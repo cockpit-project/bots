@@ -322,29 +322,19 @@ def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sh
             baseline += 1.0 - (min(100000, float(number)) / 100000)
 
         def trigger_externals():
-            if repo != "cockpit-project/cockpit":  # already a non-cockpit project
+            if repo != "cockpit-project/bots":  # already a bots project
                 return False
             if base != "master":  # bots/ is always taken from master branch
                 return False
             if LABEL_TEST_EXTERNAL in labels:  # already checked before?
                 return True
 
-            if not statuses:
-                # this is the first time tests-scan looks at a PR, so determine if it changes bots/
-                with urllib.request.urlopen(pull["patch_url"]) as f:
-                    # enough to look at the git commit header, it lists all changed files
-                    if b"bots/" in f.read(4000):
-                        if update:
-                            # remember for next run, to avoid downloading the patch multiple times
-                            label(number, [LABEL_TEST_EXTERNAL])
-                        return True
-
             return False
 
         def get_externals():
             result = []
             for proj_repo in testmap.projects():
-                if proj_repo == "cockpit-project/cockpit":
+                if proj_repo == "cockpit-project/bots":
                     continue
                 for context in testmap.tests_for_project(proj_repo).get("master", []):
                     result.append(context + "@" + proj_repo)
