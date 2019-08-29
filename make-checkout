@@ -31,7 +31,7 @@ sys.dont_write_bytecode = True
 
 BOTS = os.path.dirname(__file__)
 BASE = os.path.normpath(os.path.join(BOTS, ".."))
-TARGET_DIR = os.path.join(BOTS, "make-checkout-workdir")
+TARGET_DIR = os.path.realpath(os.path.join(BOTS, "make-checkout-workdir"))
 
 def main():
     parser = argparse.ArgumentParser(description="Fetch and checkout specific revision")
@@ -70,7 +70,11 @@ def main():
     execute("git", "checkout", "--detach", opts.revision, cwd=TARGET_DIR, error_on_fail=False)
 
     # get bots/
-    if api.repo != "cockpit-project/cockpit" or (opts.base and opts.base != "master"):
+    bots_clone_dir = os.path.join(TARGET_DIR, "bots")
+
+    # HACK
+    # We can drop this check once bots is no longer present in cockpit
+    if api.repo != "cockpit-project/bots" and (api.repo != "cockpit-project/cockpit" or (opts.base and opts.base != "master")):
         execute("git", "remote", "add", "bots_origin", "https://github.com/cockpit-project/cockpit", cwd=TARGET_DIR)
         execute("git", "fetch", "--depth=1", "bots_origin", opts.bots_ref or "master", cwd=TARGET_DIR)
         bots_ref = execute("git", "rev-parse", "FETCH_HEAD", cwd=TARGET_DIR).strip()
