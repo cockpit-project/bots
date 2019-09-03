@@ -13,4 +13,4 @@
 
 set -ex
 
-bots/image-trigger
+# bots/image-trigger
