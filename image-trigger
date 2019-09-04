@@ -98,7 +98,7 @@ def scan(api, force, verbose):
             perform = image == force
         else:
             days = options.get("refresh-days", DAYS)
-            perform = task.stale(days, os.path.join("bots", "images", image), "origin/master")
+            perform = task.stale(days, os.path.join("images", image), "origin/master")
 
         if perform:
             text = "Image refresh for {0}".format(image)
