@@ -154,7 +154,7 @@ def run(image, verbose=False, **kwargs):
     if ret:
         return ret
 
-    branch = task.branch(image, "images: Update {0} image".format(image), pathspec="bots/images", **kwargs)
+    branch = task.branch(image, "images: Update {0} image".format(image), pathspec="images", **kwargs)
     if branch:
         pull = task.pull(branch, labels=['bot', 'no-test'], run_tests=False, **kwargs)
 
