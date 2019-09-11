@@ -57,7 +57,7 @@ api = github.GitHub()
 verbose = False
 
 BOTS = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
-BASE = os.path.normpath(os.path.join(BOTS, ".."))
+BASE = BOTS if api.repo == "cockpit-project/bots" else os.path.normpath(os.path.join(BOTS, ".."))
 
 #
 # The main function takes a list of tasks, each of wihch has the following
