@@ -186,7 +186,7 @@ class PullTask(object):
             # if we are on master.  Other branches don't have a bots/
             # in their repo.
             status["link"] = "log.html"
-            status["extras"] = [ "https://raw.githubusercontent.com/cockpit-project/cockpit/{0}/bots/task/log.html".format(self.revision if not self.base else "master") ]
+            status["extras"] = [ "https://raw.githubusercontent.com/cockpit-project/bots/{0}/task/log.html".format(self.revision if not self.base else "master") ]
 
 
         # Include information about which base we're testing against
