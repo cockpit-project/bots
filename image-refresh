@@ -33,22 +33,22 @@ TRIGGERS = {
         "continuous-atomic@cockpit-project/cockpit/rhel-7.7",
     ],
     "debian-testing": [
-        "debian-testing"
+        "debian-testing@cockpit-project/cockpit"
     ],
     "debian-stable": [
-        "debian-stable"
+        "debian-stable@cockpit-project/cockpit"
     ],
     "fedora-29": [
-        "fedora-atomic",
+        "fedora-atomic@cockpit-project/cockpit",
         "fedora-29@cockpit-project/cockpit-podman",
     ],
     "fedora-30": [
-        "fedora-30",
-        "fedora-30/selenium-chrome",
-        "fedora-30/selenium-firefox",
-        "fedora-30/selenium-edge",
-        "fedora-30/container-bastion",
-        "fedora-30@cockpit-project/starter-kit",
+        "fedora-30@cockpit-project/cockpit",
+        "fedora-30/selenium-chrome@cockpit-project/cockpit",
+        "fedora-30/selenium-firefox@cockpit-project/cockpit",
+        "fedora-30/selenium-edge@cockpit-project/cockpit",
+        "fedora-30/container-bastion@cockpit-project/cockpit",
+        "fedora-30@cockpit-project/starter-kit@cockpit-project/cockpit",
         "fedora-30@cockpit-project/cockpit-podman",
         "fedora-30@weldr/lorax",
         "fedora-30/live-iso@weldr/lorax",
@@ -58,37 +58,37 @@ TRIGGERS = {
         "fedora-30/edge@weldr/cockpit-composer",
     ],
     "fedora-31": [
-        "fedora-31",
+        "fedora-31@cockpit-project/cockpit",
         "fedora-31@cockpit-project/cockpit-podman",
     ],
     "fedora-atomic": [
-        "fedora-atomic",
+        "fedora-atomic@cockpit-project/cockpit",
         "fedora-atomic@cockpit-project/cockpit-ostree",
     ],
     "fedora-testing": [
-        "fedora-testing"
+        "fedora-testing@cockpit-project/cockpit"
     ],
     "fedora-i386": [
-        "fedora-i386"
+        "fedora-i386@cockpit-project/cockpit"
     ],
     "ubuntu-1804": [
-        "ubuntu-1804"
+        "ubuntu-1804@cockpit-project/cockpit"
     ],
     "ubuntu-stable": [
-        "ubuntu-stable"
+        "ubuntu-stable@cockpit-project/cockpit"
     ],
     "openshift": [
         "rhel-7-7@cockpit-project/cockpit/rhel-7.7",
         "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
     ],
     "ipa": [
-        "fedora-30",
-        "ubuntu-1804",
-        "debian-stable"
+        "fedora-30@cockpit-project/cockpit",
+        "ubuntu-1804@cockpit-project/cockpit",
+        "debian-stable@cockpit-project/cockpit"
     ],
     "selenium": [
-        "fedora-30/selenium-chrome",
-        "fedora-30/selenium-firefox",
+        "fedora-30/selenium-chrome@cockpit-project/cockpit",
+        "fedora-30/selenium-firefox@cockpit-project/cockpit",
         "fedora-30/chrome@weldr/cockpit-composer",
         "fedora-30/firefox@weldr/cockpit-composer",
         "rhel-7-7/firefox@weldr/cockpit-composer",
@@ -107,8 +107,8 @@ TRIGGERS = {
         "rhel-8-0@cockpit-project/cockpit/rhel-8.0",
     ],
     "rhel-8-1": [
-        "rhel-8-1",
-        "rhel-8-1-distropkg",
+        "rhel-8-1@cockpit-project/cockpit",
+        "rhel-8-1-distropkg@cockpit-project/cockpit",
         "rhel-8-1@cockpit-project/cockpit/rhel-8.1",
         "rhel-8-1@cockpit-project/cockpit/rhel-8-appstream",
         "rhel-8-1/chrome@weldr/cockpit-composer",
