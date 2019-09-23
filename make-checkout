@@ -71,15 +71,14 @@ def main():
 
     # get bots/
     bots_clone_dir = os.path.join(TARGET_DIR, "bots")
-
-    # HACK
-    # We can drop this check once bots is no longer present in cockpit
-    if api.repo != "cockpit-project/bots" and (api.repo != "cockpit-project/cockpit" or (opts.base and opts.base != "master")):
-        execute("git", "remote", "add", "bots_origin", "https://github.com/cockpit-project/cockpit", cwd=TARGET_DIR)
-        execute("git", "fetch", "--depth=1", "bots_origin", opts.bots_ref or "master", cwd=TARGET_DIR)
-        bots_ref = execute("git", "rev-parse", "FETCH_HEAD", cwd=TARGET_DIR).strip()
-        execute("git", "checkout", "--force", bots_ref or "bots_origin/master", "--", "bots/", cwd=TARGET_DIR, error_on_fail=False)
-        execute("git", "reset", "bots", cwd=TARGET_DIR)
+    if opts.bots_ref:
+        # TODO: remove this when cockpit-project/cockpit#12872 has landed
+        if os.path.exists(bots_clone_dir):
+            shutil.rmtree(bots_clone_dir)
+        execute("git", "clone", "--reference-if-able", "{}/{}".format(cache, "cockpit-project/bots"), "https://github.com/cockpit-project/bots", bots_clone_dir, cwd=TARGET_DIR)
+        execute("git", "fetch", "--depth=1", "origin", opts.bots_ref or "master", cwd=bots_clone_dir)
+        bots_ref = execute("git", "rev-parse", "FETCH_HEAD", cwd=bots_clone_dir).strip()
+        execute("git", "checkout", "--force", bots_ref or "bots_origin/master", cwd=bots_clone_dir, error_on_fail=False)
 
 if __name__ == '__main__':
     sys.exit(main())

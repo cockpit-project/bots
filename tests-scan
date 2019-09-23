@@ -22,9 +22,6 @@ REPO_EXTRA_INVOKE_OPTIONS = {
     'mvollmer/subscription-manager': [ "--html-logs" ]
 }
 
-# Label: should a PR trigger external tests
-LABEL_TEST_EXTERNAL = "test-external"
-
 import argparse
 import os
 import json
@@ -95,9 +92,9 @@ def main():
                     policy[branch] = branch_context
         results = scan_for_pull_tasks(api, policy, opts, opts.repo)
 
-        # When run from c-p/cockpit checkout without PR number or PR data we want to scan also all
-        # external projects. E.g. `bots/tests-scan` in c-p/c checkout will scan all projects
-        if opts.repo == "cockpit-project/cockpit" and not opts.pull_data and not opts.pull_number:
+        # When run from c-p/bots checkout without PR number or PR data we want to scan also all
+        # external projects. E.g. `bots/tests-scan` in c-p/b checkout will scan all projects
+        if opts.repo == "cockpit-project/bots" and not opts.pull_data and not opts.pull_number:
             results += scan_external_projects(opts)
     except RuntimeError as ex:
         logging.error("tests-scan: " + str(ex))
@@ -321,16 +318,6 @@ def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sh
             # end up with a bunch of half tested pull requests
             baseline += 1.0 - (min(100000, float(number)) / 100000)
 
-        def trigger_externals():
-            if repo != "cockpit-project/bots":  # already a bots project
-                return False
-            if base != "master":  # bots/ is always taken from master branch
-                return False
-            if LABEL_TEST_EXTERNAL in labels:  # already checked before?
-                return True
-
-            return False
-
         def get_externals():
             result = []
             for proj_repo in testmap.projects():
@@ -357,11 +344,16 @@ def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sh
         if not statuses: # If none defined in github add basic set of contexts
             for context in branch_contexts.get(base, []):
                 todos[context] = {}
-        if trigger_externals():
+        # test external projects on bots PRs
+        if repo == "cockpit-project/bots":
             for context in get_externals():
                 if context not in todos:
                     todos[context] = {}
 
+        # there are 3 different HEADs
+        # ref:    the PR that we are testing
+        # base:   the target branch of that PR
+        # branch: the branch of the external project that we are testing against this PR (only applies to cockpit-project/bots PRs)
         for context in todos:
             # Get correct project and branch. Ones from test name have priority
             project = repo
@@ -392,6 +384,15 @@ def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sh
                     checkout_ref = "master"
                 if base != branch:
                     checkout_ref = branch
+
+                if repo == "cockpit-project/bots":
+                    # bots own test doesn't need bots/ setup as there is a permanent symlink to itself there
+                    # otherwise if we're testing an external project (repo != project) then checkout bots from the PR
+                    bots_ref = None if repo == project else ref
+                else:
+                    # test one external project against another non-bots project, doesn't happen (yet)
+                    bots_ref = "master"
+
                 results.append((priority,
                                 "pull-%d" % number,
                                 number,
@@ -401,7 +402,8 @@ def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sh
                                 branch,
                                 base,
                                 project,
-                                ref if project != repo or base != branch else None))
+                                bots_ref
+                ))
 
     return results
 
