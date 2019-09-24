@@ -26,12 +26,9 @@ import subprocess
 import sys
 import time
 
-from contextlib import contextmanager
-
 from task import github
 
 from machine import testvm
-from machine.machine_core.directories import BASE_DIR
 
 # threshold in G below which unreferenced qcow2 images will be pruned, even if they aren't old
 PRUNE_THRESHOLD_G = float(os.environ.get("PRUNE_THRESHOLD_G", 15))
@@ -69,10 +66,10 @@ def get_refs(open_pull_requests=True, offline=False):
             images = []
             for fl in files:
                 fl_name = fl['filename']
-                if fl_name.startswith("bots/images/"):
+                if fl_name.startswith("images/"):
                     fl_name_split = fl_name.split("/", 2)
-                    if "/" not in fl_name_split[2]:
-                        images.append(fl_name_split[2])
+                    if "/" not in fl_name_split[1]:
+                        images.append(fl_name_split[1])
             if images:
                 sha = p["head"]["sha"]
                 considerable[sha] = images
@@ -112,35 +109,24 @@ def get_image_links(ref, git_path):
     return [link for link in links if link.endswith(".qcow2")]
 
 
-@contextmanager
-def remember_cwd():
-    curdir = os.getcwd()
-    try:
-        yield
-    finally:
-        os.chdir(curdir)
-
-
 def get_image_names(quiet=False, open_pull_requests=True, offline=False):
     """Return all image names used by all branches and optionally in open pull requests
     """
     images = set()
     # iterate over visible refs (mostly branches)
     # this hinges on being in the top level directory of the the git checkout
-    with remember_cwd():
-        os.chdir(BASE_DIR)
-        (refs, considerable) = get_refs(open_pull_requests, offline)
-        # list images present in each branch / pull request
-        for name, ref in refs.items():
-            if not quiet:
-                sys.stderr.write("Considering images from {0} ({1})\n".format(name, ref))
-            for link in get_image_links(ref, "bots/images"):
-                if ref in considerable:
-                    for consider in considerable[ref]:
-                        if link.startswith(consider):
-                            images.add(link)
-                else:
-                    images.add(link)
+    (refs, considerable) = get_refs(open_pull_requests, offline)
+    # list images present in each branch / pull request
+    for name, ref in refs.items():
+        if not quiet:
+            sys.stderr.write("Considering images from {0} ({1})\n".format(name, ref))
+        for link in get_image_links(ref, "images"):
+            if ref in considerable:
+                for consider in considerable[ref]:
+                    if link.startswith(consider):
+                        images.add(link)
+            else:
+                images.add(link)
 
     return images
 
