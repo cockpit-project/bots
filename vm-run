@@ -19,9 +19,10 @@
 import argparse
 import errno
 import os
+import re
+import signal
 import subprocess
 import sys
-import re
 
 from machine import testvm
 
@@ -71,6 +72,7 @@ parser.add_argument('-v', '--verbose', action='store_true', help='Display verbos
 parser.add_argument('-m', '--maintain', action='store_true', help='Changes are permanent')
 parser.add_argument('-M', '--memory', default=None, type=int, help='Memory (in MiB) of the target machine')
 parser.add_argument('-G', '--graphics', action='store_true', help='Display a graphics console')
+parser.add_argument('-q', '--quiet', action='store_true', help="Don't connect text console")
 parser.add_argument('-C', '--cpus', default=None, type=int, help='Number of cpus in the target machine')
 parser.add_argument('-S', '--storage', default=None, type=str, help='Add a second qcow2 disk at this path')
 parser.add_argument('--network', action='store_true', help='Setup a bridged network for running machines')
@@ -142,9 +144,13 @@ try:
     if graphics:
         machine.graphics_console()
 
-    # No graphics console necessary
-    else:
+    # else, if -q not specified, text console
+    elif not args.quiet:
         machine.qemu_console(message)
+
+    # else, just wait for a signal
+    else:
+        signal.sigwait([signal.SIGTERM, signal.SIGINT, signal.SIGQUIT])
 
 except testvm.Failure as ex:
     sys.stderr.write("vm-run: %s\n" % ex)
