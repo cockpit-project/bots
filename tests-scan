@@ -30,12 +30,11 @@ import sys
 import time
 import logging
 import itertools
-import urllib.request
 
 sys.dont_write_bytecode = True
 logging.basicConfig(level=logging.INFO)
 
-from task import github, label, redhat_network, labels_of_pull, distributed_queue, testmap
+from task import github, redhat_network, labels_of_pull, distributed_queue, testmap
 
 no_amqp = False
 try:
