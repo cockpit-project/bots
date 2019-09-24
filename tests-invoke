@@ -31,8 +31,12 @@ from task import sink
 
 HOSTNAME = socket.gethostname().split(".")[0]
 BOTS = os.path.abspath(os.path.dirname(__file__))
-BASE = os.path.normpath(os.path.join(BOTS, ".."))
 DEVNULL = open("/dev/null", "r+")
+
+if os.environ.get("TEST_PROJECT") == "cockpit-project/bots":
+    BASE = BOTS
+else:
+    BASE = os.path.dirname(BOTS)
 
 def main():
     parser = argparse.ArgumentParser(description='Run integration tests')
@@ -298,8 +302,8 @@ class PullTask(object):
 
         # Actually run the tests
         if not ret:
-            entry_point = os.path.join(BOTS, "..", ".cockpit-ci", "run")
-            alt_entry_point = os.path.join(BOTS, "..", "test", "run")
+            entry_point = os.path.join(BASE, ".cockpit-ci", "run")
+            alt_entry_point = os.path.join(BASE, "test", "run")
             if not os.path.exists(entry_point) and os.path.exists(alt_entry_point):
                 entry_point = alt_entry_point
             cmd = [ "timeout", "120m", entry_point ]
