@@ -16,6 +16,11 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 REPO_BRANCH_CONTEXT = {
+    'cockpit-project/bots': {
+        'master': [
+            'host' # bots doesn't need a vm
+        ],
+    },
     'cockpit-project/cockpit': {
         'master': ['fedora-30/container-bastion',
             'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome', 'fedora-30/selenium-edge',
