@@ -12,8 +12,12 @@ wget --continue http://javadl.oracle.com/webapps/download/AutoDL?BundleId=233172
 # from https://selenium-release.storage.googleapis.com/
 wget --continue https://selenium-release.storage.googleapis.com/3.13/selenium-server-standalone-3.13.0.jar -O selenium.jar
 wget --continue https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.141-1/virtio-win.iso -O virtio-win.iso
+[ -e sdelete.zip ] || wget https://download.sysinternals.com/files/SDelete.zip -O sdelete.zip
+[ -e QRes.zip ] || wget https://ro.softpedia-secure-download.com/dl/921587227037299dcfb17f068777d92d/5d8b1a65/100000618/software/MULTIMEDIA/VIDEO/QRes.zip -O QRes.zip
 
 [ -e disk.vmdk ] || unzip -o MSEdge.Win10.VMWare.zip
+[ -e sdelete64.exe ] || unzip sdelete.zip
+[ -e QRes.exe ] || unzip QRes.zip
 
 cat <<'EOF' > Autorun.inf
 [autorun]
@@ -42,8 +46,11 @@ mkdir c:\selenium
 echo f | xcopy /f /y d:\selenium.jar c:\selenium\selenium.jar
 echo f | xcopy /f /y d:\selenium.bat c:\selenium\selenium.bat
 echo f | xcopy /f /y d:\MicrosoftWebDriver.exe c:\selenium\MicrosoftWebDriver.exe
+echo f | xcopy /f /y d:\QRes.exe c:\QRes.exe
+C:\QRes.exe /X:1280 /Y:1024
 REG ADD "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /V "Selenium Hub" /t REG_SZ /F /D "C:\selenium\selenium.bat"
 d:\java-installer.exe /s
+d:\sdelete64.exe -z c:
 timeout 30
 shutdown -s -t 0
 EOF
