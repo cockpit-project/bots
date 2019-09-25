@@ -476,6 +476,14 @@ class VirtMachine(Machine):
         finally:
             self._cleanup()
 
+    def wait_for_exit(self):
+        cmdline = ['virsh', 'event', '--event', 'lifecycle', '--domain', str(self._domain.ID())]
+        try:
+            while subprocess.call(cmdline, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) == 0:
+                pass
+        except KeyboardInterrupt:
+            pass
+
     def pull(self, image):
         if "/" in image:
             image_file = os.path.abspath(image)
