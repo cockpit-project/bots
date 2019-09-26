@@ -33,6 +33,8 @@ import urllib.parse
 
 BASE = os.path.dirname(__file__)
 sys.path.insert(1, os.path.join(BASE, ".."))
+os.environ["GITHUB_API"] = "http://127.0.0.9:9898"
+os.environ["GITHUB_BASE"] = "project/repo"
 
 from task import cache
 from task import github
