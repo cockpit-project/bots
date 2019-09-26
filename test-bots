@@ -27,6 +27,7 @@ sys.dont_write_bytecode = True
 
 BOTS_DIR = os.path.dirname(__file__)
 
+
 def main():
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
@@ -41,6 +42,7 @@ def main():
     if result.wasSuccessful():
         return 0
     return 1
+
 
 if __name__ == '__main__':
     sys.exit(main())

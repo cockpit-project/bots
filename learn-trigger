@@ -31,6 +31,7 @@ import task
 # The name and version of the training data
 TRAINING_DATA = "tests-train-1.jsonl.gz"
 
+
 def main():
     parser = argparse.ArgumentParser(description='Ensure necessary issue learning from tests')
     parser.add_argument('-v', '--verbose', action="store_true", default=False,
@@ -53,6 +54,7 @@ def main():
         sys.stderr.write("#{0}: learn-tests\n".format(issue["number"]))
 
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

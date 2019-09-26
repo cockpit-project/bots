@@ -20,26 +20,26 @@
 DAYS = 7
 
 REFRESH = {
-    "candlepin": { "refresh-days": 120 },
-    "centos-7": { },
-    "continuous-atomic": { },
-    "debian-testing": { },
-    "debian-stable": { },
-    "fedora-29": { },
-    "fedora-30": { },
-    "fedora-31": { },
-    "fedora-atomic": { },
-    "fedora-testing": { },
-    "fedora-i386": { },
-    "ipa": { "refresh-days": 120 },
-    "ubuntu-1804": { },
-    "ubuntu-stable": { },
-    "openshift": { "refresh-days": 30 },
-    'rhel-7-7': { },
-    'rhel-8-0': { },
-    'rhel-8-1': { },
-    'rhel-atomic': { },
-    "selenium": { "refresh-days": 30 },
+    "candlepin": {"refresh-days": 120},
+    "centos-7": {},
+    "continuous-atomic": {},
+    "debian-testing": {},
+    "debian-stable": {},
+    "fedora-29": {},
+    "fedora-30": {},
+    "fedora-31": {},
+    "fedora-atomic": {},
+    "fedora-testing": {},
+    "fedora-i386": {},
+    "ipa": {"refresh-days": 120},
+    "ubuntu-1804": {},
+    "ubuntu-stable": {},
+    "openshift": {"refresh-days": 30},
+    'rhel-7-7': {},
+    'rhel-8-0': {},
+    'rhel-8-1': {},
+    'rhel-atomic': {},
+    "selenium": {"refresh-days": 30},
 }
 
 import argparse
@@ -53,6 +53,7 @@ sys.dont_write_bytecode = True
 
 import task
 from task import github
+
 
 def main():
     parser = argparse.ArgumentParser(description='Ensure necessary issue exists for image refresh')
@@ -75,8 +76,10 @@ def main():
     return 0
 
 # Prepare an image prune command
+
+
 def scan_for_prune():
-    tasks = [ ]
+    tasks = []
     stamp = os.path.join(tempfile.gettempdir(), "cockpit-image-prune.stamp")
 
     # Don't prune more than once per hour
@@ -89,8 +92,9 @@ def scan_for_prune():
 
     return tasks
 
+
 def scan(api, force, verbose):
-    subprocess.check_call([ "git", "fetch", "origin", "master" ])
+    subprocess.check_call(["git", "fetch", "origin", "master"])
     for (image, options) in REFRESH.items():
         perform = False
 
@@ -106,6 +110,7 @@ def scan(api, force, verbose):
             sys.stderr.write("#{0}: image-refresh {1}\n".format(issue["number"], image))
 
     return scan_for_prune()
+
 
 if __name__ == '__main__':
     sys.exit(main())

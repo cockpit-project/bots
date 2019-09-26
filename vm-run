@@ -28,7 +28,7 @@ from machine import testvm
 
 BOTS = os.path.abspath(os.path.dirname(__file__))
 
-NETWORK_SCRIPT=b"""
+NETWORK_SCRIPT = b"""
     set -ex
     virsh net-destroy cockpit1 || true
     virsh net-undefine cockpit1 || true
@@ -89,7 +89,7 @@ try:
             sys.stderr.write("vm-run: failed to create cockpit1 network\n")
             sys.exit(1)
 
-    bridge=None
+    bridge = None
     with open(os.devnull, 'w') as fp:
         if subprocess.call(["ip", "address", "show", "dev", "cockpit1"], stdout=fp, stderr=fp) == 0:
             bridge = "cockpit1"
@@ -119,7 +119,7 @@ try:
     # Check that image is downloaded
     if not os.path.exists(machine.image_file):
         try:
-            ret = subprocess.call([ os.path.join(BOTS, "image-download"), args.image])
+            ret = subprocess.call([os.path.join(BOTS, "image-download"), args.image])
         except OSError as ex:
             if ex.errno != errno.ENOENT:
                 raise

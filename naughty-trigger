@@ -31,6 +31,7 @@ sys.dont_write_bytecode = True
 
 import task
 
+
 def main():
     parser = argparse.ArgumentParser(description='Update known issues')
     # parser.add_argument('-v', '--verbose', action="store_true", default=False,
@@ -47,6 +48,7 @@ def main():
         sys.stderr.write("#{0}: naughty-prune\n".format(issue["number"]))
 
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

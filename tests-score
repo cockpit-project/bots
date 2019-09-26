@@ -30,6 +30,7 @@ import task
 
 BOTS = os.path.dirname(os.path.realpath(__file__))
 
+
 # This parses the output JSONL format discussed here, where various
 # values are grouped:
 #
@@ -42,6 +43,7 @@ def value(record, field):
         return values[0][0] or ""
     return None
 
+
 # Here we're looking for the count of a specific field/value in the record
 def count(record, field, only):
     values = record.get(field, [])
@@ -50,6 +52,7 @@ def count(record, field, only):
             continue
         return count
     return 0
+
 
 def run(url, verbose=False, dry=False, **kwargs):
     cafile = None
@@ -60,7 +63,7 @@ def run(url, verbose=False, dry=False, **kwargs):
         cafile = os.path.join(BOTS, "images", "files", "ca.pem")
         context = ssl.create_default_context(cafile=cafile)
 
-    statistics = [ ]
+    statistics = []
 
     # Retrieve the URL
     try:
@@ -78,7 +81,7 @@ def run(url, verbose=False, dry=False, **kwargs):
 
     # Now go through and look for tests that have never flaked
     score = []
-    tests = { }
+    tests = {}
     failure = set()
 
     for record in statistics:
@@ -94,7 +97,7 @@ def run(url, verbose=False, dry=False, **kwargs):
         # Make note of all the tests we've seen
         contexts = tests.get(test)
         if not contexts:
-            tests[test] = contexts = [ ]
+            tests[test] = contexts = []
         if context:
             contexts.append(context)
 
@@ -120,6 +123,7 @@ def run(url, verbose=False, dry=False, **kwargs):
 
     for context, fraction, test in score:
         sys.stdout.write("{:>5} {:>20} {}\n".format(int(fraction * 100), context, test))
+
 
 if __name__ == '__main__':
     task.main(function=run, title="Get flakiness score for tests", verbose=True)

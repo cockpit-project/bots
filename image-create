@@ -53,6 +53,7 @@ if args.image in ["candlepin", "continuous-atomic", "fedora-atomic", "ipa", "rhe
             print("Creating machine without build capabilities based on the image type")
         args.no_build = True
 
+
 class MachineBuilder:
     def __init__(self, machine):
         tempdir = testvm.get_temp_dir()
@@ -72,9 +73,8 @@ class MachineBuilder:
 
         bootstrap_script = os.path.join(testvm.SCRIPTS_DIR, "%s.bootstrap" % (self.machine.image, ))
 
-
         if os.path.isfile(bootstrap_script):
-            subprocess.check_call([ bootstrap_script, self.machine.image_file ])
+            subprocess.check_call([bootstrap_script, self.machine.image_file])
         else:
             raise testvm.Failure("Unsupported OS %s: %s not found." % (self.machine.image, bootstrap_script))
 
@@ -83,13 +83,13 @@ class MachineBuilder:
         self.machine.start()
         try:
             self.machine.wait_boot(timeout_sec=120)
-            self.machine.upload([ os.path.join(testvm.SCRIPTS_DIR, "lib") ], "/var/lib/testvm")
+            self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib")], "/var/lib/testvm")
             self.machine.upload([script], "/var/tmp/SETUP")
-            self.machine.upload([ os.path.join(testvm.SCRIPTS_DIR, "lib", "base") ],
+            self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib", "base")],
                                 "/var/tmp/cockpit-base")
 
             if "rhel" in self.machine.image:
-                self.machine.upload([ os.path.expanduser("~/.rhel") ], "/root/")
+                self.machine.upload([os.path.expanduser("~/.rhel")], "/root/")
 
             env = {
                 "TEST_OS": self.machine.image,
@@ -110,7 +110,7 @@ class MachineBuilder:
             except subprocess.CalledProcessError as ex:
                 if args.sit:
                     sys.stderr.write(self.machine.diagnose())
-                    input ("Press RET to continue... ")
+                    input("Press RET to continue... ")
                 raise testvm.Failure("setup failed with code {0}\n".format(ex.returncode))
 
         finally:
@@ -165,10 +165,10 @@ class MachineBuilder:
         partial = os.path.join(data_dir, self.machine.image + ".partial")
 
         # Copy image via convert, to make it sparse again
-        subprocess.check_call([ "qemu-img", "convert", "-c", "-O", "qcow2", self.machine.image_file, partial ])
+        subprocess.check_call(["qemu-img", "convert", "-c", "-O", "qcow2", self.machine.image_file, partial])
 
         # Hash the image here
-        (sha, x1, x2) = subprocess.check_output([ "sha256sum", partial ], universal_newlines=True).partition(" ")
+        (sha, x1, x2) = subprocess.check_output(["sha256sum", partial], universal_newlines=True).partition(" ")
         if not sha:
             raise testvm.Failure("sha256sum returned invalid output")
 
@@ -189,6 +189,7 @@ class MachineBuilder:
         if not os.path.exists(image_file):
             os.symlink(os.path.abspath(data_file), image_file)
 
+
 try:
     testvm.VirtMachine.memory_mb = 2048
     machine = testvm.VirtMachine(verbose=args.verbose, image=args.image, maintain=True)
@@ -199,10 +200,10 @@ try:
         builder.save()
         if args.upload:
             print("Uploading...")
-            cmd = [ os.path.join(BOTS, "image-upload") ]
+            cmd = [os.path.join(BOTS, "image-upload")]
             if args.store:
-                cmd += [ "--store", args.store ]
-            cmd += [ args.image ]
+                cmd += ["--store", args.store]
+            cmd += [args.image]
             subprocess.check_call(cmd)
 
 except testvm.Failure as ex:

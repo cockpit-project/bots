@@ -39,12 +39,13 @@ from machine import testvm
 
 BOTS = os.path.dirname(__file__)
 
+
 def upload(store, source):
     ca = os.path.join(BOTS, "images", "files", "ca.pem")
     url = urllib.parse.urlparse(store)
 
     # Start building the command
-    cmd = ["curl", "--progress-bar", "--cacert", ca, "--fail", "--upload-file", source ]
+    cmd = ["curl", "--progress-bar", "--cacert", ca, "--fail", "--upload-file", source]
 
     def try_curl(cmd):
         print("Uploading to", cmd[-1])
@@ -63,10 +64,10 @@ def upload(store, source):
     try:
         with open(os.path.expanduser(TOKEN), "r") as gt:
             token = gt.read().strip()
-        cmd += [ "--user", user + ":" + token ]
+        cmd += ["--user", user + ":" + token]
     except IOError as exc:
         if exc.errno == errno.ENOENT:
-           pass
+            pass
 
     # First try to use the original store URL, for stores with valid SSL cert on an OpenShift proxy
     if try_curl(cmd + [store]) == 0:
@@ -115,6 +116,7 @@ def main():
         else:
             # all stores failed, so return last exit code
             return ret
+
 
 if __name__ == '__main__':
     sys.exit(main())

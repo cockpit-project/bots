@@ -7,6 +7,6 @@ PYFILES=$(grep -lI '^#!.*python' `find -path ./make-checkout-workdir -prune -o -
 python3 -m pyflakes $PYFILES
 
 # FIXME: Fix code for the warnings and re-enable them
-# python3 -m pycodestyle --ignore E501,E265,E261,W504,W605 $PYFILES
+python3 -m pycodestyle --ignore E722,E501,W504,E402 $PYFILES
 
 ./test-bots

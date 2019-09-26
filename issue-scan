@@ -73,7 +73,7 @@ except ImportError:
 def main():
     parser = argparse.ArgumentParser(description="Scan issues for tasks")
     parser.add_argument("-v", "--human-readable", "--verbose", action="store_true", default=False,
-         dest="verbose", help="Print verbose information")
+                        dest="verbose", help="Print verbose information")
     parser.add_argument('--amqp', default=None,
                         help='The host:port of the AMQP server to publish to (format host:port)')
     parser.add_argument('--issues-data', default=None,
@@ -121,6 +121,7 @@ def main():
 
     return 0
 
+
 def contains_any(string, matches):
     for match in matches:
         if match in string:
@@ -128,9 +129,11 @@ def contains_any(string, matches):
     return False
 
 # Map all checkable work items to fixtures
+
+
 def tasks_for_issues(issues_data):
-    results = [ ]
-    issues = [ ]
+    results = []
+    issues = []
 
     if issues_data:
         event = json.loads(issues_data)
@@ -148,7 +151,7 @@ def tasks_for_issues(issues_data):
     for issue in issues:
         if issue["title"].strip().startswith("WIP"):
             continue
-        login = issue.get("user", { }).get("login", { })
+        login = issue.get("user", {}).get("login", {})
         if login not in whitelist:
             continue
 
@@ -166,6 +169,7 @@ def tasks_for_issues(issues_data):
                 results.append((item, issue, api.repo))
                 break
     return results
+
 
 def output_task(command, issue, repo, verbose):
     name, unused, context = command.partition(" ")
@@ -204,6 +208,7 @@ def output_task(command, issue, repo, verbose):
             repo=repo,
         )
 
+
 def queue_task(channel, result):
     body = {
         "command": result,
@@ -213,10 +218,12 @@ def queue_task(channel, result):
     channel.basic_publish('', queue, json.dumps(body), properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
 
 # Default scan behavior run for each task
+
+
 def scan(issues_data, verbose):
     global issues
 
-    results = [ ]
+    results = []
 
     # Now go through each fixture
     for (command, issue, repo) in tasks_for_issues(issues_data):
@@ -225,6 +232,7 @@ def scan(issues_data, verbose):
             results.append(result)
 
     return results
+
 
 if __name__ == '__main__':
     sys.exit(main())

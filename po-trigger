@@ -27,6 +27,7 @@ sys.dont_write_bytecode = True
 
 import task
 
+
 def main():
     parser = argparse.ArgumentParser(description="Ensure necessary issue exists for translations")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
@@ -40,6 +41,7 @@ def main():
 
     if issue:
         sys.stderr.write("#{0}: po-refresh\n".format(issue["number"]))
+
 
 if __name__ == '__main__':
     sys.exit(main())

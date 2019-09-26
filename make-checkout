@@ -33,6 +33,7 @@ BOTS = os.path.dirname(__file__)
 BASE = os.path.normpath(os.path.join(BOTS, ".."))
 TARGET_DIR = os.path.realpath(os.path.join(BOTS, "make-checkout-workdir"))
 
+
 def main():
     parser = argparse.ArgumentParser(description="Fetch and checkout specific revision")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
@@ -79,6 +80,7 @@ def main():
         execute("git", "fetch", "--depth=1", "origin", opts.bots_ref or "master", cwd=bots_clone_dir)
         bots_ref = execute("git", "rev-parse", "FETCH_HEAD", cwd=bots_clone_dir).strip()
         execute("git", "checkout", "--force", bots_ref or "bots_origin/master", cwd=bots_clone_dir, error_on_fail=False)
+
 
 if __name__ == '__main__':
     sys.exit(main())

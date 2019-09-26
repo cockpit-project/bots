@@ -24,6 +24,7 @@ import sys
 
 from task import distributed_queue
 
+
 def main():
     parser = argparse.ArgumentParser(description='Read and print messages from the queue without acknowleding them')
     parser.add_argument('--amqp', default='localhost:5671',
@@ -48,6 +49,7 @@ def main():
         print_queue('public')
         print('rhel queue:')
         print_queue('rhel')
+
 
 if __name__ == '__main__':
     sys.exit(main())

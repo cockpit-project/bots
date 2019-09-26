@@ -83,6 +83,7 @@ BASE = BOTS if api.repo == "cockpit-project/bots" else os.path.normpath(os.path.
 #   task.main(title="My title", function=run)
 #
 
+
 def main(**kwargs):
     global verbose
 
@@ -94,11 +95,11 @@ def main(**kwargs):
     parser = argparse.ArgumentParser(description=task.get("title", task["name"]))
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("--issue", dest="issue", action="store",
-        help="Act on an already created task issue")
+                        help="Act on an already created task issue")
     parser.add_argument("--publish", dest="publish", default=os.environ.get("TEST_PUBLISH", ""),
-        action="store", help="Publish results centrally to a sink")
+                        action="store", help="Publish results centrally to a sink")
     parser.add_argument("--dry", dest="dry", action="store_true",
-        help="Dry run to validate this task if supported")
+                        help="Dry run to validate this task if supported")
     parser.add_argument("context", nargs="?")
 
     opts = parser.parse_args()
@@ -119,11 +120,13 @@ def main(**kwargs):
 
     sys.exit(ret and 1 or 0)
 
+
 def named(task):
     if "name" in task:
         return task["name"]
     else:
         return os.path.basename(os.path.realpath(sys.argv[0]))
+
 
 def begin(publish, name, context, issue):
     if not publish:
@@ -138,33 +141,33 @@ def begin(publish, name, context, issue):
         identifier = "{0}-{1}-{2}".format(name, number, current)
         title = issue["title"]
         wip = "WIP: {0}: [no-test] {1}".format(hostname, title)
-        requests = [ {
+        requests = [{
             "method": "POST",
             "resource": api.qualify("issues/{0}".format(number)),
-            "data": { "title": wip }
+            "data": {"title": wip}
         }, {
             "method": "POST",
             "resource": api.qualify("issues/{0}/comments".format(number)),
-            "data": { "body": "{0} in progress on {1}.\nLog: :link".format(name, hostname) }
-        } ]
-        watches = [ {
+            "data": {"body": "{0} in progress on {1}.\nLog: :link".format(name, hostname)}
+        }]
+        watches = [{
             "resource": api.qualify("issues/{0}".format(number)),
-            "result": { "title": wip }
-        } ]
-        aborted = [ {
+            "result": {"title": wip}
+        }]
+        aborted = [{
             "method": "POST",
             "resource": api.qualify("issues/{0}".format(number)),
-            "data": { "title": title }
+            "data": {"title": title}
         }, {
             "method": "POST",
             "resource": api.qualify("issues/{0}/comments".format(number)),
-            "data": { "body": "Task aborted." }
-        } ]
+            "data": {"body": "Task aborted."}
+        }]
     else:
         identifier = "{0}-{1}".format(name, current)
-        requests = [ ]
-        watches = [ ]
-        aborted = [ ]
+        requests = []
+        watches = []
+        aborted = []
 
     status = {
         "github": {
@@ -188,6 +191,7 @@ def begin(publish, name, context, issue):
     publishing.start = time.time()
 
     return publishing
+
 
 def finish(publishing, ret, name, context, issue):
     if not publishing:
@@ -219,11 +223,11 @@ def finish(publishing, ret, name, context, issue):
         # The sink wants us to escape colons :S
         body = checklist.body.replace(':', '::')
 
-        requests = [ {
+        requests = [{
             "method": "POST",
             "resource": api.qualify("issues/{0}".format(number)),
-            "data": { "title": "{0}".format(issue["title"]), "body": body }
-        } ]
+            "data": {"title": "{0}".format(issue["title"]), "body": body}
+        }]
 
         # Close the issue if it's not a pull request, successful, and all tasks done
         if "pull_request" not in issue and not ret and len(checklist.items) == len(checklist.checked()):
@@ -234,16 +238,17 @@ def finish(publishing, ret, name, context, issue):
             requests.insert(0, {
                 "method": "POST",
                 "resource": api.qualify("issues/{0}/comments".format(number)),
-                "data": { "body": comment }
+                "data": {"body": comment}
             })
 
     else:
-        requests = [ ]
+        requests = []
 
     publishing.status['github']['requests'] = requests
     publishing.status['github']['watches'] = None
     publishing.status['github']['onaborted'] = None
     publishing.flush()
+
 
 def run(context, function, **kwargs):
     number = kwargs.get("issue", None)
@@ -265,7 +270,7 @@ def run(context, function, **kwargs):
     ret = "Task threw an exception"
     try:
         if issue and "pull_request" in issue:
-           kwargs["pull"] = api.get(issue["pull_request"]["url"])
+            kwargs["pull"] = api.get(issue["pull_request"]["url"])
 
         ret = function(context, **kwargs)
     except (RuntimeError, subprocess.CalledProcessError) as ex:
@@ -280,6 +285,8 @@ def run(context, function, **kwargs):
 
 # Check if the given files that match @pathspec are stale
 # and haven't been updated in @days.
+
+
 def stale(days, pathspec, ref="HEAD"):
     global verbose
 
@@ -303,6 +310,7 @@ def stale(days, pathspec, ref="HEAD"):
 
     return timestamp < due
 
+
 def issue(title, body, item, context=None, items=[], state="open", since=None):
     if context:
         item = "{0} {1}".format(item, context).strip()
@@ -317,16 +325,17 @@ def issue(title, body, item, context=None, items=[], state="open", since=None):
             return issue
 
     if not items:
-        items = [ item ]
+        items = [item]
     checklist = github.Checklist(body)
     for x in items:
         checklist.add(x)
     data = {
         "title": title,
         "body": checklist.body,
-        "labels": [ "bot" ]
+        "labels": ["bot"]
     }
     return api.post("issues", data)
+
 
 def execute(*args):
     global verbose
@@ -345,6 +354,7 @@ def execute(*args):
     sys.stderr.write(censored(output))
     return output
 
+
 def find_our_fork(user):
     repos = api.get("/users/{0}/repos".format(user))
     for r in repos:
@@ -357,6 +367,7 @@ def find_our_fork(user):
                 return full["full_name"]
     raise RuntimeError("%s doesn't have a fork of %s" % (user, api.repo))
 
+
 def push_branch(user, branch, force=False):
     fork_repo = find_our_fork(user)
 
@@ -365,6 +376,7 @@ def push_branch(user, branch, force=False):
     if force:
         cmd.insert(2, "-f")
     execute(*cmd)
+
 
 def branch(context, message, pathspec=".", issue=None, branch=None, push=True, **kwargs):
     name = named(kwargs)
@@ -404,6 +416,7 @@ def branch(context, message, pathspec=".", issue=None, branch=None, push=True, *
 
     return "{0}:{1}".format(user, branch)
 
+
 def pull(branch, body=None, issue=None, base="master", labels=['bot'], run_tests=True, **kwargs):
     if "pull" in kwargs:
         return kwargs["pull"]
@@ -423,7 +436,7 @@ def pull(branch, body=None, issue=None, base="master", labels=['bot'], run_tests
         if body:
             data["body"] = body
 
-    pull = api.post("pulls", data, accept=[ 422 ])
+    pull = api.post("pulls", data, accept=[422])
 
     # If we were refused to grant maintainer_can_modify, then try without
     if "errors" in pull:
@@ -438,14 +451,14 @@ def pull(branch, body=None, issue=None, base="master", labels=['bot'], run_tests
     if issue:
         try:
             issue["title"] = kwargs["title"]
-            issue["pull_request"] = { "url": pull["url"] }
+            issue["pull_request"] = {"url": pull["url"]}
         except TypeError:
             pass
 
     if pull["number"]:
         # If we want to run tests automatically, drop [no-test] from title before force push
         if run_tests:
-            pull = api.post("pulls/" + str(pull["number"]), {"title": kwargs["title"]}, accept=[ 422 ])
+            pull = api.post("pulls/" + str(pull["number"]), {"title": kwargs["title"]}, accept=[422])
 
         # Force push
         last_commit_m = execute("git", "show", "--no-patch", "--format=%B")
@@ -466,6 +479,7 @@ def pull(branch, body=None, issue=None, base="master", labels=['bot'], run_tests
 
     return pull
 
+
 def label(issue, labels=['bot']):
     try:
         resource = "issues/{0}/labels".format(issue["number"])
@@ -473,25 +487,30 @@ def label(issue, labels=['bot']):
         resource = "issues/{0}/labels".format(issue)
     return api.post(resource, labels)
 
+
 def labels_of_pull(pull):
     if "labels" not in pull:
         pull["labels"] = api.get("issues/{0}/labels".format(pull["number"]))
     return list(map(lambda label: label["name"], pull["labels"]))
+
 
 def comment(issue, comment):
     try:
         number = issue["number"]
     except TypeError:
         number = issue
-    return api.post("issues/{0}/comments".format(number), { "body": comment })
+    return api.post("issues/{0}/comments".format(number), {"body": comment})
+
 
 def comment_done(issue, name, clean, branch, context=None):
     message = "{0} {1} done: {2}/commits/{3}".format(name, context or "", clean, branch)
     comment(issue, message)
 
+
 def attach(filename):
     if "TEST_ATTACHMENTS" in os.environ:
         shutil.copy(filename, os.environ["TEST_ATTACHMENTS"])
+
 
 def redhat_network():
     '''Check if we can access the Red Hat network
@@ -509,5 +528,6 @@ def redhat_network():
             redhat_network.result = False
 
     return redhat_network.result
+
 
 redhat_network.result = None

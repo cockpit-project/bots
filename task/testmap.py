@@ -18,7 +18,7 @@
 REPO_BRANCH_CONTEXT = {
     'cockpit-project/bots': {
         'master': [
-            'host' # bots doesn't need a vm
+            'host'  # bots doesn't need a vm
         ],
     },
     'cockpit-project/cockpit': {
@@ -124,9 +124,11 @@ REPO_BRANCH_CONTEXT = {
     }
 }
 
+
 def projects():
     """Return all projects for which we run tests."""
     return REPO_BRANCH_CONTEXT.keys()
+
 
 def tests_for_project(project):
     """Return branch -> contexts map."""

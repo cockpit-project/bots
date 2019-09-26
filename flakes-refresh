@@ -43,12 +43,14 @@ WINDOW_DAYS = 21
 #
 # https://github.com/cockpit-project/cockpituous/blob/master/learn/README.md
 
+
 # Here we're looking for a field in a record that only has one value
 def value(record, field):
     values = record.get(field, [])
     if len(values) == 1:
         return values[0][0] or ""
     return None
+
 
 # Here we're looking for the count of a specific field/value in the record
 def count(record, field, only):
@@ -59,8 +61,8 @@ def count(record, field, only):
         return count
     return 0
 
-# For linking flakes to test logs
 
+# For linking flakes to test logs
 def slurp_one(url, n, logs):
     items_url = url + str(n) + "/items.jsonl"
     try:
@@ -68,7 +70,7 @@ def slurp_one(url, n, logs):
             for line in f.readlines():
                 try:
                     record = json.loads(line.decode('utf-8'))
-                    logs.setdefault(record["test"], [ ]).append(record["url"])
+                    logs.setdefault(record["test"], []).append(record["url"])
                 except ValueError as ex:
                     sys.stderr.write("{0}: {1}\n".format(url, ex))
     except urllib.error.URLError as ex:
@@ -77,12 +79,14 @@ def slurp_one(url, n, logs):
         raise
     return True
 
+
 def slurp_failure_logs(url):
-    logs = { }
+    logs = {}
     n = 0
     while slurp_one(url, n, logs):
         n = n + 1
     return logs
+
 
 def get_failure_logs(failure_logs, name, context):
     match = context.replace("/", "-")
@@ -90,10 +94,11 @@ def get_failure_logs(failure_logs, name, context):
 
 # Main
 
+
 def run(context, verbose=False, **kwargs):
     api = task.github.GitHub()
 
-    open_issues = api.issues(labels=[ "flake" ])
+    open_issues = api.issues(labels=["flake"])
     create_count = NUMBER_OPEN_ISSUES - len(open_issues)
 
     if create_count <= 0:
@@ -111,7 +116,7 @@ def run(context, verbose=False, **kwargs):
     failure_logs = slurp_failure_logs(url)
 
     # Retrieve the URL
-    statistics = [ ]
+    statistics = []
     with urllib.request.urlopen(url + "statistics.jsonl", context=context) as f:
         for line in f.readlines():
             try:
@@ -120,7 +125,7 @@ def run(context, verbose=False, **kwargs):
             except ValueError as ex:
                 sys.stderr.write("{0}: {1}\n".format(url, ex))
 
-    tests = { }
+    tests = {}
 
     for record in statistics:
         test = value(record, "test")
@@ -137,12 +142,12 @@ def run(context, verbose=False, **kwargs):
 
             # And the key is that they were merged anyway
             if total > 10:
-                tests.setdefault(test, [ ]).append((merged / total, context, record))
+                tests.setdefault(test, []).append((merged / total, context, record))
 
-    scores = [ ]
+    scores = []
 
     for n, t in tests.items():
-        scores.append((sum(map(lambda f: f[0], t))/len(t), n, t))
+        scores.append((sum(map(lambda f: f[0], t)) / len(t), n, t))
 
     closed_issues = api.issues(labels=["flake"], state="closed", since=(time.time() - (WINDOW_DAYS * 86400)))
 
@@ -157,7 +162,7 @@ def run(context, verbose=False, **kwargs):
         return m.group(0) if m else url
 
     def failure_description(name, f, logs):
-        return ("%s%% on %s\n" % (int(f[0]*100), f[1]) +
+        return ("%s%% on %s\n" % (int(f[0] * 100), f[1]) +
                 "".join(map(lambda url: " - [%s](%s)\n" % (url_desc(url), url),
                             get_failure_logs(logs, name, f[1]))))
 
@@ -173,7 +178,7 @@ def run(context, verbose=False, **kwargs):
             "title": "%s is flaky" % name,
             "body": ("\n".join(map(lambda f: failure_description(name, f, failure_logs), failures)) +
                      "\n\n" + source),
-            "labels": [ "flake" ]
+            "labels": ["flake"]
         }
         api.post("issues", data)
         create_count -= 1
@@ -181,6 +186,7 @@ def run(context, verbose=False, **kwargs):
             break
 
     return 0
+
 
 if __name__ == '__main__':
     task.main(function=run, title="Create issues for test flakes")

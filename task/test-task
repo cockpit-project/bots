@@ -48,14 +48,15 @@ DATA = {
     "/users/user/repos": [{"full_name": "project/repo"}]
 }
 
+
 def mockServer():
     # Data used by below handler
-    data = { }
+    data = {}
 
     import http.server
     class Handler(http.server.BaseHTTPRequestHandler):
 
-        def replyData(self, value, headers={ }, status=200):
+        def replyData(self, value, headers={}, status=200):
             self.send_response(status)
             for name, content in headers.items():
                 self.send_header(name, content)
@@ -63,7 +64,7 @@ def mockServer():
             self.wfile.write(value)
             self.wfile.flush()
 
-        def replyJson(self, value, headers={ }, status=200):
+        def replyJson(self, value, headers={}, status=200):
             headers["Content-type"] = "application/json"
             self.replyData(json.dumps(value).encode('utf-8'), headers=headers, status=status)
 
@@ -115,21 +116,24 @@ def mockServer():
     httpd.serve_forever()
     os._exit(1)
 
+
 def mock_execute(*args):
     assert(args[0] == 'git')
     if args[1] == "show":
         return "Task title\n"
     elif args[1] == "commit" and args[2] == "--amend":
-        if args[4] !=  "Task title\nCloses #1234":
+        if args[4] != "Task title\nCloses #1234":
             raise Exception("Incorrect commit message")
     elif args[1] == "push":
         assert(args[2] == "-f")
     else:
         raise Exception("Mocking unsupported git command")
 
+
 def mockKill(child):
     os.kill(child, signal.SIGTERM)
     os.waitpid(child, 0)
+
 
 class TestTask(unittest.TestCase):
     def setUp(self):
@@ -141,7 +145,7 @@ class TestTask(unittest.TestCase):
         shutil.rmtree(self.temp)
 
     def testRunArguments(self):
-        status = { "ran": False }
+        status = {"ran": False}
 
         def function(context, **kwargs):
             self.assertEqual(context, "my-context")
@@ -162,10 +166,11 @@ class TestTask(unittest.TestCase):
 
     @patch('task.execute', mock_execute)
     def testPullBody(self):
-        args = { "title": "Task title" }
+        args = {"title": "Task title"}
         pull = task.pull("user:branch", body="This is the body", **args)
         self.assertEqual(pull["title"], "Task title")
         self.assertEqual(pull["body"], "This is the body")
+
 
 if __name__ == '__main__':
     unittest.main()

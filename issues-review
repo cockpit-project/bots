@@ -5,6 +5,7 @@ import time
 
 from task import github
 
+
 def issues_review(api, opts):
     now = time.time()
     treshold = opts.age * 86400

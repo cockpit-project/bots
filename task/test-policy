@@ -70,24 +70,25 @@ Journal extracted to TestMultiMachine-testFrameNavigation-fedora-i386-127.0.0.2-
 Journal extracted to TestMultiMachine-testFrameNavigation-fedora-i386-127.0.0.2-2502-FAIL.log
 """
 
+
 class TestPolicy(unittest.TestCase):
     def testSimpleNumber(self):
         script = os.path.join(BOTS, "tests-policy")
-        cmd = [ script, "--simple", "--offline", "verify/example" ]
+        cmd = [script, "--simple", "--offline", "verify/example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
         (output, unused) = proc.communicate(PCP_CRASH)
         self.assertEqual(output, "9876\n")
 
     def testScenario(self):
         script = os.path.join(BOTS, "tests-policy")
-        cmd = [ script, "--simple", "--offline", "verify/example/scen-one" ]
+        cmd = [script, "--simple", "--offline", "verify/example/scen-one"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
         (output, unused) = proc.communicate(PCP_CRASH)
         self.assertEqual(output, "9876\n")
 
     def testKnownIssue(self):
         script = os.path.join(BOTS, "tests-policy")
-        cmd = [ script, "--offline", "verify/example" ]
+        cmd = [script, "--offline", "verify/example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
         (output, unused) = proc.communicate(PCP_CRASH)
         self.assertEqual(output, PCP_KNOWN)
@@ -95,4 +96,3 @@ class TestPolicy(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

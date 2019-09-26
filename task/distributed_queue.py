@@ -48,6 +48,7 @@ arguments = {
     },
 }
 
+
 class DistributedQueue(object):
     def __init__(self, amqp_server, queues, **kwargs):
         """connect to some AMQP queues
