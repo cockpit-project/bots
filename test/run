@@ -3,22 +3,10 @@
 set -eu
 
 # run static code checks like pyflakes and pep8
-PYFILES=$(grep -lI '^#!.*python' `find -path ./make-checkout-workdir -prune -o -type f ! -name '.*'` 2>/dev/null || true)
-if python3 -m pyflakes $PYFILES >&2; then
-    echo "ok 1 pyflakes"
-else
-    echo "not ok 1 pyflakes"
-    fail=1
-fi
+PYFILES=$(grep -lI '^#!.*python' `find -path ./make-checkout-workdir -prune -o -type f ! -name '.*'` 2>/dev/null)
+python3 -m pyflakes $PYFILES
 
 # FIXME: Fix code for the warnings and re-enable them
-out=$(python3 -m pycodestyle --ignore E501,E265,E261,W504,W605 test/* --exclude=test/verify/nested-kvm,test/README.md,test/run) || true
-if [ -n "$out" ]; then
-    echo "$out" >&2
-    echo "not ok 2 pycodestyle test"
-    fail=1
-else
-    echo "ok 2 pycodestyle test"
-fi
+# python3 -m pycodestyle --ignore E501,E265,E261,W504,W605 $PYFILES
 
 ./test-bots
