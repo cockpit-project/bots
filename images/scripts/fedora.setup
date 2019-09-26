@@ -179,6 +179,7 @@ su builder -c "/usr/bin/mock --install --verbose rpmlint"
 if [ -n "$HAVE_DOCKER" ]; then
     # HACK: docker falls over regularly, print its log if it does
     systemctl start docker || journalctl -u docker
+    docker build -t cockpit/base /var/tmp/cockpit-base
     # docker images that we need for integration testing
     /var/lib/testvm/docker-images.setup
 fi
