@@ -20,7 +20,6 @@ import argparse
 import errno
 import os
 import re
-import signal
 import subprocess
 import sys
 
@@ -150,7 +149,7 @@ try:
 
     # else, just wait for a signal
     else:
-        signal.sigwait([signal.SIGTERM, signal.SIGINT, signal.SIGQUIT])
+        machine.wait_for_exit()
 
 except testvm.Failure as ex:
     sys.stderr.write("vm-run: %s\n" % ex)
