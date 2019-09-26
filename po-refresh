@@ -29,6 +29,7 @@ import task
 BOTS = os.path.abspath(os.path.dirname(__file__))
 BASE = os.path.normpath(os.path.join(BOTS, ".."))
 
+
 def run(context, verbose=False, **kwargs):
     cwd = BASE
 
@@ -36,6 +37,7 @@ def run(context, verbose=False, **kwargs):
         if verbose:
             sys.stderr.write("+ " + " ".join(args) + "\n")
         return subprocess.check_output(args, cwd=cwd, universal_newlines=True)
+
     def execute(*args):
         if verbose:
             sys.stderr.write("+ " + " ".join(args) + "\n")
@@ -56,7 +58,7 @@ def run(context, verbose=False, **kwargs):
     work = os.path.abspath(line.strip())
 
     # Do the various updates
-    cmd = [ "make", "upload-pot", "clean-po", "download-po" ]
+    cmd = ["make", "upload-pot", "clean-po", "download-po"]
     if verbose:
         sys.stderr.write("+ " + " ".join(cmd) + "\n")
     subprocess.check_call(cmd, cwd=work)

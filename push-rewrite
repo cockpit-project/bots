@@ -19,6 +19,7 @@ import time
 
 from task import github, label, labels_of_pull
 
+
 def execute(*args):
     try:
         sys.stderr.write("+ " + " ".join(args) + "\n")
@@ -27,8 +28,10 @@ def execute(*args):
         sys.exit(ex.returncode)
     return output
 
+
 def git(*args):
     return execute("git", *args).strip()
+
 
 def find_pr_with_sha(api, sha):
     pulls = api.pulls()
@@ -38,11 +41,12 @@ def find_pr_with_sha(api, sha):
     sys.stderr.write("Could not find pull with revision {0}.\n".format(sha))
     sys.exit(1)
 
+
 def main():
     parser = argparse.ArgumentParser(description='Force push after a rewrite')
     parser.add_argument('--repo', help="The GitHub repository to work with", default=None)
     parser.add_argument('remote', help='The remote to push to')
-    parser.add_argument('branch', nargs='?',  help='The branch to push')
+    parser.add_argument('branch', nargs='?', help='The branch to push')
     opts = parser.parse_args()
 
     if not opts.branch:
@@ -67,16 +71,16 @@ def main():
     tests_disabled = "no-test" in labels or "[no-test]" in pull["title"]
     # add no-test label to prevent tests bring triggered
     if not tests_disabled:
-        label(pull, { "labels": labels + ["no-test"] })
+        label(pull, {"labels": labels + ["no-test"]})
 
     git("push", "--force-with-lease=" + opts.branch + ":" + remote, opts.remote, opts.branch + ":" + opts.branch)
 
-    for n in range(100,0,-1):
+    for n in range(100, 0, -1):
         try:
             if api.get("commits/%s" % local):
                 break
         except RuntimeError as e:
-            if not "Unprocessable Entity" in str(e) or n <= 1:
+            if "Unprocessable Entity" not in str(e) or n <= 1:
                 raise
             print("(new commits not yet in the GiHub API...please stand by. *beep*)")
         time.sleep(1)
@@ -89,6 +93,7 @@ def main():
     # remove no-test label
     if not tests_disabled:
         api.delete("issues/%i/labels/no-test" % pull["number"])
+
 
 if __name__ == '__main__':
     sys.exit(main())

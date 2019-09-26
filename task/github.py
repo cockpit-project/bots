@@ -61,6 +61,7 @@ TOKEN = "~/.config/github-token"
 
 TEAM_CONTRIBUTORS = "Contributors"
 
+
 def known_context(context):
     context = context.split("@")[0]
     for project in testmap.projects():
@@ -68,6 +69,7 @@ def known_context(context):
             if context in branch_tests:
                 return True
     return False
+
 
 class Logger(object):
     def __init__(self, directory):
@@ -81,6 +83,7 @@ class Logger(object):
     def write(self, value):
         with open(self.path, 'a') as f:
             f.write(value)
+
 
 class GitHubError(RuntimeError):
     """Raise when getting an error from the GitHub API
@@ -101,13 +104,15 @@ class GitHubError(RuntimeError):
                 '  Reason: {2}\n'
                 '  Response: {3}'.format(self.url, self.status, self.reason, self.data))
 
+
 def get_repo():
     res = subprocess.check_output(['git', 'config', '--default=', 'cockpit.bots.github-repo'])
     return res.decode('utf-8').strip() or None
 
+
 def get_origin_repo():
     try:
-        res = subprocess.check_output([ "git", "remote", "get-url", "origin" ])
+        res = subprocess.check_output(["git", "remote", "get-url", "origin"])
     except subprocess.CalledProcessError:
         return None
     url = res.decode('utf-8').strip()
@@ -115,6 +120,7 @@ def get_origin_repo():
     if m:
         return m.group(2).rstrip("/")
     raise RuntimeError("Not a GitHub repo: %s" % url)
+
 
 class GitHub(object):
     def __init__(self, base=None, cacher=None, repo=None):
@@ -138,7 +144,7 @@ class GitHub(object):
 
         # The cache directory is $TEST_DATA/github ~/.cache/github
         if not cacher:
-            data = os.environ.get("TEST_DATA",  os.path.expanduser("~/.cache"))
+            data = os.environ.get("TEST_DATA", os.path.expanduser("~/.cache"))
             cacher = cache.Cache(os.path.join(data, "github"))
         self.cache = cacher
 
@@ -175,7 +181,7 @@ class GitHub(object):
 
     def request(self, method, resource, data="", headers=None):
         if headers is None:
-            headers = { }
+            headers = {}
         headers["User-Agent"] = "Cockpit Tests"
         if self.token:
             headers["Authorization"] = "token " + self.token
@@ -214,7 +220,7 @@ class GitHub(object):
                 if connected or ex.errno != errno.EPIPE:
                     raise
                 self.conn = None
-        heads = { }
+        heads = {}
         for (header, value) in response.getheaders():
             heads[header.lower()] = value
         self.log.write('{0} - - [{1}] "{2} {3} HTTP/1.1" {4} -\n'.format(
@@ -232,7 +238,7 @@ class GitHub(object):
         }
 
     def get(self, resource):
-        headers = { }
+        headers = {}
         qualified = self.qualify(resource)
         cached = self.cache.read(qualified)
         if cached:
@@ -247,7 +253,7 @@ class GitHub(object):
         response = self.request("GET", resource, "", headers)
         if response['status'] == 404:
             return None
-        elif cached and response['status'] == 304: # Not modified
+        elif cached and response['status'] == 304:  # Not modified
             self.cache.write(qualified, cached)
             return json.loads(cached['data'] or "null")
         elif response['status'] < 200 or response['status'] >= 300:
@@ -257,7 +263,7 @@ class GitHub(object):
             return json.loads(response['data'] or "null")
 
     def post(self, resource, data, accept=[]):
-        response = self.request("POST", resource, json.dumps(data), { "Content-Type": "application/json" })
+        response = self.request("POST", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
             raise GitHubError(self.qualify(resource), response)
@@ -265,7 +271,7 @@ class GitHub(object):
         return json.loads(response['data'])
 
     def delete(self, resource, accept=[]):
-        response = self.request("DELETE", resource, "", { "Content-Type": "application/json" })
+        response = self.request("DELETE", resource, "", {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
             raise GitHubError(self.qualify(resource), response)
@@ -273,7 +279,7 @@ class GitHub(object):
         return json.loads(response['data'])
 
     def patch(self, resource, data, accept=[]):
-        response = self.request("PATCH", resource, json.dumps(data), { "Content-Type": "application/json" })
+        response = self.request("PATCH", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
             raise GitHubError(self.qualify(resource), response)
@@ -281,7 +287,7 @@ class GitHub(object):
         return json.loads(response['data'])
 
     def statuses(self, revision):
-        result = { }
+        result = {}
         page = 1
         count = 100
         while count == 100:
@@ -296,7 +302,7 @@ class GitHub(object):
         return result
 
     def pulls(self, state='open', since=None):
-        result = [ ]
+        result = []
         page = 1
         count = 100
         while count == 100:
@@ -319,8 +325,8 @@ class GitHub(object):
 
     # The since argument is seconds since the issue was either
     # created (for open issues) or closed (for closed issues)
-    def issues(self, labels=[ "bot" ], state="open", since=None):
-        result = [ ]
+    def issues(self, labels=["bot"], state="open", since=None):
+        result = []
         page = 1
         count = 100
         opened = True
@@ -416,9 +422,9 @@ class Checklist(object):
                 check = stripped[3] in ["x", "X"]
         return (item, check)
 
-    def process(self, body, items={ }):
-        self.items = { }
-        lines = [ ]
+    def process(self, body, items={}):
+        self.items = {}
+        lines = []
         items = items.copy()
         for line in body.splitlines():
             (item, check) = self.parse_line(line)
@@ -435,13 +441,13 @@ class Checklist(object):
         self.body = "\n".join(lines)
 
     def check(self, item, checked=True):
-        self.process(self.body, { item: checked })
+        self.process(self.body, {item: checked})
 
     def add(self, item):
-        self.process(self.body, { item: False })
+        self.process(self.body, {item: False})
 
     def checked(self):
-        result = { }
+        result = {}
         for item, check in self.items.items():
             if check:
                 result[item] = check

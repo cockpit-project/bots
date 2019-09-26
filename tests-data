@@ -28,7 +28,9 @@ import sys
 import tempfile
 import time
 import urllib.parse
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 import zlib
 
 import html.parser
@@ -44,7 +46,8 @@ SINCE_DAYS = 120
 
 BOTS = os.path.abspath(os.path.dirname(__file__))
 SEEDED = set()
-SINKS = { }
+SINKS = {}
+
 
 def run(filename, verbose=False, dry=False, **kwargs):
     since = time.time() - 60 * 60 * 24 * SINCE_DAYS
@@ -54,7 +57,7 @@ def run(filename, verbose=False, dry=False, **kwargs):
     if filename:
         if "/" not in filename and not os.path.exists(filename):
             if not dry:
-                subprocess.check_call([ os.path.join(BOTS, "image-download"), "--state", filename ])
+                subprocess.check_call([os.path.join(BOTS, "image-download"), "--state", filename])
             filename = os.path.join(testvm.get_images_data_dir(), filename)
         (outfd, outname) = tempfile.mkstemp(prefix=os.path.basename(filename), dir=os.path.dirname(filename))
         os.close(outfd)
@@ -102,8 +105,9 @@ def run(filename, verbose=False, dry=False, **kwargs):
         os.rename(outname, filename)
 
     if not dry and outname and filename:
-        upload = [ os.path.join(BOTS, "image-upload"), "--state", filename ]
+        upload = [os.path.join(BOTS, "image-upload"), "--state", filename]
         subprocess.check_call(upload)
+
 
 # An HTML parser that just pulls out all the <a href="...">
 # link hrefs in a given page of content. We also qualify these
@@ -122,14 +126,15 @@ class HrefParser(html.parser.HTMLParser):
                     # print 'HREF', url
                     self.hrefs.append(url)
 
+
 # Check if a given pull request was included in its base
 # branch via merging or otherwise
 class Pulls():
     def __init__(self, since):
-        self.fetched = { }
-        self.checked = { }
-        self.pulls = { }
-        self.listing = [ ]
+        self.fetched = {}
+        self.checked = {}
+        self.pulls = {}
+        self.listing = []
         self.since = since
 
     # Get all the pull requests since a given time
@@ -138,7 +143,7 @@ class Pulls():
             iterate = self.pulls.values()
         else:
             iterate = task.api.pulls(state="all", since=self.since)
-        listing = [ ]
+        listing = []
         for pull in iterate:
             self.pulls[pull["number"]] = pull
             listing.append(pull)
@@ -183,9 +188,9 @@ class Pulls():
         base = pull["base"]["ref"]
         if base not in self.fetched:
             try:
-                subprocess.check_call([ "git", "fetch", "-q", "--", "origin", base ], cwd=cwd)
+                subprocess.check_call(["git", "fetch", "-q", "--", "origin", base], cwd=cwd)
             except subprocess.CalledProcessError:
-                return None # error already printed by process
+                return None  # error already printed by process
             self.fetched[base] = base
 
         # Look for git commits up until a year before the pull request
@@ -203,6 +208,7 @@ class Pulls():
         self.checked[number] = output and True or False
         return self.checked[number]
 
+
 # Retrieves the content of the given URL
 def retrieve(url):
     ctx = ssl.create_default_context()
@@ -211,9 +217,10 @@ def retrieve(url):
     req = urllib.request.urlopen(url, context=ctx)
     return req.read().decode('utf-8', 'replace')
 
+
 # Returns a list of all results at the given URL
 def links(url):
-    result = [ ]
+    result = []
     parser = HrefParser(url, result)
     try:
         parser.feed(retrieve(url))
@@ -223,6 +230,7 @@ def links(url):
     except (ConnectionResetError, urllib.error.URLError, socket.gaierror) as ex:
         sys.stderr.write("{0}: {1}\n".format(url, ex))
     return result
+
 
 # Parses seed input data and passes it through to output
 # all the while preparing the fact that certain URLs have
@@ -253,7 +261,7 @@ def seed(since, fp, pulls, output):
             SEEDED.add(seeded)
             seeded = None
 
-        if pull and item.get("merged") not in [ True, False ]:
+        if pull and item.get("merged") not in [True, False]:
             item["merged"] = pulls.merged(pull)
 
         # Note that we've already retrieved this URL
@@ -264,7 +272,7 @@ def seed(since, fp, pulls, output):
 
         # If the pull request had a known merged value it can be seeded
         # This forces us to retrieve data about open pull requests again
-        if item["merged"] in [ True, False ]:
+        if item["merged"] in [True, False]:
             seeded = pull
             SEEDED.add(item["revision"])
 
@@ -281,6 +289,7 @@ def seed(since, fp, pulls, output):
 
         line = json.dumps(item).encode('utf-8') + b"\n"
         output.write(line)
+
 
 # Generate a list of (revision, merged, url) for the given branch
 # This includes pull requests targeting the branch in question
@@ -320,7 +329,7 @@ def commits(branch, pulls, since, verbose=False):
 # Get all the revisions in a pull request. GitHub doesn't help
 # us here so we have to use silly tricks
 def revisions(pull):
-    head = pull.get("head", { }).get("sha")
+    head = pull.get("head", {}).get("sha")
     if not head:
         return
 
@@ -329,14 +338,14 @@ def revisions(pull):
     yield head
 
     # All the revisions we've seen
-    seen = set([ head ])
+    seen = set([head])
 
     # Seed the set of sinks. We use these sinks to figure out additional
     # revisions for the pull request. Unfortunately GitHub doesn't help us
     # with a list of revisions that this pull request used to reflect. So
     # we have to look to our sink for that info.
     data = task.api.get("commits/{0}/status?page=1&per_page=100".format(head))
-    for status in data.get("statuses", [ ]):
+    for status in data.get("statuses", []):
         url = status["target_url"]
         if url:
             SEEDED.add(urllib.parse.urljoin(url, "./"))
@@ -379,6 +388,7 @@ def revisions(pull):
                         seen.add(revision)
                         yield revision
 
+
 # Pull out all status (context, created, log) for a given revision. This includes multiple
 # test runs for a given revision, and all the various status contexts
 def logs(revision):
@@ -387,14 +397,14 @@ def logs(revision):
     while count == 100:
         data = task.api.get("commits/{0}/status?page={1}&per_page={2}".format(revision, page, count))
         count = 0
-        for status in data.get("statuses", [ ]):
+        for status in data.get("statuses", []):
             count += 1
             # Make sure to not consider "state": "success" as a success
             # here because individual tests may have failed, or been retried.
             #
             # Always only consider tests individually to have run or failed
             # not entire test suite statuses
-            if status["state"] in [ "pending" ]:
+            if status["state"] in ["pending"]:
                 continue
             target = status.get("target_url")
             if not target:
@@ -426,13 +436,13 @@ def logs(revision):
 def tap(content):
     name = status = tracker = None
     prefix = None
-    body = [ ]
+    body = []
     blocks = False
     for line in content.split('\n'):
         # The test intro, everything before here is fluff
         if not prefix and line.startswith("1.."):
             prefix = line
-            body = [ ]
+            body = []
             name = status = tracker = None
 
         # A TAP test status line
@@ -462,7 +472,7 @@ def tap(content):
             if not blocks:
                 yield (status, name, "\n".join(body), tracker)
                 status = name = tracker = None
-                body = [ ]
+                body = []
         else:
             # Old Cockpit tests didn't separate bound their stuff properly
             if line.startswith("# --------------------"):
@@ -470,12 +480,14 @@ def tap(content):
                 if status:
                     yield (status, name, "\n".join(body), tracker)
                 name = status = tracker = None
-                body = [ ]
+                body = []
             body.append(line)
+
 
 # Qualify a URL into the GitHub repository
 def qualify(path):
     return "https://api.github.com" + task.api.qualify(path)
+
 
 if __name__ == '__main__':
     task.main(function=run, title="Pull out test data for pull requests", verbose=True)

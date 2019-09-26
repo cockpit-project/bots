@@ -26,6 +26,7 @@ sys.path.insert(1, os.path.join(BASE, ".."))
 
 from task import github
 
+
 class TestChecklist(unittest.TestCase):
     def testParse(self):
         parse_line = github.Checklist.parse_line
@@ -57,7 +58,7 @@ class TestChecklist(unittest.TestCase):
         body = "This is a description\n- [ ] item1\n * [x] Item two\n * [X] Item three\n\nMore lines"
         checklist = github.Checklist(body)
         self.assertEqual(checklist.body, body)
-        self.assertEqual(checklist.items, { "item1": False, "Item two": True, "Item three": True })
+        self.assertEqual(checklist.items, {"item1": False, "Item two": True, "Item three": True})
 
     def testCheck(self):
         body = "This is a description\n- [ ] item1\n * [x] Item two\n * [X] Item three\n\nMore lines"
@@ -65,21 +66,21 @@ class TestChecklist(unittest.TestCase):
         checklist.check("item1", True)
         checklist.check("Item three", False)
         self.assertEqual(checklist.body, "This is a description\n * [x] item1\n * [x] Item two\n * [ ] Item three\n\nMore lines")
-        self.assertEqual(checklist.items, { "item1": True, "Item two": True, "Item three": False })
+        self.assertEqual(checklist.items, {"item1": True, "Item two": True, "Item three": False})
 
     def testDisable(self):
         body = "This is a description\n- [ ] item1\n * [x] Item two\n\nMore lines"
         checklist = github.Checklist(body)
         checklist.check("item1", "Status")
         self.assertEqual(checklist.body, "This is a description\n * [ ] Status: item1\n * [x] Item two\n\nMore lines")
-        self.assertEqual(checklist.items, { "item1": "Status", "Item two": True })
+        self.assertEqual(checklist.items, {"item1": "Status", "Item two": True})
 
     def testAdd(self):
         body = "This is a description\n- [ ] item1\n * [x] Item two\n\nMore lines"
         checklist = github.Checklist(body)
         checklist.add("Item three")
         self.assertEqual(checklist.body, "This is a description\n- [ ] item1\n * [x] Item two\n\nMore lines\n * [ ] Item three")
-        self.assertEqual(checklist.items, { "item1": False, "Item two": True, "Item three": False })
+        self.assertEqual(checklist.items, {"item1": False, "Item two": True, "Item three": False})
 
     def testChecked(self):
         body = "This is a description\n- [ ] item1\n * [x] Item two\n * [X] Item three\n\nMore lines"
@@ -87,8 +88,9 @@ class TestChecklist(unittest.TestCase):
         checklist.check("item1", True)
         checklist.check("Item three", False)
         checked = checklist.checked()
-        self.assertEqual(checklist.items, { "item1": True, "Item two": True, "Item three": False })
-        self.assertEqual(checked, { "item1": True, "Item two": True })
+        self.assertEqual(checklist.items, {"item1": True, "Item two": True, "Item three": False})
+        self.assertEqual(checked, {"item1": True, "Item two": True})
+
 
 if __name__ == '__main__':
     unittest.main()

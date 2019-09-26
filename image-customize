@@ -30,18 +30,17 @@ os.environ["PATH"] = "{0}:{1}".format(os.environ.get("PATH"), BOTS)
 from machine import testvm
 
 parser = argparse.ArgumentParser(
-        description='Run command inside or install packages into a Cockpit virtual machine',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
+    description='Run command inside or install packages into a Cockpit virtual machine',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-v', '--verbose', action='store_true', help='Display verbose progress details')
 parser.add_argument('-i', '--install', action='append', dest="packagelist", default=[], help='Install packages')
 parser.add_argument('-I', '--install-command', action='store', dest="installcommand",
                     default="yum --setopt=skip_missing_names_on_install=False -y install",
-                                               help="Command used to install packages in machine")
+                    help="Command used to install packages in machine")
 parser.add_argument('-r', '--run-command', action='append', dest="commandlist",
-                                           default=[], help='Run command inside virtual machine')
+                    default=[], help='Run command inside virtual machine')
 parser.add_argument('-s', '--script', action='append', dest="scriptlist",
-                                      default=[], help='Run selected script inside virtual machine')
+                    default=[], help='Run selected script inside virtual machine')
 parser.add_argument('-u', '--upload', action='append', dest="uploadlist",
                     default=[], help='Upload file/dir to destination file/dir separated by ":" example: -u file.txt:/var/lib')
 parser.add_argument('--base-image', help='Base image name, if "image" does not match a standard Cockpit VM image name')
@@ -55,6 +54,8 @@ if not args.base_image:
 args.base_image = testvm.get_test_image(args.base_image)
 
 # Create the necessary layered image for the build/install
+
+
 def prepare_install_image(base_image, install_image):
     if "/" not in base_image:
         base_image = os.path.join(testvm.IMAGES_DIR, base_image)
@@ -67,8 +68,8 @@ def prepare_install_image(base_image, install_image):
         os.makedirs(install_image_dir, exist_ok=True)
         base_image = os.path.realpath(base_image)
         qcow2_image = "{0}.qcow2".format(install_image)
-        subprocess.check_call([ "qemu-img", "create", "-q", "-f", "qcow2",
-            "-o", "backing_file={0},backing_fmt=qcow2".format(base_image), qcow2_image ])
+        subprocess.check_call(["qemu-img", "create", "-q", "-f", "qcow2",
+                               "-o", "backing_file={0},backing_fmt=qcow2".format(base_image), qcow2_image])
         if os.path.lexists(install_image):
             os.unlink(install_image)
         os.symlink(os.path.basename(qcow2_image), install_image)
@@ -78,6 +79,7 @@ def prepare_install_image(base_image, install_image):
 
     return install_image
 
+
 def run_command(machine_instance, commandlist):
     """Run command inside image"""
     for foo in commandlist:
@@ -86,6 +88,7 @@ def run_command(machine_instance, commandlist):
         except subprocess.CalledProcessError as e:
             sys.stderr.write("%s\n" % e)
             sys.exit(e.returncode)
+
 
 def run_script(machine_instance, scriptlist):
     """Run script inside image"""
@@ -103,12 +106,14 @@ def run_script(machine_instance, scriptlist):
         else:
             sys.stderr.write("Bad path to script: %s\n" % foo)
 
+
 def upload_files(machine_instance, uploadfiles):
     """Upload files/directories inside image"""
     for foo in uploadfiles:
         srcfile, dest = foo.split(":")
         src_absolute = os.path.join(os.getcwd(), srcfile)
         machine_instance.upload([src_absolute], dest)
+
 
 def install_packages(machine_instance, packagelist, install_command):
     """Install packages into a test image
@@ -127,11 +132,12 @@ def install_packages(machine_instance, packagelist, install_command):
     if allpackages:
         machine_instance.execute(install_command + " " + ' '.join(allpackages), timeout=1800)
 
+
 if args.commandlist or args.packagelist or args.scriptlist or args.uploadlist or args.resize:
     if '/' not in args.base_image:
         subprocess.check_call(["image-download", args.base_image])
     machine = testvm.VirtMachine(maintain=True,
-        verbose=args.verbose, image=prepare_install_image(args.base_image, args.image))
+                                 verbose=args.verbose, image=prepare_install_image(args.base_image, args.image))
     machine.start()
     machine.wait_boot()
     try:

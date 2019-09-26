@@ -28,6 +28,7 @@ sys.dont_write_bytecode = True
 
 from task import github
 
+
 def httpdate(dt):
     """Return a string representation of a date according to RFC 1123
     (HTTP/1.1).
@@ -41,7 +42,8 @@ def httpdate(dt):
     month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
              "Oct", "Nov", "Dec"][dt.month - 1]
     return "%s, %02d %s %04d %02d:%02d:%02d GMT" % (weekday, dt.day, month,
-        dt.year, dt.hour, dt.minute, dt.second)
+                                                    dt.year, dt.hour, dt.minute, dt.second)
+
 
 def main():
     parser = argparse.ArgumentParser(description='Test GitHub rate limits')
@@ -53,7 +55,7 @@ def main():
     future_timestamp = datetime.datetime.utcnow() + datetime.timedelta(seconds=3600)
 
     api = github.GitHub()
-    headers = { 'If-Modified-Since': httpdate(future_timestamp) }
+    headers = {'If-Modified-Since': httpdate(future_timestamp)}
     response = api.request("GET", "git/refs/heads/master", "", headers)
     sys.stdout.write("Rate limits:\n")
     for entry in ["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"]:
@@ -68,6 +70,7 @@ def main():
                 sys.stdout.write("{0}: {1} ({2})\n".format(entry, entries[0][1], readable))
             else:
                 sys.stdout.write("{0}: {1}\n".format(entry, entries[0][1]))
+
 
 if __name__ == '__main__':
     sys.exit(main())

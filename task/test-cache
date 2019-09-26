@@ -24,6 +24,7 @@ import unittest
 
 import cache
 
+
 class TestCache(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.mkdtemp()
@@ -34,29 +35,29 @@ class TestCache(unittest.TestCase):
         os.rmdir(self.directory)
 
     def testReadWrite(self):
-        value = { "blah": 1 }
+        value = {"blah": 1}
 
         c = cache.Cache(self.directory)
-        result = c.read("pa+t\%h")
+        result = c.read(r"pa+t\%h")
         self.assertIsNone(result)
 
-        c.write("pa+t\%h", value)
-        result = c.read("pa+t\%h")
+        c.write(r"pa+t\%h", value)
+        result = c.read(r"pa+t\%h")
         self.assertEqual(result, value)
 
         other = "other"
-        c.write("pa+t\%h", other)
-        result = c.read("pa+t\%h")
+        c.write(r"pa+t\%h", other)
+        result = c.read(r"pa+t\%h")
         self.assertEqual(result, other)
 
         c.write("second", value)
-        result = c.read("pa+t\%h")
+        result = c.read(r"pa+t\%h")
         self.assertEqual(result, other)
 
     def testCurrent(self):
         c = cache.Cache(self.directory, lag=3)
 
-        c.write("resource2", { "value": 2 })
+        c.write("resource2", {"value": 2})
         self.assertTrue(c.current("resource2"))
 
         time.sleep(2)
@@ -70,7 +71,7 @@ class TestCache(unittest.TestCase):
 
         self.assertFalse(c.current("resource"))
 
-        c.write("resource", { "value": 1 })
+        c.write("resource", {"value": 1})
         self.assertTrue(c.current("resource"))
 
         time.sleep(2)
@@ -81,8 +82,9 @@ class TestCache(unittest.TestCase):
 
     def testCurrentZero(self):
         c = cache.Cache(self.directory, lag=0)
-        c.write("resource", { "value": 1 })
+        c.write("resource", {"value": 1})
         self.assertFalse(c.current("resource"))
+
 
 if __name__ == '__main__':
     unittest.main()

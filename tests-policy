@@ -39,19 +39,21 @@ try:
     from machine.testvm import get_test_image
 except ImportError:
     # fallback for unit tests where libvirt is not available
-    get_test_image = lambda i: i
+    def get_test_image(i):
+        return i
 
 BOTS = os.path.dirname(os.path.realpath(__file__))
+
 
 def main():
     script = os.path.basename(__file__)
     parser = argparse.ArgumentParser(description='Check a traceback for a known issue')
     parser.add_argument('-o', "--offline", action='store_true',
-            help="Work offline, don't fetch new data or contact servers")
+                        help="Work offline, don't fetch new data or contact servers")
     parser.add_argument("--simple", action="store_true",
-            help="Just print out a known issue number")
+                        help="Just print out a known issue number")
     parser.add_argument("-v", "--verbose", action="store_true",
-            help="Print out more verbose logging info")
+                        help="Print out more verbose logging info")
     parser.add_argument('context', help="The image to check against")
     opts = parser.parse_args()
 
@@ -107,6 +109,7 @@ def main():
 # -----------------------------------------------------------------------------
 # TAP Parsing
 
+
 # Update TAP output failure and put a skip message
 # in the appropriate place
 def filterSkip(output, skip):
@@ -116,6 +119,7 @@ def filterSkip(output, skip):
             lines[i] = line[4:] + " " + skip
     return "\n".join(lines)
 
+
 # Update TAP output failure and put a retry message
 # in the appropriate place
 def filterRetry(output, retry):
@@ -124,6 +128,7 @@ def filterRetry(output, retry):
         if line.startswith("not ok "):
             lines[i] = line + " " + retry
     return "\n".join(lines)
+
 
 # Figure out the name from a failed test
 def parseName(output):
@@ -137,6 +142,7 @@ def parseName(output):
             name = name.strip()
             return name
     return ""
+
 
 # -----------------------------------------------------------------------------
 # Flakiness Checks
@@ -157,7 +163,7 @@ def guessFlake(output, context, verbose=False):
 
     host = os.environ.get("COCKPIT_LEARN_SERVICE_HOST", "learn-cockpit.apps.ci.centos.org")
     port = os.environ.get("COCKPIT_LEARN_SERVICE_PORT", "443")
-    response = { }
+    response = {}
     flake = False
 
     url = "{0}://{1}:{2}/predict".format("https" if port == "443" else "http", host, port)
@@ -206,6 +212,7 @@ def guessFlake(output, context, verbose=False):
         output = filterRetry(output, "# RETRY due to flakiness")
     return output
 
+
 # -----------------------------------------------------------------------------
 # Retry policy
 
@@ -248,12 +255,13 @@ def normalize_traceback(trace):
     trace = re.sub(r'File "[^"]*/([^/"]+)"', 'File "\\1"', trace.strip())
 
     # replace noise in SELinux violations
-    trace = re.sub('audit\([0-9.:]+\)', 'audit(0)', trace)
+    trace = re.sub(r'audit\([0-9.:]+\)', 'audit(0)', trace)
     trace = re.sub(r'\b(pid|ino)=[0-9]+ ', r'\1=0 ', trace)
 
     # in Python 3, testlib.Error is shown with namespace
-    trace = re.sub('testlib\.Error', 'Error', trace)
+    trace = re.sub(r'testlib\.Error', 'Error', trace)
     return trace
+
 
 def check_known_issue(api, trace, image):
     image_naughty = os.path.join(BOTS, "naughty", get_test_image(image))
@@ -340,7 +348,7 @@ def update_known_issue(api, number, err, details, context, timestamp=None):
 
             else:
                 # add a new part
-                while len(parts) > 10: # maximum 10 traces
+                while len(parts) > 10:  # maximum 10 traces
                     parts.pop()
 
                 parts.append("""
@@ -359,26 +367,27 @@ Times recorded: 1
             # ensure that the body is not longer than 64k.
             # drop earlier parts if we need to.
             while len(body) >= 65536:
-                parts.pop(1) # parts[0] is the header
+                parts.pop(1)  # parts[0] is the header
 
                 body = "<hr>\n".join(parts)
 
-            return api.patch("issues/comments/{0}".format(comment['id']), { "body": body })
+            return api.patch("issues/comments/{0}".format(comment['id']), {"body": body})
 
     # create a new comment, since we didn't find one to update
 
-    data = { "body": """{0}\nOoops, it happened again<hr>
+    data = {"body": """{0}\nOoops, it happened again<hr>
 ```
 {1}
 ```
 First occurrence: {2}
 Times recorded: 1
 {3}- {2}
-""".format(context, err.strip(), link, latest_occurrences) }
+""".format(context, err.strip(), link, latest_occurrences)}
     return api.post("issues/{0}/comments".format(number), data)
 
+
 def issue_comments(api, number):
-    result = [ ]
+    result = []
     page = 1
     count = 100
     while count == 100:
@@ -411,6 +420,7 @@ def post_github(api, number, output, image):
                     link = "revision {0}, [logs]({1})".format(revision, status["target_url"])
                     break
     update_known_issue(api, number, output, link, context)
+
 
 if __name__ == '__main__':
     sys.exit(main())

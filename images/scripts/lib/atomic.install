@@ -30,6 +30,7 @@ import json
 
 BASEDIR = os.path.dirname(__file__)
 
+
 class AtomicCockpitInstaller:
     branch = None
     checkout_location = "/var/local-tree"
@@ -42,11 +43,11 @@ class AtomicCockpitInstaller:
     external_packages = {}
 
     # Temporarily force cockpit-system instead of cockpit-shell
-    packages_force_install = [ "cockpit-system",
-                               "cockpit-docker",
-                               "cockpit-kdump",
-                               "cockpit-networkmanager",
-                               "cockpit-sosreport" ]
+    packages_force_install = ["cockpit-system",
+                              "cockpit-docker",
+                              "cockpit-kdump",
+                              "cockpit-networkmanager",
+                              "cockpit-sosreport"]
 
     def __init__(self, rpms=None, extra_rpms=None, verbose=False):
         self.verbose = verbose
@@ -228,7 +229,7 @@ class AtomicCockpitInstaller:
 
         packages_to_install = self.package_basenames(installed_packages)
         for p in self.packages_force_install:
-            if not p in packages_to_install:
+            if p not in packages_to_install:
                 if self.verbose:
                     print("adding package %s (forced)" % (p))
                 packages_to_install.append(p)
@@ -255,9 +256,9 @@ class AtomicCockpitInstaller:
                 os.remove(name)
 
         self.install_packages(packages_to_install)
-        no_deps = [x for x in self.rpms \
-                       if os.path.split(x)[-1].startswith("cockpit-tests") or
-                          os.path.split(x)[-1].startswith("cockpit-machines")]
+        no_deps = [x for x in self.rpms
+                   if (os.path.split(x)[-1].startswith("cockpit-tests") or
+                       os.path.split(x)[-1].startswith("cockpit-machines"))]
         self.install_packages(no_deps, deps=False, replace=True)
 
         # If firewalld is installed, we need to poke a hole for cockpit, so
@@ -271,6 +272,7 @@ class AtomicCockpitInstaller:
         self.switch_to_local_tree()
         self.update_container()
         self.clean_network()
+
 
 parser = argparse.ArgumentParser(description='Install Cockpit in Atomic')
 parser.add_argument('-v', '--verbose', action='store_true', help='Display verbose progress details')
@@ -295,8 +297,8 @@ if args.install:
     skip.append("cockpit-dashboard")
 
     rpms = [os.path.abspath(f) for f in os.listdir(".")
-            if (f.endswith(".rpm") and not f.endswith(".src.rpm")
-                and not any(f.startswith(s) for s in args.skip))]
+            if (f.endswith(".rpm") and not f.endswith(".src.rpm") and
+                not any(f.startswith(s) for s in args.skip))]
     cockpit_installer = AtomicCockpitInstaller(rpms=rpms, extra_rpms=args.extra, verbose=args.verbose)
     cockpit_installer.run()
 

@@ -41,6 +41,7 @@ from machine import testvm
 
 BOTS = os.path.dirname(os.path.realpath(__file__))
 
+
 def run(url_or_file, verbose=False, dry=False, **kwargs):
     # Default set of training data, retrieve it and use from data directory
     if not url_or_file:
@@ -59,11 +60,13 @@ def run(url_or_file, verbose=False, dry=False, **kwargs):
 
     if "/" not in filename and not os.path.exists(filename):
         if not dry:
-            subprocess.check_call([ os.path.join(BOTS, "image-download"), "--state", filename ])
+            subprocess.check_call([os.path.join(BOTS, "image-download"), "--state", filename])
         filename = os.path.join(testvm.get_images_data_dir(), filename)
     train(filename, url, verbose)
 
 # Does 'tail -F' on an HTTP URL
+
+
 def tail(url, until, verbose=False):
     stop = False
     at = 0
@@ -72,7 +75,7 @@ def tail(url, until, verbose=False):
         time.sleep(10)
 
         try:
-            req = urllib.request.Request(url, headers={ "Range": "bytes={0}-".format(at) })
+            req = urllib.request.Request(url, headers={"Range": "bytes={0}-".format(at)})
             cafile = os.path.join(BOTS, "images", "files", "ca.pem")
             context = ssl.create_default_context(cafile=cafile)
             with urllib.request.urlopen(req, context=context) as f:
@@ -95,11 +98,12 @@ def tail(url, until, verbose=False):
         # Note that we do one more loop after we stop, to make sure to get all of url
         stop = until()
 
+
 def train(filename, url, verbose=False):
     if verbose:
         sys.stderr.write(" ^ {0}\n".format(url))
 
-    cmd = [ os.path.join(BOTS, "image-upload"), "--state", filename, "--store", url ]
+    cmd = [os.path.join(BOTS, "image-upload"), "--state", filename, "--store", url]
 
     # Passing through a non terminal stdout is necessary to make progress work
     subprocess.check_call(cmd)
@@ -121,6 +125,7 @@ def train(filename, url, verbose=False):
     # Now tail the logs until above happens
     log = urllib.parse.urljoin(url, "../log")
     tail(log, until, verbose)
+
 
 if __name__ == '__main__':
     task.main(function=run, title="Learn from testing data", verbose=True)

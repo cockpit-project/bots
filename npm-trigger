@@ -28,6 +28,7 @@ sys.dont_write_bytecode = True
 
 import task
 
+
 def main():
     parser = argparse.ArgumentParser(description='Ensure necessary issue exists for npm upgrades')
     parser.add_argument('-v', '--verbose', action="store_true", default=False,
@@ -49,5 +50,7 @@ def main():
         sys.stderr.write("#{0}: npm-update {1}\n".format(issue["number"], opts.package or ""))
 
     return 0
+
+
 if __name__ == '__main__':
     sys.exit(main())

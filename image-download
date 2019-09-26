@@ -59,8 +59,9 @@ BOTS = os.path.dirname(os.path.realpath(__file__))
 DEVNULL = open("/dev/null", "r+")
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
 
+
 def find(name, stores, latest, quiet):
-    found = [ ]
+    found = []
     ca = os.path.join(testvm.IMAGES_DIR, "files", "ca.pem")
 
     for store in stores:
@@ -71,7 +72,7 @@ def find(name, stores, latest, quiet):
         try:
             ai = socket.getaddrinfo(url.hostname, url.port or defport, socket.AF_INET, 0, socket.IPPROTO_TCP)
         except socket.gaierror:
-            ai = [ ]
+            ai = []
             message = store
 
         for (family, socktype, proto, canonname, sockaddr) in ai:
@@ -124,6 +125,7 @@ def find(name, stores, latest, quiet):
 
     # Return the command and message
     return found[0][0], found[0][2]
+
 
 def download(dest, force, state, quiet, stores):
     if not stores:
@@ -191,11 +193,13 @@ def download(dest, force, state, quiet, stores):
     if not exists or os.path.getsize(temp) > 0:
         shutil.move(temp, dest)
 
+
 # Calculate a place to put images where links are not committed in git
 def state_target(path):
     data_dir = testvm.get_images_data_dir()
     os.makedirs(data_dir, mode=0o775, exist_ok=True)
     return os.path.join(data_dir, path)
+
 
 # Calculate a place to put images where links are committed in git
 def committed_target(image):
@@ -233,6 +237,7 @@ def committed_target(image):
 
     return dest
 
+
 def wait_lock(target):
     lockfile = os.path.join(tempfile.gettempdir(), ".cockpit-test-resources", os.path.basename(target) + ".lock")
     os.makedirs(os.path.dirname(lockfile), exist_ok=True)
@@ -249,6 +254,7 @@ def wait_lock(target):
             time.sleep(10)
     else:
         raise TimeoutError("timed out waiting for concurrent downloads of %s\n" % target)
+
 
 def download_images(image_list, force, quiet, state, store):
     data_dir = testvm.get_images_data_dir()
@@ -287,6 +293,7 @@ def download_images(image_list, force, quiet, state, store):
 
     return success
 
+
 def main():
     parser = argparse.ArgumentParser(description='Download a bot state or images')
     parser.add_argument("--force", action="store_true", help="Force unnecessary downloads")
@@ -300,6 +307,7 @@ def main():
         return 1
 
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

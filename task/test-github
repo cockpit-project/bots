@@ -39,20 +39,21 @@ os.environ["GITHUB_BASE"] = "project/repo"
 from task import cache
 from task import github
 
+
 def mockServer():
     # Data used by the above handler
     data = {
         "count": 0,
     }
 
-    issues =[{ "number": "5", "state": "open", "created_at": "2011-04-22T13:33:48Z" },
-             { "number": "6", "state": "closed", "closed_at": "2011-04-21T13:33:48Z" },
-             { "number": "7", "state": "open" }]
+    issues = [{"number": "5", "state": "open", "created_at": "2011-04-22T13:33:48Z"},
+              {"number": "6", "state": "closed", "closed_at": "2011-04-21T13:33:48Z"},
+              {"number": "7", "state": "open"}]
 
     import http.server
     class Handler(http.server.BaseHTTPRequestHandler):
 
-        def replyData(self, value, headers={ }, status=200):
+        def replyData(self, value, headers={}, status=200):
             self.send_response(status)
             for name, content in headers.items():
                 self.send_header(name, content)
@@ -60,7 +61,7 @@ def mockServer():
             self.wfile.write(value.encode('utf-8'))
             self.wfile.flush()
 
-        def replyJson(self, value, headers={ }, status=200):
+        def replyJson(self, value, headers={}, status=200):
             headers["Content-type"] = "application/json"
             self.server.data["count"] += 1
             self.replyData(json.dumps(value), headers=headers, status=status)
@@ -75,22 +76,22 @@ def mockServer():
                 if self.headers.get("If-None-Match") == "blah":
                     self.replyData("", status=304)
                 else:
-                    self.replyJson({ "user": "blah" }, headers={ "ETag": "blah" })
+                    self.replyJson({"user": "blah"}, headers={"ETag": "blah"})
             elif parsed.path == "/test/user/modified":
                 if self.headers.get("If-Modified-Since") == "Thu, 05 Jul 2012 15:31:30 GMT":
                     self.replyData("", status=304)
                 else:
-                    self.replyJson({ "user": "blah" }, headers={ "Last-Modified": "Thu, 05 Jul 2012 15:31:30 GMT" })
+                    self.replyJson({"user": "blah"}, headers={"Last-Modified": "Thu, 05 Jul 2012 15:31:30 GMT"})
             elif parsed.path == "/orgs/cockpit-project/teams":
                 self.replyJson([
-                    { "name": github.TEAM_CONTRIBUTORS, "id": 1 },
-                    { "name": "Other team", "id": 2 }
+                    {"name": github.TEAM_CONTRIBUTORS, "id": 1},
+                    {"name": "Other team", "id": 2}
                 ])
             elif parsed.path == "/teams/1/members":
                 self.replyJson([
-                    { "login": "one" },
-                    { "login": "two" },
-                    { "login": "three" }
+                    {"login": "one"},
+                    {"login": "two"},
+                    {"login": "three"}
                 ])
             else:
                 self.send_error(404, 'Mock Not Found: ' + parsed.path)
@@ -121,9 +122,11 @@ def mockServer():
     httpd.serve_forever()
     os._exit(1)
 
+
 def mockKill(child):
     os.kill(child, signal.SIGTERM)
     os.waitpid(child, 0)
+
 
 class TestLogger(object):
     def __init__(self):
@@ -132,6 +135,7 @@ class TestLogger(object):
     # Yes, we open the file each time
     def write(self, value):
         self.data = self.data + value
+
 
 class TestGitHub(unittest.TestCase):
     def setUp(self):
@@ -194,6 +198,7 @@ class TestGitHub(unittest.TestCase):
         issues = api.issues()
         self.assertEqual(len(issues), 1)
         self.assertEqual(issues[0]["number"], "5")
+
 
 if __name__ == '__main__':
     unittest.main()

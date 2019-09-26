@@ -46,6 +46,7 @@ import task
 BOTS = os.path.abspath(os.path.dirname(__file__))
 BASE = os.path.normpath(os.path.join(BOTS, ".."))
 
+
 def package_json(data=None, package=None, version=None):
     package_path = os.path.join(BASE, "package.json")
     if data is None:
@@ -53,26 +54,30 @@ def package_json(data=None, package=None, version=None):
             return json.load(f, object_pairs_hook=collections.OrderedDict)
     else:
         if package:
-            data = dict(data, dependencies=dict(data["dependencies"], **{ package: version }))
+            data = dict(data, dependencies=dict(data["dependencies"], **{package: version}))
         with open(package_path, "w") as f:
             json.dump(data, f, indent=2, separators=(',', ': '))
             f.write("\n")
 
+
 def map_dict(dependencies, function):
-    items = [ ]
+    items = []
     for (name, value) in dependencies.items():
         items.append((name, function(name, value)))
     return collections.OrderedDict(items)
+
 
 def execute(*args):
     if task.verbose:
         sys.stderr.write("+ " + " ".join(args) + "\n")
     subprocess.check_call(args, cwd=BASE)
 
+
 def output(*args):
     if task.verbose:
         sys.stderr.write("+ " + " ".join(args) + "\n")
     return subprocess.check_output(args, cwd=BASE, universal_newlines=True)
+
 
 def run(specified_package, verbose=False, **kwargs):
     # Force all current dependencies in place
@@ -81,7 +86,7 @@ def run(specified_package, verbose=False, **kwargs):
     orig_package_json = package_json()
 
     if specified_package:
-        packages = [ specified_package ]
+        packages = [specified_package]
     else:
         packages = list(orig_package_json["dependencies"].keys())
         random.shuffle(packages)
@@ -131,6 +136,7 @@ def run(specified_package, verbose=False, **kwargs):
 
     # Undo our changes
     package_json(orig_package_json)
+
 
 if __name__ == '__main__':
     task.main(function=run, title="Upgrade a node dependency")

@@ -40,10 +40,12 @@ SECONDS_PER_DAY = 3600 * 24
 BOTS = os.path.abspath(os.path.dirname(__file__))
 BASE = os.path.normpath(os.path.join(BOTS, ".."))
 
+
 def execute(*args):
     if task.verbose:
         sys.stderr.write("+ " + " ".join(args) + "\n")
     return subprocess.check_output(args, cwd=BASE, universal_newlines=True)
+
 
 def run(unused, verbose=False, **kwargs):
 
@@ -88,6 +90,7 @@ def run(unused, verbose=False, **kwargs):
             kwargs["title"] = title
             pull = task.pull(branch, body=body, **kwargs)
             task.comment(pull, "Please comment on the upstream distro bug manually before accepting this pull request.\n\nIf you wish to keep this known issue open, then update it")
+
 
 if __name__ == '__main__':
     task.main(function=run, title="Close known issues")
