@@ -30,8 +30,7 @@ import sys
 import time
 import tempfile
 
-BOTS = os.path.abspath(os.path.dirname(__file__))
-BASE = os.path.normpath(os.path.join(BOTS, ".."))
+from machine.machine_core.directories import BOTS_DIR
 
 from machine import testvm
 
@@ -105,7 +104,7 @@ class MachineBuilder:
 
                 if self.machine.image == 'openshift':
                     # update our local openshift kube config file to match the new image
-                    self.machine.download("/root/.kube/config", os.path.join(BOTS, "images/files/openshift.kubeconfig"))
+                    self.machine.download("/root/.kube/config", os.path.join(BOTS_DIR, "images/files/openshift.kubeconfig"))
 
             except subprocess.CalledProcessError as ex:
                 if args.sit:
@@ -200,7 +199,7 @@ try:
         builder.save()
         if args.upload:
             print("Uploading...")
-            cmd = [os.path.join(BOTS, "image-upload")]
+            cmd = [os.path.join(BOTS_DIR, "image-upload")]
             if args.store:
                 cmd += ["--store", args.store]
             cmd += [args.image]

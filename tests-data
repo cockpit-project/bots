@@ -40,11 +40,12 @@ sys.dont_write_bytecode = True
 import task
 
 from machine import testvm
+from machine.machine_core.directories import BOTS_DIR
+
 
 # The number of days of previous closed pull requests to learn from
 SINCE_DAYS = 120
 
-BOTS = os.path.abspath(os.path.dirname(__file__))
 SEEDED = set()
 SINKS = {}
 
@@ -57,7 +58,7 @@ def run(filename, verbose=False, dry=False, **kwargs):
     if filename:
         if "/" not in filename and not os.path.exists(filename):
             if not dry:
-                subprocess.check_call([os.path.join(BOTS, "image-download"), "--state", filename])
+                subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), "--state", filename])
             filename = os.path.join(testvm.get_images_data_dir(), filename)
         (outfd, outname) = tempfile.mkstemp(prefix=os.path.basename(filename), dir=os.path.dirname(filename))
         os.close(outfd)
@@ -105,7 +106,7 @@ def run(filename, verbose=False, dry=False, **kwargs):
         os.rename(outname, filename)
 
     if not dry and outname and filename:
-        upload = [os.path.join(BOTS, "image-upload"), "--state", filename]
+        upload = [os.path.join(BOTS_DIR, "image-upload"), "--state", filename]
         subprocess.check_call(upload)
 
 

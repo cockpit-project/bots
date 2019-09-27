@@ -23,8 +23,10 @@ import sys
 import unittest
 
 BASE = os.path.dirname(__file__)
-BOTS = os.path.normpath(os.path.join(BASE, ".."))
-sys.path.insert(1, BOTS)
+sys.path.insert(1, os.path.join(BASE, ".."))
+
+from machine.machine_core.directories import BOTS_DIR
+
 
 PCP_CRASH = """
 # ----------------------------------------------------------------------
@@ -73,21 +75,21 @@ Journal extracted to TestMultiMachine-testFrameNavigation-fedora-i386-127.0.0.2-
 
 class TestPolicy(unittest.TestCase):
     def testSimpleNumber(self):
-        script = os.path.join(BOTS, "tests-policy")
+        script = os.path.join(BOTS_DIR, "tests-policy")
         cmd = [script, "--simple", "--offline", "verify/example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
         (output, unused) = proc.communicate(PCP_CRASH)
         self.assertEqual(output, "9876\n")
 
     def testScenario(self):
-        script = os.path.join(BOTS, "tests-policy")
+        script = os.path.join(BOTS_DIR, "tests-policy")
         cmd = [script, "--simple", "--offline", "verify/example/scen-one"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
         (output, unused) = proc.communicate(PCP_CRASH)
         self.assertEqual(output, "9876\n")
 
     def testKnownIssue(self):
-        script = os.path.join(BOTS, "tests-policy")
+        script = os.path.join(BOTS_DIR, "tests-policy")
         cmd = [script, "--offline", "verify/example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
         (output, unused) = proc.communicate(PCP_CRASH)

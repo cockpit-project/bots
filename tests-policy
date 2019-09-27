@@ -35,14 +35,15 @@ sys.dont_write_bytecode = True
 FLAKE_THRESHOLD = 0.4
 
 from task import github
+from machine.machine_core.directories import BOTS_DIR
+
+
 try:
     from machine.testvm import get_test_image
 except ImportError:
     # fallback for unit tests where libvirt is not available
     def get_test_image(i):
         return i
-
-BOTS = os.path.dirname(os.path.realpath(__file__))
 
 
 def main():
@@ -167,7 +168,7 @@ def guessFlake(output, context, verbose=False):
     flake = False
 
     url = "{0}://{1}:{2}/predict".format("https" if port == "443" else "http", host, port)
-    cafile = os.path.join(BOTS, "images", "files", "ca.pem")
+    cafile = os.path.join(BOTS_DIR, "images", "files", "ca.pem")
     context = ssl.create_default_context(cafile=cafile)
     jsonl = json.dumps(item) + "\n"
     try:
@@ -264,7 +265,7 @@ def normalize_traceback(trace):
 
 
 def check_known_issue(api, trace, image):
-    image_naughty = os.path.join(BOTS, "naughty", get_test_image(image))
+    image_naughty = os.path.join(BOTS_DIR, "naughty", get_test_image(image))
     if not os.path.exists(image_naughty):
         return None
 

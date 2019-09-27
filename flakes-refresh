@@ -29,7 +29,7 @@ sys.dont_write_bytecode = True
 
 import task
 
-BOTS = os.path.dirname(os.path.realpath(__file__))
+from machine.machine_core.directories import BOTS_DIR
 
 NUMBER_OPEN_ISSUES = 7            # How many issues do we want to have open at a given time?
 
@@ -110,7 +110,7 @@ def run(context, verbose=False, **kwargs):
     host = os.environ.get("COCKPIT_LEARN_SERVICE_HOST", "learn-cockpit.apps.ci.centos.org")
     port = os.environ.get("COCKPIT_LEARN_SERVICE_PORT", "443")
     url = "{0}://{1}:{2}/active/".format("https" if port == "443" else "http", host, port)
-    cafile = os.path.join(BOTS, "images", "files", "ca.pem")
+    cafile = os.path.join(BOTS_DIR, "images", "files", "ca.pem")
     context = ssl.create_default_context(cafile=cafile)
 
     failure_logs = slurp_failure_logs(url)
