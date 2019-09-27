@@ -139,61 +139,55 @@ class TestGitHub(unittest.TestCase):
     def setUp(self):
         self.child = mockServer()
         self.temp = tempfile.mkdtemp()
+        self.api = github.GitHub("http://127.0.0.8:9898/", cacher=cache.Cache(self.temp))
 
     def tearDown(self):
         mockKill(self.child)
         shutil.rmtree(self.temp)
 
     def testCache(self):
-        api = github.GitHub("http://127.0.0.8:9898", cacher=cache.Cache(self.temp))
-
-        values = api.get("/test/user")
-        cached = api.get("/test/user")
+        values = self.api.get("/test/user")
+        cached = self.api.get("/test/user")
         self.assertEqual(json.dumps(values), json.dumps(cached))
 
-        count = api.get("/count")
+        count = self.api.get("/count")
         self.assertEqual(count, 1)
 
     def testLog(self):
-        api = github.GitHub("http://127.0.0.8:9898", cacher=cache.Cache(self.temp))
-        api.log = TestLogger()
+        self.api.log = TestLogger()
 
-        api.get("/test/user")
-        api.cache.mark(time.time() + 1)
-        api.get("/test/user")
+        self.api.get("/test/user")
+        self.api.cache.mark(time.time() + 1)
+        self.api.get("/test/user")
 
         expect = '127.0.0.8:9898 - - * "GET /test/user HTTP/1.1" 200 -\n' + \
                  '127.0.0.8:9898 - - * "GET /test/user HTTP/1.1" 304 -\n'
 
-        match = fnmatch.fnmatch(api.log.data, expect)
+        match = fnmatch.fnmatch(self.api.log.data, expect)
         if not match:
-            self.fail("'{0}' did not match '{1}'".format(api.log.data, expect))
+            self.fail("'{0}' did not match '{1}'".format(self.api.log.data, expect))
 
     def testIssuesSince(self):
-        api = github.GitHub("http://127.0.0.8:9898/")
-        issues = api.issues(since=1499838499)
+        issues = self.api.issues(since=1499838499)
         self.assertEqual(len(issues), 1)
         self.assertEqual(issues[0]["number"], "7")
 
     def testWhitelist(self):
-        api = github.GitHub("http://127.0.0.8:9898/")
-        whitelist = api.whitelist()
+        whitelist = self.api.whitelist()
         self.assertTrue(len(whitelist) > 0)
         self.assertEqual(whitelist, set(["one", "two", "three"]))
         self.assertNotIn("four", whitelist)
         self.assertNotIn("", whitelist)
 
     def testTeamIdFromName(self):
-        api = github.GitHub("http://127.0.0.8:9898/")
-        self.assertEqual(api.teamIdFromName(github.TEAM_CONTRIBUTORS), 1)
-        self.assertEqual(api.teamIdFromName("Other team"), 2)
-        self.assertRaises(KeyError, api.teamIdFromName, "team that doesn't exist")
+        self.assertEqual(self.api.teamIdFromName(github.TEAM_CONTRIBUTORS), 1)
+        self.assertEqual(self.api.teamIdFromName("Other team"), 2)
+        self.assertRaises(KeyError, self.api.teamIdFromName, "team that doesn't exist")
 
     def testLastIssueDelete(self):
-        api = github.GitHub("http://127.0.0.8:9898/")
-        self.assertEqual(len(api.issues()), 2)
-        api.delete("/issues/7")
-        issues = api.issues()
+        self.assertEqual(len(self.api.issues()), 2)
+        self.api.delete("/issues/7")
+        issues = self.api.issues()
         self.assertEqual(len(issues), 1)
         self.assertEqual(issues[0]["number"], "5")
 
