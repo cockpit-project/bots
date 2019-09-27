@@ -28,16 +28,11 @@ sys.dont_write_bytecode = True
 
 from task import github
 from task import sink
-from machine.machine_core.directories import BOTS_DIR
+from machine.machine_core.directories import BASE_DIR
 
 
 HOSTNAME = socket.gethostname().split(".")[0]
 DEVNULL = open("/dev/null", "r+")
-
-if os.environ.get("TEST_PROJECT") == "cockpit-project/bots":
-    BASE = BOTS_DIR
-else:
-    BASE = os.path.dirname(BOTS_DIR)
 
 
 def main():
@@ -309,8 +304,8 @@ class PullTask(object):
 
         # Actually run the tests
         if not ret:
-            entry_point = os.path.join(BASE, ".cockpit-ci", "run")
-            alt_entry_point = os.path.join(BASE, "test", "run")
+            entry_point = os.path.join(BASE_DIR, ".cockpit-ci", "run")
+            alt_entry_point = os.path.join(BASE_DIR, "test", "run")
             if not os.path.exists(entry_point) and os.path.exists(alt_entry_point):
                 entry_point = alt_entry_point
             cmd = ["timeout", "120m", entry_point]

@@ -22,7 +22,10 @@ ATOMIC_IMAGES = ["rhel-atomic", "fedora-atomic", "continuous-atomic"]
 
 MACHINE_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 BOTS_DIR = os.path.dirname(MACHINE_DIR)
-BASE_DIR = os.path.dirname(BOTS_DIR)
+
+# bots always act on the project that is the current directory
+# FIXME: Get rid of these aliases and drop their usage everywhere, once that approach works
+BASE_DIR = os.getcwd()
 TEST_DIR = os.path.join(BASE_DIR, "test")
 GIT_DIR = os.path.join(BASE_DIR, ".git")
 
