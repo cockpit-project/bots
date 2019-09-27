@@ -29,8 +29,6 @@ __all__ = (
     'Sink',
 )
 
-BOTS = os.path.join(os.path.dirname(__file__), "..")
-
 
 class Sink(object):
     def __init__(self, host, identifier, status=None):

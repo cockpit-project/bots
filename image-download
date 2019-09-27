@@ -54,8 +54,6 @@ DEFAULT = [
     REDHAT_STORE
 ]
 
-BOTS = os.path.dirname(os.path.realpath(__file__))
-
 DEVNULL = open("/dev/null", "r+")
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
 
