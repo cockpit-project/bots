@@ -60,9 +60,6 @@ sys.dont_write_bytecode = True
 
 from task import github, redhat_network, distributed_queue, labels_of_pull
 
-BOTS = os.path.normpath(os.path.join(os.path.dirname(__file__)))
-BASE = os.path.normpath(os.path.join(BOTS, ".."))
-
 no_amqp = False
 try:
     import pika
