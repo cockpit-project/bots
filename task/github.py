@@ -56,7 +56,6 @@ NOT_TESTED_DIRECT = "Not yet tested (direct trigger)"
 
 ISSUE_TITLE_IMAGE_REFRESH = "Image refresh for {0}"
 
-BASE = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 TOKEN = "~/.config/github-token"
 
 TEAM_CONTRIBUTORS = "Contributors"

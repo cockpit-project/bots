@@ -36,12 +36,11 @@ import sys
 import urllib.parse
 
 from machine import testvm
-
-BOTS = os.path.dirname(__file__)
+from machine.machine_core.directories import BOTS_DIR
 
 
 def upload(store, source):
-    ca = os.path.join(BOTS, "images", "files", "ca.pem")
+    ca = os.path.join(BOTS_DIR, "images", "files", "ca.pem")
     url = urllib.parse.urlparse(store)
 
     # Start building the command

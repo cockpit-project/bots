@@ -28,15 +28,16 @@ sys.dont_write_bytecode = True
 
 from task import github
 from task import sink
+from machine.machine_core.directories import BOTS_DIR
+
 
 HOSTNAME = socket.gethostname().split(".")[0]
-BOTS = os.path.abspath(os.path.dirname(__file__))
 DEVNULL = open("/dev/null", "r+")
 
 if os.environ.get("TEST_PROJECT") == "cockpit-project/bots":
-    BASE = BOTS
+    BASE = BOTS_DIR
 else:
-    BASE = os.path.dirname(BOTS)
+    BASE = os.path.dirname(BOTS_DIR)
 
 
 def main():

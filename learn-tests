@@ -38,8 +38,7 @@ sys.dont_write_bytecode = True
 import task
 
 from machine import testvm
-
-BOTS = os.path.dirname(os.path.realpath(__file__))
+from machine.machine_core.directories import BOTS_DIR
 
 
 def run(url_or_file, verbose=False, dry=False, **kwargs):
@@ -60,7 +59,7 @@ def run(url_or_file, verbose=False, dry=False, **kwargs):
 
     if "/" not in filename and not os.path.exists(filename):
         if not dry:
-            subprocess.check_call([os.path.join(BOTS, "image-download"), "--state", filename])
+            subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), "--state", filename])
         filename = os.path.join(testvm.get_images_data_dir(), filename)
     train(filename, url, verbose)
 
@@ -76,7 +75,7 @@ def tail(url, until, verbose=False):
 
         try:
             req = urllib.request.Request(url, headers={"Range": "bytes={0}-".format(at)})
-            cafile = os.path.join(BOTS, "images", "files", "ca.pem")
+            cafile = os.path.join(BOTS_DIR, "images", "files", "ca.pem")
             context = ssl.create_default_context(cafile=cafile)
             with urllib.request.urlopen(req, context=context) as f:
                 while True:
@@ -103,7 +102,7 @@ def train(filename, url, verbose=False):
     if verbose:
         sys.stderr.write(" ^ {0}\n".format(url))
 
-    cmd = [os.path.join(BOTS, "image-upload"), "--state", filename, "--store", url]
+    cmd = [os.path.join(BOTS_DIR, "image-upload"), "--state", filename, "--store", url]
 
     # Passing through a non terminal stdout is necessary to make progress work
     subprocess.check_call(cmd)
@@ -112,7 +111,7 @@ def train(filename, url, verbose=False):
     def until():
         try:
             req = urllib.request.Request(url, method="HEAD")
-            with urllib.request.urlopen(req, cafile=os.path.join(BOTS, "images", "files", "ca.pem")) as f:
+            with urllib.request.urlopen(req, cafile=os.path.join(BOTS_DIR, "images", "files", "ca.pem")) as f:
                 f.read()
         except urllib.error.HTTPError as ex:
             if ex.code == 404:

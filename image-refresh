@@ -24,6 +24,8 @@ import sys
 import task
 from task import github, REDHAT_STORE
 
+from machine.machine_core.directories import BOTS_DIR
+
 TRIGGERS = {
     "centos-7": [
         "centos-7@cockpit-project/starter-kit",
@@ -129,9 +131,6 @@ STORES = {
     "windows-10": REDHAT_STORE,
 }
 
-BOTS = os.path.abspath(os.path.dirname(__file__))
-BASE = os.path.normpath(os.path.join(BOTS, ".."))
-
 sys.dont_write_bytecode = True
 
 
@@ -143,9 +142,9 @@ def run(image, verbose=False, **kwargs):
     store = STORES.get(image, None)
 
     # Cleanup any extraneous disk usage elsewhere
-    subprocess.check_call([os.path.join(BOTS, "vm-reset")])
+    subprocess.check_call([os.path.join(BOTS_DIR, "vm-reset")])
 
-    cmd = [os.path.join(BOTS, "image-create"), "--verbose", "--upload"]
+    cmd = [os.path.join(BOTS_DIR, "image-create"), "--verbose", "--upload"]
     if store:
         cmd += ["--store", store]
     cmd += [image]

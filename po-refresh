@@ -25,13 +25,11 @@ import sys
 sys.dont_write_bytecode = True
 
 import task
-
-BOTS = os.path.abspath(os.path.dirname(__file__))
-BASE = os.path.normpath(os.path.join(BOTS, ".."))
+from machine.machine_core.directories import BASE_DIR
 
 
 def run(context, verbose=False, **kwargs):
-    cwd = BASE
+    cwd = BASE_DIR
 
     def output(*args):
         if verbose:

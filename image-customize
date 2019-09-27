@@ -22,10 +22,8 @@ import re
 import sys
 import subprocess
 
-BOTS = os.path.abspath(os.path.dirname(__file__))
-BASE = os.path.normpath(os.path.join(BOTS, ".."))
-TEST = os.path.join(BASE, "test")
-os.environ["PATH"] = "{0}:{1}".format(os.environ.get("PATH"), BOTS)
+from machine.machine_core.constants import BOTS_DIR, TEST_DIR
+os.environ["PATH"] = "{0}:{1}".format(os.environ.get("PATH"), BOTS_DIR)
 
 from machine import testvm
 
@@ -60,7 +58,7 @@ def prepare_install_image(base_image, install_image):
     if "/" not in base_image:
         base_image = os.path.join(testvm.IMAGES_DIR, base_image)
     if "/" not in install_image:
-        install_image = os.path.join(os.path.join(TEST, "images"), os.path.basename(install_image))
+        install_image = os.path.join(os.path.join(TEST_DIR, "images"), os.path.basename(install_image))
 
     # In vm-customize we don't force recreate images
     if not os.path.exists(install_image):
