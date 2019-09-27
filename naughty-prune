@@ -22,7 +22,6 @@
 #  * [ ] naughty-prune
 #
 
-import os
 import sys
 import subprocess
 import time
@@ -30,6 +29,7 @@ import time
 sys.dont_write_bytecode = True
 
 import task
+from machine.machine_core.directories import BASE_DIR
 
 # Number of days after which a known issue is treated as stale
 DAYS = 21
@@ -37,14 +37,11 @@ DAYS = 21
 # In case this ever changes
 SECONDS_PER_DAY = 3600 * 24
 
-BOTS = os.path.abspath(os.path.dirname(__file__))
-BASE = os.path.normpath(os.path.join(BOTS, ".."))
-
 
 def execute(*args):
     if task.verbose:
         sys.stderr.write("+ " + " ".join(args) + "\n")
-    return subprocess.check_output(args, cwd=BASE, universal_newlines=True)
+    return subprocess.check_output(args, cwd=BASE_DIR, universal_newlines=True)
 
 
 def run(unused, verbose=False, **kwargs):

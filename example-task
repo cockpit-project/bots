@@ -22,7 +22,6 @@
 #  * [ ] example-bot 20
 #
 
-import os
 import sys
 import time
 
@@ -30,8 +29,7 @@ sys.dont_write_bytecode = True
 
 import task
 
-BOTS = os.path.abspath(os.path.dirname(__file__))
-BASE = os.path.normpath(os.path.join(BOTS, ".."))
+# from machine.machine_core.directories import BOTS_DIR, BASE_DIR
 
 
 def run(argument, verbose=False, **kwargs):

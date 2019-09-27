@@ -31,8 +31,7 @@ from contextlib import contextmanager
 from task import github
 
 from machine import testvm
-
-BOTS = os.path.dirname(os.path.realpath(__file__))
+from machine.machine_core.directories import BASE_DIR
 
 # threshold in G below which unreferenced qcow2 images will be pruned, even if they aren't old
 PRUNE_THRESHOLD_G = float(os.environ.get("PRUNE_THRESHOLD_G", 15))
@@ -129,7 +128,7 @@ def get_image_names(quiet=False, open_pull_requests=True, offline=False):
     # iterate over visible refs (mostly branches)
     # this hinges on being in the top level directory of the the git checkout
     with remember_cwd():
-        os.chdir(os.path.join(BOTS, ".."))
+        os.chdir(BASE_DIR)
         (refs, considerable) = get_refs(open_pull_requests, offline)
         # list images present in each branch / pull request
         for name, ref in refs.items():

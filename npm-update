@@ -42,13 +42,11 @@ import subprocess
 sys.dont_write_bytecode = True
 
 import task
-
-BOTS = os.path.abspath(os.path.dirname(__file__))
-BASE = os.path.normpath(os.path.join(BOTS, ".."))
+from machine.machine_core.directories import BASE_DIR
 
 
 def package_json(data=None, package=None, version=None):
-    package_path = os.path.join(BASE, "package.json")
+    package_path = os.path.join(BASE_DIR, "package.json")
     if data is None:
         with open(package_path, "r") as f:
             return json.load(f, object_pairs_hook=collections.OrderedDict)
@@ -70,13 +68,13 @@ def map_dict(dependencies, function):
 def execute(*args):
     if task.verbose:
         sys.stderr.write("+ " + " ".join(args) + "\n")
-    subprocess.check_call(args, cwd=BASE)
+    subprocess.check_call(args, cwd=BASE_DIR)
 
 
 def output(*args):
     if task.verbose:
         sys.stderr.write("+ " + " ".join(args) + "\n")
-    return subprocess.check_output(args, cwd=BASE, universal_newlines=True)
+    return subprocess.check_output(args, cwd=BASE_DIR, universal_newlines=True)
 
 
 def run(specified_package, verbose=False, **kwargs):

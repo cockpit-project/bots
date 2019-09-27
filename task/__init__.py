@@ -35,6 +35,8 @@ sys.dont_write_bytecode = True
 
 from . import github
 from . import sink
+from machine.machine_core.directories import BASE_DIR
+
 
 __all__ = (
     "api",
@@ -56,8 +58,6 @@ REDHAT_STORE = "https://cockpit-11.e2e.bos.redhat.com:8493"
 api = github.GitHub()
 verbose = False
 
-BOTS = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
-BASE = BOTS if api.repo == "cockpit-project/bots" else os.path.normpath(os.path.join(BOTS, ".."))
 
 #
 # The main function takes a list of tasks, each of wihch has the following
@@ -293,7 +293,7 @@ def stale(days, pathspec, ref="HEAD"):
     def execute(*args):
         if verbose:
             sys.stderr.write("+ " + " ".join(args) + "\n")
-        output = subprocess.check_output(args, cwd=BASE, universal_newlines=True)
+        output = subprocess.check_output(args, cwd=BASE_DIR, universal_newlines=True)
         if verbose:
             sys.stderr.write("> " + output + "\n")
         return output
@@ -350,7 +350,7 @@ def execute(*args):
     # No prompting for passwords
     if "GIT_ASKPASS" not in env:
         env["GIT_ASKPASS"] = "/bin/true"
-    output = subprocess.check_output(args, cwd=BASE, stderr=subprocess.STDOUT, env=env, universal_newlines=True)
+    output = subprocess.check_output(args, cwd=BASE_DIR, stderr=subprocess.STDOUT, env=env, universal_newlines=True)
     sys.stderr.write(censored(output))
     return output
 
