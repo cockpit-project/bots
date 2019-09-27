@@ -183,12 +183,18 @@ def output_task(command, issue, repo, verbose):
     checkout = "PRIORITY={priority:04d} "
     cmd = "bots/{name} --verbose --issue='{issue}' {context}"
 
+    # when working on bots, don't check out bots into itself
+    if repo == "cockpit-project/bots":
+        bots_ref = ""
+    else:
+        bots_ref = "--bots-ref master"
+
     # `--issues-data` should also be able to receive pull_request events, in that
     # case pull_request won't be present in the object, but commits will be
     if "pull_request" in issue or "commits" in issue:
-        checkout += "bots/make-checkout --verbose --bots-ref master --repo {repo} pull/{issue}/head && "
+        checkout += "bots/make-checkout --verbose {bots_ref} --repo {repo} pull/{issue}/head && "
     else:
-        checkout += "bots/make-checkout --verbose --bots-ref master --repo {repo} master && "
+        checkout += "bots/make-checkout --verbose {bots_ref} --repo {repo} master && "
 
     if verbose:
         return "issue-{issue} {name} {context}    {priority}".format(
@@ -206,6 +212,7 @@ def output_task(command, issue, repo, verbose):
             name=name,
             context=context,
             repo=repo,
+            bots_ref=bots_ref,
         )
 
 
