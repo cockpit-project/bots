@@ -186,9 +186,9 @@ def output_task(command, issue, repo, verbose):
     # `--issues-data` should also be able to receive pull_request events, in that
     # case pull_request won't be present in the object, but commits will be
     if "pull_request" in issue or "commits" in issue:
-        checkout += "bots/make-checkout --verbose --repo {repo} pull/{issue}/head && "
+        checkout += "bots/make-checkout --verbose --bots-ref master --repo {repo} pull/{issue}/head && "
     else:
-        checkout += "bots/make-checkout --verbose --repo {repo} master && "
+        checkout += "bots/make-checkout --verbose --bots-ref master --repo {repo} master && "
 
     if verbose:
         return "issue-{issue} {name} {context}    {priority}".format(
