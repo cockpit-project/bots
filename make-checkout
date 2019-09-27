@@ -73,9 +73,6 @@ def main():
     # get bots/
     bots_clone_dir = os.path.join(TARGET_DIR, "bots")
     if opts.bots_ref:
-        # TODO: remove this when cockpit-project/cockpit#12872 has landed
-        if os.path.exists(bots_clone_dir):
-            shutil.rmtree(bots_clone_dir)
         execute("git", "clone", "--reference-if-able", "{}/{}".format(cache, "cockpit-project/bots"), "https://github.com/cockpit-project/bots", bots_clone_dir, cwd=TARGET_DIR)
         execute("git", "fetch", "--depth=1", "origin", opts.bots_ref or "master", cwd=bots_clone_dir)
         bots_ref = execute("git", "rev-parse", "FETCH_HEAD", cwd=bots_clone_dir).strip()
