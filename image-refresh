@@ -139,6 +139,7 @@ def run(image, verbose=False, **kwargs):
         raise RuntimeError("no image specified")
 
     triggers = TRIGGERS.get(image, [])
+    triggers.append("host")
     store = STORES.get(image, None)
 
     # Cleanup any extraneous disk usage elsewhere
