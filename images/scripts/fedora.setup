@@ -22,6 +22,9 @@ if [ "$IMAGE" != fedora-31 ]; then
 fi
 df -h /
 
+# make libpwquality less aggressive, so that our "foobar" password works
+printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
+
 echo foobar | passwd --stdin root
 
 HAVE_KUBERNETES=
