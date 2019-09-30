@@ -6,3 +6,6 @@ set -e
 
 # HACK: https://bugs.debian.org/914694
 sed -i '/IndividualCalls/ s/=no/=yes/' /etc/firewalld/firewalld.conf
+
+# make libpwquality less aggressive, so that our "foobar" password works
+printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
