@@ -156,7 +156,7 @@ def run(image, verbose=False, **kwargs):
 
     branch = task.branch(image, "images: Update {0} image".format(image), pathspec="images", **kwargs)
     if branch:
-        pull = task.pull(branch, labels=['bot', 'no-test'], run_tests=False, **kwargs)
+        pull = task.pull(branch, labels=['bot'], **kwargs)
 
         # Trigger this pull request
         api = github.GitHub()
