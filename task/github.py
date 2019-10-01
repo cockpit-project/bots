@@ -375,7 +375,10 @@ class GitHub(object):
                 count += 1
 
     def whitelist(self):
-        users = set()
+        # organizations which are allowed to use our CI (these use branches within the main repo for PRs)
+        users = {"candlepin"}
+
+        # individual persons from https://github.com/orgs/cockpit-project/teams/contributors/members
         teamId = self.teamIdFromName(TEAM_CONTRIBUTORS)
         page = 1
         count = 100

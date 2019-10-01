@@ -175,7 +175,7 @@ class TestGitHub(unittest.TestCase):
     def testWhitelist(self):
         whitelist = self.api.whitelist()
         self.assertTrue(len(whitelist) > 0)
-        self.assertEqual(whitelist, set(["one", "two", "three"]))
+        self.assertEqual(whitelist, set(["one", "two", "three", "candlepin"]))
         self.assertNotIn("four", whitelist)
         self.assertNotIn("", whitelist)
 
