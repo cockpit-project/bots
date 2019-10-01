@@ -58,12 +58,7 @@ def main():
     parser.add_argument('context', help="The image to check against")
     opts = parser.parse_args()
 
-    base = None
-    if os.environ.get("GITHUB_KNOWN_ISSUE_BASE"):
-        netloc = os.environ.get("GITHUB_API", "https://api.github.com")
-        base = "{0}/repos/{1}/".format(netloc, os.environ.get("GITHUB_KNOWN_ISSUE_BASE"))
-
-    api = None if opts.offline else github.GitHub(base=base)
+    api = None if opts.offline else github.GitHub(repo="cockpit-project/bots")
 
     context = opts.context
     if "/" not in context:
