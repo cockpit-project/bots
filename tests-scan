@@ -151,7 +151,6 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
     if base:
         if base != ref:
             cmd += " --rebase={base}"
-        checkout += " --base={base}"
 
     checkout += " --repo={repo}"
 
