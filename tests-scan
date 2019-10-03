@@ -19,7 +19,7 @@
 
 # Random extra options for tests-invoke
 REPO_EXTRA_INVOKE_OPTIONS = {
-    'mvollmer/subscription-manager': ["--html-logs"]
+    'candlepin/subscription-manager': ["--html-logs"]
 }
 
 import argparse
