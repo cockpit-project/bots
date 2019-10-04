@@ -101,10 +101,10 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-7/azure',
             'rhel-7-7/openstack',
             'rhel-7-7/vmware',
+            'rhel-7-7/tar',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'rhel-7-7/tar',
         ],
     },
     'weldr/cockpit-composer': {
