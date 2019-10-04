@@ -121,11 +121,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-0/edge',
         ],
     },
-    'mvollmer/subscription-manager': {
-        'master': [
-            'rhel-8-1',
-        ],
-    },
     'candlepin/subscription-manager': {
         'master': [
             'rhel-8-1',
