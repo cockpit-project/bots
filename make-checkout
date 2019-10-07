@@ -23,14 +23,14 @@ import shutil
 import subprocess
 import sys
 from task import github
-from machine.machine_core.directories import BOTS_DIR, BASE_DIR
+from machine.machine_core.directories import BASE_DIR
 
 sys.dont_write_bytecode = True
 
 # Check out the given ref and if necessary overlay the bots
 # directory on top of it as expected on non-master branches
 
-TARGET_DIR = os.path.realpath(os.path.join(BOTS_DIR, "make-checkout-workdir"))
+TARGET_DIR = "make-checkout-workdir"
 
 
 def main():
@@ -71,7 +71,7 @@ def main():
     # get bots/
     bots_clone_dir = os.path.join(TARGET_DIR, "bots")
     if opts.bots_ref:
-        execute("git", "clone", "--reference-if-able", "{}/{}".format(cache, "cockpit-project/bots"), "https://github.com/cockpit-project/bots", bots_clone_dir, cwd=TARGET_DIR)
+        execute("git", "clone", "--reference-if-able", "{}/{}".format(cache, "cockpit-project/bots"), "https://github.com/cockpit-project/bots", bots_clone_dir)
         execute("git", "fetch", "--depth=1", "origin", opts.bots_ref or "master", cwd=bots_clone_dir)
         bots_ref = execute("git", "rev-parse", "FETCH_HEAD", cwd=bots_clone_dir).strip()
         execute("git", "checkout", "--force", bots_ref or "bots_origin/master", cwd=bots_clone_dir, error_on_fail=False)

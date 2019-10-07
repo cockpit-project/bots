@@ -146,7 +146,7 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
         return
     current = time.strftime('%Y%m%d-%H%M%M')
 
-    checkout = "PRIORITY={priority:04d} bots/make-checkout --verbose"
+    checkout = "PRIORITY={priority:04d} ./make-checkout --verbose"
     cmd = "TEST_PROJECT={repo} TEST_NAME={name}-{current} TEST_REVISION={revision} bots/tests-invoke --pull-number={pull_number} "
     if base:
         if base != ref:
@@ -176,7 +176,7 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
         # we are testing the repo itself, checkout revision from the PR
         checkout += " {ref} {revision} && "
 
-    return (checkout + "cd bots/make-checkout-workdir && " + cmd + " ; cd ../..").format(
+    return (checkout + "cd make-checkout-workdir && " + cmd + " ; cd ..").format(
         priority=priority,
         name=pipes.quote(name),
         revision=pipes.quote(revision),
