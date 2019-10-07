@@ -28,10 +28,6 @@ NAMES = [
     "flakes-refresh",
 ]
 
-KVM_TASKS = [
-    "image-refresh"
-]
-
 # RHEL tasks have to be done inside Red Hat network
 REDHAT_TASKS = [
     "rhel",
@@ -52,7 +48,6 @@ REDHAT_CREDS = "~/.rhel/login"
 
 import argparse
 import pipes
-import os
 import sys
 import json
 
@@ -80,10 +75,6 @@ def main():
     if opts.amqp and no_amqp:
         parser.error("AMQP host:port specified but python-amqp not available")
 
-    kvm = os.access("/dev/kvm", os.R_OK | os.W_OK)
-    if not kvm:
-        sys.stderr.write("issue-scan: No /dev/kvm access, not creating images here\n")
-
     # Figure if we're in a Kubernetes namespace. This file will always exist
     try:
         with open("/var/run/secrets/kubernetes.io/serviceaccount/namespace", "r") as f:
@@ -97,9 +88,6 @@ def main():
                 queue_task(q.channel, result)
             continue
 
-        if not kvm and contains_any(result, KVM_TASKS):
-            sys.stderr.write("issue-scan: skipping (no kvm): {0}\n".format(result))
-            continue
         elif not redhat_network() and contains_any(result, REDHAT_TASKS):
             sys.stderr.write("issue-scan: skipping (outside redhat): {0}\n".format(result))
             continue
