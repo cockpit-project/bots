@@ -147,15 +147,12 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
     current = time.strftime('%Y%m%d-%H%M%M')
 
     checkout = "PRIORITY={priority:04d} ./make-checkout --verbose"
-    cmd = "TEST_PROJECT={repo} TEST_NAME={name}-{current} TEST_REVISION={revision} bots/tests-invoke --pull-number={pull_number} "
+    cmd = "TEST_PROJECT={repo} TEST_NAME={name}-{current} TEST_REVISION={revision} ../tests-invoke --pull-number={pull_number} "
     if base:
         if base != ref:
             cmd += " --rebase={base}"
 
     checkout += " --repo={repo}"
-
-    if bots_ref:
-        checkout += " --bots-ref={bots_ref}"
 
     # The repo of this test differs from the PR's repo
     if options.repo != repo:
@@ -172,6 +169,7 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
     if bots_ref:
         # we are checking the external repo on a cockpit PR, so stay on the project's master
         checkout += " {ref} && "
+        cmd = "COCKPIT_BOTS_REF={bots_ref} " + cmd
     else:
         # we are testing the repo itself, checkout revision from the PR
         checkout += " {ref} {revision} && "
