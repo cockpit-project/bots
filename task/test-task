@@ -20,7 +20,6 @@
 ADDRESS = ("127.0.0.9", 9898)
 
 import ctypes
-import imp
 import json
 import os
 import signal
@@ -29,11 +28,11 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-BASE = os.path.dirname(__file__)
+import task
+
 os.environ["GITHUB_API"] = "http://127.0.0.9:9898"
 os.environ["GITHUB_BASE"] = "project/repo"
 
-task = imp.load_source("task", os.path.join(BASE, "__init__.py"))
 
 DATA = {
     "/repos/project/repo/issues/3333": {

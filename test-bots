@@ -18,10 +18,11 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import glob
-import imp
 import os
 import sys
 import unittest
+
+from importlib.machinery import SourceFileLoader
 
 sys.dont_write_bytecode = True
 
@@ -34,7 +35,7 @@ def main():
     for filename in glob.glob(os.path.join(BOTS_DIR, "task", "test-*")):
         name = os.path.basename(filename)
         sys.path[0] = os.path.dirname(filename)
-        module = imp.load_source(name.replace("-", "_"), filename)
+        module = SourceFileLoader(name.replace("-", "_"), filename).load_module()
         suite.addTest(loader.loadTestsFromModule(module))
 
     runner = unittest.TextTestRunner()
