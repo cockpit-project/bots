@@ -23,7 +23,6 @@ REPO_EXTRA_INVOKE_OPTIONS = {
 }
 
 import argparse
-import os
 import json
 import pipes
 import sys
@@ -415,11 +414,6 @@ def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sh
 
 
 def scan_for_pull_tasks(api, policy, opts, repo):
-    kvm = os.access("/dev/kvm", os.R_OK | os.W_OK)
-    if not kvm:
-        logging.error("tests-scan: No /dev/kvm access, not running tests here")
-        return []
-
     results = cockpit_tasks(api, not opts.dry, policy, repo, opts.pull_data, opts.pull_number, opts.sha, opts.amqp)
 
     if opts.human_readable:
