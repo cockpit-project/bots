@@ -13,5 +13,5 @@
 
 set -ex
 
-bots/image-trigger
-bots/naughty-trigger
+./image-trigger
+./naughty-trigger
