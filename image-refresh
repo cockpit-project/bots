@@ -32,7 +32,7 @@ TRIGGERS = {
     ],
     "continuous-atomic": [
         "continuous-atomic@cockpit-project/cockpit-ostree",
-        "continuous-atomic@cockpit-project/cockpit/rhel-7.7",
+        "continuous-atomic@cockpit-project/cockpit/rhel-7.8",
     ],
     "debian-testing": [
         "debian-testing@cockpit-project/cockpit"
@@ -80,7 +80,6 @@ TRIGGERS = {
         "ubuntu-stable@cockpit-project/cockpit"
     ],
     "openshift": [
-        "rhel-7-7@cockpit-project/cockpit/rhel-7.7",
         "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
     ],
     "ipa": [
@@ -118,7 +117,7 @@ TRIGGERS = {
     ],
     "rhel-atomic": [
         "rhel-atomic@cockpit-project/cockpit-ostree",
-        "rhel-atomic@cockpit-project/cockpit/rhel-7.7",
+        "rhel-atomic@cockpit-project/cockpit/rhel-7.8",
     ]
 }
 
