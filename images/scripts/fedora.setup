@@ -8,7 +8,7 @@ unset LANGUAGE
 unset LANG
 export LC_ALL=C.utf8
 
-# keep this in sync with avocado/selenium image mapping in bots/tests-invoke
+# keep this in sync with avocado/selenium image mapping in tests-invoke
 if [ "$IMAGE" = fedora-30 ]; then
     AVOCADO=1
 fi

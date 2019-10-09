@@ -92,7 +92,7 @@ def main():
         results = scan_for_pull_tasks(api, policy, opts, opts.repo)
 
         # When run from c-p/bots checkout without PR number or PR data we want to scan also all
-        # external projects. E.g. `bots/tests-scan` in c-p/b checkout will scan all projects
+        # external projects. E.g. `./tests-scan` in c-p/b checkout will scan all projects
         if opts.repo == "cockpit-project/bots" and not opts.pull_data and not opts.pull_number:
             results += scan_external_projects(opts)
     except RuntimeError as ex:

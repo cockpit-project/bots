@@ -7,7 +7,7 @@ releasing Cockpit and more.
 ## Images
 
 In order to test Cockpit-related projects, they are staged into an operating
-system image. These images are tracked in the ```bots/images``` directory.
+system image. These images are tracked in the ```images``` directory.
 
 These well known image names are expected to contain no ```.```
 characters and have no file name extension.
@@ -19,13 +19,11 @@ For managing these images:
  * image-create: Create test machine images
  * image-customize: Generic tool to install packages, upload files, or run
    commands in a test machine image
- * image-prepare: Build and install Cockpit packages into a test machine image
-   (specific to the cockpit project itself, thus it is in test/, not bots/)
 
 For debugging the images:
 
- * bots/vm-run: Run a test machine image
- * bots/vm-reset: Remove all overlays from image-customize, image-prepare, etc
+ * ./vm-run: Run a test machine image
+ * ./vm-reset: Remove all overlays from image-customize, image-prepare, etc
    from test/images/
 
 In case of `qemu-system-x86_64: -netdev bridge,br=cockpit1,id=bridge0: bridge helper failed`
@@ -34,7 +32,7 @@ error, please [allow][1] `qemu-bridge-helper` to access the bridge settings.
 To check when images will automatically be refreshed by the bots
 use the image-trigger tool:
 
-    $ bots/image-trigger -vd
+    $ ./image-trigger -vd
 
 ## Tests
 
@@ -42,7 +40,7 @@ The bots automatically run the tests as needed on pull requests
 and branches. To check when and where tests will be run, use the
 tests-scan tool:
 
-    $ bots/tests-scan -vd
+    $ ./tests-scan -vd
 
 #### Note on eslintrc interaction
 
@@ -71,18 +69,22 @@ encompass public_repo (or repo if you're accessing a private repo).
 
 ### Retrying a failed test
 
-If you want to run the "verify/fedora-atomic" testsuite again for pull
-request #1234, run tests-trigger like so:
+If you want to run the "fedora-atomic" testsuite again for pull
+request #1234 of cockpit-project/cockpit, run tests-trigger like so:
 
-    $ bots/tests-trigger 1234 verify/fedora-atomic
+    $ ./tests-trigger --repo cockpit-project/cockpit 1234 fedora-atomic
+
+You can also invoke bots/tests/trigger from any project checkout, in which case
+you don't need the explicit `--repo` -- it will default to the GitHub origin of
+the current directory's project.
 
 ### Testing a pull request by a non-whitelisted user
 
 If you want to run all tests on pull request #1234 that has been
 opened by someone who is not in our white-list, run tests-trigger
-like so:
+with `-f`:
 
-    $ bots/tests-trigger -f 1234
+    $ ./tests-trigger -f [...]
 
 Of course, you should make sure that the pull request is proper and
 doesn't execute evil code during tests.
@@ -95,7 +97,7 @@ last refresh has failed, the machines wait one week before trying again.
 If you want the machines to refresh the fedora-atomic image immediately,
 run image-trigger like so:
 
-    $ bots/image-trigger fedora-atomic
+    $ ./image-trigger fedora-atomic
 
 ### Creating new images for a pull request
 

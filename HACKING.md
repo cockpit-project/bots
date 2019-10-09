@@ -20,8 +20,7 @@ first items in the list is executed.
 
 ## The bots themselves
 
-Most bots are python scripts. They live in this `bots/` directory. Shared code
-is in the `bots/tasks` directory.
+Most bots are python scripts. Shared code is in the tasks/ directory.
 
 ## Bots filing issues
 
@@ -29,8 +28,8 @@ Many bots file or work with issues in GitHub repository. We can use issues to te
 bots what to do. Often certan bots will just file issues for tasks that are outstanding.
 And in many cases other bots will then perform those tasks.
 
-These bots are listed in the `bots/issue-scan` file. They are written using the
-`bots/tasks/__init__.py` code, and you can see `bots/example-task` for an
+These bots are listed in the `./issue-scan` file. They are written using the
+`tasks/__init__.py` code, and you can see `example-task` for an
 example of one.
 
 ## Bots printing output
