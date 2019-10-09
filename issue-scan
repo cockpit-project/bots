@@ -166,13 +166,14 @@ def output_task(command, issue, repo, verbose):
 
     context = context.strip()
     checkout = "PRIORITY={priority:04d} "
-    cmd = "bots/{name} --verbose --issue='{issue}' {context}"
 
-    # when working on bots, don't check out bots into itself
+    # when working on bots, don't check out bots into itself, and run from project root
     if repo == "cockpit-project/bots":
         bots_ref = ""
+        cmd = "./{name} --verbose --issue='{issue}' {context}"
     else:
         bots_ref = "--bots-ref master"
+        cmd = "bots/{name} --verbose --issue='{issue}' {context}"
 
     # `--issues-data` should also be able to receive pull_request events, in that
     # case pull_request won't be present in the object, but commits will be
