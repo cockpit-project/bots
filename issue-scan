@@ -167,20 +167,19 @@ def output_task(command, issue, repo, verbose):
     context = context.strip()
     checkout = "PRIORITY={priority:04d} "
 
-    # when working on bots, don't check out bots into itself, and run from project root
     if repo == "cockpit-project/bots":
-        bots_ref = ""
+        # when working on bots run from project root
         cmd = "./{name} --verbose --issue='{issue}' {context}"
     else:
-        bots_ref = "--bots-ref master"
-        cmd = "bots/{name} --verbose --issue='{issue}' {context}"
+        # for external projects, nothing checks out bots/ subdir for them, so do it here
+        cmd = "git clone .. bots && bots/{name} --verbose --issue='{issue}' {context}"
 
     # `--issues-data` should also be able to receive pull_request events, in that
     # case pull_request won't be present in the object, but commits will be
     if "pull_request" in issue or "commits" in issue:
-        checkout += "./make-checkout --verbose {bots_ref} --repo {repo} pull/{issue}/head && "
+        checkout += "./make-checkout --verbose --repo {repo} pull/{issue}/head && "
     else:
-        checkout += "./make-checkout --verbose {bots_ref} --repo {repo} master && "
+        checkout += "./make-checkout --verbose --repo {repo} master && "
 
     if verbose:
         return "issue-{issue} {name} {context}    {priority}".format(
@@ -198,7 +197,6 @@ def output_task(command, issue, repo, verbose):
             name=name,
             context=context,
             repo=repo,
-            bots_ref=bots_ref,
         )
 
 
