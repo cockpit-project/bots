@@ -55,6 +55,9 @@ def main():
     # TEST_BRANCH would be `rhel-8.0`
     test_branch = os.environ.get("TEST_BRANCH")
 
+    if opts.publish and not revision:
+        parser.error("TEST_REVISION is required for proper publishing")
+
     try:
         task = PullTask(name, revision, opts.context, opts.rebase,
                         test_project=test_project, test_branch=test_branch)
@@ -242,16 +245,11 @@ class PullTask(object):
             self.start_publishing(opts.publish)
             os.environ["TEST_ATTACHMENTS"] = self.sink.attachments
 
-        head = subprocess.check_output(["git", "rev-parse", "HEAD"], universal_newlines=True).strip()
-        if not self.revision:
-            self.revision = head
-
         # Retrieve information about our base branch and master (for bots/)
         if self.base and not opts.offline:
             subprocess.check_call(["git", "fetch", "origin", self.base, "master"])
 
         os.environ["TEST_NAME"] = self.name
-        os.environ["TEST_REVISION"] = self.revision
 
         # Split OS and potential scenario
         (image, _, scenario) = self.context.partition("/")
