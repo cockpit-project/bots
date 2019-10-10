@@ -199,9 +199,6 @@ class PullTask(object):
                                              universal_newlines=True).strip()
             status["base"] = commit
 
-        if not self.base:
-            status['irc'] = {}    # Only send to IRC when master
-
         # For other scripts to use
         os.environ["TEST_DESCRIPTION"] = description
         self.sink = sink.Sink(host, identifier, status)
@@ -229,8 +226,6 @@ class PullTask(object):
         def mark_failed():
             if "github" in sink.status:
                 self.github_status_data["state"] = "failure"
-            if "irc" in sink.status:  # Never send success messages to IRC
-                sink.status["irc"]["channel"] = "#cockpit"
 
         def mark_passed():
             if "github" in sink.status:
