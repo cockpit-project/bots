@@ -177,13 +177,6 @@ class PullTask(object):
         status["link"] = "log.html"
         status["extras"] = ["https://raw.githubusercontent.com/cockpit-project/bots/master/task/log.html"]
 
-        # Include information about which base we're testing against
-        if self.base:
-            subprocess.check_call(["git", "fetch", "origin", self.base])
-            commit = subprocess.check_output(["git", "rev-parse", "origin/" + self.base],
-                                             universal_newlines=True).strip()
-            status["base"] = commit
-
         # For other scripts to use
         os.environ["TEST_DESCRIPTION"] = description
         self.sink = sink.Sink(host, identifier, status)
