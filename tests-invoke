@@ -272,9 +272,6 @@ class PullTask(object):
         if self.base and not opts.offline:
             subprocess.check_call(["git", "fetch", "origin", self.base, "master"])
 
-        # Clean out the test directory
-        subprocess.check_call(["git", "clean", "-d", "--force", "--quiet", "-x", "--", "test/"])
-
         os.environ["TEST_NAME"] = self.name
         os.environ["TEST_REVISION"] = self.revision
 
