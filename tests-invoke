@@ -44,7 +44,6 @@ def main():
                         action='store', help='Publish results centrally to a sink')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
     parser.add_argument('--pull-number', help="The number of the pull request to test")
-    parser.add_argument('--html-logs', action='store_true', help="Use log.html to prettify the raw logs")
     parser.add_argument('context', help="The context or type of integration tests to run")
     opts = parser.parse_args()
 
@@ -58,8 +57,7 @@ def main():
 
     try:
         task = PullTask(name, revision, opts.context, opts.rebase,
-                        test_project=test_project, test_branch=test_branch,
-                        html_logs=opts.html_logs)
+                        test_project=test_project, test_branch=test_branch)
         ret = task.run(opts)
     except RuntimeError as ex:
         ret = str(ex)
@@ -71,14 +69,13 @@ def main():
 
 
 class PullTask(object):
-    def __init__(self, name, revision, context, base, test_project, test_branch, html_logs):
+    def __init__(self, name, revision, context, base, test_project, test_branch):
         self.name = name
         self.revision = revision
         self.context = context
         self.base = base
         self.test_project = test_project
         self.test_branch = test_branch
-        self.html_logs = html_logs
 
         self.sink = None
         self.github_status_data = None
@@ -177,20 +174,8 @@ class PullTask(object):
             }
         }
 
-        if self.html_logs:
-            # explicit request for html logs
-            status["link"] = "log.html"
-            status["extras"] = ["https://raw.githubusercontent.com/cockpit-project/bots/master/task/log.html"]
-        elif self.test_project != "cockpit-project/cockpit":
-            # third-party project, link directly to text log
-            status["link"] = "log"
-        else:
-            # Testing cockpit itself, use HTML log from current
-            # revision.  Use log.html from code under test, but only
-            # if we are on master.  Other branches don't have a bots/
-            # in their repo.
-            status["link"] = "log.html"
-            status["extras"] = ["https://raw.githubusercontent.com/cockpit-project/bots/{0}/task/log.html".format(self.revision if not self.base else "master")]
+        status["link"] = "log.html"
+        status["extras"] = ["https://raw.githubusercontent.com/cockpit-project/bots/master/task/log.html"]
 
         # Include information about which base we're testing against
         if self.base:

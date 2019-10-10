@@ -17,11 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-# Random extra options for tests-invoke
-REPO_EXTRA_INVOKE_OPTIONS = {
-    'candlepin/subscription-manager': ["--html-logs"]
-}
-
 import argparse
 import json
 import pipes
@@ -156,9 +151,6 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
     # The repo of this test differs from the PR's repo
     if options.repo != repo:
         cmd = "GITHUB_BASE={github_base} " + cmd
-
-    if repo in REPO_EXTRA_INVOKE_OPTIONS:
-        cmd += " " + " ".join(REPO_EXTRA_INVOKE_OPTIONS[repo])
 
     # Let tests-invoke know that we are triggering different branch - it needs to post correct status
     if base != original_base:
