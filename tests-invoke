@@ -22,7 +22,6 @@ import os
 import socket
 import subprocess
 import sys
-import traceback
 
 sys.dont_write_bytecode = True
 
@@ -37,9 +36,6 @@ DEVNULL = open("/dev/null", "r+")
 
 def main():
     parser = argparse.ArgumentParser(description='Run integration tests')
-    parser.add_argument('--rebase', help="Rebase onto the specific branch before testing")
-    parser.add_argument('-o', "--offline", action='store_true',
-                        help="Work offline, don''t fetch new data from origin for rebase")
     parser.add_argument('--publish', dest='publish', default=os.environ.get("TEST_PUBLISH", ""),
                         action='store', help='Publish results centrally to a sink')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
@@ -59,7 +55,7 @@ def main():
         parser.error("TEST_REVISION is required for proper publishing")
 
     try:
-        task = PullTask(name, revision, opts.context, opts.rebase,
+        task = PullTask(name, revision, opts.context,
                         test_project=test_project, test_branch=test_branch)
         ret = task.run(opts)
     except RuntimeError as ex:
@@ -72,11 +68,10 @@ def main():
 
 
 class PullTask(object):
-    def __init__(self, name, revision, context, base, test_project, test_branch):
+    def __init__(self, name, revision, context, test_project, test_branch):
         self.name = name
         self.revision = revision
         self.context = context
-        self.base = base
         self.test_project = test_project
         self.test_branch = test_branch
 
@@ -184,23 +179,6 @@ class PullTask(object):
         os.environ["TEST_DESCRIPTION"] = description
         self.sink = sink.Sink(host, identifier, status)
 
-    def rebase(self):
-        remote_base = "origin" + "/" + self.base
-
-        # Rebase this branch onto the base, but only if it's not already an ancestor
-        try:
-            if subprocess.call(["git", "merge-base", "--is-ancestor", remote_base, "HEAD"]) != 0:
-                sha = subprocess.check_output(["git", "rev-parse", remote_base], universal_newlines=True).strip()
-                sys.stderr.write("Rebasing onto {0} ({1}) ...\n".format(remote_base, sha))
-                subprocess.check_call(["git", "reset", "HEAD"])
-                subprocess.check_call(["git", "rebase", remote_base])
-        except subprocess.CalledProcessError:
-            subprocess.call(["git", "rebase", "--abort"])
-            traceback.print_exc()
-            return "Rebase failed"
-
-        return None
-
     def stop_publishing(self, ret):
         sink = self.sink
 
@@ -245,10 +223,6 @@ class PullTask(object):
             self.start_publishing(opts.publish)
             os.environ["TEST_ATTACHMENTS"] = self.sink.attachments
 
-        # Retrieve information about our base branch and master (for bots/)
-        if self.base and not opts.offline:
-            subprocess.check_call(["git", "fetch", "origin", self.base, "master"])
-
         os.environ["TEST_NAME"] = self.name
 
         # Split OS and potential scenario
@@ -262,9 +236,6 @@ class PullTask(object):
         sys.stderr.write(msg)
 
         ret = None
-
-        if self.base:
-            ret = self.rebase()
 
         # Flush our own output before running command
         sys.stdout.flush()
