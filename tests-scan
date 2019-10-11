@@ -142,9 +142,8 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
 
     checkout = "PRIORITY={priority:04d} ./make-checkout --verbose"
     cmd = "TEST_PROJECT={repo} TEST_NAME={name}-{current} TEST_REVISION={revision} ../tests-invoke --pull-number={pull_number} "
-    if base:
-        if base != ref:
-            cmd += " --rebase={base}"
+    if base != ref:
+        checkout += " --rebase={base}"
 
     checkout += " --repo={repo}"
 
