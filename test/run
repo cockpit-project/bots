@@ -3,7 +3,7 @@
 set -eu
 
 # run static code checks like pyflakes and pep8
-PYFILES=$(grep -lI '^#!.*python' `find -path ./make-checkout-workdir -prune -o -type f ! -name '.*'` 2>/dev/null)
+PYFILES=$(git grep -lI '^#!.*python')
 python3 -m pyflakes $PYFILES
 
 # FIXME: Fix code for the warnings and re-enable them
