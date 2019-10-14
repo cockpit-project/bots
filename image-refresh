@@ -29,6 +29,7 @@ from machine.machine_core.directories import BOTS_DIR
 TRIGGERS = {
     "centos-7": [
         "centos-7@cockpit-project/starter-kit",
+        "centos-7@cockpit-project/cockpit/rhel-7.8",
     ],
     "continuous-atomic": [
         "continuous-atomic@cockpit-project/cockpit-ostree",
