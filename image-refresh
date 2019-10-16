@@ -51,7 +51,7 @@ TRIGGERS = {
         "fedora-30/selenium-firefox@cockpit-project/cockpit",
         "fedora-30/selenium-edge@cockpit-project/cockpit",
         "fedora-30/container-bastion@cockpit-project/cockpit",
-        "fedora-30@cockpit-project/starter-kit@cockpit-project/cockpit",
+        "fedora-30@cockpit-project/starter-kit",
         "fedora-30@cockpit-project/cockpit-podman",
         "fedora-30@weldr/lorax",
         "fedora-30/live-iso@weldr/lorax",
