@@ -1,3 +1,4 @@
 Failed to update container stats: {"error":"io.podman.ErrorOccurred","parameters":{"reason":"Link not found"}}
 *
-AssertionError: '%' not found in ''
+*b.wait(lambda: b.text("#containers-containers tbody tr:contains('busybox:latest') > td:nth-child(5)") != "")
+
