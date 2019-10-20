@@ -10,3 +10,6 @@ systemctl mask systemd-networkd-wait-online.service
 
 # HACK: broken virt-builder image; locale defaults to en_US (which is ISO-8859-1)
 update-locale LANG=C.UTF-8
+
+# make libpwquality less aggressive, so that our "foobar" password works
+printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
