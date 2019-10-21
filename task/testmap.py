@@ -51,6 +51,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-i386',
             'fedora-testing',
+            'fedora-30/firefox', # Experimental context for Firefox CDP testing
         ],
     },
     'cockpit-project/starter-kit': {
