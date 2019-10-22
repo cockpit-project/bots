@@ -94,6 +94,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-1/azure',
             'rhel-8-1/openstack',
             'rhel-8-1/vmware',
+            'rhel-8-1/tar',
         ],
         'rhel7-extras': [
             'rhel-7-7',
