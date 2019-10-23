@@ -97,14 +97,14 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-1/tar',
         ],
         'rhel7-extras': [
-            'rhel-7-7',
-            'rhel-7-7/live-iso',
-            'rhel-7-7/qcow2',
-            'rhel-7-7/aws',
-            'rhel-7-7/azure',
-            'rhel-7-7/openstack',
-            'rhel-7-7/vmware',
-            'rhel-7-7/tar',
+            'rhel-7-8',
+            'rhel-7-8/live-iso',
+            'rhel-7-8/qcow2',
+            'rhel-7-8/aws',
+            'rhel-7-8/azure',
+            'rhel-7-8/openstack',
+            'rhel-7-8/vmware',
+            'rhel-7-8/tar',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
