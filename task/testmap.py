@@ -77,14 +77,14 @@ REPO_BRANCH_CONTEXT = {
     },
     'weldr/lorax': {
         'master': [
-            'fedora-30',
-            'fedora-30/tar',
-            'fedora-30/live-iso',
-            'fedora-30/qcow2',
-            'fedora-30/aws',
-            'fedora-30/azure',
-            'fedora-30/openstack',
-            'fedora-30/vmware',
+            'fedora-31',
+            'fedora-31/tar',
+            'fedora-31/live-iso',
+            'fedora-31/qcow2',
+            'fedora-31/aws',
+            'fedora-31/azure',
+            'fedora-31/openstack',
+            'fedora-31/vmware',
         ],
         'rhel8-branch': [
             'rhel-8-1',
@@ -108,7 +108,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-30/ci',
+            'fedora-31/ci',
         ],
     },
     'weldr/cockpit-composer': {
