@@ -132,6 +132,13 @@ REPO_BRANCH_CONTEXT = {
     }
 }
 
+# The Atomic variants can't build their own packages, so we build in
+# their non-Atomic siblings.
+ATOMIC_BUILD_IMAGE = {
+    "fedora-atomic": "fedora-29",
+    "rhel-atomic": "rhel-7-7",
+    "continuous-atomic": "centos-7",
+}
 
 def projects():
     """Return all projects for which we run tests."""
