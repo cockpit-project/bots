@@ -140,6 +140,33 @@ ATOMIC_BUILD_IMAGE = {
     "continuous-atomic": "centos-7",
 }
 
+# only put auxiliary images here; triggers for primary OS images are computed from testmap
+IMAGE_REFRESH_TRIGGERS = {
+    "fedora-testing": [
+        "fedora-testing@cockpit-project/cockpit"
+    ],
+    "fedora-i386": [
+        "fedora-i386@cockpit-project/cockpit"
+    ],
+    "openshift": [
+        "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
+    ],
+    "ipa": [
+        "fedora-30@cockpit-project/cockpit",
+        "ubuntu-1804@cockpit-project/cockpit",
+        "debian-stable@cockpit-project/cockpit"
+    ],
+    "selenium": [
+        "fedora-30/selenium-chrome@cockpit-project/cockpit",
+        "fedora-30/selenium-firefox@cockpit-project/cockpit",
+        "fedora-30/chrome@weldr/cockpit-composer",
+        "fedora-30/firefox@weldr/cockpit-composer",
+        "rhel-7-7/firefox@weldr/cockpit-composer",
+        "rhel-8-1/chrome@weldr/cockpit-composer",
+    ],
+}
+
+
 def projects():
     """Return all projects for which we run tests."""
     return REPO_BRANCH_CONTEXT.keys()
@@ -148,3 +175,30 @@ def projects():
 def tests_for_project(project):
     """Return branch -> contexts map."""
     return REPO_BRANCH_CONTEXT.get(project, {})
+
+
+def tests_for_image(image):
+    """Return context list of all tests required for testing an image"""
+
+    tests = set(IMAGE_REFRESH_TRIGGERS.get(image, []))
+    for repo, branch_contexts in REPO_BRANCH_CONTEXT.items():
+        for  branch, contexts in branch_contexts.items():
+            if branch.startswith('_'):
+                continue
+            for context in contexts:
+                if context.split('/')[0] == image:
+                    c = context + '@' + repo
+                    if branch != "master":
+                        c += "/" + branch
+                    tests.add(c)
+
+    # is this a build image for Atomic? then add the Atomic tests
+    for a, i in ATOMIC_BUILD_IMAGE.items():
+        if image == i:
+            tests.update(tests_for_image(a))
+            break
+
+    # bots' own unit test ("host") is required for all bots PRs
+    tests.add("host")
+
+    return list(tests)
