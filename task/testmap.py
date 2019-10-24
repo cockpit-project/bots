@@ -33,10 +33,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-30/container-bastion', 'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome',
             'rhel-atomic', 'continuous-atomic',
         ],
-        'rhel-8.0': ['fedora-30/container-bastion',
-            'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome',
-            'rhel-8-0',
-        ],
         'rhel-8-appstream': ['fedora-30/container-bastion',
             'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome', 'rhel-8-1-distropkg', 'rhel-8-1',
         ],
@@ -120,10 +116,10 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-8/firefox',
             'rhel-8-1/chrome',
         ],
-        'rhel-8.0': [
-            'rhel-8-0/chrome',
-            'rhel-8-0/firefox',
-            'rhel-8-0/edge',
+        'rhel-8.1': [
+            'rhel-8-1/chrome',
+            'rhel-8-1/firefox',
+            'rhel-8-1/edge',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
