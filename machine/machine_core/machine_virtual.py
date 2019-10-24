@@ -33,6 +33,9 @@ from .machine import Machine
 from .constants import TEST_DIR, BOTS_DIR
 from .directories import get_temp_dir
 
+sys.path.insert(1, BOTS_DIR)
+from task import testmap
+
 MEMORY_MB = 1024
 
 
@@ -41,13 +44,7 @@ MEMORY_MB = 1024
 # in fedora-29
 def get_build_image(image):
     (test_os, unused) = os.path.splitext(os.path.basename(image))
-    if test_os == "fedora-atomic":
-        image = "fedora-29"
-    elif test_os == "rhel-atomic":
-        image = "rhel-7-7"
-    elif test_os == "continuous-atomic":
-        image = "centos-7"
-    return image
+    return testmap.ATOMIC_BUILD_IMAGE.get(image, image)
 
 
 # some tests have suffixes that run the same image in different modes; map a
