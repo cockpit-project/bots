@@ -97,32 +97,32 @@ EOF
 
     elif [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
         case "$IMAGE" in
-            rhel-8-0) REPO="latest-RHEL-8.0.1" ;;
-            rhel-8-1) REPO="latest-RHEL-8.1" ;;
+            rhel-8-0) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.0.1" ;;
+            rhel-8-1) REPO="rhel-8/rel-eng/RHEL-8/latest-RHEL-8.1" ;;
             *) echo "Unknown image $IMAGE"; exit 1
         esac
 cat <<EOF > /etc/yum.repos.d/nightly.repo
 [RHEL-8-NIGHTLY-BaseOS]
 name=baseos
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/RHEL-8/$REPO/compose/BaseOS/x86_64/os/
+baseurl=http://download.devel.redhat.com/$REPO/compose/BaseOS/x86_64/os/
 enabled=1
 gpgcheck=0
 
 [RHEL-8-NIGHTLY-AppStream]
 name=appstream
-baseurl=http://download.devel.redhat.com/rhel-8/nightly/RHEL-8/$REPO/compose/AppStream/x86_64/os/
+baseurl=http://download.devel.redhat.com/$REPO/compose/AppStream/x86_64/os/
 enabled=1
 gpgcheck=0
 
 [RHEL-8-NIGHTLY-BaseOS-Debug]
 name=baseos-debug
-baseurl=http://download-ipv4.eng.brq.redhat.com/rhel-8/nightly/RHEL-8/$REPO/compose/BaseOS/x86_64/debug/tree/
+baseurl=http://download.devel.redhat.com/$REPO/compose/BaseOS/x86_64/debug/tree/
 enabled=0
 gpgcheck=0
 
 [RHEL-8-NIGHTLY-AppStream-Debug]
 name=appstream-debug
-baseurl=http://download-ipv4.eng.brq.redhat.com/rhel-8/nightly/RHEL-8/$REPO/compose/AppStream/x86_64/debug/tree/
+baseurl=http://download.devel.redhat.com/$REPO/compose/AppStream/x86_64/debug/tree/
 enabled=0
 gpgcheck=0
 EOF
