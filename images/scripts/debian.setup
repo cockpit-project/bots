@@ -120,13 +120,6 @@ apt-get install -y eatmydata
 # remove packages that we don't need
 for p in lxd snapd landscape-common accountsservice open-vm-tools ufw cloud-init; do eatmydata apt-get purge -y --auto-remove $p || true; done
 
-# HACK: work around fuse 2.9.9-1 install failure (https://bugs.debian.org/935496)
-if [ "$1" = "debian-testing" ]; then
-    rm /dev/fuse
-    # this needs to happen right away, as upgrading other packages triggers udev events which recreate /dev/fuse
-    eatmydata apt-get install -y fuse
-fi
-
 # HACK: debian-stable image got /usr/bin/qemu-img removed, even though qemu-utils package is installed
 if [ "$1" = "debian-stable" ]; then
     eatmydata apt-get install --reinstall -y qemu-utils
