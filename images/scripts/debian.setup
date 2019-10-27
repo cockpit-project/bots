@@ -112,6 +112,11 @@ if [ "$1" = "debian-testing" ]; then
     echo 'deb http://deb.debian.org/debian testing main' > /etc/apt/sources.list
 fi
 
+# freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
+if [ "$1" = "debian-testing" ]; then
+    IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
+fi
+
 export DEBIAN_FRONTEND=noninteractive
 apt-get -y update
 # apt go-faster
