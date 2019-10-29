@@ -27,7 +27,7 @@ REPO_BRANCH_CONTEXT = {
             'debian-stable', 'debian-testing',
             'ubuntu-1804', 'ubuntu-stable',
             'fedora-30', 'fedora-31', 'fedora-atomic',
-            'rhel-8-1-distropkg', 'rhel-8-1',
+            'rhel-8-1-distropkg', 'rhel-8-1', 'rhel-8-2',
         ],
         'rhel-7.7': ['rhel-7-7',
             'fedora-30/container-bastion', 'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome',
@@ -48,7 +48,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-i386',
             'fedora-testing',
             'fedora-30/firefox', # Experimental context for Firefox CDP testing
-            'rhel-8-2',
         ],
     },
     'cockpit-project/starter-kit': {
