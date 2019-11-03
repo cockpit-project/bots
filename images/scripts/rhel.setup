@@ -187,6 +187,8 @@ sssd-dbus \
 TEST_PACKAGES="\
 valgrind \
 gdb \
+strace \
+ltrace \
 nmap-ncat \
 targetcli \
 yum-utils \
