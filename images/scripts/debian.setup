@@ -54,6 +54,8 @@ acl \
 curl \
 firewalld \
 gdb \
+strace \
+ltrace \
 iproute2 \
 mdadm \
 nfs-server \
