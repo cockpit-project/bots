@@ -30,7 +30,6 @@ REFRESH = {
     "fedora-31": {},
     "fedora-atomic": {},
     "fedora-testing": {},
-    "fedora-i386": {},
     "ipa": {"refresh-days": 120},
     "ubuntu-1804": {},
     "ubuntu-stable": {},

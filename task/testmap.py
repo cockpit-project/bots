@@ -45,7 +45,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-i386',
             'fedora-testing',
             'fedora-30/firefox', # Experimental context for Firefox CDP testing
         ],
@@ -152,9 +151,6 @@ ATOMIC_BUILD_IMAGE = {
 IMAGE_REFRESH_TRIGGERS = {
     "fedora-testing": [
         "fedora-testing@cockpit-project/cockpit"
-    ],
-    "fedora-i386": [
-        "fedora-i386@cockpit-project/cockpit"
     ],
     "openshift": [
         "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
