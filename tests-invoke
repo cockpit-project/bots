@@ -47,8 +47,8 @@ def main():
     revision = os.environ.get("TEST_REVISION")
     test_project = os.environ.get("TEST_PROJECT")
     # branch name when explicitly given in the test status
-    # e.g. PR opened against master for test `rhel-8-0@cockpit-project/cockpit/rhel-8.0`
-    # TEST_BRANCH would be `rhel-8.0`
+    # e.g. PR opened against master for test `rhel-8-1@cockpit-project/cockpit/rhel-8.1`
+    # TEST_BRANCH would be `rhel-8.1`
     test_branch = os.environ.get("TEST_BRANCH")
 
     if opts.publish and not revision:
