@@ -4,6 +4,65 @@ set -ex
 
 YUM_INSTALL="yum --setopt=skip_missing_names_on_install=False -y install"
 
+yum -y upgrade
+$YUM_INSTALL docker
+
+# static host name and IP so that peer VMs can find us
+nmcli con add con-name "static-eth1" ifname eth1 type ethernet ip4 "10.111.112.100/20" ipv4.dns "10.111.112.100" gw4 "10.111.112.1"
+nmcli con up "static-eth1"
+hostnamectl set-hostname services.cockpit.lan
+
+systemctl disable firewalld
+systemctl enable --now docker
+
+#############
+#
+# FreeIPA setup
+#
+#############
+
+# see https://hub.docker.com/r/freeipa/freeipa-server
+docker pull freeipa/freeipa-server
+setsebool -P container_manage_cgroup 1
+mkdir /var/lib/ipa-data
+
+cat <<EOF > /run-freeipa
+docker run -d --rm --name freeipa -ti -h f0.cockpit.lan \
+    -e IPA_SERVER_IP=10.111.112.100 \
+    -p 53:53/udp -p 53:53 -p 80:80 -p 443:443 -p 389:389 -p 636:636 -p 88:88 -p 464:464 -p 88:88/udp -p 464:464/udp -p 123:123/udp \
+    -v /var/lib/ipa-data:/data:Z \
+    freeipa/freeipa-server \
+    -U -p foobarfoo -a foobarfoo -n cockpit.lan -r COCKPIT.LAN --setup-dns --no-forwarders --no-ntp
+EOF
+chmod 755 /run-freeipa
+/run-freeipa
+
+docker logs freeipa -f &
+LOGS=$!
+
+# so wait until booted and setup is done
+docker exec freeipa sh -ec 'until systemctl --quiet is-system-running; do sleep 5; done'
+
+# stop docker logs
+kill $!
+wait || true
+
+# further setup
+docker exec freeipa sh -exc '
+# Default password expiry of 90 days is impractical
+echo foobarfoo | kinit admin@COCKPIT.LAN
+ipa pwpolicy-mod --minlife=0 --maxlife=1000
+# Change password to apply new password policy
+printf "foobarfoo\nfoobarfoo\n" | ipa user-mod --password admin
+# Allow "admins" IPA group members to run sudo
+# This is an "unbreak my setup" step and ought to happen by default.
+# See https://pagure.io/freeipa/issue/7538
+ipa-advise enable-admins-sudo | sh -ex
+ipa dnsconfig-mod --forwarder=8.8.8.8
+poweroff
+'
+
+
 #############################
 #
 # candlepin setup
