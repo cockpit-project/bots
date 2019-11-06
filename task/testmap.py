@@ -26,7 +26,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome', 'fedora-30/selenium-edge',
             'debian-stable', 'debian-testing',
             'ubuntu-1804', 'ubuntu-stable',
-            'fedora-30', 'fedora-31', 'fedora-atomic',
+            'fedora-30', 'fedora-31',
             'rhel-8-1-distropkg', 'rhel-8-1', 'rhel-8-2',
         ],
         'rhel-7.7': ['rhel-7-7',
@@ -64,7 +64,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-podman': {
         'master': [
-            'fedora-29',
             'fedora-30',
             'fedora-31',
             'rhel-8-1',
@@ -134,7 +133,6 @@ REPO_BRANCH_CONTEXT = {
 # The Atomic variants can't build their own packages, so we build in
 # their non-Atomic siblings.
 ATOMIC_BUILD_IMAGE = {
-    "fedora-atomic": "fedora-29",
     "rhel-atomic": "rhel-7-7",
     "continuous-atomic": "centos-7",
 }

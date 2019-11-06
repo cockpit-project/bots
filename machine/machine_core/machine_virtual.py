@@ -40,8 +40,8 @@ MEMORY_MB = 1024
 
 
 # The Atomic variants can't build their own packages, so we build in
-# their non-Atomic siblings.  For example, fedora-atomic is built
-# in fedora-29
+# their non-Atomic siblings.  For example, rhel-atomic is built
+# in rhel-7-X
 def get_build_image(image):
     (test_os, unused) = os.path.splitext(os.path.basename(image))
     return testmap.ATOMIC_BUILD_IMAGE.get(image, image)
