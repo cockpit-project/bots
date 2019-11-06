@@ -27,8 +27,7 @@ TTY LOGIN
   To quit use Ctrl+], Ctrl+5 (depending on locale)
 
 SSH ACCESS
-  $ ssh -p {ssh_port} {ssh_user}@{ssh_address}
-  Password: foobar
+  $ ssh -p {ssh_port} -i bots/machine/identity {ssh_user}@{ssh_address}
 
 COCKPIT
   http://{web_address}:{web_port}
