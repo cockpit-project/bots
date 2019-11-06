@@ -4,6 +4,12 @@ set -ex
 
 YUM_INSTALL="yum --setopt=skip_missing_names_on_install=False -y install"
 
+#############################
+#
+# candlepin setup
+#
+#############################
+
 # We deploy candlepin via ansible
 $YUM_INSTALL epel-release
 
@@ -54,11 +60,13 @@ ansible-playbook -i inventory -c local -v --skip-tags 'system_update' playbook.y
 
 rm -rf playbookdir
 
-# reduce image size
-yum clean all
-/var/lib/testvm/zero-disk.setup
-
+#############################
+#
 # Final tweaks
+#
+#############################
+
+yum clean all
 
 rm -rf /var/log/journal/*
 echo "kernel.core_pattern=|/usr/lib/systemd/systemd-coredump %p %u %g %s %t %e" > /etc/sysctl.d/50-coredump.conf
@@ -67,3 +75,5 @@ echo "kernel.core_pattern=|/usr/lib/systemd/systemd-coredump %p %u %g %s %t %e" 
 rm -f '/etc/systemd/system/multi-user.target.wants/auditd.service'
 rm -rf /var/log/audit/
 
+# reduce image size
+/var/lib/testvm/zero-disk.setup
