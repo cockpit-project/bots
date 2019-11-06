@@ -20,7 +20,7 @@
 DAYS = 7
 
 REFRESH = {
-    "candlepin": {"refresh-days": 120},
+    "services": {"refresh-days": 120},
     "centos-7": {},
     "continuous-atomic": {},
     "debian-testing": {},

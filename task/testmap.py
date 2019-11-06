@@ -158,6 +158,11 @@ IMAGE_REFRESH_TRIGGERS = {
         "rhel-7-7/firefox@weldr/cockpit-composer",
         "rhel-8-1/chrome@weldr/cockpit-composer",
     ],
+    "services": [
+        "fedora-31@cockpit-project/cockpit",
+        "rhel-8-2@cockpit-project/cockpit",
+        "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
+    ]
 }
 
 
