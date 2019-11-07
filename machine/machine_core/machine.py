@@ -19,7 +19,7 @@ import os
 
 from . import ssh_connection
 from . import timeout
-from .constants import DEFAULT_IDENTITY_FILE, ATOMIC_IMAGES, TEST_DIR
+from .constants import DEFAULT_IDENTITY_FILE, ATOMIC_IMAGES, OSTREE_IMAGES, TEST_DIR
 
 LOGIN_MESSAGE = """
 TTY LOGIN
@@ -69,6 +69,7 @@ class Machine(ssh_connection.SSHConnection):
         self.arch = arch
         self.image = image
         self.atomic_image = self.image in ATOMIC_IMAGES
+        self.ostree_image = self.image in OSTREE_IMAGES
         if ":" in browser:
             (self.web_address, unused, self.web_port) = browser.rpartition(":")
         else:
