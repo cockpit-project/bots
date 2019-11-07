@@ -46,6 +46,7 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
+            'fedora-coreos',
             'fedora-30/firefox', # Experimental context for Firefox CDP testing
         ],
     },
@@ -60,6 +61,9 @@ REPO_BRANCH_CONTEXT = {
             'fedora-atomic',
             'continuous-atomic',
             'rhel-atomic',
+        ],
+        '_manual': [
+            'fedora-coreos',
         ],
     },
     'cockpit-project/cockpit-podman': {
