@@ -1,1 +1,1 @@
-testlib.Error: audit: type=1400 audit(*): avc:  denied  { name_bind } * comm="rpcbind"
+* type=1400 audit(*): avc:  denied  { name_bind } * comm="rpcbind"
