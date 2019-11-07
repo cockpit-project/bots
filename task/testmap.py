@@ -145,11 +145,6 @@ IMAGE_REFRESH_TRIGGERS = {
     "openshift": [
         "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
     ],
-    "ipa": [
-        "fedora-30@cockpit-project/cockpit",
-        "ubuntu-1804@cockpit-project/cockpit",
-        "debian-stable@cockpit-project/cockpit"
-    ],
     "selenium": [
         "fedora-30/selenium-chrome@cockpit-project/cockpit",
         "fedora-30/selenium-firefox@cockpit-project/cockpit",
@@ -160,6 +155,8 @@ IMAGE_REFRESH_TRIGGERS = {
     ],
     "services": [
         "fedora-31@cockpit-project/cockpit",
+        "ubuntu-1804@cockpit-project/cockpit",
+        "debian-stable@cockpit-project/cockpit"
         "rhel-8-2@cockpit-project/cockpit",
         "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
     ]
