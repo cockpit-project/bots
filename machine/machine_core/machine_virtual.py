@@ -39,12 +39,12 @@ from task import testmap
 MEMORY_MB = 1024
 
 
-# The Atomic variants can't build their own packages, so we build in
-# their non-Atomic siblings.  For example, rhel-atomic is built
+# The OSTree variants can't build their own packages, so we build in
+# their classic siblings.  For example, rhel-atomic is built
 # in rhel-7-X
 def get_build_image(image):
     (test_os, unused) = os.path.splitext(os.path.basename(image))
-    return testmap.ATOMIC_BUILD_IMAGE.get(image, image)
+    return testmap.OSTREE_BUILD_IMAGE.get(image, image)
 
 
 # some tests have suffixes that run the same image in different modes; map a

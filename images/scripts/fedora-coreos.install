@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eux
+
+# Enable ssh password authentication
+sed -i '/PasswordAuthentication no/d' /etc/ssh/sshd_config
+
+# install/upgrade RPMs that apply to Fedora CoreOS
+# Note: cockpit-selinux would be desirable, but needs setroubleshoot-server which isn't installed
+cd /var/tmp/build-results/
+rpm-ostree install cockpit-bridge-*.rpm cockpit-dashboard-*.rpm \
+    cockpit-networkmanager-*.rpm cockpit-system-*.rpm cockpit-tests-*.rpm
+
+# run cockpit/ws once to generate certificate; avoids slow down on every start
+podman container runlabel INSTALL cockpit/ws
