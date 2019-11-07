@@ -130,9 +130,10 @@ REPO_BRANCH_CONTEXT = {
     }
 }
 
-# The Atomic variants can't build their own packages, so we build in
+# The OSTree variants can't build their own packages, so we build in
 # their non-Atomic siblings.
-ATOMIC_BUILD_IMAGE = {
+OSTREE_BUILD_IMAGE = {
+    "fedora-coreos": "fedora-30",
     "rhel-atomic": "rhel-7-7",
     "continuous-atomic": "centos-7",
 }
@@ -189,7 +190,7 @@ def tests_for_image(image):
                     tests.add(c)
 
     # is this a build image for Atomic? then add the Atomic tests
-    for a, i in ATOMIC_BUILD_IMAGE.items():
+    for a, i in OSTREE_BUILD_IMAGE.items():
         if image == i:
             tests.update(tests_for_image(a))
             break
