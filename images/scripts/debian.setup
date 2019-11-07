@@ -132,6 +132,11 @@ if [ "$1" = "debian-stable" ]; then
     eatmydata apt-get install --reinstall -y qemu-utils
 fi
 
+# HACK https://bugs.launchpad.net/ubuntu/+source/pcp/+bug/1850281
+if [ "$1" = "ubuntu-stable" ]; then
+    eatmydata apt-get -y install pcp libpcp3 || true
+fi
+
 # install our dependencies
 DEBIAN_FRONTEND=noninteractive eatmydata apt-get -y dist-upgrade
 eatmydata apt-get -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
