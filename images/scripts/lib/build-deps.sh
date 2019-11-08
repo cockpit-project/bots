@@ -8,8 +8,8 @@ stable_branch_deps=""
 
 case "$1" in
     rhel*7|centos*7) branch=rhel-7.8 ;;
-    # intltool got removed on cockpit master, but not from rhel-8.{0,1} branch
-    rhel*8) stable_branch_deps="intltool" ;;
+    # intltool got removed on cockpit master, but not from rhel-[78].* branches
+    rhel*8|fedora*30) stable_branch_deps="intltool" ;;
 esac
 
 # Download cockpit.spec, replace `npm-version` macro and then query all build requires
