@@ -51,7 +51,9 @@ DEFAULT = [
     "http://cockpit-images.verify.svc.cluster.local",
     "https://images-cockpit.apps.ci.centos.org/",
     "https://209.132.184.41:8493/",
-    REDHAT_STORE
+    REDHAT_STORE,
+    # fallback RedHat-internal image server in AWS (internal VPN only)
+    "https://10.29.163.169:8493/",
 ]
 
 DEVNULL = open("/dev/null", "r+")
