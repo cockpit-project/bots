@@ -16,3 +16,6 @@ podman container runlabel INSTALL cockpit/ws
 # HACK: work around https://bugzilla.redhat.com/show_bug.cgi?id=1771422
 mkdir -p /etc/systemd/system/NetworkManager.service.d
 printf '[Service]\nExecReload=\nExecReload=/usr/bin/busctl call org.freedesktop.NetworkManager /org/freedesktop/NetworkManager org.freedesktop.NetworkManager Reload u -- 0\n' > /etc/systemd/system/NetworkManager.service.d/fix-reload.conf
+
+# HACK: work around https://github.com/coreos/fedora-coreos-config/issues/230
+echo 'dictcheck=0' >> /etc/security/pwquality.conf
