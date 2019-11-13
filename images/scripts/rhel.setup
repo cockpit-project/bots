@@ -218,7 +218,8 @@ if [ "${IMAGE#rhel-7}" != "$IMAGE" ]; then
     # needed for composer testing
     TEST_PACKAGES="${TEST_PACKAGES} gcc-c++ lorax-composer"
 fi
-if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
+
+if [ "${IMAGE#rhel-8*}" != "$IMAGE" ] || [ "${IMAGE#centos-8-stream}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/yum-utils/dnf-utils}"
     TEST_PACKAGES="${TEST_PACKAGES} dnf-automatic"
     # Atomic/docker are not on RHEL 8
@@ -228,6 +229,9 @@ if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} libvirt-daemon-config-network"
     # Install node for external Composer tests, they use our rhel-* images
     TEST_PACKAGES="${TEST_PACKAGES} nodejs"
+fi
+
+if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} subscription-manager-cockpit"
     # Install insights-client for external subscription-manager tests
     TEST_PACKAGES="${TEST_PACKAGES} insights-client"
@@ -288,7 +292,11 @@ EOF
             mkdir /tmp/dep
             cd /tmp/dep
             $YUM_INSTALL wget
-            wget -T 15 -t 4 http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            if [ "${IMAGE#centos-8-stream}" != "$IMAGE" ]; then
+                wget -T 15 -t 4 http://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+            else
+                wget -T 15 -t 4 http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            fi
             yum -y remove wget
             rpm -Uvh epel-release-*.rpm
             cd

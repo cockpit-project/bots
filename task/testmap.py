@@ -66,12 +66,16 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
-            ],
+            'centos-8-stream',
+        ],
     },
     'cockpit-project/starter-kit': {
         'master': [
             'centos-7',
             'fedora-30',
+        ],
+        '_manual': [
+            'centos-8-stream',
         ],
     },
     'cockpit-project/cockpit-ostree': {
@@ -88,6 +92,9 @@ REPO_BRANCH_CONTEXT = {
             'fedora-30',
             'fedora-31',
             'rhel-8-1',
+        ],
+        '_manual': [
+            'centos-8-stream',
         ],
     },
     'weldr/lorax': {
@@ -123,6 +130,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'centos-8-stream',
         ],
     },
     'weldr/cockpit-composer': {
@@ -141,6 +149,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'centos-8-stream',
         ],
     },
     'candlepin/subscription-manager': {

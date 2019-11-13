@@ -22,6 +22,7 @@ DAYS = 7
 REFRESH = {
     "services": {"refresh-days": 120},
     "centos-7": {},
+    "centos-8-stream": {},
     "continuous-atomic": {},
     "debian-testing": {},
     "debian-stable": {},
