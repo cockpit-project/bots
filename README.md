@@ -69,10 +69,10 @@ encompass public_repo (or repo if you're accessing a private repo).
 
 ### Retrying a failed test
 
-If you want to run the "fedora-atomic" testsuite again for pull
+If you want to run the "fedora-testing" testsuite again for pull
 request #1234 of cockpit-project/cockpit, run tests-trigger like so:
 
-    $ ./tests-trigger --repo cockpit-project/cockpit 1234 fedora-atomic
+    $ ./tests-trigger --repo cockpit-project/cockpit 1234 fedora-testing
 
 You can also invoke bots/tests/trigger from any project checkout, in which case
 you don't need the explicit `--repo` -- it will default to the GitHub origin of
@@ -94,21 +94,21 @@ doesn't execute evil code during tests.
 Test images are refreshed automatically once per week, and even if the
 last refresh has failed, the machines wait one week before trying again.
 
-If you want the machines to refresh the fedora-atomic image immediately,
+If you want the machines to refresh the fedora-testing image immediately,
 run image-trigger like so:
 
-    $ ./image-trigger fedora-atomic
+    $ ./image-trigger fedora-testing
 
 ### Creating new images for a pull request
 
 If as part of some new feature you need to change the content of some
 or all images, you can ask the machines to create those images.
 
-If you want to have a new fedora-atomic image for pull request #1234, add
+If you want to have a new fedora-testing image for pull request #1234, add
 a bullet point to that pull request's description like so, and add the
 "bot" label to the pull request.
 
-    * [ ] image-refresh fedora-atomic
+    * [ ] image-refresh fedora-testing
 
 The machines will post comments to the pull request about their
 progress and at the end there will be links to commits with the new

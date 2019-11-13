@@ -27,7 +27,6 @@ REFRESH = {
     "debian-stable": {},
     "fedora-30": {},
     "fedora-31": {},
-    "fedora-atomic": {},
     "fedora-testing": {},
     "ipa": {"refresh-days": 120},
     "ubuntu-1804": {},

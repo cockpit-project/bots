@@ -18,7 +18,7 @@
 import os
 
 # Images which are OSTree based
-ATOMIC_IMAGES = ["rhel-atomic", "fedora-atomic", "continuous-atomic"]
+ATOMIC_IMAGES = ["rhel-atomic", "continuous-atomic"]
 OSTREE_IMAGES = ATOMIC_IMAGES + ["fedora-coreos"]
 
 MACHINE_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

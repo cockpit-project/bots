@@ -52,7 +52,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-ostree': {
         'master': [
-            'fedora-atomic',
             'continuous-atomic',
             'rhel-atomic',
         ],
