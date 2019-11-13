@@ -26,7 +26,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome', 'fedora-30/selenium-edge',
             'debian-stable', 'debian-testing',
             'ubuntu-1804', 'ubuntu-stable',
-            'fedora-30', 'fedora-31', 'fedora-30/firefox',
+            'fedora-30', 'fedora-31', 'fedora-coreos', 'fedora-30/firefox',
             'rhel-8-1-distropkg', 'rhel-8-2',
         ],
         'rhel-7.8': ['rhel-7-8', 'rhel-atomic', 'continuous-atomic',
@@ -42,7 +42,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
-            'fedora-coreos',
         ],
     },
     'cockpit-project/starter-kit': {
