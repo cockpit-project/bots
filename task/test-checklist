@@ -65,21 +65,24 @@ class TestChecklist(unittest.TestCase):
         checklist = github.Checklist(body)
         checklist.check("item1", True)
         checklist.check("Item three", False)
-        self.assertEqual(checklist.body, "This is a description\n * [x] item1\n * [x] Item two\n * [ ] Item three\n\nMore lines")
+        self.assertEqual(checklist.body,
+                         "This is a description\n * [x] item1\n * [x] Item two\n * [ ] Item three\n\nMore lines")
         self.assertEqual(checklist.items, {"item1": True, "Item two": True, "Item three": False})
 
     def testDisable(self):
         body = "This is a description\n- [ ] item1\n * [x] Item two\n\nMore lines"
         checklist = github.Checklist(body)
         checklist.check("item1", "Status")
-        self.assertEqual(checklist.body, "This is a description\n * [ ] Status: item1\n * [x] Item two\n\nMore lines")
+        self.assertEqual(checklist.body,
+                         "This is a description\n * [ ] Status: item1\n * [x] Item two\n\nMore lines")
         self.assertEqual(checklist.items, {"item1": "Status", "Item two": True})
 
     def testAdd(self):
         body = "This is a description\n- [ ] item1\n * [x] Item two\n\nMore lines"
         checklist = github.Checklist(body)
         checklist.add("Item three")
-        self.assertEqual(checklist.body, "This is a description\n- [ ] item1\n * [x] Item two\n\nMore lines\n * [ ] Item three")
+        self.assertEqual(checklist.body,
+                         "This is a description\n- [ ] item1\n * [x] Item two\n\nMore lines\n * [ ] Item three")
         self.assertEqual(checklist.items, {"item1": False, "Item two": True, "Item three": False})
 
     def testChecked(self):

@@ -234,7 +234,9 @@ class AtomicCockpitInstaller:
                     print("adding package %s (forced)" % (p))
                 packages_to_install.append(p)
 
-        packages_to_install = list(filter(lambda p: any(os.path.split(p)[1].startswith(base) for base in packages_to_install), self.rpms))
+        packages_to_install = list(filter(
+            lambda p: any(os.path.split(p)[1].startswith(base) for base in packages_to_install),
+            self.rpms))
 
         if self.verbose:
             print("packages to install:")

@@ -305,7 +305,8 @@ class GitHub(object):
         page = 1
         count = 100
         while count == 100:
-            pulls = self.get("pulls?page={0}&per_page={1}&state={2}&sort=created&direction=desc".format(page, count, state))
+            pulls = self.get("pulls?page={0}&per_page={1}&state={2}&sort=created&direction=desc".format(
+                page, count, state))
             count = 0
             page += 1
             for pull in pulls or []:

@@ -173,7 +173,8 @@ def run(context, verbose=False, **kwargs):
 
         if verbose:
             sys.stderr.write("Opening issue for %s\n" % name)
-        source = "<details><summary>Source material</summary>\n\n```json\n%s\n```\n</details>\n" % "\n".join(map(lambda f: json.dumps(f[2], indent=2), failures))
+        source = "<details><summary>Source material</summary>\n\n```json\n%s\n```\n</details>\n" % "\n".join(
+            map(lambda f: json.dumps(f[2], indent=2), failures))
         data = {
             "title": "%s is flaky" % name,
             "body": ("\n".join(map(lambda f: failure_description(name, f, failure_logs), failures)) +

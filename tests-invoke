@@ -95,8 +95,10 @@ class PullTask(object):
         statuses = api.get("commits/{0}/statuses".format(self.revision))
         for status in statuses:
             if status.get("context") == self.context:
-                if status.get("state") == "pending" and status.get("description") not in [github.NOT_TESTED, github.NOT_TESTED_DIRECT]:
-                    return "Status of context isn't pending or description is not in [{0}, {1}]".format(github.NOT_TESTED, github.NOT_TESTED_DIRECT)
+                if status.get("state") == "pending" and \
+                        status.get("description") not in [github.NOT_TESTED, github.NOT_TESTED_DIRECT]:
+                    return "Status of context isn't pending or description is not in [{0}, {1}]".format(
+                        github.NOT_TESTED, github.NOT_TESTED_DIRECT)
                 else:  # only check the newest status of the supplied context
                     return None
 

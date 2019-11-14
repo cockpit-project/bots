@@ -141,7 +141,8 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
     current = time.strftime('%Y%m%d-%H%M%M')
 
     checkout = "PRIORITY={priority:04d} ./make-checkout --verbose"
-    cmd = "TEST_PROJECT={repo} TEST_NAME={name}-{current} TEST_REVISION={revision} ../tests-invoke --pull-number={pull_number} "
+    cmd = "TEST_PROJECT={repo} TEST_NAME={name}-{current} TEST_REVISION={revision} " \
+          "../tests-invoke --pull-number={pull_number} "
     if base != ref:
         checkout += " --rebase={base}"
 
@@ -347,7 +348,8 @@ def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sh
         # there are 3 different HEADs
         # ref:    the PR that we are testing
         # base:   the target branch of that PR
-        # branch: the branch of the external project that we are testing against this PR (only applies to cockpit-project/bots PRs)
+        # branch: the branch of the external project that we are testing
+        #         against this PR (only applies to cockpit-project/bots PRs)
         for context in todos:
             # Get correct project and branch. Ones from test name have priority
             project = repo

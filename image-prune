@@ -100,13 +100,15 @@ def get_image_links(ref, git_path):
         git_path = "{0}/".format(git_path)
 
     try:
-        entries = subprocess.check_output(["git", "ls-tree", "--name-only", ref, git_path], universal_newlines=True).splitlines()
+        entries = subprocess.check_output(["git", "ls-tree", "--name-only", ref, git_path],
+                                          universal_newlines=True).splitlines()
     except subprocess.CalledProcessError as e:
         if e.returncode == 128:
             sys.stderr.write("Skipping {0} due to tree error.\n".format(ref))
             return []
         raise
-    links = [subprocess.check_output(["git", "show", "{0}:{1}".format(ref, entry)], universal_newlines=True) for entry in entries]
+    links = [subprocess.check_output(["git", "show", "{0}:{1}".format(ref, entry)], universal_newlines=True)
+             for entry in entries]
     return [link for link in links if link.endswith(".qcow2")]
 
 
@@ -159,7 +161,9 @@ def prune_images(force, dryrun, quiet=False, open_pull_requests=True, offline=Fa
         path = os.path.join(get_images_data_dir(), filename)
         if not force and (enough_disk_space() and os.lstat(path).st_mtime > expiry_threshold):
             continue
-        if os.path.isfile(path) and (path.endswith(".xz") or path.endswith(".qcow2") or path.endswith(".partial")) and filename not in targets:
+        if os.path.isfile(path) and \
+                (path.endswith(".xz") or path.endswith(".qcow2") or path.endswith(".partial")) and \
+                filename not in targets:
             if not quiet or dryrun:
                 sys.stderr.write("Pruning {0}\n".format(filename))
             if not dryrun:
@@ -194,14 +198,20 @@ def main():
     parser = argparse.ArgumentParser(description='Prune downloaded images')
     parser.add_argument("--force", action="store_true", help="Delete images even if they aren't old")
     parser.add_argument("--quiet", action="store_true", help="Make downloading quieter")
-    parser.add_argument("-d", "--dry-run-prune", dest="dryrun", action="store_true", help="Don't actually delete images and links")
-    parser.add_argument("-b", "--branches-only", dest="branches_only", action="store_true", help="Don't consider pull requests on GitHub, only look at branches")
-    parser.add_argument("-c", "--checkout-only", dest="checkout_only", action="store_true", help="Consider neither pull requests on GitHub nor branches, only look at the current checkout")
-    parser.add_argument("-o", "--offline", dest="offline", action="store_true", help="Don't access external sources such as GitHub")
+    parser.add_argument("-d", "--dry-run-prune", dest="dryrun", action="store_true",
+                        help="Don't actually delete images and links")
+    parser.add_argument("-b", "--branches-only", dest="branches_only", action="store_true",
+                        help="Don't consider pull requests on GitHub, only look at branches")
+    parser.add_argument("-c", "--checkout-only", dest="checkout_only", action="store_true",
+                        help="Consider neither pull requests on GitHub nor branches, only look at the current checkout")
+    parser.add_argument("-o", "--offline", dest="offline", action="store_true",
+                        help="Don't access external sources such as GitHub")
     args = parser.parse_args()
 
     try:
-        prune_images(args.force, args.dryrun, quiet=args.quiet, open_pull_requests=(not args.branches_only), offline=args.offline, checkout_only=args.checkout_only)
+        prune_images(args.force, args.dryrun, quiet=args.quiet,
+                     open_pull_requests=(not args.branches_only),
+                     offline=args.offline, checkout_only=args.checkout_only)
     except RuntimeError as ex:
         sys.stderr.write("image-prune: {0}\n".format(str(ex)))
         return 1

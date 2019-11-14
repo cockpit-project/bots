@@ -112,7 +112,11 @@ def main():
             return 0
 
         if not cmd:
-            cmd, delivery_tag = consume_task_queue(channel, opts.amqp, q.declare_results['public'], q.declare_results['rhel'])
+            cmd, delivery_tag = consume_task_queue(
+                channel,
+                opts.amqp,
+                q.declare_results['public'],
+                q.declare_results['rhel'])
         if not cmd:
             logging.info("All queues are empty")
             return 1
