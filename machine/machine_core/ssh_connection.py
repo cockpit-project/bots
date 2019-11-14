@@ -20,7 +20,6 @@ import os
 import time
 import socket
 import subprocess
-import tempfile
 import select
 import errno
 import sys
