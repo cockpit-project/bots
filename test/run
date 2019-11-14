@@ -3,10 +3,10 @@
 set -eu
 
 # run static code checks like pyflakes and pep8
-PYFILES=$(git grep -lI '^#!.*python')
-python3 -m pyflakes $PYFILES
+PYEXEFILES=$(git grep -lI '^#!.*python')
+python3 -m pyflakes . $PYEXEFILES
 
 # FIXME: Fix code for the warnings and re-enable them
-python3 -m pycodestyle --ignore E722,E501,W504,E402 $PYFILES
+python3 -m pycodestyle --ignore E722,E501,W504,E402 $PYEXEFILES
 
 ./test-bots

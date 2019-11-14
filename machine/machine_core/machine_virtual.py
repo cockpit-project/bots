@@ -303,7 +303,6 @@ class VirtMachine(Machine):
 
         Machine.__init__(self, image=image, **args)
 
-        base_dir = os.path.dirname(BOTS_DIR)
         self.run_dir = os.path.join(get_temp_dir(), "run")
 
         self.virt_connection = self._libvirt_connection(hypervisor = "qemu:///session")
@@ -666,7 +665,6 @@ class VirtMachine(Machine):
         if not networking:
             networking = VirtNetwork(image=self.image).interface()
         self._qemu_monitor("netdev_add socket,mcast=230.0.0.1:{mcast},id={id}".format(mcast=networking["mcast"], id=networking["hostnet"]))
-        cmd = "device_add virtio-net-pci,mac={0},netdev={1}".format(networking["mac"], networking["hostnet"])
         self._qemu_monitor("device_add virtio-net-pci,mac={0},netdev={1}".format(networking["mac"], networking["hostnet"]))
         return networking["mac"]
 

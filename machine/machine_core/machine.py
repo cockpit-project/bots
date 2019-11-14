@@ -77,7 +77,7 @@ class Machine(ssh_connection.SSHConnection):
             self.web_port = web_port
         if label:
             self.label = label
-        elif self.image is not "unknown":
+        elif self.image != "unknown":
             self.label = "{}-{}-{}".format(self.image, self.ssh_address, self.ssh_port)
         else:
             self.label = "{}@{}:{}".format(self.ssh_user, self.ssh_address, self.ssh_port)
