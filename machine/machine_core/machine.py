@@ -181,7 +181,8 @@ class Machine(ssh_connection.SSHConnection):
         else:
             cursor_arg = ""
 
-        cmd = "journalctl %s -o cat SYSLOG_IDENTIFIER=kernel 2>&1 | grep 'type=%s.*audit' || true" % (cursor_arg, type_pref, )
+        cmd = "journalctl %s -o cat SYSLOG_IDENTIFIER=kernel 2>&1 | grep 'type=%s.*audit' || true" % (
+            cursor_arg, type_pref,)
         messages = self.execute(cmd).splitlines()
         if len(messages) == 1 and "Cannot assign requested address" in messages[0]:
             messages = []
@@ -206,13 +207,11 @@ class Machine(ssh_connection.SSHConnection):
             # self.execute("atomic run cockpit/ws --no-tls")
             # but atomic doesn't forward the parameter, so we use the resulting command
             # also we need to wait for cockpit to be up and running
-            cmd = """#!/bin/sh
-            systemctl start docker &&
-            """
-            if tls:
-                cmd += "/usr/bin/docker run -d --privileged --pid=host -v /:/host cockpit/ws /container/atomic-run --local-ssh\n"
-            else:
-                cmd += "/usr/bin/docker run -d --privileged --pid=host -v /:/host cockpit/ws /container/atomic-run --local-ssh --no-tls\n"
+            cmd = """#!/bin/sh -e
+            systemctl start docker
+            docker run -d --privileged --pid=host -v /:/host cockpit/ws /container/atomic-run --local-ssh"""
+            if not tls:
+                cmd += " --no-tls\n"
             with timeout.Timeout(seconds=90, error_message="Timeout while waiting for cockpit/ws to start"):
                 self.execute(script=cmd)
             self.wait_for_cockpit_running(atomic_wait_for_host or "localhost")
@@ -233,7 +232,11 @@ class Machine(ssh_connection.SSHConnection):
             self.execute(script="""#!/bin/sh
             mkdir -p /etc/systemd/system/cockpit.service.d/ &&
             rm -f /etc/systemd/system/cockpit.service.d/notls.conf &&
-            printf \"[Service]\nExecStartPre=-/bin/sh -c 'echo 0 > /proc/sys/kernel/yama/ptrace_scope'\nExecStart=\n%s --no-tls\n\" `systemctl cat cockpit.service | grep ExecStart=` > /etc/systemd/system/cockpit.service.d/notls.conf &&
+            printf "[Service]
+            ExecStartPre=-/bin/sh -c 'echo 0 > /proc/sys/kernel/yama/ptrace_scope'
+            ExecStart=
+            %s --no-tls" `systemctl cat cockpit.service | grep ExecStart=` \
+                    > /etc/systemd/system/cockpit.service.d/notls.conf &&
             systemctl daemon-reload &&
             systemctl stop cockpit.service &&
             systemctl start cockpit.socket
@@ -243,7 +246,7 @@ class Machine(ssh_connection.SSHConnection):
         """Restart Cockpit.
         """
         if self.atomic_image:
-            with timeout.Timeout(seconds=90, error_message="timeoutlib.Timeout while waiting for cockpit/ws to restart"):
+            with timeout.Timeout(seconds=90, error_message="Timeout while waiting for cockpit/ws to restart"):
                 self.execute("docker restart `docker ps | grep cockpit/ws | awk '{print $1;}'`")
             self.wait_for_cockpit_running()
         elif self.image in ["fedora-coreos"]:
@@ -265,7 +268,9 @@ class Machine(ssh_connection.SSHConnection):
 
     def set_address(self, address, mac='52:54:01'):
         """Set IP address for the network interface with given mac prefix"""
-        cmd = "nmcli con add type ethernet autoconnect yes con-name static-{mac} ifname \"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\" ip4 {address} && ( nmcli conn up static-{mac} || true )"
+        cmd = "nmcli con add type ethernet autoconnect yes con-name static-{mac} " \
+              "ifname \"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\"" \
+              " ip4 {address} && ( nmcli conn up static-{mac} || true )"
         self.execute(cmd.format(mac=mac, address=address))
 
     def set_dns(self, nameserver=None, domain=None):
@@ -273,12 +278,17 @@ class Machine(ssh_connection.SSHConnection):
 
     def dhcp_server(self, mac='52:54:01', range=['10.111.112.2', '10.111.127.254']):
         """Sets up a DHCP server on the interface"""
-        cmd = "dnsmasq --domain=cockpit.lan --interface=\"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\" --bind-dynamic --dhcp-range=" + ','.join(range) + " && firewall-cmd --add-service=dhcp"
+        cmd = "dnsmasq --domain=cockpit.lan " \
+              "--interface=\"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\"" \
+              " --bind-dynamic --dhcp-range=" + ','.join(range) + \
+              " && firewall-cmd --add-service=dhcp"
         self.execute(cmd.format(mac=mac))
 
     def dns_server(self, mac='52:54:01'):
         """Sets up a DNS server on the interface"""
-        cmd = "dnsmasq --domain=cockpit.lan --interface=\"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\" --bind-dynamic"
+        cmd = "dnsmasq --domain=cockpit.lan " \
+              "--interface=\"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\"" \
+              " --bind-dynamic"
         self.execute(cmd.format(mac=mac))
 
     def wait_for_cockpit_running(self, address="localhost", port=9090, seconds=30, tls=False):

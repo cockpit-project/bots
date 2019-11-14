@@ -64,7 +64,8 @@ def main():
         shutil.rmtree(TARGET_DIR)
 
     cache = os.getenv('XDG_CACHE_HOME', ".")
-    execute("git", "clone", "--reference-if-able", "{}/{}".format(cache, api.repo), "https://github.com/{}".format(api.repo), TARGET_DIR)
+    execute("git", "clone", "--reference-if-able", "{}/{}".format(cache, api.repo),
+            "https://github.com/{}".format(api.repo), TARGET_DIR)
     execute("git", "fetch", "origin", opts.ref, cwd=TARGET_DIR, error_on_fail=False)
     execute("git", "checkout", "--detach", opts.revision, cwd=TARGET_DIR, error_on_fail=False)
 

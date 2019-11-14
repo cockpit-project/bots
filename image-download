@@ -99,7 +99,8 @@ def find(name, stores, latest, quiet):
             if curl("--resolve", resolve):
                 continue
 
-            # fall back for OpenShift proxied stores which send their own SSL cert initially; host name has to match that
+            # fall back for OpenShift proxied stores which send their own SSL cert initially
+            # host name has to match that
             source = urllib.parse.urljoin(store, name)
             if curl():
                 continue

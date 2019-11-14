@@ -80,13 +80,15 @@ def run(unused, verbose=False, **kwargs):
         # Create a pull request from these changes
         title = "naughty: Close {0}: {1}".format(number, issue["title"])
         days = int((now - updated) / SECONDS_PER_DAY)
-        body = "Known issue which has not occurred in {0} days\n\n{1}\n\nFixes #{2}".format(days, issue["title"], number)
+        body = "Known issue which has not occurred in {0} days\n\n{1}\n\nFixes #{2}".format(
+            days, issue["title"], number)
         branch = task.branch(number, "{0}\n\n{1}".format(title, body), pathspec="naughty/", **kwargs)
 
         if branch:
             kwargs["title"] = title
             pull = task.pull(branch, body=body, **kwargs)
-            task.comment(pull, "Please comment on the upstream distro bug manually before accepting this pull request.\n\nIf you wish to keep this known issue open, then update it")
+            task.comment(pull, "Please comment on the upstream distro bug manually before accepting this "
+                               "pull request.\n\nIf you wish to keep this known issue open, then update it")
 
 
 if __name__ == '__main__':

@@ -113,7 +113,8 @@ class SSHConnection(object):
                 if boot_id:
                     break
         if not boot_id:
-            raise exceptions.Failure("Unable to reach machine {0} via ssh: {1}:{2}".format(self.label, self.ssh_address, self.ssh_port))
+            raise exceptions.Failure("Unable to reach machine {0} via ssh: {1}:{2}".format(
+                self.label, self.ssh_address, self.ssh_port))
         self.boot_id = boot_id
 
     def wait_reboot(self, timeout_sec=180):

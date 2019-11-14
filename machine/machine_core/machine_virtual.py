@@ -659,15 +659,18 @@ class VirtMachine(Machine):
         self.message("& " + command)
         # you can run commands manually using virsh:
         # virsh -c qemu:///session qemu-monitor-command [domain name/id] --hmp [command]
-        output = libvirt_qemu.qemuMonitorCommand(self._domain, command, libvirt_qemu.VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP)
+        output = libvirt_qemu.qemuMonitorCommand(self._domain, command,
+                                                 libvirt_qemu.VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP)
         self.message(output.strip())
         return output
 
     def add_netiface(self, networking=None):
         if not networking:
             networking = VirtNetwork(image=self.image).interface()
-        self._qemu_monitor("netdev_add socket,mcast=230.0.0.1:{mcast},id={id}".format(mcast=networking["mcast"], id=networking["hostnet"]))
-        self._qemu_monitor("device_add virtio-net-pci,mac={0},netdev={1}".format(networking["mac"], networking["hostnet"]))
+        self._qemu_monitor("netdev_add socket,mcast=230.0.0.1:{mcast},id={id}".format(
+            mcast=networking["mcast"], id=networking["hostnet"]))
+        self._qemu_monitor("device_add virtio-net-pci,mac={0},netdev={1}".format(
+            networking["mac"], networking["hostnet"]))
         return networking["mac"]
 
     def needs_writable_usr(self):
