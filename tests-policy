@@ -282,7 +282,7 @@ def check_known_issue(api, trace, image):
 # The idea is to combine repeated errors into fewer comments by
 # editing them and keeping all relevant information.
 #
-# For this we keep one comment per context (e.g. 'verify/fedora-atomic')
+# For this we keep one comment per context (e.g. 'fedora-testing')
 # and divide that into sections, one each per error description / trace.
 # In each section, we keep the error description / trace as well as
 # the number of recorded events, the first occurrence and the last 10
