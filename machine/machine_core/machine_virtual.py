@@ -34,23 +34,8 @@ from .constants import TEST_DIR, BOTS_DIR
 from .directories import get_temp_dir
 
 sys.path.insert(1, BOTS_DIR)
-from task import testmap
 
 MEMORY_MB = 1024
-
-
-# The OSTree variants can't build their own packages, so we build in
-# their classic siblings.  For example, rhel-atomic is built
-# in rhel-7-X
-def get_build_image(image):
-    (test_os, unused) = os.path.splitext(os.path.basename(image))
-    return testmap.OSTREE_BUILD_IMAGE.get(image, image)
-
-
-# some tests have suffixes that run the same image in different modes; map a
-# test context image to an actual physical image name
-def get_test_image(image):
-    return image.replace("-distropkg", "")
 
 
 # based on http://stackoverflow.com/a/17753573
