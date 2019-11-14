@@ -131,7 +131,6 @@ class SSHConnection(object):
         else:
             raise exceptions.Failure("Timeout waiting for system to reboot properly")
 
-
     def _start_ssh_master(self):
         self._kill_ssh_master()
 
@@ -144,7 +143,7 @@ class SSHConnection(object):
             "-o", "StrictHostKeyChecking=no",
             "-o", "UserKnownHostsFile=/dev/null",
             "-o", "BatchMode=yes",
-            "-M", # ControlMaster, no stdin
+            "-M",  # ControlMaster, no stdin
             "-o", "ControlPath=" + control,
             "-o", "LogLevel=ERROR",
             "-l", self.ssh_user,
@@ -282,7 +281,7 @@ class SSHConnection(object):
             additional_ssh_params += ["-o", "ControlPath=" + self.ssh_master]
 
         if command:
-            if getattr(command, "strip", None): # Is this a string?
+            if getattr(command, "strip", None):  # Is this a string?
                 cmd += [command]
                 if not quiet:
                     self.message("+", command)
@@ -364,15 +363,15 @@ class SSHConnection(object):
             "-o", "UserKnownHostsFile=/dev/null",
             "-o", "ControlPath=" + self.ssh_master,
             "-o", "BatchMode=yes",
-          ]
+        ]
         if not self.verbose:
-            cmd += [ "-q" ]
+            cmd += ["-q"]
 
         def relative_to_test_dir(path):
             return os.path.join(relative_dir, path)
         cmd += map(relative_to_test_dir, sources)
 
-        cmd += [ "%s@[%s]:%s" % (self.ssh_user, self.ssh_address, dest) ]
+        cmd += ["%s@[%s]:%s" % (self.ssh_user, self.ssh_address, dest)]
 
         self.message("Uploading", ", ".join(sources))
         self.message(" ".join(cmd))
@@ -397,7 +396,7 @@ class SSHConnection(object):
             ]
         if not self.verbose:
             cmd += ["-q"]
-        cmd += [ "%s@[%s]:%s" % (self.ssh_user, self.ssh_address, source), dest ]
+        cmd += ["%s@[%s]:%s" % (self.ssh_user, self.ssh_address, source), dest]
 
         self.message("Downloading", source)
         self.message(" ".join(cmd))
@@ -420,10 +419,10 @@ class SSHConnection(object):
             "-o", "ControlPath=" + self.ssh_master,
             "-o", "BatchMode=yes",
             "-r",
-          ]
+        ]
         if not self.verbose:
             cmd += ["-q"]
-        cmd += [ "%s@[%s]:%s" % (self.ssh_user, self.ssh_address, source), dest ]
+        cmd += ["%s@[%s]:%s" % (self.ssh_user, self.ssh_address, source), dest]
 
         self.message("Downloading", source)
         self.message(" ".join(cmd))
@@ -431,7 +430,7 @@ class SSHConnection(object):
             subprocess.check_call(cmd)
             target = os.path.join(dest, os.path.basename(source))
             if os.path.exists(target):
-                subprocess.check_call([ "find", target, "-type", "f", "-exec", "chmod", "0644", "{}", ";" ])
+                subprocess.check_call(["find", target, "-type", "f", "-exec", "chmod", "0644", "{}", ";"])
         except:
             self.message("Error while downloading directory '{0}'".format(source))
 

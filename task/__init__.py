@@ -31,8 +31,6 @@ import time
 import traceback
 import urllib.parse
 
-sys.dont_write_bytecode = True
-
 from . import github
 from . import sink
 from machine.machine_core.directories import BASE_DIR
@@ -51,6 +49,8 @@ __all__ = (
     "redhat_network",
     "REDHAT_STORE",
 )
+
+sys.dont_write_bytecode = True
 
 # Server which has the private RHEL/Windows images
 REDHAT_STORE = "https://cockpit-11.e2e.bos.redhat.com:8493"

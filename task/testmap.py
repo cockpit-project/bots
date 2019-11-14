@@ -25,27 +25,48 @@ REPO_BRANCH_CONTEXT = {
         ],
     },
     'cockpit-project/cockpit': {
-        'master': ['fedora-30/container-bastion',
-            'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome', 'fedora-30/selenium-edge',
-            'debian-stable', 'debian-testing',
-            'ubuntu-1804', 'ubuntu-stable',
-            'fedora-30', 'fedora-31', 'fedora-coreos', 'fedora-30/firefox',
-            'rhel-8-1-distropkg', 'rhel-8-2',
+        'master': [
+            'fedora-30/container-bastion',
+            'fedora-30/selenium-firefox',
+            'fedora-30/selenium-chrome',
+            'fedora-30/selenium-edge',
+            'debian-stable',
+            'debian-testing',
+            'ubuntu-1804',
+            'ubuntu-stable',
+            'fedora-30',
+            'fedora-31',
+            'fedora-coreos',
+            'fedora-30/firefox',
+            'rhel-8-1-distropkg',
+            'rhel-8-2',
         ],
-        'rhel-7.8': ['rhel-7-8', 'rhel-atomic', 'continuous-atomic',
-            'fedora-30/container-bastion', 'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome',
+        'rhel-7.8': [
+            'rhel-7-8',
+            'rhel-atomic',
+            'continuous-atomic',
+            'fedora-30/container-bastion',
+            'fedora-30/selenium-firefox',
+            'fedora-30/selenium-chrome',
             'centos-7',
-        ],
-        'rhel-8-appstream': ['fedora-30/container-bastion',
-            'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome', 'rhel-8-1-distropkg', 'rhel-8-1',
-        ],
-        'rhel-8.1': ['fedora-30/container-bastion',
-            'fedora-30/selenium-firefox', 'fedora-30/selenium-chrome', 'rhel-8-1',
-        ],
+            ],
+        'rhel-8-appstream': [
+            'fedora-30/container-bastion',
+            'fedora-30/selenium-firefox',
+            'fedora-30/selenium-chrome',
+            'rhel-8-1-distropkg',
+            'rhel-8-1',
+            ],
+        'rhel-8.1': [
+            'fedora-30/container-bastion',
+            'fedora-30/selenium-firefox',
+            'fedora-30/selenium-chrome',
+            'rhel-8-1',
+            ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
-        ],
+            ],
     },
     'cockpit-project/starter-kit': {
         'master': [
@@ -163,6 +184,7 @@ IMAGE_REFRESH_TRIGGERS = {
     ]
 }
 
+
 # The OSTree variants can't build their own packages, so we build in
 # their classic siblings.  For example, rhel-atomic is built
 # in rhel-7-X
@@ -192,7 +214,7 @@ def tests_for_image(image):
 
     tests = set(IMAGE_REFRESH_TRIGGERS.get(image, []))
     for repo, branch_contexts in REPO_BRANCH_CONTEXT.items():
-        for  branch, contexts in branch_contexts.items():
+        for branch, contexts in branch_contexts.items():
             if branch.startswith('_'):
                 continue
             for context in contexts:

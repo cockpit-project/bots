@@ -20,6 +20,10 @@ import subprocess
 
 from .constants import BOTS_DIR, BASE_DIR, GIT_DIR
 
+_images_data_dir = None
+_temp_dir = None
+
+
 def get_git_config(variable):
     if not os.path.exists(GIT_DIR):
         return None
@@ -29,10 +33,10 @@ def get_git_config(variable):
         myenv["GIT_DIR"] = GIT_DIR
         return subprocess.check_output(["git", "config", variable], universal_newlines=True, env=myenv).strip()
 
-    except (OSError, subprocess.CalledProcessError): # 'git' not in PATH, or cmd fails
+    except (OSError, subprocess.CalledProcessError):  # 'git' not in PATH, or cmd fails
         return None
 
-_images_data_dir = None
+
 def get_images_data_dir():
     global _images_data_dir
 
@@ -44,7 +48,7 @@ def get_images_data_dir():
 
     return _images_data_dir
 
-_temp_dir = None
+
 def get_temp_dir():
     global _temp_dir
 
