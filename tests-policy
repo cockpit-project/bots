@@ -36,14 +36,7 @@ FLAKE_THRESHOLD = 0.4
 
 from task import github
 from machine.machine_core.directories import BOTS_DIR
-
-
-try:
-    from machine.testvm import get_test_image
-except ImportError:
-    # fallback for unit tests where libvirt is not available
-    def get_test_image(i):
-        return i
+from task.testmap import get_test_image
 
 
 def main():

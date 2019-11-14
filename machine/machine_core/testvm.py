@@ -18,7 +18,7 @@
 from .timeout import Timeout
 from .machine import Machine
 from .exceptions import Failure, RepeatableFailure
-from .machine_virtual import VirtMachine, VirtNetwork, get_build_image, get_test_image
+from .machine_virtual import VirtMachine, VirtNetwork
 from .constants import BOTS_DIR, TEST_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT
 
-__all__ = [Timeout, Machine, Failure, RepeatableFailure, VirtMachine, VirtNetwork, get_build_image, get_test_image, BOTS_DIR, TEST_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT]
+__all__ = [Timeout, Machine, Failure, RepeatableFailure, VirtMachine, VirtNetwork, BOTS_DIR, TEST_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT]

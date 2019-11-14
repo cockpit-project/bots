@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import os.path
+
+
 REPO_BRANCH_CONTEXT = {
     'cockpit-project/bots': {
         'master': [
@@ -159,6 +162,19 @@ IMAGE_REFRESH_TRIGGERS = {
         "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
     ]
 }
+
+# The OSTree variants can't build their own packages, so we build in
+# their classic siblings.  For example, rhel-atomic is built
+# in rhel-7-X
+def get_build_image(image):
+    (test_os, unused) = os.path.splitext(os.path.basename(image))
+    return OSTREE_BUILD_IMAGE.get(image, image)
+
+
+# some tests have suffixes that run the same image in different modes; map a
+# test context image to an actual physical image name
+def get_test_image(image):
+    return image.replace("-distropkg", "")
 
 
 def projects():
