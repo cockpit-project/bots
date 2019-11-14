@@ -28,7 +28,8 @@ import time
 
 from task import github
 
-from machine import testvm
+from machine.machine_core.constants import IMAGES_DIR
+from machine.machine_core.directories import get_images_data_dir
 
 # threshold in G below which unreferenced qcow2 images will be pruned, even if they aren't old
 PRUNE_THRESHOLD_G = float(os.environ.get("PRUNE_THRESHOLD_G", 15))
@@ -37,7 +38,7 @@ PRUNE_THRESHOLD_G = float(os.environ.get("PRUNE_THRESHOLD_G", 15))
 def enough_disk_space():
     """Check if available disk space in our data store is sufficient
     """
-    st = os.statvfs(testvm.get_images_data_dir())
+    st = os.statvfs(get_images_data_dir())
     free = st.f_bavail * st.f_frsize / (1024 * 1024 * 1024)
     return free >= PRUNE_THRESHOLD_G
 
@@ -143,8 +144,8 @@ def prune_images(force, dryrun, quiet=False, open_pull_requests=True, offline=Fa
         targets = get_image_names(quiet, open_pull_requests, offline)
 
     # what we have in the current checkout might already have been added by its branch, but check anyway
-    for filename in os.listdir(testvm.IMAGES_DIR):
-        path = os.path.join(testvm.IMAGES_DIR, filename)
+    for filename in os.listdir(IMAGES_DIR):
+        path = os.path.join(IMAGES_DIR, filename)
 
         # only consider original image entries as trustworthy sources and ignore non-links
         if path.endswith(".qcow2") or path.endswith(".partial") or not os.path.islink(path):
@@ -154,8 +155,8 @@ def prune_images(force, dryrun, quiet=False, open_pull_requests=True, offline=Fa
         targets.add(target)
 
     expiry_threshold = now - IMAGE_EXPIRE * 86400
-    for filename in os.listdir(testvm.get_images_data_dir()):
-        path = os.path.join(testvm.get_images_data_dir(), filename)
+    for filename in os.listdir(get_images_data_dir()):
+        path = os.path.join(get_images_data_dir(), filename)
         if not force and (enough_disk_space() and os.lstat(path).st_mtime > expiry_threshold):
             continue
         if os.path.isfile(path) and (path.endswith(".xz") or path.endswith(".qcow2") or path.endswith(".partial")) and filename not in targets:
@@ -165,8 +166,8 @@ def prune_images(force, dryrun, quiet=False, open_pull_requests=True, offline=Fa
                 os.unlink(path)
 
     # now prune broken links
-    for filename in os.listdir(testvm.IMAGES_DIR):
-        path = os.path.join(testvm.IMAGES_DIR, filename)
+    for filename in os.listdir(IMAGES_DIR):
+        path = os.path.join(IMAGES_DIR, filename)
 
         # don't prune original image entries and ignore non-links
         if not path.endswith(".qcow2") or not os.path.islink(path):
@@ -182,8 +183,8 @@ def prune_images(force, dryrun, quiet=False, open_pull_requests=True, offline=Fa
 
 def every_image():
     result = []
-    for filename in os.listdir(testvm.IMAGES_DIR):
-        link = os.path.join(testvm.IMAGES_DIR, filename)
+    for filename in os.listdir(IMAGES_DIR):
+        link = os.path.join(IMAGES_DIR, filename)
         if os.path.islink(link):
             result.append(filename)
     return result

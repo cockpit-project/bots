@@ -43,8 +43,11 @@ import time
 import fcntl
 import urllib.parse
 
-from machine import testvm
+from machine.machine_core.constants import IMAGES_DIR
+from machine.machine_core.directories import get_images_data_dir
+
 from task import REDHAT_STORE
+from task.testmap import get_test_image
 
 CONFIG = "~/.config/image-stores"
 DEFAULT = [
@@ -62,7 +65,7 @@ EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
 
 def find(name, stores, latest, quiet):
     found = []
-    ca = os.path.join(testvm.IMAGES_DIR, "files", "ca.pem")
+    ca = os.path.join(IMAGES_DIR, "files", "ca.pem")
 
     for store in stores:
         url = urllib.parse.urlparse(store)
@@ -196,14 +199,14 @@ def download(dest, force, state, quiet, stores):
 
 # Calculate a place to put images where links are not committed in git
 def state_target(path):
-    data_dir = testvm.get_images_data_dir()
+    data_dir = get_images_data_dir()
     os.makedirs(data_dir, mode=0o775, exist_ok=True)
     return os.path.join(data_dir, path)
 
 
 # Calculate a place to put images where links are committed in git
 def committed_target(image):
-    link = os.path.join(testvm.IMAGES_DIR, image)
+    link = os.path.join(IMAGES_DIR, image)
     if not os.path.islink(link):
         raise RuntimeError("image link does not exist: " + image)
 
@@ -216,17 +219,17 @@ def committed_target(image):
         relative_dir = os.path.dirname(os.path.abspath(link))
         full_dest = os.path.join(relative_dir, dest)
 
-    dest = os.path.join(testvm.get_images_data_dir(), dest)
+    dest = os.path.join(get_images_data_dir(), dest)
 
     # We have the file but there is not valid link
     if os.path.exists(dest):
         try:
-            os.symlink(dest, os.path.join(testvm.IMAGES_DIR, os.readlink(link)))
+            os.symlink(dest, os.path.join(IMAGES_DIR, os.readlink(link)))
         except FileExistsError:
             pass
 
     # The image file in the images directory, may be same as dest
-    image_file = os.path.join(testvm.IMAGES_DIR, os.readlink(link))
+    image_file = os.path.join(IMAGES_DIR, os.readlink(link))
 
     # Double check that symlink in place but never make a cycle.
     if os.path.abspath(dest) != os.path.abspath(image_file):
@@ -257,7 +260,7 @@ def wait_lock(target):
 
 
 def download_images(image_list, force, quiet, state, store):
-    data_dir = testvm.get_images_data_dir()
+    data_dir = get_images_data_dir()
     os.makedirs(data_dir, exist_ok=True)
 
     # A default set of images are all links in git.  These links have
@@ -267,15 +270,15 @@ def download_images(image_list, force, quiet, state, store):
     if not image_list:
         image_list = []
         if not state:
-            for filename in os.listdir(testvm.IMAGES_DIR):
-                link = os.path.join(testvm.IMAGES_DIR, filename)
+            for filename in os.listdir(IMAGES_DIR):
+                link = os.path.join(IMAGES_DIR, filename)
                 if os.path.islink(link) and os.path.dirname(os.readlink(link)) == "":
                     image_list.append(filename)
 
     success = True
 
     for image in image_list:
-        image = testvm.get_test_image(image)
+        image = get_test_image(image)
         try:
             if state:
                 target = state_target(image)
