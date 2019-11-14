@@ -35,8 +35,8 @@ import subprocess
 import sys
 import urllib.parse
 
-from machine import testvm
-from machine.machine_core.directories import BOTS_DIR
+from machine.machine_core.constants import IMAGES_DIR
+from machine.machine_core.directories import BOTS_DIR, get_images_data_dir
 
 
 def upload(store, source):
@@ -93,13 +93,13 @@ def main():
     parser.add_argument('image', nargs='*')
     args = parser.parse_args()
 
-    data_dir = testvm.get_images_data_dir()
+    data_dir = get_images_data_dir()
     sources = []
     for image in args.image:
         if args.state:
             source = os.path.join(data_dir, image)
         else:
-            link = os.path.join(testvm.IMAGES_DIR, image)
+            link = os.path.join(IMAGES_DIR, image)
             if not os.path.islink(link):
                 parser.error("image link does not exist: " + image)
             source = os.path.join(data_dir, os.readlink(link))
