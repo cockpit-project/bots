@@ -19,6 +19,7 @@ import signal
 import argparse
 from . import machine_virtual
 
+
 def cmd_cli():
     parser = argparse.ArgumentParser(description="Run a VM image until SIGTERM or SIGINT")
     parser.add_argument("--memory", type=int, default=1024,

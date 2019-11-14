@@ -75,7 +75,7 @@ class DistributedQueue(object):
             raise ValueError('Please format amqp_server as host:port')
         context = ssl.create_default_context(cafile='/run/secrets/webhook/ca.pem')
         context.load_cert_chain(keyfile='/run/secrets/webhook/amqp-client.key',
-            certfile='/run/secrets/webhook/amqp-client.pem')
+                                certfile='/run/secrets/webhook/amqp-client.pem')
         context.check_hostname = False
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
             host=host,

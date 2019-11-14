@@ -61,13 +61,13 @@ def stdchannel_redirected(stdchannel, dest_filename):
             dest_file.close()
 
 
-TEST_CONSOLE_XML="""
+TEST_CONSOLE_XML = """
     <console type='pty'>
       <target type='serial' port='0'/>
     </console>
 """
 
-TEST_GRAPHICS_XML="""
+TEST_GRAPHICS_XML = """
     <video>
       <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
       <alias name='video0'/>
@@ -78,7 +78,7 @@ TEST_GRAPHICS_XML="""
     </graphics>
 """
 
-TEST_DOMAIN_XML="""
+TEST_DOMAIN_XML = """
 <domain type='{type}' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
   <name>{label}</name>
   {cpu}
@@ -118,7 +118,7 @@ TEST_DOMAIN_XML="""
 </domain>
 """
 
-TEST_DISK_XML="""
+TEST_DISK_XML = """
 <disk type='file'>
   <driver name='qemu' type='%(type)s'/>
   <source file='%(file)s'/>
@@ -128,20 +128,20 @@ TEST_DISK_XML="""
 </disk>
 """
 
-TEST_KVM_XML="""
+TEST_KVM_XML = """
   <cpu mode='host-passthrough'/>
   <vcpu>{cpus}</vcpu>
 """
 
 # The main network interface which we use to communicate between VMs
-TEST_MCAST_XML="""
+TEST_MCAST_XML = """
     <qemu:arg value='-netdev'/>
     <qemu:arg value='socket,mcast=230.0.0.1:{mcast},id=mcast0'/>
     <qemu:arg value='-device'/>
     <qemu:arg value='{netdriver},netdev=mcast0,mac={mac},bus=pci.0,addr=0x0f'/>
 """
 
-TEST_BRIDGE_XML="""
+TEST_BRIDGE_XML = """
     <interface type="bridge">
       <source bridge="{bridge}"/>
       <mac address="{mac}"/>
@@ -150,16 +150,17 @@ TEST_BRIDGE_XML="""
 """
 
 # Used to access SSH from the main host into the virtual machines
-TEST_REDIR_XML="""
+TEST_REDIR_XML = """
     <qemu:arg value='-netdev'/>
     <qemu:arg value='user,id=base0,restrict={restrict},net=172.27.0.0/24,hostname={name},{forwards}'/>
     <qemu:arg value='-device'/>
     <qemu:arg value='{netdriver},netdev=base0,bus=pci.0,addr=0x0e'/>
 """
 
+
 class VirtNetwork:
     def __init__(self, network=None, bridge=None, image="generic"):
-        self.locked = [ ]
+        self.locked = []
         self.bridge = bridge
         self.image = image
 
@@ -227,11 +228,11 @@ class VirtNetwork:
         return result
 
     # Create resources for a host, returns address and XML
-    def host(self, number=None, restrict=False, isolate=False, forward={ }):
+    def host(self, number=None, restrict=False, isolate=False, forward={}):
         result = self.interface(number)
         result["mcast"] = self.network
         result["restrict"] = restrict and "on" or "off"
-        result["forward"] = { "22": 2200, "9090": 9090 }
+        result["forward"] = {"22": 2200, "9090": 9090}
         result["forward"].update(forward)
         result["netdriver"] = ("windows" in self.image) and "rtl8139" or "virtio-net-pci"
         forwards = []
@@ -262,9 +263,10 @@ class VirtNetwork:
 
     def kill(self):
         locked = self.locked
-        self.locked = [ ]
+        self.locked = []
         for x in locked:
             os.close(x)
+
 
 class VirtMachine(Machine):
     network = None
@@ -305,15 +307,15 @@ class VirtMachine(Machine):
 
         self.run_dir = os.path.join(get_temp_dir(), "run")
 
-        self.virt_connection = self._libvirt_connection(hypervisor = "qemu:///session")
+        self.virt_connection = self._libvirt_connection(hypervisor="qemu:///session")
 
-        self._disks = [ ]
+        self._disks = []
         self._domain = None
 
         # init variables needed for running a vm
         self._cleanup()
 
-    def _libvirt_connection(self, hypervisor, read_only = False):
+    def _libvirt_connection(self, hypervisor, read_only=False):
         tries_left = 5
         connection = None
         if read_only:
@@ -472,7 +474,7 @@ class VirtMachine(Machine):
             image_file = os.path.join(BOTS_DIR, "images", image)
         if not os.path.exists(image_file):
             try:
-                subprocess.check_call([ os.path.join(BOTS_DIR, "image-download"), image_file ])
+                subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), image_file])
             except OSError as ex:
                 if ex.errno != errno.ENOENT:
                     raise
@@ -604,8 +606,8 @@ class VirtMachine(Machine):
 
         if path:
             (unused, image) = tempfile.mkstemp(suffix='.qcow2', prefix=os.path.basename(path), dir=self.run_dir)
-            subprocess.check_call([ "qemu-img", "create", "-q", "-f", "qcow2",
-                                    "-o", "backing_file=" + os.path.realpath(path), image ])
+            subprocess.check_call(["qemu-img", "create", "-q", "-f", "qcow2",
+                                   "-o", "backing_file=" + os.path.realpath(path), image])
 
         else:
             assert size is not None
@@ -650,7 +652,7 @@ class VirtMachine(Machine):
             }
 
             if self._domain:
-                if self._domain.detachDeviceFlags(disk_desc, libvirt.VIR_DOMAIN_AFFECT_LIVE ) != 0:
+                if self._domain.detachDeviceFlags(disk_desc, libvirt.VIR_DOMAIN_AFFECT_LIVE) != 0:
                     raise Failure("Unable to remove disk from vm")
 
     def _qemu_monitor(self, command):

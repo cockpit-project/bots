@@ -168,10 +168,10 @@ class Machine(ssh_connection.SSHConnection):
 
         cmd = "journalctl 2>&1 %s -o cat -p %d %s || true" % (cursor_arg, log_level, matches)
         messages = self.execute(cmd).splitlines()
-        if len(messages) == 1 and ("Cannot assign requested address" in messages[0]
-                                   or "-- No entries --" in messages[0]):
+        if len(messages) == 1 and \
+           ("Cannot assign requested address" in messages[0] or "-- No entries --" in messages[0]):
             # No messages
-            return [ ]
+            return []
         else:
             return messages
 
@@ -184,7 +184,7 @@ class Machine(ssh_connection.SSHConnection):
         cmd = "journalctl %s -o cat SYSLOG_IDENTIFIER=kernel 2>&1 | grep 'type=%s.*audit' || true" % (cursor_arg, type_pref, )
         messages = self.execute(cmd).splitlines()
         if len(messages) == 1 and "Cannot assign requested address" in messages[0]:
-            messages = [ ]
+            messages = []
         return messages
 
     def get_admin_group(self):
