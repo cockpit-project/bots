@@ -28,7 +28,6 @@ REFRESH = {
     "fedora-30": {},
     "fedora-31": {},
     "fedora-testing": {},
-    "ipa": {"refresh-days": 120},
     "ubuntu-1804": {},
     "ubuntu-stable": {},
     "openshift": {"refresh-days": 30},
