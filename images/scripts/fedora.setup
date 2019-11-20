@@ -105,6 +105,7 @@ tang \
 podman \
 ntp \
 libvirt-daemon-config-network \
+tlog \
 "
 
 ABRT_PACKAGES="\
