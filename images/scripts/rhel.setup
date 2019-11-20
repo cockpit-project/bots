@@ -149,6 +149,7 @@ COCKPIT_DEPS="\
 atomic \
 device-mapper-multipath \
 docker \
+glibc-all-langpacks \
 glib-networking \
 json-glib \
 kexec-tools \
