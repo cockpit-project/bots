@@ -73,9 +73,9 @@ REPO_BRANCH_CONTEXT = {
         'master': [
             'centos-7',
             'fedora-30',
+            'centos-8-stream',
         ],
         '_manual': [
-            'centos-8-stream',
         ],
     },
     'cockpit-project/cockpit-ostree': {
