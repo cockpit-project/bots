@@ -40,6 +40,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-30/firefox',
             'rhel-8-1-distropkg',
             'rhel-8-2',
+            'centos-8-stream',
         ],
         'rhel-7.8': [
             'rhel-7-8',
@@ -66,7 +67,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
-            'centos-8-stream',
         ],
     },
     'cockpit-project/starter-kit': {
