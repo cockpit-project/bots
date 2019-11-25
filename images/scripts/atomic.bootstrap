@@ -58,13 +58,14 @@ done
 # note that due to mirroring, timestamp comparison can result in unnecessary downloading
 out_base="`dirname $out`"
 intermediate="$out_base/$fragment"
+tty --silent || quiet_opt=--quiet
 
 if [ "$intermediate" != "$out" ]; then
-    wget --no-clobber --directory-prefix="$out_base" "$base/$fragment"
+    wget $quiet_opt --no-clobber --directory-prefix="$out_base" "$base/$fragment"
     cp "$intermediate" "$out"
 else
     rm -f "$out"
-    wget --directory-prefix="$out_base" "$base/$fragment"
+    wget $quiet_opt --directory-prefix="$out_base" "$base/$fragment"
 fi
 
 # Make the image be at least 12 Gig.  During boot, docker-storage-setup
