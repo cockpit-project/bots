@@ -87,9 +87,6 @@ class MachineBuilder:
             self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib", "base")],
                                 "/var/tmp/cockpit-base")
 
-            if "rhel" in self.machine.image:
-                self.machine.upload([os.path.expanduser("~/.rhel")], "/root/")
-
             env = {
                 "TEST_OS": self.machine.image,
                 "DO_BUILD": "0" if args.no_build else "1",
@@ -100,7 +97,6 @@ class MachineBuilder:
                 self.machine.execute(script="/var/tmp/SETUP " + self.machine.image,
                                      environment=env, quiet=not self.machine.verbose, timeout=7200)
                 self.machine.execute(command="rm -f /var/tmp/SETUP")
-                self.machine.execute(command="rm -rf /root/.rhel")
 
                 if self.machine.image == 'openshift':
                     # update our local openshift kube config file to match the new image
