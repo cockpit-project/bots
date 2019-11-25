@@ -43,9 +43,6 @@ KUBERNETES_TASKS = [
     ".svc.cluster.local"
 ]
 
-# Credentials for working on above contexts
-REDHAT_CREDS = "~/.rhel/login"
-
 import argparse
 import pipes
 import sys
