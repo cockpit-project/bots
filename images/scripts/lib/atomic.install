@@ -47,7 +47,8 @@ class AtomicCockpitInstaller:
                               "cockpit-docker",
                               "cockpit-kdump",
                               "cockpit-networkmanager",
-                              "cockpit-sosreport"]
+                              "cockpit-sosreport",
+                              "libssh"]
 
     def __init__(self, rpms=None, extra_rpms=None, verbose=False):
         self.verbose = verbose
