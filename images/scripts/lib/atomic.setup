@@ -35,21 +35,10 @@ fi
 /var/lib/testvm/docker-images.setup
 
 # Download the libssh RPM plus dependencies which we'll use for
-# package overlay.  The only way to do this is via a container
-. /etc/os-release
-REPO="updates"
-if [ "$ID" = "rhel" ]; then
-    subscription-manager repos --enable rhel-7-server-extras-rpms
-    REPO="rhel-7-server-extras-rpms"
-    ID="rhel7"
-fi
-docker run --rm --volume=/etc/yum.repos.d:/etc/yum.repos.d:z --volume=/root/rpms:/tmp/rpms:rw,z "$ID:$VERSION_ID" /bin/sh -cex "yum install -y findutils createrepo yum-utils && (cd /tmp/; yumdownloader --enablerepo=$REPO libssh) && find /tmp -name '*.$(uname -m).*rpm' | while read rpm; do mv -v \$rpm /tmp/rpms; done; createrepo /tmp/rpms"
-rm -f /etc/yum.repos.d/*
-cat >/etc/yum.repos.d/deps.repo <<EOF
-[deps]
-baseurl=file:///root/rpms
-enabled=1
-EOF
+# package overlay. Use the EPEL package on RHEL Atomic as well, so that we
+# don't need a subscription.
+mkdir -p /root/rpms
+(cd /root/rpms && curl --silent --show-error -O https://dl.fedoraproject.org/pub/epel/7Server/x86_64/Packages/l/libssh-0.7.1-0.7.el7.x86_64.rpm)
 
 # fully upgrade host. Anything past this point can't touch /etc
 # Upgrade host if there is a valid upgrade available (we might be on a RC)

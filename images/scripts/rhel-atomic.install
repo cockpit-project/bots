@@ -2,4 +2,6 @@
 
 set -e
 
+# libssh is not installed by default on rhel-atomic, but we want to overlay cockpit-dashboard
+cp /root/rpms/libssh*.rpm /var/tmp/build-results/
 /var/lib/testvm/atomic.install --skip cockpit-sosreport "$@"
