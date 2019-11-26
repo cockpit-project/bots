@@ -149,7 +149,6 @@ COCKPIT_DEPS="\
 atomic \
 device-mapper-multipath \
 docker \
-glibc-all-langpacks \
 glib-networking \
 json-glib \
 kexec-tools \
@@ -204,6 +203,7 @@ dracut-fips \
 clevis-luks \
 tang \
 boom-boot \
+glibc-all-langpacks \
 "
 
 if [ "$IMAGE" = "centos-7" ]; then
@@ -218,6 +218,8 @@ fi
 if [ "${IMAGE#rhel-7}" != "$IMAGE" ]; then
     # needed for composer testing
     TEST_PACKAGES="${TEST_PACKAGES} gcc-c++ lorax-composer"
+    # does not exist yet, necessary locales for testing are already installed
+    TEST_PACKAGES="${TEST_PACKAGES/glibc-all-langpacks /}"
 fi
 
 if [ "${IMAGE#rhel-8*}" != "$IMAGE" ] || [ "${IMAGE#centos-8-stream}" != "$IMAGE" ]; then
