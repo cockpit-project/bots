@@ -180,6 +180,8 @@ IMAGE_REFRESH_TRIGGERS = {
     ],
     "services": [
         "fedora-31@cockpit-project/cockpit",
+        "fedora-30/selenium-firefox@cockpit-project/cockpit",
+        "fedora-30/selenium-chrome@cockpit-project/cockpit",
         "ubuntu-1804@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit"
         "rhel-8-2@cockpit-project/cockpit",
