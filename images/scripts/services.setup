@@ -119,6 +119,19 @@ ansible-playbook -i inventory -c local -v --skip-tags 'system_update' playbook.y
 
 rm -rf playbookdir
 
+
+#############################
+#
+# Selenium setup
+#
+#############################
+
+# docker images that we need for integration testing
+docker pull selenium/hub:3
+docker pull selenium/node-chrome-debug:3
+docker pull selenium/node-firefox-debug:3
+
+
 #############################
 #
 # Final tweaks
