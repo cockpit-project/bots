@@ -1,1 +1,1 @@
-*Failed to set system clock: Operation not permitted
+* type=1400 * avc:  denied  { search } * comm="timedatex"
