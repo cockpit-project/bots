@@ -142,6 +142,11 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-8/firefox',
             'rhel-8-1/chrome',
         ],
+        'rhel-8.2': [
+            'rhel-8-2/firefox',
+            'rhel-8-2/chrome',
+            'rhel-8-2/edge',
+        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'centos-8-stream',
