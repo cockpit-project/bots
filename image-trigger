@@ -20,7 +20,6 @@
 DAYS = 7
 
 REFRESH = {
-    "services": {"refresh-days": 120},
     "centos-7": {},
     "centos-8-stream": {},
     "continuous-atomic": {},
@@ -33,12 +32,12 @@ REFRESH = {
     "ubuntu-1804": {},
     "ubuntu-stable": {},
     "openshift": {"refresh-days": 30},
-    'rhel-7-7': {},
-    'rhel-7-8': {},
-    'rhel-8-1': {},
-    'rhel-8-2': {},
-    'rhel-atomic': {},
-    "selenium": {"refresh-days": 30},
+    "rhel-7-7": {},
+    "rhel-7-8": {},
+    "rhel-8-1": {},
+    "rhel-8-2": {},
+    "rhel-atomic": {},
+    "services": {"refresh-days": 30},
 }
 
 import argparse
