@@ -46,7 +46,7 @@ import urllib.parse
 from machine.machine_core.constants import IMAGES_DIR
 from machine.machine_core.directories import get_images_data_dir
 
-from task import REDHAT_STORE
+from task import REDHAT_STORES
 from task.testmap import get_test_image
 
 CONFIG = "~/.config/image-stores"
@@ -54,10 +54,7 @@ DEFAULT = [
     "http://cockpit-images.verify.svc.cluster.local",
     "https://images-cockpit.apps.ci.centos.org/",
     "https://209.132.184.41:8493/",
-    REDHAT_STORE,
-    # fallback RedHat-internal image server in AWS (internal VPN only)
-    "https://10.29.163.169:8493/",
-]
+] + REDHAT_STORES
 
 DEVNULL = open("/dev/null", "r+")
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"

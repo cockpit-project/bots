@@ -47,13 +47,17 @@ __all__ = (
     "verbose",
     "stale",
     "redhat_network",
-    "REDHAT_STORE",
+    "REDHAT_STORES",
 )
 
 sys.dont_write_bytecode = True
 
-# Server which has the private RHEL/Windows images
-REDHAT_STORE = "https://cockpit-11.e2e.bos.redhat.com:8493"
+# Servers which have the private RHEL/Windows images
+REDHAT_STORES = [
+    "https://cockpit-11.e2e.bos.redhat.com:8493",
+    # fallback RedHat-internal image server in AWS (internal VPN only), running only on demand
+    "https://10.29.163.169:8493/",
+]
 
 api = github.GitHub()
 verbose = False
@@ -519,14 +523,17 @@ def redhat_network():
     so this can be called several times.
     '''
     if redhat_network.result is None:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(10)
-        store = urllib.parse.urlparse(REDHAT_STORE)
-        try:
-            s.connect((store.hostname, store.port))
-            redhat_network.result = True
-        except OSError:
-            redhat_network.result = False
+        redhat_network.result = False
+        for url in REDHAT_STORES:
+            store = urllib.parse.urlparse(url)
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(10)
+                s.connect((store.hostname, store.port))
+                redhat_network.result = True
+                break
+            except OSError:
+                pass
 
     return redhat_network.result
 
