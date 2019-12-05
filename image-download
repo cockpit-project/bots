@@ -83,7 +83,8 @@ def find(name, stores, latest, quiet):
 
             def curl(*args):
                 try:
-                    cmd = ["curl"] + list(args) + ["--head", "--silent", "--fail", "--cacert", ca, source]
+                    cmd = ["curl"] + list(args) + ["--head", "--connect-timeout", "10", "--silent",
+                                                   "--fail", "--cacert", ca, source]
                     start = time.time()
                     output = subprocess.check_output(cmd, universal_newlines=True)
                     found.append((cmd, output, message, time.time() - start))
