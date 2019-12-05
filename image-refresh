@@ -22,7 +22,7 @@ import subprocess
 import sys
 
 import task
-from task import github, testmap, REDHAT_STORE
+from task import github, testmap, REDHAT_STORES
 
 from machine.machine_core.directories import BOTS_DIR
 
@@ -42,7 +42,8 @@ def run(image, verbose=False, **kwargs):
     cmd = [os.path.join(BOTS_DIR, "image-create"), "--verbose", "--upload"]
     # these images are not freely redistributable, keep them Red Hat internal
     if image.startswith("rhel") or image.startswith("windows"):
-        cmd += ["--store", REDHAT_STORE]
+        # FIXME: Move this to image-upload and try all stores
+        cmd += ["--store", REDHAT_STORES[0]]
     cmd += [image]
 
     os.environ['VIRT_BUILDER_NO_CACHE'] = "yes"
