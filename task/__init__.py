@@ -520,6 +520,7 @@ def redhat_network():
     '''
     if redhat_network.result is None:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(10)
         store = urllib.parse.urlparse(REDHAT_STORE)
         try:
             s.connect((store.hostname, store.port))
