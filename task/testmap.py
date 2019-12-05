@@ -228,7 +228,7 @@ def tests_for_image(image):
             if branch.startswith('_'):
                 continue
             for context in contexts:
-                if context.split('/')[0] == image:
+                if context.split('/')[0].replace('-distropkg', '') == image:
                     c = context + '@' + repo
                     if branch != "master":
                         c += "/" + branch
