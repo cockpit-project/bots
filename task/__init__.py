@@ -47,10 +47,18 @@ __all__ = (
     "verbose",
     "stale",
     "redhat_network",
+    "PUBLIC_STORES",
     "REDHAT_STORES",
 )
 
 sys.dont_write_bytecode = True
+
+# Servers which have public images
+PUBLIC_STORES = [
+    "https://images-cockpit.apps.ci.centos.org/",
+    # instance in fedorainfracloud.org
+    "https://209.132.184.41:8493/",
+]
 
 # Servers which have the private RHEL/Windows images
 REDHAT_STORES = [
