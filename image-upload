@@ -29,7 +29,7 @@ import urllib.parse
 from machine.machine_core.constants import IMAGES_DIR
 from machine.machine_core.directories import BOTS_DIR, get_images_data_dir
 
-from task import PUBLIC_STORES
+from task import PUBLIC_STORES, REDHAT_STORES
 
 TOKEN = "~/.config/github-token"
 
@@ -103,7 +103,17 @@ def main():
         sources.append(source)
 
     for source in sources:
-        for store in (args.store or PUBLIC_STORES):
+        # determine possible stores, unless explicitly given
+        stores = args.store
+        if not stores:
+            # these images are not freely redistributable, keep them Red Hat internal
+            b = os.path.basename(source)
+            if b.startswith("rhel") or image.startswith("windows"):
+                stores = REDHAT_STORES
+            else:
+                stores = PUBLIC_STORES
+
+        for store in stores:
             ret = upload(store, source)
             if ret == 0:
                 return ret
