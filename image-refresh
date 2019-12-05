@@ -22,7 +22,7 @@ import subprocess
 import sys
 
 import task
-from task import github, testmap, REDHAT_STORES
+from task import github, testmap
 
 from machine.machine_core.directories import BOTS_DIR
 
@@ -39,12 +39,7 @@ def run(image, verbose=False, **kwargs):
     # Cleanup any extraneous disk usage elsewhere
     subprocess.check_call([os.path.join(BOTS_DIR, "vm-reset")])
 
-    cmd = [os.path.join(BOTS_DIR, "image-create"), "--verbose", "--upload"]
-    # these images are not freely redistributable, keep them Red Hat internal
-    if image.startswith("rhel") or image.startswith("windows"):
-        # FIXME: Move this to image-upload and try all stores
-        cmd += ["--store", REDHAT_STORES[0]]
-    cmd += [image]
+    cmd = [os.path.join(BOTS_DIR, "image-create"), "--verbose", "--upload", image]
 
     os.environ['VIRT_BUILDER_NO_CACHE'] = "yes"
     ret = subprocess.call(cmd)
