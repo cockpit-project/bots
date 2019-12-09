@@ -37,6 +37,24 @@ except ImportError:
     no_amqp = True
 
 
+def build_policy(repo, context):
+    policy = testmap.tests_for_project(repo)
+    if context:
+        short_contexts = []
+        for c in context:
+            short_contexts.append(c.split("@")[0])
+        new_policy = {}
+        for (branch, contexts) in policy.items():
+            branch_context = []
+            for c in short_contexts:
+                if c in contexts:
+                    branch_context.append(c)
+            if branch_context:
+                new_policy[branch] = branch_context
+        policy = new_policy
+    return policy
+
+
 def main():
     parser = argparse.ArgumentParser(description='Bot: scan and update status of pull requests on GitHub')
     parser.add_argument('-v', '--human-readable', action="store_true", default=False,
@@ -71,20 +89,7 @@ def main():
     opts.repo = api.repo
 
     try:
-        policy = testmap.tests_for_project(opts.repo)
-        if opts.context:
-            short_contexts = []
-            for context in opts.context:
-                short_contexts.append(context.split("@")[0])
-            policy = {}
-            for (branch, contexts) in testmap.tests_for_project(opts.repo).items():
-                branch_context = []
-                for context in short_contexts:
-                    if context in contexts:
-                        branch_context.append(context)
-                if branch_context:
-                    policy[branch] = branch_context
-        results = scan_for_pull_tasks(api, policy, opts, opts.repo)
+        results = scan_for_pull_tasks(api, opts.context, opts, opts.repo)
     except RuntimeError as ex:
         logging.error("tests-scan: " + str(ex))
         return 1
@@ -267,10 +272,11 @@ def update_status(api, revision, context, last, changes):
     return True
 
 
-def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sha, amqp):
+def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp):
     results = []
     pulls = []
-    contexts = set(itertools.chain(*branch_contexts.values()))
+    branch_contexts = testmap.tests_for_project(repo).values()
+    repo_contexts = set(itertools.chain(*branch_contexts))
 
     if pull_data:
         pulls.append(json.loads(pull_data)['pull_request'])
@@ -319,12 +325,25 @@ def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sh
 
         def is_valid_context(context):
             (os_scenario, _, repo_branch) = context.partition("@")
+
+            # If contexts were specified on commandline, only those are valid
+            # Of course if you specify invalid context in `tests-scan` it will be happy about it
+            # But this can be used when want to try new context which does not yet exists in map
+            if contexts:
+                for c in contexts:
+                    c = c.split("@")[0]
+                    if c == os_scenario:
+                        return True
+                return False
+
+            # If repo in context, consider only contexts from the given repo
             if repo_branch:
                 repo_branch = "/".join(repo_branch.split("/")[:2])
-                repo_contexts = testmap.tests_for_project(repo_branch).values()
-                return os_scenario in set(itertools.chain(*repo_contexts))
-            else:
-                return os_scenario in contexts
+                repo_cs = testmap.tests_for_project(repo_branch).values()
+                return os_scenario in set(itertools.chain(*repo_cs))
+
+            # Valid contexts are the ones that exist in the current repo
+            return os_scenario in repo_contexts
 
         # Create list of statuses to process
         todos = {}
@@ -332,13 +351,14 @@ def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sh
             if is_valid_context(status):
                 todos[status] = statuses[status]
         if not statuses:  # If none defined in github add basic set of contexts
-            for context in branch_contexts.get(base, []):
+            for context in build_policy(repo, contexts).get(base, []):
                 todos[context] = {}
-        # test external projects on bots PRs
-        if repo == "cockpit-project/bots":
-            for context in get_externals():
-                if context not in todos:
-                    todos[context] = {}
+
+            # test external projects on bots PRs
+            if repo == "cockpit-project/bots":
+                for context in get_externals():
+                    if context not in todos:
+                        todos[context] = {}
 
         # there are 3 different HEADs
         # ref:    the PR that we are testing
@@ -399,8 +419,8 @@ def cockpit_tasks(api, update, branch_contexts, repo, pull_data, pull_number, sh
     return results
 
 
-def scan_for_pull_tasks(api, policy, opts, repo):
-    results = cockpit_tasks(api, not opts.dry, policy, repo, opts.pull_data, opts.pull_number, opts.sha, opts.amqp)
+def scan_for_pull_tasks(api, contexts, opts, repo):
+    results = cockpit_tasks(api, not opts.dry, contexts, repo, opts.pull_data, opts.pull_number, opts.sha, opts.amqp)
 
     if opts.human_readable:
         results.sort(reverse=True, key=lambda x: str(x))
