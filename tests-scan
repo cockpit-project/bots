@@ -85,11 +85,6 @@ def main():
                 if branch_context:
                     policy[branch] = branch_context
         results = scan_for_pull_tasks(api, policy, opts, opts.repo)
-
-        # When run from c-p/bots checkout without PR number or PR data we want to scan also all
-        # external projects. E.g. `./tests-scan` in c-p/b checkout will scan all projects
-        if opts.repo == "cockpit-project/bots" and not opts.pull_data and not opts.pull_number:
-            results += scan_external_projects(opts)
     except RuntimeError as ex:
         logging.error("tests-scan: " + str(ex))
         return 1
@@ -414,14 +409,6 @@ def scan_for_pull_tasks(api, policy, opts, repo):
         return list([tests_invoke(*x, options=opts) for x in results])
     with distributed_queue.DistributedQueue(opts.amqp, ['rhel', 'public']) as q:
         return list([queue_test(*x, channel=q.channel, options=opts) for x in results])
-
-
-def scan_external_projects(opts):
-    tests = []
-    for repo in testmap.projects():
-        if repo != "cockpit-project/bots":
-            tests += scan_for_pull_tasks(github.GitHub(repo=repo), testmap.tests_for_project(repo), opts, repo)
-    return tests
 
 
 if __name__ == '__main__':
