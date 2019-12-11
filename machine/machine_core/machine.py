@@ -252,7 +252,11 @@ class Machine(ssh_connection.SSHConnection):
                 self.execute("docker restart `docker ps | grep cockpit/ws | awk '{print $1;}'`")
             self.wait_for_cockpit_running()
         elif self.image in ["fedora-coreos"]:
-            self.execute("podman restart `podman ps --quiet --filter ancestor=cockpit/ws`")
+            # HACK: podman restart is broken (https://bugzilla.redhat.com/show_bug.cgi?id=1780161)
+            # self.execute("podman restart `podman ps --quiet --filter ancestor=cockpit/ws`")
+            tls = "--no-tls" not in self.execute("podman inspect `podman ps --quiet --filter ancestor=cockpit/ws`")
+            self.stop_cockpit()
+            self.start_cockpit(tls=tls)
             self.wait_for_cockpit_running()
         else:
             self.execute("systemctl reset-failed 'cockpit*'; systemctl restart cockpit")
