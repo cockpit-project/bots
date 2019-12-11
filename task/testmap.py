@@ -175,14 +175,6 @@ IMAGE_REFRESH_TRIGGERS = {
     "openshift": [
         "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
     ],
-    "selenium": [
-        "fedora-30/selenium-chrome@cockpit-project/cockpit",
-        "fedora-30/selenium-firefox@cockpit-project/cockpit",
-        "fedora-30/chrome@weldr/cockpit-composer",
-        "fedora-30/firefox@weldr/cockpit-composer",
-        "rhel-7-7/firefox@weldr/cockpit-composer",
-        "rhel-8-1/chrome@weldr/cockpit-composer",
-    ],
     "services": [
         "fedora-31@cockpit-project/cockpit",
         "fedora-30/selenium-firefox@cockpit-project/cockpit",
@@ -191,6 +183,8 @@ IMAGE_REFRESH_TRIGGERS = {
         "debian-stable@cockpit-project/cockpit",
         "rhel-8-2@cockpit-project/cockpit",
         "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
+        "fedora-31/firefox@weldr/cockpit-composer",
+        "rhel-8-1/chrome@weldr/cockpit-composer",
     ]
 }
 
