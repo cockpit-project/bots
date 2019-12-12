@@ -116,6 +116,11 @@ libreport-plugin-bugzilla \
 libreport-fedora
 "
 
+# Install ansible on Fedora 30 image so we can run ansible playbook from some VM
+if [ "${IMAGE%-30}" != "$IMAGE" ]; then
+    TEST_PACKAGES="$TEST_PACKAGES ansible"
+fi
+
 rm -rf /etc/sysconfig/iptables
 
 maybe() { if type "$1" >/dev/null 2>&1; then "$@"; fi; }
