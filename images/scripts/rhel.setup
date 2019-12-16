@@ -140,6 +140,11 @@ fi
 
 yum --nogpgcheck -y update
 
+# make libpwquality less aggressive, so that our "foobar" password works
+if expr "$IMAGE" '>=' "rhel-8-2"; then
+    printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
+fi
+
 echo foobar | passwd --stdin root
 
 # We install all dependencies of the cockpit packages since we want
