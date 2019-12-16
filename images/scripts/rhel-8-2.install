@@ -7,3 +7,7 @@ set -e
 rpm --erase --nodeps --verbose cockpit cockpit-ws cockpit-bridge cockpit-system
 
 /var/lib/testvm/fedora.install --rhel "$@"
+
+# HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1782435
+# segfaults at boot and breaks every test due to unexpected messages
+rm /usr/libexec/virt-what-cpuid-helper
