@@ -132,6 +132,7 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'centos-8-stream',
+            'fedora-31/cloud-cleanup',
         ],
     },
     'weldr/cockpit-composer': {
