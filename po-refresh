@@ -19,6 +19,7 @@
 
 import os
 import json
+import glob
 import subprocess
 import sys
 
@@ -35,6 +36,11 @@ def run(context, verbose=False, **kwargs):
         if verbose:
             sys.stderr.write("+ " + " ".join(args) + "\n")
         return subprocess.check_output(args, cwd=cwd, universal_newlines=True)
+
+    def output_with_stderr(*args):
+        if verbose:
+            sys.stderr.write("+ " + " ".join(args) + "\n")
+        return subprocess.check_output(args, cwd=cwd, universal_newlines=True, stderr=subprocess.STDOUT)
 
     def execute(*args):
         if verbose:
@@ -111,6 +117,17 @@ def run(context, verbose=False, **kwargs):
     if linguas_exists:
         with open("po/LINGUAS", "r", encoding='utf-8') as lngs:
             current_linguas = lngs.read().strip().split()
+
+    # Remove all files that have less than 50% coverage
+    for po in glob.glob("po/*.po"):
+        all_types = output_with_stderr("msgfmt", "--statistics", po).split(", ")
+        translated = int(all_types[0].split(" ")[0])
+        untranslated = 0
+        for u in all_types[1:]:
+            untranslated += int(u.split(" ")[0])
+        coverage = translated / (translated + untranslated)
+        if coverage < 0.5:
+            output("rm", po)
 
     # Remove languages that fall under 50% translated
     files = output("git", "ls-files", "--deleted", "po/")
