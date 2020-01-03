@@ -124,22 +124,24 @@ apt-get -y update
 # apt go-faster
 echo 'Acquire::Languages "none";' > /etc/apt/apt.conf.d/90nolanguages
 apt-get install -y eatmydata
+APT='eatmydata apt-get -y -o Dpkg::Options::=--force-confold'
+
 # remove packages that we don't need
-for p in lxd snapd landscape-common accountsservice open-vm-tools ufw cloud-init; do eatmydata apt-get purge -y --auto-remove $p || true; done
+for p in lxd snapd landscape-common accountsservice open-vm-tools ufw cloud-init; do $APT --auto-remove $p || true; done
 
 # HACK: debian-stable image got /usr/bin/qemu-img removed, even though qemu-utils package is installed
 if [ "$1" = "debian-stable" ]; then
-    eatmydata apt-get install --reinstall -y qemu-utils
+    $APT install --reinstall -y qemu-utils
 fi
 
 # HACK https://bugs.launchpad.net/ubuntu/+source/pcp/+bug/1850281
 if [ "$1" = "ubuntu-stable" ]; then
-    eatmydata apt-get -y install pcp libpcp3 || true
+    $APT install pcp libpcp3 || true
 fi
 
 # install our dependencies
-DEBIAN_FRONTEND=noninteractive eatmydata apt-get -y dist-upgrade
-eatmydata apt-get -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
+$APT dist-upgrade
+$APT install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
 
 # Prepare for building
 #
@@ -156,7 +158,7 @@ PBUILDERSATISFYDEPENDSCMD=true
 $PBUILDER_OPTS
 EOF
 
-eatmydata apt-get -y install dpkg-dev pbuilder
+$APT install dpkg-dev pbuilder
 
 pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
 /usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get | pbuilder --login --save-after-login
@@ -187,7 +189,7 @@ fi
 rm -rf /var/lib/docker/devicemapper
 
 # in case there are unnecessary packages
-eatmydata apt-get -y autoremove || true
+$APT autoremove || true
 
 # disable udev network names, our tests expect the kernel schema
 sed -i '/GRUB_CMDLINE_LINUX=/ s/"$/ net.ifnames=0 biosdevname=0"/' /etc/default/grub
