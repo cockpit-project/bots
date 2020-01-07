@@ -97,11 +97,17 @@ try:
     if "windows" in args.image and memory is None:
         memory = 4096
 
+    # Windows does not get along with the mcast network, use QEMU user network for it instead
+    if "windows" in args.image and not bridge:
+        isolate = "user"
+    else:
+        isolate = False
+
     graphics = args.graphics or 'windows' in args.image
     network = testvm.VirtNetwork(0, bridge=bridge, image=args.image)
 
     machine = testvm.VirtMachine(verbose=args.verbose, image=args.image, maintain=args.maintain,
-                                 networking=network.host(restrict=args.no_network),
+                                 networking=network.host(restrict=args.no_network, isolate=isolate),
                                  memory_mb=memory, cpus=args.cpus, graphics=graphics)
 
     # Hack to make things easier for users who don't know about kubeconfig

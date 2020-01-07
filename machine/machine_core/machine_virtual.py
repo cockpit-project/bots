@@ -141,6 +141,13 @@ TEST_MCAST_XML = """
     <qemu:arg value='{netdriver},netdev=mcast0,mac={mac},bus=pci.0,addr=0x0f'/>
 """
 
+TEST_USERNET_XML = """
+    <qemu:arg value='-netdev'/>
+    <qemu:arg value='user,id=user0'/>
+    <qemu:arg value='-device'/>
+    <qemu:arg value='{netdriver},netdev=user0,mac={mac},bus=pci.0,addr=0x0f'/>
+"""
+
 TEST_BRIDGE_XML = """
     <interface type="bridge">
       <source bridge="{bridge}"/>
@@ -227,8 +234,11 @@ class VirtNetwork:
         }
         return result
 
-    # Create resources for a host, returns address and XML
     def host(self, number=None, restrict=False, isolate=False, forward={}):
+        '''Create resources for a host, returns address and XML
+
+        isolate: True for no network at all, "user" for QEMU user network instead of bridging
+        '''
         result = self.interface(number)
         result["mcast"] = self.network
         result["restrict"] = restrict and "on" or "off"
@@ -245,7 +255,11 @@ class VirtNetwork:
             elif remote == "9090":
                 result["browser"] = result["forward"][remote]
 
-        if isolate:
+        if isolate == 'user':
+            result["bridge"] = ""
+            result["bridgedev"] = ""
+            result["ethernet"] = TEST_USERNET_XML.format(**result)
+        elif isolate:
             result["bridge"] = ""
             result["bridgedev"] = ""
             result["ethernet"] = ""
