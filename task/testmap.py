@@ -136,16 +136,12 @@ REPO_BRANCH_CONTEXT = {
     },
     'weldr/cockpit-composer': {
         'master': [
-            'fedora-30/chrome',
-            'rhel-8-2/firefox',
+            'fedora-31/chrome',
             'fedora-31/edge',
             'fedora-31/firefox',
-            'rhel-7-8/firefox',
-            'rhel-8-1/chrome',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'centos-8-stream',
         ],
     },
     'candlepin/subscription-manager': {
