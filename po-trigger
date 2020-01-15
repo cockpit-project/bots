@@ -34,7 +34,7 @@ def main():
     opts = parser.parse_args()
 
     task.verbose = opts.verbose
-    text = "Update translations from Fedora Zanata"
+    text = "Update translations from Fedora Weblate"
 
     since = time.time() - (DAYS * 86400)
     issue = task.issue(text, text, "po-refresh", None, state="all", since=since)
