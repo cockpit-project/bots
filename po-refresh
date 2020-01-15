@@ -164,7 +164,7 @@ def run(context, verbose=False, **kwargs):
                 execute("git", "checkout", "--", name)
 
     # Create a pull request from these changes
-    branch = task.branch(context, "po: Update from Fedora Zanata", pathspec="po/",
+    branch = task.branch(context, "po: Update from Fedora Weblate", pathspec="po/",
                          branch=local_branch, **kwargs)
 
     if branch:
@@ -179,4 +179,4 @@ def run(context, verbose=False, **kwargs):
 
 
 if __name__ == '__main__':
-    task.main(function=run, title="Update translations from Fedora Zanata")
+    task.main(function=run, title="Update translations from Fedora Weblate")
