@@ -132,10 +132,9 @@ REPO_BRANCH_CONTEXT = {
     },
     'candlepin/subscription-manager': {
         'master': [
-            'rhel-8-1',
+            'rhel-8-2',
         ],
         '_manual': [
-            'rhel-8-2',
         ]
     }
 }
