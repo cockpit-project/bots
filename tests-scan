@@ -354,12 +354,6 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
             for context in build_policy(repo, contexts).get(base, []):
                 todos[context] = {}
 
-            # test external projects on bots PRs
-            if repo == "cockpit-project/bots":
-                for context in get_externals():
-                    if context not in todos:
-                        todos[context] = {}
-
         # there are 3 different HEADs
         # ref:    the PR that we are testing
         # base:   the target branch of that PR
