@@ -22,6 +22,7 @@ import os
 import socket
 import subprocess
 import sys
+import time
 
 sys.dont_write_bytecode = True
 
@@ -78,7 +79,7 @@ class PullTask(object):
         self.sink = None
         self.github_status_data = None
 
-    def detect_collisions(self, opts):
+    def detect_collisions(self, opts, running):
         api = github.GitHub()
 
         if opts.pull_number:
@@ -90,6 +91,9 @@ class PullTask(object):
                     return "Pull request isn't open"
 
         if not self.revision:
+            return None
+
+        if running:
             return None
 
         statuses = api.get("commits/{0}/statuses".format(self.revision))
@@ -216,7 +220,7 @@ class PullTask(object):
 
     def run(self, opts):
         # Collision detection
-        ret = self.detect_collisions(opts)
+        ret = self.detect_collisions(opts, False)
         if ret:
             sys.stderr.write('Collision detected: {0}\n'.format(ret))
             return None
@@ -252,8 +256,19 @@ class PullTask(object):
             cmd = ["timeout", "120m", entry_point]
             if opts.verbose:
                 cmd.append("--verbose")
-            ret = subprocess.call(cmd)
-
+            p = subprocess.Popen(cmd)
+            while p.poll() is None:
+                # Cancel test if PR gets updated while running
+                ret = self.detect_collisions(opts, True)
+                if ret:
+                    sys.stderr.write('Collision detected, cancelling this test run: {0}\n'.format(ret))
+                    ret = None
+                    p.terminate()
+                    p.wait(timeout=60)
+                else:
+                    time.sleep(60)
+            ret = p.returncode
+            sys.stderr.write("Test run finished, return code: {0}\n", ret)
         # All done
         if self.sink:
             ret = self.stop_publishing(ret)
