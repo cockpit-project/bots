@@ -268,7 +268,7 @@ class PullTask(object):
                 else:
                     time.sleep(60)
             ret = p.returncode
-            sys.stderr.write("Test run finished, return code: {0}\n", ret)
+            sys.stderr.write("Test run finished, return code: {0}\n".format(ret))
         # All done
         if self.sink:
             ret = self.stop_publishing(ret)
