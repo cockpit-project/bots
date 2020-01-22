@@ -47,6 +47,7 @@ def main():
     name = os.environ.get("TEST_NAME", "tests")
     revision = os.environ.get("TEST_REVISION")
     test_project = os.environ.get("TEST_PROJECT")
+    github_context = os.environ.get("TEST_GITHUB_CONTEXT")
     # branch name when explicitly given in the test status
     # e.g. PR opened against master for test `rhel-8-1@cockpit-project/cockpit/rhel-8.1`
     # TEST_BRANCH would be `rhel-8.1`
@@ -57,7 +58,7 @@ def main():
 
     try:
         task = PullTask(name, revision, opts.context,
-                        test_project=test_project, test_branch=test_branch)
+                        test_project=test_project, test_branch=test_branch, github_context=github_context)
         ret = task.run(opts)
     except RuntimeError as ex:
         ret = str(ex)
@@ -69,12 +70,13 @@ def main():
 
 
 class PullTask(object):
-    def __init__(self, name, revision, context, test_project, test_branch):
+    def __init__(self, name, revision, context, test_project, test_branch, github_context):
         self.name = name
         self.revision = revision
         self.context = context
         self.test_project = test_project
         self.test_branch = test_branch
+        self.github_context = github_context
 
         self.sink = None
         self.github_status_data = None
@@ -98,7 +100,8 @@ class PullTask(object):
 
         statuses = api.get("commits/{0}/statuses".format(self.revision))
         for status in statuses:
-            if status.get("context") == self.context:
+            if status.get("context") == self.github_context:
+
                 if status.get("state") == "pending" and \
                         status.get("description") not in [github.NOT_TESTED, github.NOT_TESTED_DIRECT]:
                     return "Status of context isn't pending or description is not in [{0}, {1}]".format(
@@ -110,7 +113,7 @@ class PullTask(object):
         api = github.GitHub()
 
         # build a unique file name for this test run
-        id_context = "-".join([self.test_project, self.test_branch or "", self.context])
+        id_context = self.github_context.replace("@", "-").replace("#", "-")
         identifier = "-".join([
             self.name.replace("/", "-"),
             self.revision[0:8],
@@ -119,16 +122,9 @@ class PullTask(object):
 
         description = "{0} [{1}]".format(github.TESTING, HOSTNAME)
 
-        # build a globally unique test context for GitHub statuses
-        github_context = self.context
-        if self.test_branch:
-            github_context += "@" + self.test_project + "/" + self.test_branch
-        elif self.test_project != api.repo:  # disambiguate test name for foreign project tests
-            github_context += "@" + self.test_project
-
         self.github_status_data = {
             "state": "pending",
-            "context": github_context,
+            "context": self.github_context,
             "description": description,
             "target_url": ":link"
         }
@@ -149,7 +145,7 @@ class PullTask(object):
                     "result": {
                         "statuses": [
                             {
-                                "context": github_context,
+                                "context": self.github_context,
                                 "description": description,
                                 "target_url": ":link"
                             }
@@ -168,7 +164,7 @@ class PullTask(object):
                             "resource": api.qualify("statuses/" + self.revision),
                             "data": {
                                 "state": "error",
-                                "context": self.context,
+                                "context": self.github_context,
                                 "description": "Aborted without status",
                                 "target_url": ":link"
                             }
@@ -238,7 +234,7 @@ class PullTask(object):
         os.environ["TEST_OS"] = image
 
         msg = "Testing {0} for {1} with {2} on {3}...\n".format(self.revision, self.name,
-                                                                self.context, HOSTNAME)
+                                                                self.github_context, HOSTNAME)
         sys.stderr.write(msg)
 
         ret = None

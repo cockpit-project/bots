@@ -128,7 +128,8 @@ def is_internal_context(context):
 
 
 # Prepare a test invocation command
-def tests_invoke(priority, name, number, revision, ref, context, base, original_base, repo, bots_ref, options):
+def tests_invoke(priority, name, number, revision, ref, context, base,
+                 original_base, repo, bots_ref, github_context, options):
     if not options.amqp and not redhat_network() and is_internal_context(context):
         return ''
 
@@ -142,7 +143,7 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
 
     checkout = "PRIORITY={priority:04d} ./make-checkout --verbose"
     cmd = "TEST_PROJECT={repo} TEST_NAME={name}-{current} TEST_REVISION={revision} " \
-          "../tests-invoke --pull-number={pull_number} "
+          "TEST_GITHUB_CONTEXT={github_context} ../tests-invoke --pull-number={pull_number} "
     if base != ref:
         checkout += " --rebase={base}"
 
@@ -173,6 +174,7 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
         ref=pipes.quote(ref),
         bots_ref=pipes.quote(bots_ref),
         context=pipes.quote(context),
+        github_context=github_context,
         current=current,
         pull_number=number,
         repo=pipes.quote(repo),
@@ -180,8 +182,10 @@ def tests_invoke(priority, name, number, revision, ref, context, base, original_
     )
 
 
-def queue_test(priority, name, number, revision, ref, context, base, original_base, repo, bots_ref, channel, options):
-    command = tests_invoke(priority, name, number, revision, ref, context, base, original_base, repo, bots_ref, options)
+def queue_test(priority, name, number, revision, ref, context, base,
+               original_base, repo, bots_ref, github_context, channel, options):
+    command = tests_invoke(priority, name, number, revision, ref, context, base,
+                           original_base, repo, bots_ref, github_context, options)
     if command:
         if priority > distributed_queue.MAX_PRIORITY:
             priority = distributed_queue.MAX_PRIORITY
@@ -407,7 +411,8 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                                 branch,
                                 base,
                                 project,
-                                bots_ref
+                                bots_ref,
+                                context
                                 ))
 
     return results
