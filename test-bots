@@ -27,6 +27,7 @@ from importlib.machinery import SourceFileLoader
 sys.dont_write_bytecode = True
 
 BOTS_DIR = os.path.dirname(__file__)
+sys.path.append(BOTS_DIR)
 
 
 def main():
