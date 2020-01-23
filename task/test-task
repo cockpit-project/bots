@@ -53,6 +53,7 @@ def mockServer():
     data = {}
 
     import http.server
+
     class Handler(http.server.BaseHTTPRequestHandler):
 
         def replyData(self, value, headers={}, status=200):
