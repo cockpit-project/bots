@@ -21,11 +21,13 @@ from . import ssh_connection
 from . import timeout
 from .constants import DEFAULT_IDENTITY_FILE, ATOMIC_IMAGES, OSTREE_IMAGES, TEST_DIR
 
-LOGIN_MESSAGE = """
+LOCAL_MESSAGE = """
 TTY LOGIN
   User: {ssh_user}/admin  Password: foobar
   To quit use Ctrl+], Ctrl+5 (depending on locale)
 
+"""
+REMOTE_MESSAGE = """
 SSH ACCESS
   $ ssh -p {ssh_port} -i bots/machine/identity {ssh_user}@{ssh_address}
 
@@ -85,7 +87,7 @@ class Machine(ssh_connection.SSHConnection):
         # The Linux kernel boot_id
         self.boot_id = None
 
-    def diagnose(self):
+    def diagnose(self, tty=True):
         keys = {
             "ssh_user": self.ssh_user,
             "ssh_address": self.ssh_address,
@@ -93,7 +95,8 @@ class Machine(ssh_connection.SSHConnection):
             "web_address": self.web_address,
             "web_port": self.web_port,
         }
-        return LOGIN_MESSAGE.format(**keys)
+        message = (tty and LOCAL_MESSAGE or '') + REMOTE_MESSAGE
+        return message.format(**keys)
 
     def start(self):
         """Overridden by machine classes to start the machine"""

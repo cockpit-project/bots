@@ -144,6 +144,10 @@ try:
         ip = re.search("inet ([^/]+)", output).group(1)
         message = "\nBRIDGE IP FROM HOST\n  %s\n" % ip
 
+    # Wait here before the "Press ^C" message
+    if args.quiet:
+        machine.wait_boot()
+
     # Graphics console necessary
     if graphics:
         machine.graphics_console()
@@ -154,6 +158,8 @@ try:
 
     # else, just wait for a signal
     else:
+        print(machine.diagnose(tty=False))
+        print('[ ^C to terminate ]')
         machine.wait_for_exit()
 
 except testvm.Failure as ex:
