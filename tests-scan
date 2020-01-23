@@ -327,8 +327,27 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                     result.append(context + "@" + proj_repo)
             return result
 
+        def split_context(context):
+            os_scenario = ""
+            bots_pr = ""
+            repo_branch = ""
+
+            context_parts = context.split("@")
+            os_scenario = context_parts[0]
+
+            # Second part can be be either `bots#<pr_number>` or repo specification
+            if len(context_parts) > 1:
+                if context_parts[1].startswith("bots#"):
+                    bots_pr = int(context_parts[1][5:])
+                else:
+                    repo_branch = context_parts[1]
+
+            if len(context_parts) > 2:
+                repo_branch = context_parts[2]
+            return (os_scenario, bots_pr, repo_branch)
+
         def is_valid_context(context):
-            (os_scenario, _, repo_branch) = context.partition("@")
+            os_scenario, bots_pr, repo_branch = split_context(context)
 
             # If contexts were specified on commandline, only those are valid
             # Of course if you specify invalid context in `tests-scan` it will be happy about it
@@ -367,7 +386,8 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
             # Get correct project and branch. Ones from test name have priority
             project = repo
             branch = base
-            (os_scenario, _, repo_branch) = context.partition("@")
+            os_scenario, bots_pr, repo_branch = split_context(context)
+
             repo_branch = repo_branch.split("/")
             if len(repo_branch) == 2:
                 project = "/".join(repo_branch)
@@ -399,8 +419,10 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                     # otherwise if we're testing an external project (repo != project) then checkout bots from the PR
                     bots_ref = None if repo == project else ref
                 else:
-                    # test one external project against another non-bots project, doesn't happen (yet)
-                    bots_ref = "master"
+                    if bots_pr:
+                        bots_ref = "pull/%d/head" % bots_pr
+                    else:
+                        bots_ref = "master"
 
                 results.append((priority,
                                 "pull-%d" % number,
