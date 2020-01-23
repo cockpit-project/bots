@@ -73,11 +73,19 @@ parser.add_argument('-G', '--graphics', action='store_true', help='Display a gra
 parser.add_argument('-q', '--quiet', action='store_true', help="Don't connect text console")
 parser.add_argument('-C', '--cpus', default=None, type=int, help='Number of cpus in the target machine')
 parser.add_argument('-S', '--storage', default=None, type=str, help='Add a second qcow2 disk at this path')
+parser.add_argument('-e', '--execute', metavar='COMMAND', action='append',
+                    help='Execute this (shell-interpreted) command (implies -q)')
+parser.add_argument('-s', '--systemd-start', metavar='UNIT', action='append', dest='execute',
+                    type=(lambda s: "systemctl enable --now {}".format(str(s))),
+                    help='Start this systemd unit (implies -q)')
 parser.add_argument('--network', action='store_true', help='Setup a bridged network for running machines')
 parser.add_argument('--no-network', action='store_true', help='Do not connect the machine to the Internet')
 
 parser.add_argument('image', help='The image to run')
 args = parser.parse_args()
+
+if args.execute:
+    args.quiet = True
 
 try:
     if args.network:
@@ -144,9 +152,16 @@ try:
         ip = re.search("inet ([^/]+)", output).group(1)
         message = "\nBRIDGE IP FROM HOST\n  %s\n" % ip
 
-    # Wait here before the "Press ^C" message
+    # we need this to execute any commands, but we also want to wait here
+    # before we display the "Press ^C" message
     if args.quiet:
         machine.wait_boot()
+
+    # execute any -e and -s commands
+    if args.execute:
+        for cmd in args.execute:
+            print('#', cmd)
+            machine.execute(cmd, stdout=1)
 
     # Graphics console necessary
     if graphics:
