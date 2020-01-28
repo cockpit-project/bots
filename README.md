@@ -67,6 +67,43 @@ for your account at
 When generating a new personal access token, the scope only needs to
 encompass public_repo (or repo if you're accessing a private repo).
 
+### Test contexts
+
+For describing tests which we want to run we use __contexts__. A context has the form:
+
+```
+os_image[/scenario][@bots#bots_pr][@owner/project/ref]
+```
+where items have the following meaning:
+- os_image: Name of the image on which tests should run (e.g. 'fedora-testing').
+- scenario: Name of a specific test. This is specific for each separate project and
+    is passed verbatim to 'test/run' in '$TEST_SCENARIO'.
+- bots_pr: Number of pull request that exists in bots repository. When specified,
+    bots from this PR would be used instead of master.
+- owner/project: Name of github project (e.g. 'cockpit-project/cockpit'). This part can
+    be omitted when testing in the same project and no 'ref' is needed.
+- ref: Reference in the project (usually branch) (e.g. 'rhel-8-0'). Default is 'master'.
+
+For example, context for scenario 'firefox' on 'fedora-testing' is:
+```
+fedora-testing/firefox
+```
+
+If we want to trigger it on 'cockpit-project/cockpit':
+```
+fedora-testing/firefox@cockpit-project/cockpit
+```
+
+If we want to also not run it on master branch, but on 'rhel-8-0' branch:
+```
+fedora-testing/firefox@cockpit-project/cockpit/rhel-8-0
+```
+
+If we want to run tests on 'fedora-testing' but with bots from pull request '169':
+```
+fedora-testing@bots#169
+```
+
 ### Retrying a failed test
 
 If you want to run the "fedora-testing" testsuite again for pull
