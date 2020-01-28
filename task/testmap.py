@@ -98,6 +98,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-31/tar',
             'fedora-31/live-iso',
             'fedora-31/qcow2',
+            'fedora-31/alibaba',
             'fedora-31/aws',
             'fedora-31/azure',
             'fedora-31/openstack',
@@ -107,6 +108,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-2',
             'rhel-8-2/live-iso',
             'rhel-8-2/qcow2',
+            'rhel-8-2/alibaba',
             'rhel-8-2/aws',
             'rhel-8-2/azure',
             'rhel-8-2/openstack',
@@ -126,7 +128,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'centos-8-stream',
-            'fedora-31/alibaba',
         ],
     },
     'weldr/cockpit-composer': {
