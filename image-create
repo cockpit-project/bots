@@ -90,6 +90,10 @@ class MachineBuilder:
             env = {
                 "TEST_OS": self.machine.image,
                 "DO_BUILD": "0" if args.no_build else "1",
+                "SERVER_REPO_URL": os.environ.get("SERVER_REPO_URL", ""),
+                "EXTRAS_REPO_URL": os.environ.get("EXTRAS_REPO_URL", ""),
+                "BASEOS_REPO_URL": os.environ.get("BASEOS_REPO_URL", ""),
+                "APPSTREAM_REPO_URL": os.environ.get("APPSTREAM_REPO_URL", ""),
             }
             self.machine.message("run setup script on guest")
 

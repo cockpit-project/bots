@@ -1,0 +1,46 @@
+#!/bin/bash
+set -eu
+
+COMPOSE=${COMPOSE:-""}
+EXTRAS_COMPOSE=${EXTRAS_COMPOSE:-""}
+
+if [ -z "$COMPOSE" ]; then
+    echo "Unspecified compose (use COMPOSE env variable)."
+    exit 1
+fi
+
+# RHEL-x.y(.z)-YYYYMMDD.b -> rhel-x-y
+final_image=${COMPOSE,,}
+final_image=${final_image//./-}
+image=${final_image:0:8}
+
+if [[ "$COMPOSE" =~ RHEL-7 ]]; then
+    if [[ -z "$EXTRAS_COMPOSE" ]]; then
+        EXTRAS_COMPOSE="latest-EXTRAS-7-RHEL-7"
+        echo "EXTRAS_COMPOSE not supplied, using '$EXTRAS_COMPOSE'."
+    fi
+    export SERVER_REPO_URL="http://download.devel.redhat.com/rel-eng/rhel-7/RHEL-7/$COMPOSE/compose/Server/x86_64/os"
+    export EXTRAS_REPO_URL="http://download.devel.redhat.com/rel-eng/rhel-7/EXTRAS-7/$EXTRAS_COMPOSE/compose/Server/x86_64/os"
+    install_url=$SERVER_REPO_URL
+else
+    export BASEOS_REPO_URL="http://download.devel.redhat.com/rel-eng/rhel-8/RHEL-8/$COMPOSE/compose/BaseOS/x86_64/os"
+    export APPSTREAM_REPO_URL="http://download.devel.redhat.com/rel-eng/rhel-8/RHEL-8/$COMPOSE/compose/AppStream/x86_64/os"
+    install_url=$BASEOS_REPO_URL
+fi
+
+bootstrap_script="$(dirname $0)/images/scripts/$image.bootstrap"
+mv $bootstrap_script ${bootstrap_script}.orig
+
+echo "#!/bin/bash
+set -eux
+
+BASE=\$(dirname \$0)
+\$BASE/virt-install-fedora \"\$1\" x86_64 \"$install_url\"
+" > $bootstrap_script
+chmod +x $bootstrap_script
+
+pushd $(dirname $0)
+./image-create $image $@
+mv ${bootstrap_script}.orig $bootstrap_script
+mv images/$image images/$final_image
+popd
