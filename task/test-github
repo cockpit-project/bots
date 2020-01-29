@@ -70,7 +70,10 @@ def mockServer():
             if parsed.path == "/count":
                 self.replyJson(self.server.data["count"])
             elif parsed.path == "/issues":
-                self.replyJson(issues)
+                issues_ = issues
+                if "state=open" in self.path:
+                    issues_ = [i for i in issues_ if i["state"] == "open"]
+                self.replyJson(issues_)
             elif parsed.path == "/test/user":
                 if self.headers.get("If-None-Match") == "blah":
                     self.replyData("", status=304)

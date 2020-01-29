@@ -329,24 +329,14 @@ class GitHub(object):
         result = []
         page = 1
         count = 100
-        opened = True
         label = ",".join(labels)
-        while count == 100 and opened:
-            req = "issues?labels={0}&state=all&page={1}&per_page={2}".format(label, page, count)
+        while count == 100:
+            req = "issues?labels={0}&state={1}&page={2}&per_page={3}".format(label, state, page, count)
             issues = self.get(req)
             count = 0
             page += 1
-            opened = False
             for issue in issues:
                 count += 1
-
-                # On each loop of 100 issues we must encounter at least 1 open issue
-                if issue["state"] == "open":
-                    opened = True
-
-                # Make sure the state matches
-                if state != "all" and issue["state"] != state:
-                    continue
 
                 # Check that the issues are past the expected date
                 if since:
