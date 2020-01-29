@@ -323,31 +323,24 @@ class GitHub(object):
                 count += 1
         return result
 
-    # The since argument is seconds since the issue was either
-    # created (for open issues) or closed (for closed issues)
+    # The since argument is seconds since the issue was last time modified
     def issues(self, labels=["bot"], state="open", since=None):
         result = []
         page = 1
         count = 100
         label = ",".join(labels)
+        if since:
+            since = "&since={0}".format(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(since)))
+        else:
+            since = ""
+
         while count == 100:
-            req = "issues?labels={0}&state={1}&page={2}&per_page={3}".format(label, state, page, count)
+            req = "issues?labels={0}&state={1}&page={2}&per_page={3}{4}".format(label, state, page, count, since)
             issues = self.get(req)
-            count = 0
+
             page += 1
-            for issue in issues:
-                count += 1
-
-                # Check that the issues are past the expected date
-                if since:
-                    closed = issue.get("closed_at", None)
-                    if closed and since > time.mktime(time.strptime(closed, "%Y-%m-%dT%H:%M:%SZ")):
-                        continue
-                    created = issue.get("created_at", None)
-                    if not closed and created and since > time.mktime(time.strptime(created, "%Y-%m-%dT%H:%M:%SZ")):
-                        continue
-
-                result.append(issue)
+            count = len(issues)
+            result = result + issues
         return result
 
     def commits(self, branch='master', since=None):
