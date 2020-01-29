@@ -73,6 +73,8 @@ def mockServer():
                 issues_ = issues
                 if "state=open" in self.path:
                     issues_ = [i for i in issues_ if i["state"] == "open"]
+                if "since=" in self.path:
+                    issues_ = [i for i in issues_ if "created_at" not in i.keys() and "closed_at" not in i.keys()]
                 self.replyJson(issues_)
             elif parsed.path == "/test/user":
                 if self.headers.get("If-None-Match") == "blah":
