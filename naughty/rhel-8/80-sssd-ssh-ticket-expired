@@ -1,4 +1,0 @@
-  File "test/verify/check-realms", line *, in testNegotiate
-    b.wait_popdown('troubleshoot-dialog')
-*
-testlib.Error: timeout
