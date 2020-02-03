@@ -71,7 +71,7 @@ if [ -n "$do_build" ]; then
 
     rm -rf build-results
     srpm=$(/var/lib/testvm/make-srpm "$tar")
-    LC_ALL=C.UTF-8 su builder -c "/usr/bin/mock --offline --no-clean --resultdir build-results $mock_opts --rebuild $srpm"
+    LC_ALL=C.UTF-8 su builder -c "/usr/bin/mock --offline --no-clean --no-cleanup-after --resultdir build-results $mock_opts --rebuild $srpm"
 
     cat <<EOF >/tmp/rpmlint
 #! /bin/bash
@@ -113,8 +113,4 @@ if [ -n "$do_install" ]; then
     journalctl --sync || killall systemd-journald
     rm -rf /var/log/journal/*
     rm -rf /var/lib/NetworkManager/dhclient-*.lease
-fi
-
-if [ -n "$do_build" ]; then
-    su builder -c "/usr/bin/mock --clean"
 fi
