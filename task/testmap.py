@@ -77,9 +77,9 @@ REPO_BRANCH_CONTEXT = {
         'master': [
             'continuous-atomic',
             'rhel-atomic',
+            'fedora-coreos',
         ],
         '_manual': [
-            'fedora-coreos',
         ],
     },
     'cockpit-project/cockpit-podman': {
