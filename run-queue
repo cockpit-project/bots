@@ -26,7 +26,6 @@ import subprocess
 import sys
 import time
 import logging
-import pipes
 
 from task import redhat_network, distributed_queue
 
@@ -59,7 +58,7 @@ def consume_webhook_queue(channel, amqp):
     elif event == 'status':
         repo = request['repository']['full_name']
         sha = request['sha']
-        context = pipes.quote(request['context'])
+        context = request['context']
         cmd = ['./tests-scan', '--sha', sha, '--amqp', amqp, '--context', context, '--repo', repo]
     elif event == 'issues':
         action = request['action']
