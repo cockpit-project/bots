@@ -62,6 +62,11 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
+            'fedora-31/container-bastion',
+            'fedora-31/selenium-firefox',
+            'fedora-31/selenium-chrome',
+            'fedora-31/selenium-edge',
+            'fedora-31/firefox',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -71,6 +76,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
         '_manual': [
+            'fedora-31',
         ],
     },
     'cockpit-project/cockpit-ostree': {
