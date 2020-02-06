@@ -26,7 +26,7 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit': {
         'master': [
-            'fedora-30/container-bastion',
+            'fedora-31/container-bastion',
             'fedora-30/selenium-firefox',
             'fedora-30/selenium-chrome',
             'fedora-30/selenium-edge',
@@ -46,13 +46,13 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-8',
             'rhel-atomic',
             'continuous-atomic',
-            'fedora-30/container-bastion',
+            'fedora-31/container-bastion',
             'fedora-30/selenium-firefox',
             'fedora-30/selenium-chrome',
             'centos-7',
             ],
         'rhel-8.2': [
-            'fedora-30/container-bastion',
+            'fedora-31/container-bastion',
             'fedora-30/selenium-firefox',
             'fedora-30/selenium-chrome',
             'fedora-30/selenium-edge',
@@ -62,7 +62,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
-            'fedora-31/container-bastion',
             'fedora-31/selenium-firefox',
             'fedora-31/selenium-chrome',
             'fedora-31/selenium-edge',
