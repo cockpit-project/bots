@@ -37,7 +37,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-30',
             'fedora-31',
             'fedora-coreos',
-            'fedora-30/firefox',
+            'fedora-31/firefox',
             'rhel-8-2',
             'rhel-8-2-distropkg',
             'centos-8-stream',
@@ -66,7 +66,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-31/selenium-firefox',
             'fedora-31/selenium-chrome',
             'fedora-31/selenium-edge',
-            'fedora-31/firefox',
         ],
     },
     'cockpit-project/starter-kit': {
