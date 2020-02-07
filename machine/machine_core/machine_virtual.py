@@ -516,33 +516,6 @@ class VirtMachine(Machine):
             # Normally only one pass
             break
 
-    def _diagnose_no_address(self):
-        SCRIPT = """
-            spawn virsh -c qemu:///session console $argv
-            set timeout 300
-            expect "Escape character"
-            send "\r"
-            expect " login: "
-            send "root\r"
-            expect "Password: "
-            send "foobar\r"
-            expect " ~]# "
-            send "ip addr\r\n"
-            expect " ~]# "
-            exit 0
-        """
-        expect = subprocess.Popen(["expect", "--", "-", str(self._domain.ID())], stdin=subprocess.PIPE,
-                                  universal_newlines=True)
-        expect.communicate(SCRIPT)
-
-    def wait_boot(self, timeout_sec=120):
-        """Wait for a machine to boot"""
-        try:
-            Machine.wait_boot(self, timeout_sec)
-        except Failure:
-            self._diagnose_no_address()
-            raise
-
     def stop(self, timeout_sec=120):
         if self.maintain:
             self.shutdown(timeout_sec=timeout_sec)
