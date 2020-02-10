@@ -120,6 +120,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-2/openstack',
             'rhel-8-2/vmware',
             'rhel-8-2/tar',
+            'rhel-8-2/ci',
         ],
         'rhel7-extras': [
             'rhel-7-8',
@@ -134,7 +135,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'centos-8-stream',
-            'rhel-8-2/ci',
         ],
     },
     'weldr/cockpit-composer': {
