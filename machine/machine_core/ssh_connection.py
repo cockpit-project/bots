@@ -299,11 +299,12 @@ class SSHConnection(object):
             input += script
             command = "<script>"
         command_line = ssh_env + default_ssh_params + additional_ssh_params + env_command + cmd
-        if stdout:
-            subprocess.call(command_line, stdout=stdout)
-            return
 
         with timeoutlib.Timeout(seconds=timeout, error_message="Timed out on '%s'" % command, machine=self):
+            if stdout:
+                subprocess.call(command_line, stdout=stdout)
+                return
+
             output = ""
             proc = subprocess.Popen(command_line, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdin_fd = proc.stdin.fileno()
