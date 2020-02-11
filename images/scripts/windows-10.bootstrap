@@ -51,6 +51,8 @@ C:\QRes.exe /X:1280 /Y:1024
 REG ADD "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /V "Selenium Hub" /t REG_SZ /F /D "C:\selenium\selenium.bat"
 d:\java-installer.exe /s
 d:\sdelete64.exe -z c:
+REM "Ultimate power" profile that disables automatic sleep; from powercfg /L
+powercfg /S e9a42b02-d5df-448d-aa00-03f14749eb61
 timeout 30
 shutdown -s -t 0
 EOF
