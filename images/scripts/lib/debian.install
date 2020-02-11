@@ -87,6 +87,7 @@ if [ -n "$do_install" ]; then
     # avoid random dpkg database locks, they break our package related tests
     systemctl disable apt-daily-upgrade.timer
 
+    systemctl start firewalld
     firewall-cmd --add-service=cockpit --permanent
     # not managed by NM, so enable interface manually
     firewall-cmd --zone=public --permanent --add-interface=eth1
