@@ -289,7 +289,7 @@ class Machine(ssh_connection.SSHConnection):
         """Sets up a DHCP server on the interface"""
         cmd = "dnsmasq --domain=cockpit.lan " \
               "--interface=\"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\"" \
-              " --bind-dynamic --dhcp-range=" + ','.join(range) + \
+              " --bind-dynamic --dhcp-range=" + ','.join(range) + ",4h" + \
               " && firewall-cmd --add-service=dhcp"
         self.execute(cmd.format(mac=mac))
 
