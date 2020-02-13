@@ -5,6 +5,31 @@ import time
 
 from task import github
 
+bug_msg = """
+This issue is closed due to inactivity.
+
+If you are still able to reproduce it, please comment here and provide us with
+an updated reproducer.
+"""
+
+rfe_msg = """
+This issue is closed due to inactivity.
+
+We are sorry, but we won't be able to address this in any time soon.
+If you are interested in helping us with the implementation, please comment here.
+"""
+
+general_msg = """
+This issue is closed due to inactivity.
+
+If this issue is a bug report and you are still able to reproduce it, please
+comment here and provide us with an updated reproducer.
+
+If this issue is a request for a new feature, we are sorry, but we won't be able
+to address this in any time soon. If you are interested in helping us with
+the implementation, please comment here.
+"""
+
 
 def issues_review(api, opts):
     now = time.time()
@@ -22,17 +47,45 @@ def issues_review(api, opts):
                 api.post("issues/%i/labels" % issue["number"], [opts.label])
 
 
+def close_issues(api, opts):
+    count = 100
+    page = 1
+    while count == 100:
+        issues = api.get("issues?filter=all&page=%i&per_page=%i&labels=%s" % (page, count, opts.label))
+        page += 1
+        count = len(issues)
+        for issue in issues:
+            labels = api.get("issues/%i/labels" % issue["number"])
+            enhancement = [l for l in labels if l["name"] == "enhancement"]
+            bug = [l for l in labels if l["name"] == "bug"]
+            if bug:
+                print("Closing #%i as stale bug" % issue["number"])
+                api.post("issues/%i/comments" % issue["number"], {"body": bug_msg})
+            elif enhancement:
+                print("Closing #%i as stale enhancement" % issue["number"])
+                api.post("issues/%i/comments" % issue["number"], {"body": rfe_msg})
+            else:
+                print("Closing #%i as stale bug or enhancement" % issue["number"])
+                api.post("issues/%i/comments" % issue["number"], {"body": general_msg})
+            api.post("issues/%i" % issue["number"], {"state": "closed"})
+
+
 def main():
-    parser = argparse.ArgumentParser(description='Add review label to stale issues')
+    parser = argparse.ArgumentParser(description='Label or close labeled stable issues')
     parser.add_argument('-a', '--age', metavar='DAYS', default=90,
                         help='Label issues whose last update is older than given number of days (default: %(default)s)')
     parser.add_argument('-l', '--label', default=time.strftime('review-%Y-%m'),
                         help='Label name (default: %(default)s)')
+    parser.add_argument('-c', '--close', action='store_true',
+                        help='Close all issues with the label')
     parser.add_argument('--repo', help='Work on this GitHub repository (owner/name)')
     opts = parser.parse_args()
 
     api = github.GitHub(repo=opts.repo)
-    issues_review(api, opts)
+    if opts.close:
+        close_issues(api, opts)
+    else:
+        issues_review(api, opts)
 
 
 if __name__ == '__main__':
