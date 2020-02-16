@@ -127,7 +127,7 @@ apt-get install -y eatmydata
 APT='eatmydata apt-get -y -o Dpkg::Options::=--force-confold'
 
 # remove packages that we don't need
-for p in lxd snapd landscape-common accountsservice open-vm-tools ufw cloud-init; do $APT --auto-remove $p || true; done
+for p in lxd snapd landscape-common accountsservice open-vm-tools ufw cloud-init; do $APT purge --auto-remove $p || true; done
 
 # HACK: debian-stable image got /usr/bin/qemu-img removed, even though qemu-utils package is installed
 if [ "$1" = "debian-stable" ]; then
