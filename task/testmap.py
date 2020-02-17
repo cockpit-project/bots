@@ -159,7 +159,7 @@ REPO_BRANCH_CONTEXT = {
 # The OSTree variants can't build their own packages, so we build in
 # their non-Atomic siblings.
 OSTREE_BUILD_IMAGE = {
-    "fedora-coreos": "fedora-30",
+    "fedora-coreos": "fedora-31",
     "rhel-atomic": "rhel-7-7",
     "continuous-atomic": "centos-7",
 }
