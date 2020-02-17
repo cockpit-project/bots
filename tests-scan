@@ -102,7 +102,7 @@ def main():
 
 
 # Prepare a human readable output
-def tests_human(priority, name, number, revision, ref, context, base, original_base, repo, bots_ref):
+def tests_human(priority, name, number, revision, ref, context, base, original_base, repo, bots_ref, github_context):
     if not priority:
         return
     try:
