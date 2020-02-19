@@ -318,15 +318,6 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
             # end up with a bunch of half tested pull requests
             baseline += 1.0 - (min(100000, float(number)) / 100000)
 
-        def get_externals():
-            result = []
-            for proj_repo in testmap.projects():
-                if proj_repo == "cockpit-project/bots":
-                    continue
-                for context in testmap.tests_for_project(proj_repo).get("master", []):
-                    result.append(context + "@" + proj_repo)
-            return result
-
         def split_context(context):
             os_scenario = ""
             bots_pr = ""
