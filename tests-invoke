@@ -19,47 +19,57 @@
 
 import argparse
 import os
-import socket
 import subprocess
 import sys
 import time
 
-sys.dont_write_bytecode = True
-
 from task import github
-from task import sink
 from machine.machine_core.directories import BASE_DIR
 
-
-HOSTNAME = socket.gethostname().split(".")[0]
-DEVNULL = open("/dev/null", "r+")
+sys.dont_write_bytecode = True
 
 
 def main():
     parser = argparse.ArgumentParser(description='Run integration tests')
-    parser.add_argument('--publish', dest='publish', default=os.environ.get("TEST_PUBLISH", ""),
-                        action='store', help='Publish results centrally to a sink')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
-    parser.add_argument('--pull-number', help="The number of the pull request to test")
-    parser.add_argument('context', help="The context or type of integration tests to run")
+    parser.add_argument('--repo', help="The repository in which the tested PR is opened", default=None)
+    parser.add_argument('--pull-number', help="The number of the pull request to test",
+                        required=True)
+    parser.add_argument('--revision', help="Revision of the PR head", required=True)
     opts = parser.parse_args()
 
-    name = os.environ.get("TEST_NAME", "tests")
-    revision = os.environ.get("TEST_REVISION")
-    test_project = os.environ.get("TEST_PROJECT")
-    github_context = os.environ.get("TEST_GITHUB_CONTEXT")
-    # branch name when explicitly given in the test status
-    # e.g. PR opened against master for test `rhel-8-1@cockpit-project/cockpit/rhel-8.1`
-    # TEST_BRANCH would be `rhel-8.1`
-    test_branch = os.environ.get("TEST_BRANCH")
+    def detect_collisions(opts):
+        api = github.GitHub(repo=opts.repo)
 
-    if opts.publish and not revision:
-        parser.error("TEST_REVISION is required for proper publishing")
+        pull = api.get("pulls/{0}".format(opts.pull_number))
+        if pull:
+            if pull["head"]["sha"] != opts.revision:
+                return "Newer revision available on GitHub for this pull request"
+            if pull["state"] != "open":
+                return "Pull request isn't open"
+
+        return None
 
     try:
-        task = PullTask(name, revision, opts.context,
-                        test_project=test_project, test_branch=test_branch, github_context=github_context)
-        ret = task.run(opts)
+        entry_point = os.path.join(BASE_DIR, ".cockpit-ci", "run")
+        alt_entry_point = os.path.join(BASE_DIR, "test", "run")
+        if not os.path.exists(entry_point) and os.path.exists(alt_entry_point):
+            entry_point = alt_entry_point
+        cmd = ["timeout", "120m", entry_point]
+
+        p = subprocess.Popen(cmd)
+        while p.poll() is None:
+            # Cancel test if PR gets updated while running
+            ret = detect_collisions(opts)
+            if ret:
+                sys.stderr.write('Collision detected, cancelling this test run: {0}\n'.format(ret))
+                ret = None
+                p.terminate()
+                p.wait(timeout=60)
+            else:
+                time.sleep(60)
+        return_code = p.returncode
+        sys.stderr.write("Test run finished, return code: {0}\n".format(return_code))
+        return return_code
     except RuntimeError as ex:
         ret = str(ex)
 
@@ -67,209 +77,6 @@ def main():
         sys.stderr.write("tests-invoke: {0}\n".format(ret))
         return 1
     return 0
-
-
-class PullTask(object):
-    def __init__(self, name, revision, context, test_project, test_branch, github_context):
-        self.name = name
-        self.revision = revision
-        self.context = context
-        self.test_project = test_project
-        self.test_branch = test_branch
-        self.github_context = github_context
-
-        self.sink = None
-        self.github_status_data = None
-
-    def detect_collisions(self, opts, running):
-        api = github.GitHub()
-
-        if opts.pull_number:
-            pull = api.get("pulls/{0}".format(opts.pull_number))
-            if pull:
-                if pull["head"]["sha"] != self.revision:
-                    return "Newer revision available on GitHub for this pull request"
-                if pull["state"] != "open":
-                    return "Pull request isn't open"
-
-        if not self.revision:
-            return None
-
-        if running:
-            return None
-
-        statuses = api.get("commits/{0}/statuses".format(self.revision))
-        for status in statuses:
-            if status.get("context") == self.github_context:
-
-                if status.get("state") == "pending" and \
-                        status.get("description") not in [github.NOT_TESTED, github.NOT_TESTED_DIRECT]:
-                    return "Status of context isn't pending or description is not in [{0}, {1}]".format(
-                        github.NOT_TESTED, github.NOT_TESTED_DIRECT)
-                else:  # only check the newest status of the supplied context
-                    return None
-
-    def start_publishing(self, host):
-        api = github.GitHub()
-
-        # build a unique file name for this test run
-        id_context = self.github_context.replace("@", "-").replace("#", "-")
-        identifier = "-".join([
-            self.name.replace("/", "-"),
-            self.revision[0:8],
-            id_context.replace("/", "-")
-        ])
-
-        description = "{0} [{1}]".format(github.TESTING, HOSTNAME)
-
-        self.github_status_data = {
-            "state": "pending",
-            "context": self.github_context,
-            "description": description,
-            "target_url": ":link"
-        }
-
-        status = {
-            "github": {
-                "token": api.token,
-                "requests": [
-                    # Set status to pending
-                    {
-                        "method": "POST",
-                        "resource": api.qualify("commits/" + self.revision + "/statuses"),
-                        "data": self.github_status_data
-                    }
-                ],
-                "watches": [{
-                    "resource": api.qualify("commits/" + self.revision + "/status?per_page=100"),
-                    "result": {
-                        "statuses": [
-                            {
-                                "context": self.github_context,
-                                "description": description,
-                                "target_url": ":link"
-                            }
-                        ]
-                    }
-                }]
-            },
-            "revision": self.revision,
-            "onaborted": {
-                "github": {
-                    "token": api.token,
-                    "requests": [
-                        # Set status to error
-                        {
-                            "method": "POST",
-                            "resource": api.qualify("statuses/" + self.revision),
-                            "data": {
-                                "state": "error",
-                                "context": self.github_context,
-                                "description": "Aborted without status",
-                                "target_url": ":link"
-                            }
-                        }
-                    ]
-                },
-            }
-        }
-
-        status["link"] = "log.html"
-        status["extras"] = ["https://raw.githubusercontent.com/cockpit-project/bots/master/task/log.html"]
-
-        # For other scripts to use
-        os.environ["TEST_DESCRIPTION"] = description
-        self.sink = sink.Sink(host, identifier, status)
-
-    def stop_publishing(self, ret):
-        sink = self.sink
-
-        def mark_failed():
-            if "github" in sink.status:
-                self.github_status_data["state"] = "failure"
-
-        def mark_passed():
-            if "github" in sink.status:
-                self.github_status_data["state"] = "success"
-
-        if isinstance(ret, str):
-            message = ret
-            mark_failed()
-            ret = 0
-        elif ret == 0:
-            message = "Tests passed"
-            mark_passed()
-        else:
-            message = "Tests failed with code {0}".format(ret)
-            mark_failed()
-            ret = 0  # A failure, but not for this script
-        sink.status["message"] = message
-        if "github" in sink.status:
-            self.github_status_data["description"] = message
-        try:
-            del sink.status["extras"]
-        except KeyError:
-            pass
-        sink.flush()
-
-        return ret
-
-    def run(self, opts):
-        # Collision detection
-        ret = self.detect_collisions(opts, False)
-        if ret:
-            sys.stderr.write('Collision detected: {0}\n'.format(ret))
-            return None
-
-        if opts.publish:
-            self.start_publishing(opts.publish)
-            os.environ["TEST_ATTACHMENTS"] = self.sink.attachments
-
-        os.environ["TEST_NAME"] = self.name
-
-        # Split OS and potential scenario
-        (image, _, scenario) = self.context.partition("/")
-        if scenario:
-            os.environ["TEST_SCENARIO"] = scenario
-        os.environ["TEST_OS"] = image
-
-        msg = "Testing {0} for {1} with {2} on {3}...\n".format(self.revision, self.name,
-                                                                self.github_context, HOSTNAME)
-        sys.stderr.write(msg)
-
-        ret = None
-
-        # Flush our own output before running command
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        # Actually run the tests
-        if not ret:
-            entry_point = os.path.join(BASE_DIR, ".cockpit-ci", "run")
-            alt_entry_point = os.path.join(BASE_DIR, "test", "run")
-            if not os.path.exists(entry_point) and os.path.exists(alt_entry_point):
-                entry_point = alt_entry_point
-            cmd = ["timeout", "120m", entry_point]
-            if opts.verbose:
-                cmd.append("--verbose")
-            p = subprocess.Popen(cmd)
-            while p.poll() is None:
-                # Cancel test if PR gets updated while running
-                ret = self.detect_collisions(opts, True)
-                if ret:
-                    sys.stderr.write('Collision detected, cancelling this test run: {0}\n'.format(ret))
-                    ret = None
-                    p.terminate()
-                    p.wait(timeout=60)
-                else:
-                    time.sleep(60)
-            ret = p.returncode
-            sys.stderr.write("Test run finished, return code: {0}\n".format(ret))
-        # All done
-        if self.sink:
-            ret = self.stop_publishing(ret)
-
-        return ret
 
 
 if __name__ == '__main__':
