@@ -102,7 +102,7 @@ def main():
 
 
 # Prepare a human readable output
-def tests_human(priority, name, number, revision, ref, context, base, original_base, repo, bots_ref, github_context):
+def tests_human(priority, name, number, revision, ref, context, base, repo, bots_ref, github_context):
     if not priority:
         return
     try:
@@ -116,7 +116,7 @@ def tests_human(priority, name, number, revision, ref, context, base, original_b
         name=name,
         repo=repo and "  (%s)" % repo or "",
         bots_ref=bots_ref and (" [bots@%s]" % bots_ref) or "",
-        branches=base != original_base and ("   {%s...%s}" % (original_base, base)) or ""
+        branches=base != ref and ("   {%s}" % base) or ""
     )
 
 
@@ -129,7 +129,7 @@ def is_internal_context(context):
 
 # Prepare a test invocation command
 def tests_invoke(priority, name, number, revision, ref, context, base,
-                 original_base, repo, bots_ref, github_context, options):
+                 repo, bots_ref, github_context, options):
     if not options.amqp and not redhat_network() and is_internal_context(context):
         return ''
 
@@ -139,41 +139,39 @@ def tests_invoke(priority, name, number, revision, ref, context, base,
         priority = 0
     if priority <= 0:
         return
-    current = time.strftime('%Y%m%d-%H%M%M')
+    current = time.strftime('%Y%m%d-%H%M%S')
+    (image, _, scenario) = context.partition("/")
 
-    checkout = "PRIORITY={priority:04d} ./make-checkout --verbose"
-    cmd = "TEST_PROJECT={repo} TEST_NAME={name}-{current} TEST_REVISION={revision} " \
-          "TEST_GITHUB_CONTEXT={github_context} ../tests-invoke --pull-number={pull_number} "
+    checkout = "PRIORITY={priority:04d} ./make-checkout --verbose --repo={repo}"
+    invoke = "../tests-invoke --pull-number {pull_number} --revision {revision} --repo {github_base}"
+    test_env = "TEST_OS={image}"
+    wrapper = "./publish-wrapper --repo {github_base} --test-name {name}-{current} " \
+              "--github-context {github_context} --revision {revision}"
+
     if base != ref:
         checkout += " --rebase={base}"
 
-    checkout += " --repo={repo}"
-
-    # The repo of this test differs from the PR's repo
-    if options.repo != repo:
-        cmd = "GITHUB_BASE={github_base} " + cmd
-
-    # Let tests-invoke know that we are triggering different branch - it needs to post correct status
-    if base != original_base:
-        cmd = "TEST_BRANCH={base} " + cmd
-
-    cmd += " {context}"
     if bots_ref:
         # we are checking the external repo on a cockpit PR, so stay on the project's master
-        checkout += " {ref} && "
-        cmd = "COCKPIT_BOTS_REF={bots_ref} " + cmd
+        checkout += " {ref}"
+        test_env += " COCKPIT_BOTS_REF={bots_ref}"
     else:
         # we are testing the repo itself, checkout revision from the PR
-        checkout += " {ref} {revision} && "
+        checkout += " {ref} {revision}"
 
-    return (checkout + "cd make-checkout-workdir && " + cmd + " ; cd ..").format(
+    if scenario:
+        test_env += " TEST_SCENARIO={scenario}"
+
+    cmd = " ".join([checkout, "&& cd make-checkout-workdir &&", test_env, invoke])
+    return (wrapper + ' "' + cmd + '"').format(
         priority=priority,
         name=pipes.quote(name),
         revision=pipes.quote(revision),
         base=pipes.quote(str(base)),
         ref=pipes.quote(ref),
         bots_ref=pipes.quote(bots_ref),
-        context=pipes.quote(context),
+        image=pipes.quote(image),
+        scenario=(pipes.quote(scenario)),
         github_context=github_context,
         current=current,
         pull_number=number,
@@ -183,9 +181,9 @@ def tests_invoke(priority, name, number, revision, ref, context, base,
 
 
 def queue_test(priority, name, number, revision, ref, context, base,
-               original_base, repo, bots_ref, github_context, channel, options):
+               repo, bots_ref, github_context, channel, options):
     command = tests_invoke(priority, name, number, revision, ref, context, base,
-                           original_base, repo, bots_ref, github_context, options)
+                           repo, bots_ref, github_context, options)
     if command:
         if priority > distributed_queue.MAX_PRIORITY:
             priority = distributed_queue.MAX_PRIORITY
@@ -422,7 +420,6 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                                 checkout_ref,
                                 os_scenario,
                                 branch,
-                                base,
                                 project,
                                 bots_ref,
                                 context
