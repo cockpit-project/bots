@@ -50,7 +50,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-31/selenium-firefox',
             'fedora-31/selenium-chrome',
             'centos-7',
-            ],
+        ],
         'rhel-8.2': [
             'fedora-30/container-bastion',
             'fedora-31/selenium-firefox',
@@ -58,7 +58,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-31/selenium-edge',
             'rhel-8-2',
             'rhel-8-2-distropkg',
-            ],
+        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',

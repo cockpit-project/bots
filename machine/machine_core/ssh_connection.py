@@ -395,7 +395,7 @@ class SSHConnection(object):
             "-o", "UserKnownHostsFile=/dev/null",
             "-o", "ControlPath=" + self.ssh_master,
             "-o", "BatchMode=yes",
-            ]
+        ]
         if not self.verbose:
             cmd += ["-q"]
         cmd += ["%s@[%s]:%s" % (self.ssh_user, self.ssh_address, source), dest]
