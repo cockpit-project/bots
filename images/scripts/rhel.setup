@@ -35,7 +35,43 @@ set -x
 if [ ! -f "$SKIP_REPO_FLAG" ]; then
     # Configure repositories.
 
-    if [ "$IMAGE" = "rhel-7-7" ]; then
+    if [ -n "$SERVER_REPO_URL" -a -n "$EXTRAS_REPO_URL" ]; then
+    # disable all default repos
+    rm -f --verbose /etc/yum.repos.d/*.repo
+cat <<EOF > /etc/yum.repos.d/rel-eng.repo
+[RHEL-7]
+name=rhel7-server
+baseurl=$SERVER_REPO_URL
+enabled=1
+gpgcheck=0
+
+[EXTRAS-7]
+name=rhel7-extras
+baseurl=$EXTRAS_REPO_URL
+enabled=1
+gpgcheck=0
+EOF
+        $YUM_INSTALL yum-utils
+
+    elif [ -n "$BASEOS_REPO_URL" -a -n "$APPSTREAM_REPO_URL" ]; then
+    # disable all default repos
+    rm -f --verbose /etc/yum.repos.d/*.repo
+cat <<EOF > /etc/yum.repos.d/rel-eng.repo
+[RHEL-8-BaseOS]
+name=rhel8-baseos
+baseurl=$BASEOS_REPO_URL
+enabled=1
+gpgcheck=0
+
+[RHEL-8-AppStream]
+name=rhel8-appstream
+baseurl=$APPSTREAM_REPO_URL
+enabled=1
+gpgcheck=0
+EOF
+        $YUM_INSTALL yum-utils
+
+    elif [ "$IMAGE" = "rhel-7-7" ]; then
         # disable all default repos
         rm -f --verbose /etc/yum.repos.d/*.repo
 cat <<EOF > /etc/yum.repos.d/internal.repo
