@@ -192,6 +192,8 @@ su builder -c "/usr/bin/mock --install --verbose rpmlint"
 if [ -n "$HAVE_DOCKER" ]; then
     # HACK: docker falls over regularly, print its log if it does
     systemctl start docker || journalctl -u docker
+    # Fedora 30's docker does not yet understand ARG before FROM
+    sed -i "/^ARG VERSION/ d; s/\$VERSION/$version/" /var/tmp/cockpit-base/Dockerfile
     docker build -t cockpit/base /var/tmp/cockpit-base
     # docker images that we need for integration testing
     /var/lib/testvm/docker-images.setup
@@ -199,6 +201,11 @@ fi
 
 # Configure kubernetes
 [ -z "$HAVE_KUBERNETES" ] || /var/lib/testvm/kubernetes.setup
+
+# for Fedora ≥ 31, use podman for cockpit/base container; we don't need kubernetes any more
+if [ "$IMAGE" != fedora-30 ]; then
+    podman build --tag cockpit/base --build-arg VERSION=$version /var/tmp/cockpit-base
+fi
 
 # reduce image size
 dnf clean all
