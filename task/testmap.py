@@ -34,7 +34,6 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'ubuntu-1804',
             'ubuntu-stable',
-            'fedora-30',
             'fedora-31',
             'fedora-coreos',
             'fedora-31/firefox',
