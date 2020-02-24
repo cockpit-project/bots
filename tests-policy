@@ -137,6 +137,12 @@ def parseName(output):
 # Flakiness Checks
 
 def guessFlake(output, context, verbose=False):
+    host = os.environ.get("COCKPIT_LEARN_SERVICE_HOST")
+    port = os.environ.get("COCKPIT_LEARN_SERVICE_PORT", "443")
+
+    if not host:
+        return output
+
     # Build up an item just like in tests-data
     item = {
         "pull": None,
@@ -150,8 +156,6 @@ def guessFlake(output, context, verbose=False):
         "log": output
     }
 
-    host = os.environ.get("COCKPIT_LEARN_SERVICE_HOST", "learn-cockpit.apps.ci.centos.org")
-    port = os.environ.get("COCKPIT_LEARN_SERVICE_PORT", "443")
     response = {}
     flake = False
 
