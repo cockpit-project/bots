@@ -1,0 +1,3 @@
+*testAddDisk*
+*
+*ph_is_present("#vm-subVmTest1-disks-vdh-bus"))*
