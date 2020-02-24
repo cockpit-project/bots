@@ -68,11 +68,10 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/starter-kit': {
         'master': [
             'centos-7',
-            'fedora-30',
+            'fedora-31',
             'centos-8-stream',
         ],
         '_manual': [
-            'fedora-31',
         ],
     },
     'cockpit-project/cockpit-ostree': {
