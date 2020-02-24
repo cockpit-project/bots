@@ -29,7 +29,3 @@ do
     docker build --build-arg OFFLINE=1 -t "cockpit/$NAME" . 1>&2;
     rm -r "/var/tmp/containers/$NAME/rpms"
 done
-
-journalctl --flush || true
-journalctl --sync || killall systemd-journald || true
-rm -rf /var/log/journal/* || true
