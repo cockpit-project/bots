@@ -30,7 +30,7 @@ echo foobar | passwd --stdin root
 # HACK docker not available on f31
 # https://github.com/cockpit-project/cockpit/issues/12670
 HAVE_DOCKER=
-if [ "$1" != fedora-31 ]; then
+if [ "$1" = fedora-30 ]; then
     HAVE_DOCKER=1
 fi
 
@@ -40,6 +40,7 @@ fi
 #
 COCKPIT_DEPS="\
 device-mapper-multipath \
+docker \
 etcd \
 glibc-all-langpacks \
 glib-networking \
@@ -67,7 +68,7 @@ tuned \
 virt-install \
 "
 
-[ -z "$HAVE_DOCKER" ] || COCKPIT_DEPS="$COCKPIT_DEPS atomic docker"
+[ -z "$HAVE_DOCKER" ] || COCKPIT_DEPS="$COCKPIT_DEPS atomic"
 
 COCKPIT_DEPS="$COCKPIT_DEPS udisks2 udisks2-lvm2 udisks2-iscsi"
 
@@ -159,7 +160,7 @@ useradd -c Builder -G mock builder
 
 if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
     # Enable updates-testing in mock
-    echo "config_opts['yum.conf'] += '[updates-testing]\nenabled=1'" >>/etc/mock/default.cfg
+    echo "config_opts['dnf.conf'] += '[updates-testing]\nenabled=1'" >>/etc/mock/default.cfg
 fi
 
 # HACK - mock --installdeps is broken, it seems that it forgets to
