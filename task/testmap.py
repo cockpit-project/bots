@@ -62,6 +62,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-31/container-bastion',
+            'fedora-32',
         ],
     },
     'cockpit-project/starter-kit': {
