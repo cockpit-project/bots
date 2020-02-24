@@ -27,6 +27,7 @@ REFRESH = {
     "debian-stable": {},
     "fedora-30": {},
     "fedora-31": {},
+    "fedora-32": {},
     "fedora-testing": {},
     "fedora-coreos": {},
     "ubuntu-1804": {},
