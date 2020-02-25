@@ -27,11 +27,6 @@ printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
 
 echo foobar | passwd --stdin root
 
-HAVE_KUBERNETES=
-if [ $(uname -m) = x86_64 ]; then
-    HAVE_KUBERNETES=1
-fi
-
 # HACK docker not available on f31
 # https://github.com/cockpit-project/cockpit/issues/12670
 HAVE_DOCKER=
@@ -75,8 +70,6 @@ virt-install \
 [ -z "$HAVE_DOCKER" ] || COCKPIT_DEPS="$COCKPIT_DEPS atomic docker"
 
 COCKPIT_DEPS="$COCKPIT_DEPS udisks2 udisks2-lvm2 udisks2-iscsi"
-
-[ -z "$HAVE_KUBERNETES" ] || COCKPIT_DEPS="$COCKPIT_DEPS kubernetes"
 
 # We also install the packages necessary to join a FreeIPA domain so
 # that we don't have to go to the network during a test run.
@@ -198,9 +191,6 @@ if [ -n "$HAVE_DOCKER" ]; then
     # docker images that we need for integration testing
     /var/lib/testvm/docker-images.setup
 fi
-
-# Configure kubernetes
-[ -z "$HAVE_KUBERNETES" ] || /var/lib/testvm/kubernetes.setup
 
 # for Fedora ≥ 31, use podman for cockpit/base container; we don't need kubernetes any more
 if [ "$IMAGE" != fedora-30 ]; then
