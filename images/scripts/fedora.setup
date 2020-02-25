@@ -84,6 +84,7 @@ libsss_sudo \
 "
 
 TEST_PACKAGES="\
+ansible
 systemtap-runtime-virtguest \
 valgrind \
 gdb \
@@ -108,11 +109,6 @@ reportd \
 libreport-plugin-bugzilla \
 libreport-fedora
 "
-
-# Install ansible on Fedora 31 image so we can run ansible playbook from some VM
-if [ "${IMAGE%-31}" != "$IMAGE" ]; then
-    TEST_PACKAGES="$TEST_PACKAGES ansible"
-fi
 
 rm -rf /etc/sysconfig/iptables
 
