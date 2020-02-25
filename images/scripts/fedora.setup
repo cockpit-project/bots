@@ -193,10 +193,6 @@ if [ "$IMAGE" != fedora-30 ]; then
     podman build --tag cockpit/base --build-arg VERSION=$version /var/tmp/cockpit-base
 fi
 
-# reduce image size
-dnf clean all
-/var/lib/testvm/zero-disk.setup --keep-mock-cache
-
 ln -sf ../selinux/config /etc/sysconfig/selinux
 printf "SELINUX=enforcing\nSELINUXTYPE=targeted\n" > /etc/selinux/config
 
@@ -206,3 +202,7 @@ echo 'UseDNS no' >> /etc/ssh/sshd_config
 # Audit events to the journal
 rm -f '/etc/systemd/system/multi-user.target.wants/auditd.service'
 rm -rf /var/log/audit/
+
+# reduce image size
+dnf clean all
+/var/lib/testvm/zero-disk.setup --keep-mock-cache
