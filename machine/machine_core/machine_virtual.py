@@ -16,7 +16,6 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import contextlib
-import errno
 import fcntl
 import libvirt
 import libvirt_qemu
@@ -480,19 +479,6 @@ class VirtMachine(Machine):
                 pass
         except KeyboardInterrupt:
             pass
-
-    def pull(self, image):
-        if "/" in image:
-            image_file = os.path.abspath(image)
-        else:
-            image_file = os.path.join(BOTS_DIR, "images", image)
-        if not os.path.exists(image_file):
-            try:
-                subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), image_file])
-            except OSError as ex:
-                if ex.errno != errno.ENOENT:
-                    raise
-        return image_file
 
     def start(self):
         tries = 0

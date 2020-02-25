@@ -16,10 +16,12 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import errno
+import subprocess
 
 from . import ssh_connection
 from . import timeout
-from .constants import DEFAULT_IDENTITY_FILE, ATOMIC_IMAGES, OSTREE_IMAGES, TEST_DIR
+from .constants import DEFAULT_IDENTITY_FILE, ATOMIC_IMAGES, OSTREE_IMAGES, TEST_DIR, BOTS_DIR
 
 LOCAL_MESSAGE = """
 TTY LOGIN
@@ -136,6 +138,21 @@ class Machine(ssh_connection.SSHConnection):
         """Download a directory from the test machine, recursively.
         """
         super(Machine, self).download_dir(source, dest, relative_dir)
+
+    def pull(self, image):
+        """Download image.
+        """
+        if "/" in image:
+            image_file = os.path.abspath(image)
+        else:
+            image_file = os.path.join(BOTS_DIR, "images", image)
+        if not os.path.exists(image_file):
+            try:
+                subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), image_file])
+            except OSError as ex:
+                if ex.errno != errno.ENOENT:
+                    raise
+        return image_file
 
     def journal_cursor(self):
         """Return current journal cursor
