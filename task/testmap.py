@@ -35,6 +35,7 @@ REPO_BRANCH_CONTEXT = {
             'ubuntu-1804',
             'ubuntu-stable',
             'fedora-31',
+            'fedora-32',
             'fedora-coreos',
             'fedora-31/firefox',
             'rhel-8-2',
@@ -61,7 +62,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
-            'fedora-32',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -89,6 +89,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-32',
         ],
     },
     'weldr/lorax': {
