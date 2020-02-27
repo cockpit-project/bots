@@ -85,11 +85,11 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-podman': {
         'master': [
             'fedora-31',
+            'fedora-32',
             'rhel-8-2',
         ],
         '_manual': [
             'centos-8-stream',
-            'fedora-32',
         ],
     },
     'weldr/lorax': {
