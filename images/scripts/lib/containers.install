@@ -19,22 +19,12 @@ set -ex
 
 . /etc/os-release
 
-# use podman on Fedora ≥ 31, docker on 30
-if [ "$VERSION_ID" = 30 ]; then
-    CR=docker
-
-    # HACK: docker falls over regularly, print its log if it does
-    systemctl start docker || journalctl -u docker
-else
-    CR=podman
-fi
-
 for NAME in bastion
 do
     mkdir -p "/var/tmp/containers/$NAME/rpms"
     cp -f /var/tmp/build-results/*.rpm "/var/tmp/containers/$NAME/rpms/"
     cd "/var/tmp/containers/$NAME/"
     sed -i -e "s#FROM .*#FROM cockpit/base#" Dockerfile
-    $CR build --build-arg OFFLINE=1 -t "cockpit/$NAME" . 1>&2;
+    podman build --build-arg OFFLINE=1 -t "cockpit/$NAME" . 1>&2;
     rm -r "/var/tmp/containers/$NAME/rpms"
 done
