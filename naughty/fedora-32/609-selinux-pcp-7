@@ -1,0 +1,1 @@
+* type=1400 audit(*): avc:  denied  { search } * comm="pmdalinux" *pcp_pmcd_t
