@@ -28,7 +28,8 @@ else
     install_url=$BASEOS_REPO_URL
 fi
 
-bootstrap_script="$(dirname $0)/images/scripts/$image.bootstrap"
+pushd $(dirname $0)
+bootstrap_script="images/scripts/$image.bootstrap"
 mv $bootstrap_script ${bootstrap_script}.orig
 
 echo "#!/bin/bash
@@ -39,7 +40,6 @@ BASE=\$(dirname \$0)
 " > $bootstrap_script
 chmod +x $bootstrap_script
 
-pushd $(dirname $0)
 ./image-create $image $@
 mv ${bootstrap_script}.orig $bootstrap_script
 mv images/$image images/$final_image
