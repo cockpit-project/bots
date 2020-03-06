@@ -1,0 +1,8 @@
+#! /bin/bash
+
+set -e
+
+/var/lib/testvm/debian.install "$@"
+
+# HACK: broken virt-builder image; locale defaults to en_US (which is ISO-8859-1)
+update-locale LANG=C.UTF-8

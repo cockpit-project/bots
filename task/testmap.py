@@ -33,6 +33,7 @@ REPO_BRANCH_CONTEXT = {
             'debian-stable',
             'debian-testing',
             'ubuntu-1804',
+            'ubuntu-2004',
             'ubuntu-stable',
             'fedora-31',
             'fedora-32',
@@ -62,7 +63,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
-            'ubuntu-2004',
         ],
     },
     'cockpit-project/starter-kit': {
