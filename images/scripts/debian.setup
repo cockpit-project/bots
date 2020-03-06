@@ -73,6 +73,10 @@ case "$RELEASE" in
         # these packages are not in Ubuntu 18.04
         COCKPIT_DEPS="${COCKPIT_DEPS/libvirt-dbus /}"
         ;;
+    focal)
+        # these packages are not in Ubuntu 20.04; same as for debian-testing below
+        IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
+        ;;
 esac
 
 if [ "${1#ubuntu}" != "$1" ]; then
