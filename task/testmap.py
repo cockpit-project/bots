@@ -62,6 +62,7 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
+            'ubuntu-2004',
         ],
     },
     'cockpit-project/starter-kit': {
