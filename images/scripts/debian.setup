@@ -28,6 +28,7 @@ libosinfo-bin \
 network-manager \
 pcp \
 policykit-1 \
+packagekit \
 python3-dbus \
 qemu-block-extra \
 realmd \
@@ -46,7 +47,6 @@ IPA_CLIENT_PACKAGES="\
 freeipa-client \
 sssd-tools \
 sssd-dbus \
-packagekit \
 "
 
 TEST_PACKAGES="\
