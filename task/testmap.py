@@ -156,6 +156,15 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
         ]
+    },
+    'skobyda/cockpit-certificates': {
+        'master': [
+            'fedora-31',
+        ],
+        '_manual': [
+            'rhel-8-2',
+            'centos-8-stream',
+        ]
     }
 }
 
