@@ -72,6 +72,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
         '_manual': [
+            'fedora-32/firefox',
         ],
     },
     'cockpit-project/cockpit-ostree': {
