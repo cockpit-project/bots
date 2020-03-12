@@ -116,6 +116,7 @@ fi
 if [ "$1" = "debian-testing" ]; then
     rm --verbose -f /etc/apt/sources.list.d/*
     echo 'deb http://deb.debian.org/debian testing main' > /etc/apt/sources.list
+    RELEASE=testing
 fi
 
 # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
