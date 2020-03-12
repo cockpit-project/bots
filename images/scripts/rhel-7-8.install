@@ -3,6 +3,9 @@
 set -e
 
 # remove cockpit distro packages, testing with upstream master
-rpm --erase --verbose cockpit cockpit-ws cockpit-bridge cockpit-system cockpit-dashboard
+rpm --erase --verbose cockpit cockpit-ws cockpit-bridge cockpit-system
+# HACK: https://github.com/cockpit-project/bots/pull/631 added cockpit-dashboard to rhel.setup, but until the rhel-7-8 image gets
+# rebuilt, the package will not actually be present
+rpm --erase --verbose cockpit-dashboard || true
 
 /var/lib/testvm/fedora.install --rhel "$@"
