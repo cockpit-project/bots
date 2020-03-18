@@ -65,6 +65,8 @@ systemd-coredump \
 virtinst \
 xfsprogs \
 sosreport \
+open-iscsi \
+targetcli-fb \
 "
 
 RELEASE=$(grep -m1 ^deb /etc/apt/sources.list | awk '{print $3}')
@@ -143,6 +145,11 @@ fi
 if [ "$1" = "ubuntu-stable" ]; then
     $APT install pcp libpcp3 || true
 fi
+
+# python3-rtslib-fb postinst starts rtslib-fb-targetctl.service , but that may fail due to kernel being upgraded
+mkdir -p /run/systemd/system
+ln -s /dev/null /run/systemd/system/rtslib-fb-targetctl.service
+systemctl daemon-reload
 
 # install our dependencies
 $APT dist-upgrade
