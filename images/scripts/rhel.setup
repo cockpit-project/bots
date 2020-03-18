@@ -291,6 +291,36 @@ fi
 pkgs="$TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES"
 $YUM_INSTALL $pkgs
 
+# If the insights-client is installed, update the insights-client
+# "egg" and make sure that only the newest one is used.
+#
+# Running "insights-client --status" will download the newest egg to
+# /var/lib/insights (and then output some status that we are not
+# really interested in).
+#
+# Normally, newest.egg is then copied automatically to last_stable.egg
+# once it has successfully been used once.
+#
+# But the idea is here that we only want to ever run newest.egg and if
+# it is broken, we want to know about that, instead of having the
+# insights-client fall back to an older egg. Thus, we promote
+# newest.egg to last_stable.egg unconditionally and immediately.
+# Removing rpm.egg takes that fallback out of the equation, too.
+#
+# Also, "insights-client --version" only looks at last_stable.egg or
+# rpm.egg, never at newest.egg. So copying newest.egg to
+# last_stable.egg makes that work as expected, too.
+
+if [ -x /usr/bin/insights-client ]; then
+    insights-client --status --verbose || true
+    if [ -f /var/lib/insights/newest.egg ]; then
+        cp /var/lib/insights/newest.egg /var/lib/insights/last_stable.egg
+        cp /var/lib/insights/newest.egg.asc /var/lib/insights/last_stable.egg.asc
+        rm -f /etc/insights-client/rpm.egg /etc/insights-client/rpm.egg.asc
+    fi
+    insights-client --version
+fi
+
 # Pre-install cockpit packages from base preinstalled, to check for API breakages
 # and more convenient interactive debugging
 if [ "${IMAGE#rhel-7}" != "$IMAGE" ] || [ "${IMAGE#centos-7}" != "$IMAGE" ] ; then
