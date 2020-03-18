@@ -125,6 +125,8 @@ def find(name, stores, latest, quiet):
 
 
 def download(dest, force, state, quiet, stores):
+    name = os.path.basename(dest)
+
     if not stores:
         config = os.path.expanduser(CONFIG)
         if os.path.exists(config):
@@ -132,8 +134,11 @@ def download(dest, force, state, quiet, stores):
                 stores = fp.read().strip().split("\n")
         else:
             stores = []
-        stores += PUBLIC_STORES
-        stores += REDHAT_STORES
+
+        if any(p in name for p in ['rhel', 'windows']):
+            stores += REDHAT_STORES
+        else:
+            stores += PUBLIC_STORES
 
     # The time condition for If-Modified-Since
     exists = not force and os.path.exists(dest)
@@ -142,7 +147,6 @@ def download(dest, force, state, quiet, stores):
     else:
         since = EPOCH
 
-    name = os.path.basename(dest)
     cmd, message = find(name, stores, latest=state, quiet=quiet)
 
     # If we couldn't find the file, but it exists, we're good
