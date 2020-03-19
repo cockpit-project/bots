@@ -49,7 +49,7 @@ openssl \
 PackageKit \
 pcp \
 pcp-libs \
-qemu \
+qemu-system-x86-core \
 realmd \
 selinux-policy-targeted \
 setroubleshoot-server \
@@ -127,6 +127,11 @@ fi
 dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $ABRT_PACKAGES
 
+# clean up old kernels
+dnf remove --oldinstallonly -y || true
+# also removes gcc and some -devel packages
+dnf remove -y kernel-headers
+
 if [ -n "$AVOCADO" ]; then
 
     # enable python3 avocado support repository
@@ -156,19 +161,13 @@ if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
     echo "config_opts['dnf.conf'] += '[updates-testing]\nenabled=1'" >>/etc/mock/default.cfg
 fi
 
-# HACK - mock --installdeps is broken, it seems that it forgets to
-# copy the source rpm to a location that dnf can actually access.  A
-# workaround is to pass "--no-bootstrap-chroot".
-#
-# When you remove this hack, also remove it in fedora-*.install.
-#
-# https://bugzilla.redhat.com/show_bug.cgi?id=1447627
-
 opsys=$(cut -d '-' -f 1 <<< "$IMAGE")
 version=$(cut -d '-' -f 2 <<< "$IMAGE")
 # If version is not number (testing/i386) then use Fedora 31
 if ! [ "$version" -eq "$version" ] 2>/dev/null; then version=31; fi
 
+# don't use a bootstrap chroot to save time and space; everything is offline, and we always just do exactly one build
+echo "config_opts['use_bootstrap'] = False" >>/etc/mock/site-defaults.cfg
 su builder -c "/usr/bin/mock --no-bootstrap-chroot --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
 su builder -c "/usr/bin/mock --install --verbose rpmlint"
 
@@ -186,4 +185,5 @@ rm -rf /var/log/audit/
 
 # reduce image size
 dnf clean all
-/var/lib/testvm/zero-disk.setup --keep-mock-cache
+rm -rf /var/lib/mock/*-bootstrap
+/var/lib/testvm/zero-disk.setup
