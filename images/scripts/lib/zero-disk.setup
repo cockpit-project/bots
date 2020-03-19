@@ -43,6 +43,8 @@ if [ -d "/var/cache" ]; then
     find /var/cache/* -maxdepth 0 -depth -name "*" $keep -exec rm -rf {} \;
 fi
 rm -rf /var/tmp/*
+# try to not continue to write to /var for this setup boot
+journalctl --relinquish-var || true
 rm -rf /var/log/journal/*
 
 dd if=/dev/zero of=/root/junk || true
