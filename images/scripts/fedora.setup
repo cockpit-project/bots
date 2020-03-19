@@ -59,9 +59,11 @@ system-logos \
 subscription-manager \
 tuned \
 virt-install \
+udisks2 \
+udisks2-lvm2 \
+udisks2-iscsi \
 "
 
-COCKPIT_DEPS="$COCKPIT_DEPS udisks2 udisks2-lvm2 udisks2-iscsi"
 
 # We also install the packages necessary to join a FreeIPA domain so
 # that we don't have to go to the network during a test run.
