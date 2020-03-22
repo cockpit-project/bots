@@ -15,4 +15,7 @@ fi
 # release name is the last part of the URL
 rel=${rel##*/}
 
+# Pin release to 19.10 (eoan) while the current stable is 20.04 LTS, as we have a separate image for that (ubuntu-2004)
+rel=eoan
+
 exec $(dirname $0)/lib/debian.bootstrap "$1" "https://cloud-images.ubuntu.com/daily/server/$rel/current/$rel-server-cloudimg-amd64.img"
