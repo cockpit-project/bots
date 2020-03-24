@@ -63,6 +63,7 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
+            'rhel-7-9',
         ],
     },
     'cockpit-project/starter-kit': {
