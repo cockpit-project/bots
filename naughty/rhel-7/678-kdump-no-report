@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "test/verify/check-kdump", line *, in testBasic
+    m.execute("""find "{0}" -maxdepth 1 -mindepth 1 -type d -exec echo {{}} \;""".format(customPath)), "")
+AssertionError: '' == ''
