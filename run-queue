@@ -24,6 +24,9 @@ import subprocess
 import sys
 import time
 import logging
+import os
+import socket
+import smtplib
 
 from task import redhat_network, distributed_queue
 
@@ -89,10 +92,26 @@ def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result
     body = json.loads(body)
     return body['command'], method_frame.delivery_tag
 
+
+def mail_notification(body):
+    mx = os.environ.get("TEST_NOTIFICATION_MX")
+    if not mx:
+        return
+
+    sender = "noreply@redhat.com"
+    receivers = os.environ.get("TEST_NOTIFICATION_TO", "").split(',')
+    # if sending the notification fails, then fail the pod -- we do *not* want to ack messages in this case,
+    # otherwise we would silently miss failure notifications; thus no exception handling here
+    s = smtplib.SMTP(mx)
+    s.sendmail(sender, receivers, """From: %s
+To: %s
+Subject: cockpituous: run-queue crash on %s
+
+%s""" % (sender, ', '.join(receivers), socket.gethostname(), body))
+
+
 # Consume from the webhook queue and republish to the task queue via *-scan
 # Consume from the task queue (endpoint)
-
-
 def main():
     parser = argparse.ArgumentParser(description='Bot: read a single test command from the queue and execute it')
     parser.add_argument('--amqp', default='localhost:5671',
@@ -129,6 +148,11 @@ def main():
             time.sleep(3)
         if p.returncode != 0:
             logging.error("%s failed with exit code %i", cmd_str, p.returncode)
+            mail_notification("""The queue command
+
+  %s
+
+failed with exit code %i. Please check the container logs for details.""" % (cmd_str, p.returncode))
 
         channel.basic_ack(delivery_tag)
 
