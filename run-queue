@@ -118,11 +118,17 @@ def main():
             logging.info("All queues are empty")
             return 1
 
-        logging.info("Consuming message with command: {0}\n".format(' '.join(cmd) if type(cmd) is list else cmd))
+        if type(cmd) is list:
+            cmd_str = ' '.join(cmd)
+        else:
+            cmd_str = cmd
+        logging.info("Consuming message with command: %s", cmd_str)
         p = subprocess.Popen(cmd, shell=type(cmd) is str)
         while p.poll() is None:
             q.connection.process_data_events()
             time.sleep(3)
+        if p.returncode != 0:
+            logging.error("%s failed with exit code %i", cmd_str, p.returncode)
 
         channel.basic_ack(delivery_tag)
 
