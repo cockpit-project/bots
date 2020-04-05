@@ -141,9 +141,10 @@ if [ "$1" = "debian-stable" ]; then
     $APT install --reinstall -y qemu-utils
 fi
 
-# HACK https://bugs.launchpad.net/ubuntu/+source/pcp/+bug/1850281
+# HACK https://launchpad.net/bugs/1850281: disable pmlogger for image build, to avoid package install failure
 if [ "$1" = "ubuntu-stable" ]; then
-    $APT install pcp libpcp3 || true
+    mkdir -p /run/systemd/system/pmlogger.service.d
+    printf '[Service]\nType=simple\nExecStart=\nExecStart=/bin/true\n' > /run/systemd/system/pmlogger.service.d/disable.conf
 fi
 
 # python3-rtslib-fb postinst starts rtslib-fb-targetctl.service , but that may fail due to kernel being upgraded
