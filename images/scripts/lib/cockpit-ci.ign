@@ -34,7 +34,20 @@
       }
     ]
   },
-  "storage": {},
+  "storage": {
+    "files": [
+      {
+        "group": {},
+        "path": "/etc/NetworkManager/system-connections/eth1.nmconnection",
+        "user": {},
+        "contents": {
+          "source": "data:,%5Bconnection%5D%0Aid%3Deth1%0Atype%3Dethernet%0Ainterface-name%3Deth1%0A%0A%5Bipv4%5D%0Amethod%3Ddisabled%0A%0A%5Bipv6%5D%0Amethod%3Dignore%0A",
+          "verification": {}
+        },
+        "mode": 384
+      }
+    ]
+  },
   "systemd": {
     "units": [
       {
