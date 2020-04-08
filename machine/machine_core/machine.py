@@ -246,7 +246,7 @@ class Machine(ssh_connection.SSHConnection):
             rm -f /etc/systemd/system/cockpit.service.d/notls.conf &&
             systemctl reset-failed 'cockpit*' &&
             systemctl daemon-reload &&
-            systemctl stop cockpit.service &&
+            systemctl stop --quiet cockpit.service &&
             systemctl start cockpit.socket
             """)
         else:
@@ -256,11 +256,11 @@ class Machine(ssh_connection.SSHConnection):
             printf "[Service]
             ExecStartPre=-/bin/sh -c 'echo 0 > /proc/sys/kernel/yama/ptrace_scope'
             ExecStart=
-            %s --no-tls" `systemctl cat cockpit.service | grep ExecStart=` \
+            %s --no-tls" `grep ExecStart= /lib/systemd/system/cockpit.service` \
                     > /etc/systemd/system/cockpit.service.d/notls.conf &&
             systemctl reset-failed 'cockpit*' &&
             systemctl daemon-reload &&
-            systemctl stop cockpit.service &&
+            systemctl stop --quiet cockpit.service &&
             systemctl start cockpit.socket
             """)
 
