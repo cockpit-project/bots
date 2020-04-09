@@ -139,6 +139,14 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'centos-8-stream',
+            'rhel-7-9',
+            'rhel-7-9/live-iso',
+            'rhel-7-9/qcow2',
+            'rhel-7-9/aws',
+            'rhel-7-9/azure',
+            'rhel-7-9/openstack',
+            'rhel-7-9/vmware',
+            'rhel-7-9/tar',
         ],
     },
     'weldr/cockpit-composer': {
