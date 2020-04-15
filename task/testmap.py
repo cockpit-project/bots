@@ -149,7 +149,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-9/tar',
         ],
     },
-    'weldr/cockpit-composer': {
+    'osbuild/cockpit-composer': {
         'master': [
             'fedora-31/chrome',
             'fedora-31/edge',
@@ -209,7 +209,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "debian-stable@cockpit-project/cockpit",
         "rhel-8-2@cockpit-project/cockpit",
         "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
-        "fedora-31/firefox@weldr/cockpit-composer",
+        "fedora-31/firefox@osbuild/cockpit-composer",
     ]
 }
 
