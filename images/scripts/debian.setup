@@ -62,6 +62,7 @@ nfs-server \
 qemu-kvm \
 socat \
 systemd-coredump \
+systemd-timesyncd \
 virtinst \
 xfsprogs \
 sosreport \
@@ -85,6 +86,12 @@ case "$RELEASE" in
     bionic)
         # these packages are not in Ubuntu 18.04
         COCKPIT_DEPS="${COCKPIT_DEPS/libvirt-dbus /}"
+        TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
+        ;;
+    eoan|buster)
+        # timesyncd got split out in Ubuntu 20.04 and Debian 11
+        TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
+        ;;
     focal|testing)
         # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
         IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
