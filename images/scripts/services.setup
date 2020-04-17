@@ -3,12 +3,13 @@
 set -ex
 
 YUM_INSTALL="yum --setopt=skip_missing_names_on_install=False -y install"
+SERVER_IP=10.111.112.100
 
 yum -y upgrade
 $YUM_INSTALL docker
 
 # static host name and IP so that peer VMs can find us
-nmcli con add con-name "static-eth1" ifname eth1 type ethernet ip4 "10.111.112.100/20" ipv4.dns "10.111.112.100" gw4 "10.111.112.1"
+nmcli con add con-name "static-eth1" ifname eth1 type ethernet ip4 "$SERVER_IP/20" ipv4.dns "$SERVER_IP" gw4 "10.111.112.1"
 nmcli con up "static-eth1"
 hostnamectl set-hostname services.cockpit.lan
 
@@ -28,7 +29,7 @@ mkdir /var/lib/ipa-data
 
 cat <<EOF > /run-freeipa
 docker run -d --rm --name freeipa -ti -h f0.cockpit.lan \
-    -e IPA_SERVER_IP=10.111.112.100 \
+    -e IPA_SERVER_IP=$SERVER_IP \
     -p 53:53/udp -p 53:53 -p 80:80 -p 443:443 -p 389:389 -p 636:636 -p 88:88 -p 464:464 -p 88:88/udp -p 464:464/udp -p 123:123/udp \
     -v /var/lib/ipa-data:/data:Z \
     freeipa/freeipa-server \
@@ -61,6 +62,51 @@ ipa-advise enable-admins-sudo | sh -ex
 ipa dnsconfig-mod --forwarder=8.8.8.8
 poweroff
 '
+
+#############
+#
+# Samba AD setup
+#
+#############
+
+# See https://hub.docker.com/r/nowsci/samba-domain
+docker pull docker.io/nowsci/samba-domain
+mkdir -p /var/lib/samba-data/config /var/lib/samba-data/data
+
+# "foobarfoo" password is not accepted:
+# 0000052D: Constraint violation - check_password_restrictions: the password does not meet the complexity criteria!
+# supposed to be disabled with -e NOCOMPLEXITY=true, but that doesn't work
+cat <<EOF > /run-samba-domain
+docker run -d -it --rm --name samba \
+    -e "DOMAIN=COCKPIT.LAN" \
+    -e "DOMAINPASS=foobarFoo123" \
+    -e "DNSFORWARDER=172.27.0.3" \
+    -e "HOSTIP=$SERVER_IP" \
+    -p 53:53 \
+    -p 53:53/udp \
+    -p 88:88 \
+    -p 88:88/udp \
+    -p 135:135 \
+    -p 137-138:137-138/udp \
+    -p 139:139 \
+    -p 389:389 \
+    -p 389:389/udp \
+    -p 445:445 \
+    -p 464:464 \
+    -p 464:464/udp \
+    -p 636:636 \
+    -p 1024-1044:1024-1044 \
+    -p 3268-3269:3268-3269 \
+    -v /etc/localtime:/etc/localtime:ro \
+    -v /var/lib/samba-data/data/:/var/lib/samba \
+    -v /var/lib/samba-data/config:/etc/samba/external \
+    --add-host services.cockpit.lan:$SERVER_IP \
+    -h f0.cockpit.lan \
+    nowsci/samba-domain
+EOF
+chmod 755 /run-samba-domain
+
+# no need to run the script here; it initializes reasonably fast and we don't have post-setup to do for now
 
 
 #############################
