@@ -361,7 +361,7 @@ class VirtMachine(Machine):
         if not self.maintain:
             (unused, self._transient_image) = tempfile.mkstemp(suffix='.qcow2', prefix="", dir=self.run_dir)
             execute("qemu-img", "create", "-q", "-f", "qcow2",
-                    "-o", "backing_file=%s" % self.image_file, self._transient_image)
+                    "-o", "backing_file=%s,backing_fmt=qcow2" % self.image_file, self._transient_image)
             image_to_use = self._transient_image
 
         keys = {
