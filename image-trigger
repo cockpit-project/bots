@@ -25,7 +25,6 @@ REFRESH = {
     "continuous-atomic": {},
     "debian-testing": {},
     "debian-stable": {},
-    "fedora-30": {},
     "fedora-31": {},
     "fedora-32": {},
     "fedora-testing": {},
