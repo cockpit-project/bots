@@ -360,8 +360,13 @@ class VirtMachine(Machine):
         image_to_use = self.image_file
         if not self.maintain:
             (unused, self._transient_image) = tempfile.mkstemp(suffix='.qcow2', prefix="", dir=self.run_dir)
+            options = ""
+            # check if it is qcow2 (libvirt complains otherwise)
+            with open(self.image_file, "rb") as f:
+                if f.read(3) == b"QFI":
+                    options += ",backing_fmt=qcow2"
             execute("qemu-img", "create", "-q", "-f", "qcow2",
-                    "-o", "backing_file=%s,backing_fmt=qcow2" % self.image_file, self._transient_image)
+                    "-o", "backing_file=%s%s" % (self.image_file, options), self._transient_image)
             image_to_use = self._transient_image
 
         keys = {
