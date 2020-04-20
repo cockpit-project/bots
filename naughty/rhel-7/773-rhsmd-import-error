@@ -1,0 +1,1 @@
+wait_js_cond(ph_is_present("label:contains('Status') + button:contains('Register')"))*
