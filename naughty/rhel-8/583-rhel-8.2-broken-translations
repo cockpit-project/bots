@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-pages", line *, in testBasic
-    b.enter_page(page)
-*
-RuntimeError: TypeError: n.replace is not a function
