@@ -100,6 +100,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-2',
         ],
         '_manual': [
+            'rhel-8-3',
             'centos-8-stream',
         ],
     },
@@ -149,6 +150,15 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-9/openstack',
             'rhel-7-9/vmware',
             'rhel-7-9/tar',
+            'rhel-8-3',
+            'rhel-8-3/live-iso',
+            'rhel-8-3/qcow2',
+            'rhel-8-3/aws',
+            'rhel-8-3/azure',
+            'rhel-8-3/openstack',
+            'rhel-8-3/vmware',
+            'rhel-8-3/tar',
+            'rhel-8-3/ci',
         ],
     },
     'osbuild/cockpit-composer': {
@@ -167,6 +177,9 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-32',
+            'rhel-8-3/chrome',
+            'rhel-8-3/firefox',
+            'rhel-8-3/edge',
         ],
     },
     'candlepin/subscription-manager': {
@@ -174,6 +187,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-2',
         ],
         '_manual': [
+            'rhel-8-3',
         ]
     },
     'skobyda/cockpit-certificates': {
@@ -181,7 +195,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-31',
         ],
         '_manual': [
-            'rhel-8-2',
+            'rhel-8-3',
             'centos-8-stream',
         ]
     }
