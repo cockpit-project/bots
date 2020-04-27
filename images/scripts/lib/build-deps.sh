@@ -1,6 +1,8 @@
 #!/bin/bash
 
 set -eu
+# Guard against GitHub outages, redirects etc., and let this script fail on rpmspec failures
+set -o pipefail
 
 # most images use cockpit.spec from  master branch
 branch="master"
@@ -14,8 +16,7 @@ esac
 
 # Download cockpit.spec, replace `npm-version` macro and then query all build requires
 curl -s https://raw.githubusercontent.com/cockpit-project/cockpit/$branch/tools/cockpit.spec |
-    sed 's/%{npm-version:.*}/0/' |
-    sed '/Recommends:/d' |
+    sed 's/%{npm-version:.*}/0/; /Recommends:/d' |
     rpmspec -D "$1" --buildrequires --query /dev/stdin |
     sed 's/.*/"&"/' |
     tr '\n' ' '
