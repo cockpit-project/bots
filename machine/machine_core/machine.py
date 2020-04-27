@@ -236,6 +236,7 @@ class Machine(ssh_connection.SSHConnection):
                 self.execute(script=cmd)
             self.wait_for_cockpit_running(atomic_wait_for_host or "localhost")
         elif self.image in ["fedora-coreos"]:
+            self.stop_cockpit()
             cmd = "podman container runlabel RUN cockpit/ws"
             if not tls:
                 cmd += " -- --no-tls"
@@ -288,7 +289,7 @@ class Machine(ssh_connection.SSHConnection):
             with timeout.Timeout(seconds=60, error_message="Timeout while waiting for cockpit/ws to stop"):
                 self.execute("docker kill `docker ps | grep cockpit/ws | awk '{print $1;}'`")
         elif self.image in ["fedora-coreos"]:
-            self.execute("podman rm -f `podman ps --quiet --all --filter ancestor=cockpit/ws`")
+            self.execute("podman ps --quiet --all --filter ancestor=cockpit/ws | xargs --no-run-if-empty podman rm -f")
         else:
             self.execute("systemctl stop cockpit.socket cockpit.service")
 
