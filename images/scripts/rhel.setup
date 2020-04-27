@@ -71,36 +71,6 @@ gpgcheck=0
 EOF
         $YUM_INSTALL yum-utils
 
-    elif [ "$IMAGE" = "rhel-7-7" ]; then
-        # disable all default repos
-        rm -f --verbose /etc/yum.repos.d/*.repo
-cat <<EOF > /etc/yum.repos.d/internal.repo
-[RHEL-7.7]
-name=base-rhel
-baseurl=http://download.devel.redhat.com/rhel-7/rel-eng/latest-RHEL-7.7/compose/Server/x86_64/os/
-enabled=1
-gpgcheck=0
-
-[EXTRAS-7.7-LATEST]
-name=rhel-extras-compose
-baseurl=http://download.devel.redhat.com/rhel-7/rel-eng/latest-EXTRAS-7.7-RHEL-7/compose/Server/x86_64/os/
-enabled=1
-gpgcheck=0
-
-[RHEL-7.7-DEBUG]
-name=base-rhel-debug
-baseurl=http://download.devel.redhat.com/rhel-7/rel-eng/latest-RHEL-7.7/compose/Server/x86_64/debug/tree
-enabled=0
-gpgcheck=0
-
-[EXTRAS-7.7-DEBUG]
-name=rhel-extras-compose-debug
-baseurl=http://download.devel.redhat.com/rhel-7/rel-eng/latest-EXTRAS-7.7-RHEL-7/compose/Server/x86_64/debug/tree/
-enabled=0
-gpgcheck=0
-EOF
-        $YUM_INSTALL yum-utils
-
     elif [ "$IMAGE" = "rhel-7-8" ]; then
         # disable all default repos
         rm -f --verbose /etc/yum.repos.d/*.repo
@@ -163,7 +133,6 @@ EOF
 
     elif [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
         case "$IMAGE" in
-            rhel-8-1) REPO="rhel-8/rel-eng/RHEL-8/latest-RHEL-8.1" ;;
             rhel-8-2) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.2" ;;
             rhel-8-3) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.3" ;;
             *) echo "Unknown image $IMAGE"; exit 1
@@ -375,7 +344,6 @@ if [ "$DO_BUILD" -eq 1 ]; then
         dnf config-manager --set-disabled epel
 
         case "$IMAGE" in
-            rhel-8-1) REPO="rhel-8.1.0-build" ;;
             rhel-8-2) REPO="rhel-8.2.0-build" ;;
             rhel-8-3) REPO="rhel-8.3.0-build" ;;
             *) echo "Unknown image $IMAGE"; exit 1
