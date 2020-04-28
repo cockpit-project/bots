@@ -165,6 +165,8 @@ REPO_BRANCH_CONTEXT = {
         'master': [
             'fedora-31',
             'fedora-31/firefox',
+            'fedora-32',
+            'fedora-32/firefox',
         ],
         'rhel-8': [
             'rhel-8-2/chrome',
@@ -176,7 +178,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-32',
             'rhel-8-3/chrome',
             'rhel-8-3/firefox',
             'rhel-8-3/edge',
