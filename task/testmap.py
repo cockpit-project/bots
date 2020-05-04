@@ -127,21 +127,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-2/ci',
         ],
         'rhel7-extras': [
-            'rhel-7-8',
-            'rhel-7-8/live-iso',
-            'rhel-7-8/qcow2',
-            'rhel-7-8/aws',
-            'rhel-7-8/azure',
-            'rhel-7-8/openstack',
-            'rhel-7-8/vmware',
-            'rhel-7-8/tar',
-        ],
-        # These can be triggered manually with bots/tests-trigger
-        '_manual': [
-            # alibaba keeps failing with "resource is out of stock in the specified zone"
-            'fedora-31/alibaba',
-            'rhel-8-2/alibaba',
-            'centos-8-stream',
             'rhel-7-9',
             'rhel-7-9/live-iso',
             'rhel-7-9/qcow2',
@@ -150,6 +135,13 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-9/openstack',
             'rhel-7-9/vmware',
             'rhel-7-9/tar',
+        ],
+        # These can be triggered manually with bots/tests-trigger
+        '_manual': [
+            # alibaba keeps failing with "resource is out of stock in the specified zone"
+            'fedora-31/alibaba',
+            'rhel-8-2/alibaba',
+            'centos-8-stream',
             'rhel-8-3',
             'rhel-8-3/live-iso',
             'rhel-8-3/qcow2',
