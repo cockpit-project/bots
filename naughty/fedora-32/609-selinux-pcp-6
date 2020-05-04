@@ -1,1 +1,0 @@
-* type=1400 audit(*): avc:  denied  { dac_override } * comm="mv" *pcp_pmie_t
