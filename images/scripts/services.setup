@@ -13,7 +13,7 @@ nmcli con add con-name "static-eth1" ifname eth1 type ethernet ip4 "$SERVER_IP/2
 nmcli con up "static-eth1"
 hostnamectl set-hostname services.cockpit.lan
 
-systemctl disable firewalld
+systemctl disable firewalld kdump crond
 systemctl enable --now docker
 
 #############
