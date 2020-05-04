@@ -1,1 +1,0 @@
-* type=1400 audit(*): avc:  denied  { fsetid } * comm="cp" *pcp_pmlogger_t
