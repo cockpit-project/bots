@@ -93,7 +93,7 @@ TEST_DOMAIN_XML = """
   </features>
   <devices>
     <disk type='file' snapshot='external'>
-      <driver name='qemu' type='qcow2'/>
+      <driver name='qemu' type='qcow2' cache='unsafe'/>
       <source file='{drive}'/>
       <target dev='vda' bus='{disk}'/>
       <serial>ROOT</serial>
@@ -119,7 +119,7 @@ TEST_DOMAIN_XML = """
 
 TEST_DISK_XML = """
 <disk type='file'>
-  <driver name='qemu' type='%(type)s'/>
+  <driver name='qemu' type='%(type)s' cache='unsafe' />
   <source file='%(file)s'/>
   <serial>%(serial)s</serial>
   <address type='drive' controller='0' bus='0' target='2' unit='%(unit)d'/>
