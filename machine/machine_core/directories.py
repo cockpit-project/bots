@@ -24,14 +24,14 @@ _images_data_dir = None
 _temp_dir = None
 
 
-def get_git_config(variable):
+def get_git_config(*args):
     if not os.path.exists(GIT_DIR):
         return None
 
     try:
         myenv = os.environ.copy()
         myenv["GIT_DIR"] = GIT_DIR
-        return subprocess.check_output(["git", "config", variable], universal_newlines=True, env=myenv).strip()
+        return subprocess.check_output(("git", "config") + args, universal_newlines=True, env=myenv).strip()
 
     except (OSError, subprocess.CalledProcessError):  # 'git' not in PATH, or cmd fails
         return None
@@ -41,7 +41,7 @@ def get_images_data_dir():
     global _images_data_dir
 
     if _images_data_dir is None:
-        _images_data_dir = get_git_config('cockpit.bots.images-data-dir')
+        _images_data_dir = get_git_config('--type=path', 'cockpit.bots.images-data-dir')
 
         if _images_data_dir is None:
             _images_data_dir = os.path.join(os.environ.get("TEST_DATA", BOTS_DIR), "images")
