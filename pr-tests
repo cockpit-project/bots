@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+
+# This file is part of Cockpit.
+#
+# Copyright (C) 2020 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+import argparse
+import sys
+import urllib.request
+import ssl
+import json
+import os
+
+from machine.machine_core.constants import IMAGES_DIR
+import task
+
+logs_ssl_cockpit = ssl.create_default_context(cafile=os.path.join(IMAGES_DIR, "files", "ca.pem"))
+
+
+def ssl_context_for(log_url):
+    # sinks which use the Cockpit CI CA
+    if "logs.cockpit-project.org" in log_url:
+        return logs_ssl_cockpit
+
+    # other cockpit sinks and test providers (Semaphore, Travis, etc.) have an official certificate
+        return None
+
+
+def print_summary(by_state, state):
+    tests = by_state[state]
+    print("%i tests in state %s: %s" % (
+        len(tests),
+        state,
+        " ".join([t[0] for t in tests])))
+
+
+def print_failure(context, url):
+    print(context + ":")
+    print("  " + url)
+    if url.endswith(".html"):
+        url = url[:-5]
+    with urllib.request.urlopen(url, context=ssl_context_for(url)) as f:
+        for line in f:
+            if line.startswith(b"not ok"):
+                print("  " + line.strip().decode())
+    print()
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Summarize test status of a PR')
+    parser.add_argument('--repo', help="The repository of the PR", default=None)
+    parser.add_argument('-v', '--verbose', action="store_true", default=False,
+                        help="Print verbose information")
+    parser.add_argument("pr", type=int)
+    opts = parser.parse_args()
+
+    api = task.github.GitHub(repo=opts.repo)
+    try:
+        statuses_url = api.get("pulls/" + str(opts.pr))["statuses_url"]
+    except TypeError:
+        sys.stderr.write("%s is not a pull request\n" % opts.pr)
+        return 1
+
+    with urllib.request.urlopen(statuses_url) as f:
+        statuses = json.load(f)
+
+    by_context = {}  # context → (state, url)
+    for status in statuses:
+        # latest status wins
+        if status["context"] in by_context:
+            continue
+        by_context[status["context"]] = (status["state"], status.get("target_url", ""))
+
+    by_state = {}  # state → [(context, url), ..]
+    for context, (state, url) in by_context.items():
+        by_state.setdefault(state, []).append((context, url))
+
+    for state in by_state.keys():
+        if state != "failure":
+            print_summary(by_state, state)
+
+    failed = by_state.get("failure")
+    if not failed:
+        return
+    print("\nFailed tests\n============\n")
+    for (context, url) in failed:
+        print_failure(context, url)
+
+
+if __name__ == '__main__':
+    sys.exit(main())
