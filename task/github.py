@@ -137,7 +137,6 @@ class GitHub(object):
                 pass
             else:
                 raise
-        self.available = self.token and True or False
 
         # The cache directory is $TEST_DATA/github ~/.cache/github
         if not cacher:
