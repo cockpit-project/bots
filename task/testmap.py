@@ -43,15 +43,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-2-distropkg',
             'centos-8-stream',
         ],
-        'rhel-7.8': [
-            'rhel-7-8',
-            'rhel-atomic',
-            'continuous-atomic',
-            'fedora-31/container-bastion',
-            'fedora-31/selenium-firefox',
-            'fedora-31/selenium-chrome',
-            'centos-7',
-        ],
         'rhel-7.9': [
             'rhel-7-9',
             'rhel-atomic',
@@ -208,7 +199,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "fedora-testing@cockpit-project/cockpit"
     ],
     "openshift": [
-        "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
+        "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
     ],
     "services": [
         "fedora-31@cockpit-project/cockpit",
@@ -217,7 +208,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "ubuntu-2004@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
         "rhel-8-2@cockpit-project/cockpit",
-        "rhel-7-8@cockpit-project/cockpit/rhel-7.8",
+        "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
         "fedora-31/firefox@osbuild/cockpit-composer",
     ]
 }
