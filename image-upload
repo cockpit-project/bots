@@ -19,7 +19,6 @@
 
 import argparse
 import getpass
-import errno
 import os
 import socket
 import subprocess
@@ -29,9 +28,7 @@ import urllib.parse
 from machine.machine_core.constants import IMAGES_DIR
 from machine.machine_core.directories import BOTS_DIR, get_images_data_dir
 
-from task import PUBLIC_STORES, REDHAT_STORES
-
-TOKEN = "~/.config/github-token"
+from task import api, PUBLIC_STORES, REDHAT_STORES
 
 
 def upload(store, source):
@@ -53,15 +50,10 @@ def upload(store, source):
             sys.stderr.write("image-upload: unable to upload image: {0}\n".format(cmd[-1]))
         return ret
 
-    # Parse the user name and token, if present
-    user = url.username or getpass.getuser()
-    try:
-        with open(os.path.expanduser(TOKEN), "r") as gt:
-            token = gt.read().strip()
-        cmd += ["--user", user + ":" + token]
-    except IOError as exc:
-        if exc.errno == errno.ENOENT:
-            pass
+    # Pass credentials, if present
+    if api.token:
+        user = url.username or getpass.getuser()
+        cmd += ["--user", user + ":" + api.token]
 
     # First try to use the original store URL, for stores with valid SSL cert on an OpenShift proxy
     if try_curl(cmd + [store]) == 0:
