@@ -59,8 +59,9 @@ actions with the tests-trigger utility in this directory.
 
 ### Setup
 
-You need a GitHub token in ~/.config/github-token.  You can create one
-for your account at
+You need a GitHub token in ~/.config/github-token or from
+the [GitHub CLI](https://cli.github.com/) configuration in
+~/.config/gh/config.yml.  You can create one for your account at
 
     https://github.com/settings/tokens
 

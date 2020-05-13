@@ -129,14 +129,17 @@ class GitHub(object):
         self.token = None
         self.debug = False
         try:
-            gt = open(os.path.expanduser(TOKEN), "r")
-            self.token = gt.read().strip()
-            gt.close()
-        except IOError as exc:
-            if exc.errno == errno.ENOENT:
+            with open(os.path.expanduser(TOKEN), "r") as f:
+                self.token = f.read().strip()
+        except FileNotFoundError:
+            # fall back to GitHub's CLI token
+            try:
+                with open(os.path.expanduser("~/.config/gh/config.yml")) as f:
+                    match = re.search(r'oauth_token:\s*(\S+)', f.read())
+                if match:
+                    self.token = match.group(1)
+            except FileNotFoundError:
                 pass
-            else:
-                raise
 
         # The cache directory is $TEST_DATA/github ~/.cache/github
         if not cacher:
