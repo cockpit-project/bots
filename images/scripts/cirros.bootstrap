@@ -3,7 +3,7 @@ set -eux
 
 OUTPUT="$1"
 
-curl https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-i386-disk.img > "$OUTPUT"
+curl -L https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-i386-disk.img > "$OUTPUT"
 
 # prepare a cloud-init iso for disabling network source, to avoid a 90s timeout at boot
 WORKDIR=$(mktemp -d)
