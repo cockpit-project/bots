@@ -66,7 +66,7 @@ def main():
         if image and output:
             number = check_known_issue(api, output, image)
 
-        if number and api and api.available:
+        if number and api and api.token:
             try:
                 post_github(api, number, output, image)
             except (socket.error, RuntimeError):
@@ -396,7 +396,7 @@ def issue_comments(api, number):
 def post_github(api, number, output, image):
 
     # Ignore this if we were not given a token
-    if not api or not api.available:
+    if not api or not api.token:
         return
 
     context = "verify/{0}".format(image)
