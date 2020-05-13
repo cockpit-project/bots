@@ -19,12 +19,12 @@ if [[ "$COMPOSE" =~ RHEL-7 ]]; then
         EXTRAS_COMPOSE="latest-EXTRAS-7-RHEL-7"
         echo "EXTRAS_COMPOSE not supplied, using '$EXTRAS_COMPOSE'."
     fi
-    export SERVER_REPO_URL="http://download.devel.redhat.com/rel-eng/rhel-7/RHEL-7/$COMPOSE/compose/Server/x86_64/os"
-    export EXTRAS_REPO_URL="http://download.devel.redhat.com/rel-eng/rhel-7/EXTRAS-7/$EXTRAS_COMPOSE/compose/Server/x86_64/os"
+    export SERVER_REPO_URL="http://download.devel.redhat.com/rhel-7/rel-eng/RHEL-7/$COMPOSE/compose/Server/x86_64/os"
+    export EXTRAS_REPO_URL="http://download.devel.redhat.com/rhel-7/rel-eng/EXTRAS-7/$EXTRAS_COMPOSE/compose/Server/x86_64/os"
     install_url=$SERVER_REPO_URL
 else
-    export BASEOS_REPO_URL="http://download.devel.redhat.com/rel-eng/rhel-8/RHEL-8/$COMPOSE/compose/BaseOS/x86_64/os"
-    export APPSTREAM_REPO_URL="http://download.devel.redhat.com/rel-eng/rhel-8/RHEL-8/$COMPOSE/compose/AppStream/x86_64/os"
+    export BASEOS_REPO_URL="http://download.devel.redhat.com/rhel-8/rel-eng/RHEL-8/$COMPOSE/compose/BaseOS/x86_64/os"
+    export APPSTREAM_REPO_URL="http://download.devel.redhat.com/rhel-8/rel-eng/RHEL-8/$COMPOSE/compose/AppStream/x86_64/os"
     install_url=$BASEOS_REPO_URL
 fi
 
