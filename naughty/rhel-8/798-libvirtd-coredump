@@ -1,0 +1,5 @@
+*testLibvirt*
+*
+Process * (libvirtd) of user 0 dumped core.
+*
+*virObjectUnref*
