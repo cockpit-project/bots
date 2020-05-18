@@ -295,10 +295,11 @@ class Machine(ssh_connection.SSHConnection):
 
     def set_address(self, address, mac='52:54:01'):
         """Set IP address for the network interface with given mac prefix"""
-        cmd = "nmcli con add type ethernet autoconnect yes con-name static-{mac} " \
-              "ifname \"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\"" \
-              " ip4 {address} && ( nmcli conn up static-{mac} || true )"
-        self.execute(cmd.format(mac=mac, address=address))
+        self.execute("""set -eu
+             iface=$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)
+             nmcli con add type ethernet autoconnect yes con-name static-{mac} ifname $iface ip4 {address}
+             nmcli con delete $iface || true # may not have an active connection
+             nmcli con up static-{mac}""".format(mac=mac, address=address))
 
     def set_dns(self, nameserver=None, domain=None):
         self.execute(RESOLV_SCRIPT.format(nameserver=nameserver or "127.0.0.1", domain=domain or "cockpit.lan"))
