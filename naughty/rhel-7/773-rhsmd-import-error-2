@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "test/verify/check-packagekit", line *, in testAvailableUpdates
+    b.wait_not_present(".container-fluid div.blank-slate-pf")
+*
+testlib.Error: timeout
