@@ -94,6 +94,7 @@ podman \
 ntp \
 libvirt-daemon-config-network \
 tlog \
+nginx \
 "
 
 ABRT_PACKAGES="\
