@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+
+# This file is part of Cockpit.
+#
+# Copyright (C) 2020 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
+import os
+import ssl
+import sys
+import sqlite3
+import urllib.request
+import argparse
+
+from task import github
+from machine.machine_core.constants import IMAGES_DIR
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Store information about failed tests')
+    parser.add_argument("--db", default="cockpit-failures.db", help="Database name")
+    parser.add_argument("--repo", help="Repository from which to process failures")
+    parser.add_argument("revision", help="SHA for which failures should be stored")
+    opts = parser.parse_args()
+
+    ca = os.path.join(IMAGES_DIR, "files", "ca.pem")
+    ctx = ssl.create_default_context()
+    ctx.load_verify_locations(cafile=ca)
+
+    db_conn = sqlite3.connect(opts.db)
+    cursor = db_conn.cursor()
+    init_db(cursor)
+
+    api = github.GitHub(repo=opts.repo)
+    statuses = api.statuses(opts.revision)
+
+    for status in statuses:
+        run_id = None
+        repo = api.repo
+        context = status
+        url = statuses[status]["target_url"]
+        if "@" in status:
+            parts = status.split("@")
+            context = parts[0]
+            if not parts[1].startswith("bots"):
+                # Can contain branch, as it diffs between master and branches (e.g `cockpit-project/cockpit/rhel-7.9`)
+                repo = parts[1]
+
+        raw_log = url[:-5] if url.endswith(".html") else url
+        with urllib.request.urlopen(raw_log, context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
+            for (testname, retry_reason) in find_failed_tests(fp):
+                if run_id is None:
+                    run_id = insert_run(cursor, repo, context, url)
+                insert_failure(cursor, run_id, testname, retry_reason)
+
+    db_conn.commit()
+    db_conn.close()
+
+
+def init_db(cursor):
+    cursor.execute("""CREATE TABLE if not exists TestRuns
+                    (id INTEGER PRIMARY KEY,
+                     project TEXT,
+                     context TEXT,
+                     url TEXT)
+                   """)
+    cursor.execute("""CREATE TABLE if not exists Failures
+                    (testname TEXT NOT NULL,
+                     retry_reason TEXT,
+                     run INTEGER NOT NULL,
+                     FOREIGN KEY (run) REFERENCES TestRuns(id))
+                   """)
+
+
+def insert_run(cursor, project, context, url):
+    return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?)", (project, context, url)).lastrowid
+
+
+def insert_failure(cursor, run_id, testname, retry_reason):
+    cursor.execute("INSERT INTO Failures VALUES (?, ?, ?)", (testname, retry_reason, run_id))
+
+
+def find_failed_tests(fp):
+    for line in fp:
+        line = line.decode('utf-8')
+        if line.startswith("not ok "):
+            # Result line has form like:
+            # not ok 24 test/verify/check-foobar TestExample.testBasic [ND] # RETRY 2 (be robust against unstable tests)
+            fields = line.split(" ")
+            testname = "{0} {1}".format(fields[3], fields[4])
+            retry_reason = None
+            if "(" in line and ")" in line:
+                retry_reason = line[line.rfind("(") + 1:line.rfind(")")]
+            yield (testname, retry_reason)
+
+
+if __name__ == '__main__':
+    sys.exit(main())
