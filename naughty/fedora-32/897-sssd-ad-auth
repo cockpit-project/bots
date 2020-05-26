@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+*
+  File "test/verify/check-realms", line *, in testQualifiedUsers
+    b.login_and_go('/system/services#/systemd-tmpfiles-clean.timer', user='%s@cockpit.lan' % self.admin_user, password=self.admin_password)
+*
+RuntimeError: timed out waiting for page load
+*
+# Result testQualifiedUsers (__main__.TestAD) failed
