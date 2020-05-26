@@ -34,7 +34,7 @@ from .directories import get_temp_dir
 
 sys.path.insert(1, BOTS_DIR)
 
-MEMORY_MB = 1024
+MEMORY_MB = 1152
 
 
 # based on http://stackoverflow.com/a/17753573
