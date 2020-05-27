@@ -54,6 +54,11 @@ CONFIG = "~/.config/image-stores"
 DEVNULL = open("/dev/null", "r+")
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
 
+if os.isatty(1):
+    SYMBOLS = {'present': ' ✔', 'absent': ' ⨯', 'selected': '❯❯'}
+else:
+    SYMBOLS = {'present': ' >', 'absent': ' x', 'selected': '=>'}
+
 
 def find(name, stores, latest, quiet):
     found = []
@@ -78,7 +83,7 @@ def find(name, stores, latest, quiet):
                     output = subprocess.check_output(cmd, universal_newlines=True)
                     found.append((cmd, output, store, time.time() - start))
                     if not quiet:
-                        sys.stderr.write(" > {0}\n".format(store))
+                        sys.stderr.write("{0} {1}\n".format(SYMBOLS['present'], store))
                     return True
                 except subprocess.CalledProcessError:
                     return False
@@ -96,7 +101,7 @@ def find(name, stores, latest, quiet):
                 continue
 
             if not quiet:
-                sys.stderr.write(" x {0}\n".format(store))
+                sys.stderr.write("{0} {1}\n".format(SYMBOLS['absent'], store))
 
     # If we couldn't find the file, but it exists, we're good
     if not found:
@@ -153,7 +158,7 @@ def download(dest, force, state, quiet, stores):
 
     # Choose the first found item after sorting by date
     if not quiet:
-        sys.stderr.write(" > {0}\n".format(urllib.parse.urljoin(message, name)))
+        sys.stderr.write("{0} {1}\n".format(SYMBOLS['selected'], urllib.parse.urljoin(message, name)))
 
     temp = dest + ".partial"
 
