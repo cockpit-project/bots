@@ -122,7 +122,7 @@ def find(name, stores, latest, quiet):
     else:
         found.sort(reverse=False, key=lambda x: x[3])
 
-    # Return the command and message
+    # Return the command and message; choose the first found item after sorting
     return found[0][0], found[0][2]
 
 
@@ -156,7 +156,6 @@ def download(dest, force, state, quiet, stores):
             return
         raise RuntimeError("image-download: couldn't find file anywhere: {0}".format(name))
 
-    # Choose the first found item after sorting by date
     if not quiet:
         sys.stderr.write("{0} {1}\n".format(SYMBOLS['selected'], urllib.parse.urljoin(message, name)))
 
