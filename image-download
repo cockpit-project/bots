@@ -81,9 +81,13 @@ def find(name, stores, latest, quiet):
                                                    "--fail", "--cacert", ca, source]
                     start = time.time()
                     output = subprocess.check_output(cmd, universal_newlines=True)
-                    found.append((cmd, output, store, time.time() - start))
+                    duration = time.time() - start
+                    found.append((cmd, output, store, duration))
                     if not quiet:
-                        sys.stderr.write("{0} {1}\n".format(SYMBOLS['present'], store))
+                        sys.stderr.write("{0} {1} [{2}ms]\n".format(
+                            SYMBOLS['present'],
+                            store,
+                            int(duration * 1000 + 0.5)))
                     return True
                 except subprocess.CalledProcessError:
                     return False
