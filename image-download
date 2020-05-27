@@ -68,20 +68,17 @@ def find(name, stores, latest, quiet):
             ai = socket.getaddrinfo(url.hostname, url.port or defport, socket.AF_INET, 0, socket.IPPROTO_TCP)
         except socket.gaierror:
             ai = []
-            message = store
 
         for (family, socktype, proto, canonname, sockaddr) in ai:
-            message = "{scheme}://{0}:{1}{path}".format(*sockaddr, scheme=url.scheme, path=url.path)
-
             def curl(*args):
                 try:
                     cmd = ["curl"] + list(args) + ["--head", "--connect-timeout", "10", "--silent",
                                                    "--fail", "--cacert", ca, source]
                     start = time.time()
                     output = subprocess.check_output(cmd, universal_newlines=True)
-                    found.append((cmd, output, message, time.time() - start))
+                    found.append((cmd, output, store, time.time() - start))
                     if not quiet:
-                        sys.stderr.write(" > {0}\n".format(message))
+                        sys.stderr.write(" > {0}\n".format(store))
                     return True
                 except subprocess.CalledProcessError:
                     return False
@@ -99,7 +96,7 @@ def find(name, stores, latest, quiet):
                 continue
 
             if not quiet:
-                sys.stderr.write(" x {0}\n".format(message))
+                sys.stderr.write(" x {0}\n".format(store))
 
     # If we couldn't find the file, but it exists, we're good
     if not found:
