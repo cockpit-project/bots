@@ -55,14 +55,11 @@ if args.image in ["continuous-atomic", "rhel-atomic", "fedora-coreos", "services
 
 class MachineBuilder:
     def __init__(self, machine):
-        tempdir = testvm.get_temp_dir()
         self.machine = machine
 
-        os.makedirs(tempdir, 0o750, exist_ok=True)
-
-        # Use a tmp filename
+        # Use /var/tmp/ as this is going to be a huge file; /tmp/ is commonly tmpfs
         self.target_file = self.machine.image_file
-        fp, self.machine.image_file = tempfile.mkstemp(dir=tempdir, prefix=self.machine.image, suffix=".qcow2")
+        fp, self.machine.image_file = tempfile.mkstemp(dir="/var/tmp/", prefix=self.machine.image, suffix=".qcow2")
         os.close(fp)
 
     def bootstrap_system(self):
