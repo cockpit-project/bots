@@ -75,13 +75,6 @@ until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 
 RELEASE=$(grep -m1 ^deb /etc/apt/sources.list | awk '{print $3}')
 
-# debian-testing image gets bootstrapped from debian stable; upgrade
-if [ "$1" = "debian-testing" ]; then
-    rm --verbose -f /etc/apt/sources.list.d/*
-    echo 'deb http://deb.debian.org/debian testing main' > /etc/apt/sources.list
-    RELEASE=testing
-fi
-
 case "$RELEASE" in
     bionic)
         # these packages are not in Ubuntu 18.04
@@ -92,7 +85,7 @@ case "$RELEASE" in
         # timesyncd got split out in Ubuntu 20.04 and Debian 11
         TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
         ;;
-    focal|testing)
+    focal|bullseye)
         # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
         IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
 esac
@@ -125,8 +118,8 @@ chown -R admin:admin ~admin/.ssh
 mkdir -p /etc/NetworkManager/conf.d/
 printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
 
-if [ "${1#debian}" != "$1" ]; then
-    # HACK: Debian's cloud-init generates a *.cfg file, but /etc/network/interfaces sources extension-less files
+if [ "$1" = "debian-stable" ]; then
+    # HACK: Debian 10's cloud-init generates a *.cfg file, but /etc/network/interfaces sources extension-less files
     mv /etc/network/interfaces.d/50-cloud-init.cfg /etc/network/interfaces.d/50-cloud-init
 fi
 
