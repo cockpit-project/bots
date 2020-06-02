@@ -286,7 +286,8 @@ class VirtMachine(Machine):
     memory_mb = None
     cpus = None
 
-    def __init__(self, image, networking=None, maintain=False, memory_mb=None, cpus=None, graphics=False, **args):
+    def __init__(self, image, networking=None, maintain=False, memory_mb=None, cpus=None,
+                 graphics=False, overlay_dir=None, **args):
         self.maintain = maintain
 
         # Currently all images are run on x86_64. When that changes we will have
@@ -318,7 +319,7 @@ class VirtMachine(Machine):
 
         Machine.__init__(self, image=image, **args)
 
-        self.run_dir = os.path.join(get_temp_dir(), "run")
+        self.run_dir = overlay_dir or os.path.join(get_temp_dir(), "run")
 
         self.virt_connection = self._libvirt_connection(hypervisor="qemu:///session")
 
