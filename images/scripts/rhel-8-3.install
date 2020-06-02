@@ -6,4 +6,8 @@ set -e
 # subscription-manager-cockpit needs these, thus --nodeps
 rpm --erase --nodeps --verbose cockpit cockpit-ws cockpit-bridge cockpit-system
 
+# HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1842850
+# GnuTLS fails without a default policy
+ln -s /usr/share/crypto-policies/DEFAULT/gnutls.txt /var/lib/mock/rhel-8-candidate-x86_64/root/etc/crypto-policies/back-ends/gnutls.config
+
 /var/lib/testvm/fedora.install --rhel "$@"
