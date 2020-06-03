@@ -4,9 +4,6 @@ set -eux
 # Enable ssh password authentication
 sed -i '/PasswordAuthentication no/d' /etc/ssh/sshd_config
 
-# Drop core user from wheel group, it causes spurious unexpected polkit auth messages
-groupmems --group wheel --delete core
-
 # install/upgrade RPMs that apply to Fedora CoreOS
 # Note: cockpit-selinux would be desirable, but needs setroubleshoot-server which isn't installed
 cd /var/tmp/build-results/
