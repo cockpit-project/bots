@@ -79,15 +79,10 @@ def find(name, stores, latest, quiet):
                 try:
                     cmd = ["curl"] + list(args) + ["--head", "--connect-timeout", "10", "--silent",
                                                    "--fail", "--cacert", ca, source]
-                    start = time.time()
                     output = subprocess.check_output(cmd, universal_newlines=True)
-                    duration = time.time() - start
-                    found.append((cmd, output, store, duration))
+                    found.append((cmd, output, store))
                     if not quiet:
-                        sys.stderr.write("{0} {1} [{2}ms]\n".format(
-                            SYMBOLS['present'],
-                            store,
-                            int(duration * 1000 + 0.5)))
+                        sys.stderr.write("{0} {1}\n".format(SYMBOLS['present'], store))
                     return True
                 except subprocess.CalledProcessError:
                     return False
@@ -107,10 +102,6 @@ def find(name, stores, latest, quiet):
             if not quiet:
                 sys.stderr.write("{0} {1}\n".format(SYMBOLS['absent'], store))
 
-    # If we couldn't find the file, but it exists, we're good
-    if not found:
-        return None, None
-
     # Find the most recent version of this file
     def header_date(args):
         cmd, output, message, latency = args
@@ -121,13 +112,12 @@ def find(name, stores, latest, quiet):
         except ValueError:
             return ""
 
-    if latest:
+    if found and latest:
+        # if we depend on getting the latest info, only download it from that one store
         found.sort(reverse=True, key=header_date)
-    else:
-        found.sort(reverse=False, key=lambda x: x[3])
+        del found[1:]
 
-    # Return the command and message; choose the first found item after sorting
-    return found[0][0], found[0][2]
+    return found
 
 
 def download(dest, force, state, quiet, stores):
@@ -152,45 +142,70 @@ def download(dest, force, state, quiet, stores):
     else:
         since = EPOCH
 
-    cmd, message = find(name, stores, latest=state, quiet=quiet)
+    # returns [(cmd, HEAD output, store)]
+    stores = find(name, stores, latest=state, quiet=quiet)
 
     # If we couldn't find the file, but it exists, we're good
-    if not cmd:
+    if not stores:
         if exists:
             return
         raise RuntimeError("image-download: couldn't find file anywhere: {0}".format(name))
 
-    if not quiet:
-        sys.stderr.write("{0} {1}\n".format(SYMBOLS['selected'], urllib.parse.urljoin(message, name)))
+    # Start downloading from every store and keep the connection with the fastest throughput
+    procs = []  # [(Popen object, output file)]
+    for (cmd, _, store) in stores:
+        temp = dest + "." + store.replace('/', '_') + ".partial"
 
-    temp = dest + ".partial"
+        # Adjust the command above that worked to make it visible and download real stuff
+        cmd.remove("--head")
+        cmd.append("--show-error")
+        if not quiet and os.isatty(sys.stdout.fileno()):
+            cmd.remove("--silent")
+            cmd.insert(1, "--progress-bar")
+        cmd.append("--remote-time")
+        cmd.append("--time-cond")
+        cmd.append(since)
+        cmd.append("--output")
+        cmd.append(temp)
+        if os.path.exists(temp):
+            if force:
+                os.remove(temp)
+            else:
+                cmd.append("-C")
+                cmd.append("-")
 
-    # Adjust the command above that worked to make it visible and download real stuff
-    cmd.remove("--head")
-    cmd.append("--show-error")
-    if not quiet and os.isatty(sys.stdout.fileno()):
-        cmd.remove("--silent")
-        cmd.insert(1, "--progress-bar")
-    cmd.append("--remote-time")
-    cmd.append("--time-cond")
-    cmd.append(since)
-    cmd.append("--output")
-    cmd.append(temp)
-    if os.path.exists(temp):
-        if force:
-            os.remove(temp)
+        # Always create the destination file (because --state)
         else:
-            cmd.append("-C")
-            cmd.append("-")
+            open(temp, 'a').close()
 
-    # Always create the destination file (because --state)
-    else:
-        open(temp, 'a').close()
+        procs.append((subprocess.Popen(cmd), temp))
 
-    curl = subprocess.Popen(cmd)
-    ret = curl.wait()
+    # now see which one downloads fastest
+    time.sleep(7)
+    fastest_store = None
+    max_size = 0
+    for i, (proc, output) in enumerate(procs):
+        s = os.stat(output).st_size
+        if s > max_size:
+            max_size = s
+            fastest_store = i
+
+    if not quiet:
+        sys.stderr.write("\n\n{0} {1} is the fastest store\n".format(SYMBOLS['selected'],
+                         urllib.parse.urljoin(stores[fastest_store][2], name)))
+
+    # kill all the others
+    for i, (proc, output) in enumerate(procs):
+        if i != fastest_store:
+            proc.kill()
+            proc.wait()
+            os.unlink(output)
+
+    # and wait for the remaining one
+    temp = procs[fastest_store][1]
+    ret = procs[fastest_store][0].wait()
     if ret != 0:
-        raise RuntimeError("curl: unable to download %s (returned: %s)" % (message, ret))
+        raise RuntimeError("curl: unable to download from %s (returned: %s)" % (stores[fastest_store][2], ret))
 
     os.chmod(temp, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
