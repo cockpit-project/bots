@@ -1,9 +1,6 @@
 #!/bin/sh
 set -eux
 
-# Enable ssh password authentication
-sed -i '/PasswordAuthentication no/d' /etc/ssh/sshd_config
-
 # install/upgrade RPMs that apply to Fedora CoreOS
 # Note: cockpit-selinux would be desirable, but needs setroubleshoot-server which isn't installed
 cd /var/tmp/build-results/
