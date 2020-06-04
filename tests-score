@@ -27,7 +27,7 @@ import urllib
 sys.dont_write_bytecode = True
 
 import task
-from machine.machine_core.directories import BOTS_DIR
+from machine.machine_core.constants import BOTS_DIR
 
 
 # This parses the output JSONL format discussed here, where various

@@ -31,7 +31,7 @@ import urllib.parse
 
 from . import github
 from . import sink
-from machine.machine_core.directories import BASE_DIR
+from machine.machine_core.constants import BASE_DIR
 
 
 __all__ = (
