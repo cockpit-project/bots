@@ -141,10 +141,9 @@ class GitHub(object):
             except FileNotFoundError:
                 pass
 
-        # The cache directory is $TEST_DATA/github ~/.cache/github
+        # default cache directory
         if not cacher:
-            data = os.environ.get("TEST_DATA", os.path.expanduser("~/.cache"))
-            cacher = cache.Cache(os.path.join(data, "github"))
+            cacher = cache.Cache(os.path.expanduser("~/.cache/github"))
         self.cache = cacher
 
         # Create a log for debugging our GitHub access
