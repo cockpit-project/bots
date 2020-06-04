@@ -18,7 +18,7 @@
 import os
 import subprocess
 
-from .constants import BOTS_DIR, BASE_DIR, GIT_DIR
+from .constants import GIT_DIR
 
 _images_data_dir = None
 _temp_dir = None
@@ -44,16 +44,7 @@ def get_images_data_dir():
         _images_data_dir = get_git_config('--type=path', 'cockpit.bots.images-data-dir')
 
         if _images_data_dir is None:
-            _images_data_dir = os.path.join(os.environ.get("TEST_DATA", BOTS_DIR), "images")
+            _images_data_dir = os.path.join(os.getenv('XDG_CACHE_HOME', os.path.expanduser("~/.cache")),
+                                            "cockpit-images")
 
     return _images_data_dir
-
-
-def get_temp_dir():
-    global _temp_dir
-
-    if _temp_dir is None:
-        _temp_dir = os.path.join(os.environ.get("TEST_DATA", BASE_DIR), "tmp")
-        os.makedirs(_temp_dir, exist_ok=True)
-
-    return _temp_dir

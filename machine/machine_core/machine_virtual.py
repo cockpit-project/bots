@@ -30,7 +30,6 @@ import time
 from .exceptions import Failure, RepeatableFailure
 from .machine import Machine
 from .constants import TEST_DIR, BOTS_DIR
-from .directories import get_temp_dir
 
 sys.path.insert(1, BOTS_DIR)
 
@@ -319,7 +318,7 @@ class VirtMachine(Machine):
 
         Machine.__init__(self, image=image, **args)
 
-        self.run_dir = overlay_dir or os.path.join(get_temp_dir(), "run")
+        self.run_dir = overlay_dir or os.getenv("TEST_OVERLAY_DIR", "tmp/run")
 
         self.virt_connection = self._libvirt_connection(hypervisor="qemu:///session")
 

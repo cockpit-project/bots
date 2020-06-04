@@ -49,19 +49,12 @@ then please [allow][1] `qemu-bridge-helper` to access the bridge settings.
 
 ## Image location
 
-Downloaded images are stored into ./images/ by default. This is often
-impractical as you cannot easily clean your tree without losing them, nor can
-they be easily put into a separate container volume.
-
-You can set the `cockpit.bots.images-data-dir` variable with
-`git config` to a directory where to store the pristine virtual machine images.
-For example:
+Downloaded images are stored into ~/.cache/cockpit-images/ by default. If you
+want to change that, you can set the `cockpit.bots.images-data-dir` variable
+with `git config` to a directory where to store the pristine virtual machine
+images.  For example:
 
     $ git config cockpit.bots.images-data-dir /srv/cockpit/images
-
-Alternatively, you can set the `$TEST_DATA` environment variable, then images
-will be put into `$TEST_DATA/images/`. However, this is deprecated and will go
-away soon.
 
 ## Tests
 
