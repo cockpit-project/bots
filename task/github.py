@@ -143,7 +143,8 @@ class GitHub(object):
 
         # default cache directory
         if not cacher:
-            cacher = cache.Cache(os.path.expanduser("~/.cache/github"))
+            cacher = cache.Cache(os.path.join(os.getenv('XDG_CACHE_HOME', os.path.expanduser("~/.cache")), "github"))
+
         self.cache = cacher
 
         # Create a log for debugging our GitHub access
