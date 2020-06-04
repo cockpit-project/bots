@@ -30,7 +30,7 @@ import sys
 import time
 import tempfile
 
-from machine.machine_core.directories import BOTS_DIR
+from machine.machine_core.constants import BOTS_DIR
 
 from machine import testvm
 

@@ -38,7 +38,7 @@ sys.dont_write_bytecode = True
 import task
 
 from machine import testvm
-from machine.machine_core.directories import BOTS_DIR
+from machine.machine_core.constants import BOTS_DIR
 
 
 def run(url_or_file, verbose=False, dry=False, **kwargs):

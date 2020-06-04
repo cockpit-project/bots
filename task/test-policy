@@ -25,7 +25,7 @@ import unittest
 BASE = os.path.dirname(__file__)
 sys.path.insert(1, os.path.join(BASE, ".."))
 
-from machine.machine_core.directories import BOTS_DIR
+from machine.machine_core.constants import BOTS_DIR
 
 
 PCP_CRASH = """
