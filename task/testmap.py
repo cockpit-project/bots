@@ -38,9 +38,8 @@ REPO_BRANCH_CONTEXT = {
             'fedora-32',
             'fedora-coreos',
             'fedora-31/firefox',
-            'rhel-8-2',
-            'rhel-8-2-distropkg',
             'rhel-8-3',
+            'rhel-8-3-distropkg',
             'centos-8-stream',
         ],
         'rhel-7.9': [
@@ -199,7 +198,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "fedora-31/selenium-chrome@cockpit-project/cockpit",
         "ubuntu-2004@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
-        "rhel-8-2@cockpit-project/cockpit",
+        "rhel-8-3@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
         "fedora-31/firefox@osbuild/cockpit-composer",
     ]
