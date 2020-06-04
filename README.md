@@ -7,32 +7,61 @@ releasing Cockpit and more.
 ## Images
 
 In order to test Cockpit-related projects, they are staged into an operating
-system image. These images are tracked in the `images` directory.
+system image. These images are tracked in the `images/` directory. For example,
+you might want to test a scenario where Cockpit on one machine talks to FreeIPA
+on another, and you want those two machines to use different images.
+
+This is handled by passing a specific image to image-create
+and other scripts that work with test machine images. Available images include:
+
+ - fedora-*, rhel-*, debian-*, etc: Various operating systems for testing Cockpit related projects
+ - services: Auxiliary network services for tests which are independent from the OS where Cockpit runs: FreeIPA, Samba AD, candlepin, selenium containers
+ - openshift: An Openshift Origin server
 
 These well known image names are expected to contain no `.`
 characters and have no file name extension.
 
+Individual projects are expected to locally build their code into packages, and
+install them as overlay on top of these pristine images, with `image-customize`
+or using the [machine Python API](./machine/machine_core/).
+
 For managing these images:
 
- * image-download: Download test images
- * image-upload: Upload test images
- * image-create: Create test machine images
- * image-customize: Generic tool to install packages, upload files, or run
-   commands in a test machine image
+ * `image-download`: Download selected or all test images
+ * `image-create`: Create test machine images from scratch (usually through
+   virt-install or downloading a cloud image), with common build and test
+   dependencies for Cockpit projects preinstalled
+ * `image-upload`: Upload a locally built test image to the official image servers
 
-For debugging the images:
+For running and debugging the images:
 
- * ./vm-run: Run a test machine image
- * ./vm-reset: Remove all overlays from image-customize, image-prepare, etc
-   from test/images/
+ * `image-customize`: Install packages, upload files, or run commands in a test machine image; this keeps the original image intact, and puts the changes into an image overlay into test/images/.
+ * `vm-run`: Run a test machine image; by default this happens in an ephemeral
+   overlay. You can use the `--maintain` option to write into the persistent
+   overlay in test/images/ instead.
+ * `vm-reset`: Remove all overlays from test/images/
 
-In case of `qemu-system-x86_64: -netdev bridge,br=cockpit1,id=bridge0: bridge helper failed`
-error, please [allow][1] `qemu-bridge-helper` to access the bridge settings.
+If you use `vm-run` with the `--network` option and you get an error:
 
-To check when images will automatically be refreshed by the bots
-use the image-trigger tool:
+    qemu-system-x86_64: -netdev bridge,br=cockpit1,id=bridge0: bridge helper failed
 
-    $ ./image-trigger -vd
+then please [allow][1] `qemu-bridge-helper` to access the bridge settings.
+
+## Image location
+
+Downloaded images are stored into ./images/ by default. This is often
+impractical as you cannot easily clean your tree without losing them, nor can
+they be easily put into a separate container volume.
+
+You can set the `cockpit.bots.images-data-dir` variable with
+`git config` to a directory where to store the pristine virtual machine images.
+For example:
+
+    $ git config cockpit.bots.images-data-dir /srv/cockpit/images
+
+Alternatively, you can set the `$TEST_DATA` environment variable, then images
+will be put into `$TEST_DATA/images/`. However, this is deprecated and will go
+away soon.
 
 ## Tests
 
@@ -115,9 +144,9 @@ the current directory's project.
 
 If you want to run all tests on pull request #1234 that has been
 opened by someone who is not in our white-list, run tests-trigger
-with `-f`:
+with `--allow`:
 
-    $ ./tests-trigger -f [...]
+    $ ./tests-trigger --allow [...]
 
 Of course, you should make sure that the pull request is proper and
 doesn't execute evil code during tests.
