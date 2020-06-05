@@ -74,7 +74,8 @@ def init_db(cursor):
                     (id INTEGER PRIMARY KEY,
                      project TEXT,
                      context TEXT,
-                     url TEXT)
+                     url TEXT,
+                     UNIQUE (url))
                    """)
     cursor.execute("""CREATE TABLE if not exists Failures
                     (testname TEXT NOT NULL,
@@ -86,6 +87,9 @@ def init_db(cursor):
 
 
 def insert_run(cursor, project, context, url):
+    row = cursor.execute("SELECT id FROM TestRuns WHERE url = ?", (url, )).fetchone()
+    if row is not None:
+        return row[0]
     return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?)", (project, context, url)).lastrowid
 
 
