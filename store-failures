@@ -33,8 +33,12 @@ def main():
     parser = argparse.ArgumentParser(description='Store information about failed tests')
     parser.add_argument("--db", default="cockpit-failures.db", help="Database name")
     parser.add_argument("--repo", help="Repository from which to process failures")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument("revision", help="SHA for which failures should be stored")
     opts = parser.parse_args()
+
+    if opts.verbose:
+        logging.basicConfig(level=logging.DEBUG)
 
     ca = os.path.join(IMAGES_DIR, "files", "ca.pem")
     ctx = ssl.create_default_context()
@@ -63,6 +67,7 @@ def main():
                 repo = parts[1]
 
         raw_log = url[:-5] if url.endswith(".html") else url
+        logging.debug("scanning log %s", raw_log)
         with urllib.request.urlopen(raw_log, context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
             for (testname, retry_reason) in find_failed_tests(fp):
                 if run_id is None:
@@ -93,6 +98,7 @@ def init_db(cursor):
 def insert_run(cursor, project, context, url):
     row = cursor.execute("SELECT id FROM TestRuns WHERE url = ?", (url, )).fetchone()
     if row is not None:
+        logging.debug("Test run %s already exists as ID %i, skipping", url, row[0])
         return row[0]
     return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?)", (project, context, url)).lastrowid
 
