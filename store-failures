@@ -24,9 +24,13 @@ import sqlite3
 import urllib.request
 import argparse
 import logging
+import re
 
 from task import github
 from machine.machine_core.constants import IMAGES_DIR
+
+# regexp for retry reason in a "not ok" line
+re_retry = re.compile(r"# RETRY .* \(([^)]+)\)")
 
 
 def main():
@@ -113,15 +117,15 @@ def find_failed_tests(fp):
         if line.startswith("not ok "):
             # Result line has form like:
             # not ok 24 test/verify/check-foobar TestExample.testBasic [ND] # RETRY 2 (be robust against unstable tests)
+            # older logs look like this instead:
+            # not ok 78 testNodeNavigation (check_openshift.TestOpenshift) # duration: 172s
             fields = line.split(" ")
             # sometimes line breaks are missing:
             # not ok 117 test/verify/check-metrics TestMetrics.testPcp# ------
             fields[4] = fields[4].rstrip("#")
             testname = "{0} {1}".format(fields[3], fields[4])
-            retry_reason = None
-            if "(" in line and ")" in line:
-                retry_reason = line[line.rfind("(") + 1:line.rfind(")")]
-            yield (testname, retry_reason)
+            m = re_retry.search(line)
+            yield (testname, m and m.group(1) or None)
 
 
 if __name__ == '__main__':
