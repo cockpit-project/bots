@@ -23,6 +23,7 @@ import sys
 import sqlite3
 import urllib.request
 import argparse
+import logging
 
 from task import github
 from machine.machine_core.constants import IMAGES_DIR
@@ -45,6 +46,9 @@ def main():
 
     api = github.GitHub(repo=opts.repo)
     statuses = api.statuses(opts.revision)
+    if not statuses:
+        logging.warning("Revision %s has no statuses", opts.revision)
+        return 0
 
     for status in statuses:
         run_id = None
