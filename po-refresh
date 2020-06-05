@@ -26,7 +26,7 @@ import sys
 sys.dont_write_bytecode = True
 
 import task
-from machine.machine_core.directories import BASE_DIR
+from machine.machine_core.constants import BASE_DIR
 
 
 def run(context, verbose=False, **kwargs):

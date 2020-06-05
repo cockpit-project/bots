@@ -23,7 +23,7 @@ import shutil
 import subprocess
 import sys
 from task import github
-from machine.machine_core.directories import BASE_DIR
+from machine.machine_core.constants import BASE_DIR
 
 sys.dont_write_bytecode = True
 

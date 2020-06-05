@@ -29,7 +29,7 @@ import time
 sys.dont_write_bytecode = True
 
 import task
-from machine.machine_core.directories import BASE_DIR
+from machine.machine_core.constants import BASE_DIR
 
 # Number of days after which a known issue is treated as stale
 DAYS = 21
