@@ -104,6 +104,9 @@ def find_failed_tests(fp):
             # Result line has form like:
             # not ok 24 test/verify/check-foobar TestExample.testBasic [ND] # RETRY 2 (be robust against unstable tests)
             fields = line.split(" ")
+            # sometimes line breaks are missing:
+            # not ok 117 test/verify/check-metrics TestMetrics.testPcp# ------
+            fields[4] = fields[4].rstrip("#")
             testname = "{0} {1}".format(fields[3], fields[4])
             retry_reason = None
             if "(" in line and ")" in line:
