@@ -19,7 +19,6 @@
 
 import os
 import sys
-import warnings
 
 # ensure that this module path is present
 machine_dir = os.path.dirname(os.path.realpath(__file__))
@@ -30,32 +29,16 @@ from machine_core.timeout import Timeout
 from machine_core.machine import Machine
 from machine_core.exceptions import Failure, RepeatableFailure
 from machine_core.machine_virtual import VirtMachine, VirtNetwork
-from machine_core.constants import BASE_DIR, BOTS_DIR, TEST_DIR, IMAGES_DIR, SCRIPTS_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT
+from machine_core.constants import BOTS_DIR, TEST_DIR, IMAGES_DIR, SCRIPTS_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT
 from machine_core.cli import cmd_cli
 from machine_core.directories import get_images_data_dir
 from task.testmap import get_build_image, get_test_image
 
 
-_temp_dir = None
-
-
-# FIXME: Only consumer is cockpit's image-prepare; https://github.com/cockpit-project/cockpit/pull/14190
-def get_temp_dir():
-    warnings.warn("get_temp_dir() is obsolete", PendingDeprecationWarning)
-
-    global _temp_dir
-
-    if _temp_dir is None:
-        _temp_dir = os.path.join(BASE_DIR, "tmp")
-        os.makedirs(_temp_dir, exist_ok=True)
-
-    return _temp_dir
-
-
 __all__ = [
     Timeout, Machine, Failure, RepeatableFailure, VirtMachine,
     VirtNetwork, get_build_image, get_test_image, get_images_data_dir,
-    get_temp_dir, BOTS_DIR, TEST_DIR, IMAGES_DIR, SCRIPTS_DIR,
+    BOTS_DIR, TEST_DIR, IMAGES_DIR, SCRIPTS_DIR,
     DEFAULT_IMAGE, TEST_OS_DEFAULT
 ]
 
