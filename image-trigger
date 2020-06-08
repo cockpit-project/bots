@@ -32,7 +32,6 @@ REFRESH = {
     "ubuntu-2004": {},
     "ubuntu-stable": {},
     "openshift": {"refresh-days": 30},
-    "rhel-7-8": {},
     "rhel-7-9": {},
     "rhel-8-2": {},
     "rhel-8-3": {},
