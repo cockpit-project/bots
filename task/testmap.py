@@ -175,7 +175,7 @@ REPO_BRANCH_CONTEXT = {
 # their non-Atomic siblings.
 OSTREE_BUILD_IMAGE = {
     "fedora-coreos": "fedora-32",
-    "rhel-atomic": "rhel-7-8",
+    "rhel-atomic": "rhel-7-9",
     "continuous-atomic": "centos-7",
 }
 
