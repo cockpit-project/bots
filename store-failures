@@ -70,8 +70,14 @@ def main():
                 # Can contain branch, as it diffs between master and branches (e.g `cockpit-project/cockpit/rhel-7.9`)
                 repo = parts[1]
 
+        row = cursor.execute("SELECT id FROM TestRuns WHERE url = ?", (url, )).fetchone()
+        if row is not None:
+            logging.warning("Test run %s already exists as ID %i, skipping", url, row[0])
+            continue
+
         raw_log = url[:-5] if url.endswith(".html") else url
         logging.debug("scanning log %s", raw_log)
+
         with urllib.request.urlopen(raw_log, context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
             for (testname, retry_reason) in find_failed_tests(fp):
                 if run_id is None:
@@ -99,10 +105,6 @@ def init_db(cursor):
 
 
 def insert_run(cursor, project, context, url):
-    row = cursor.execute("SELECT id FROM TestRuns WHERE url = ?", (url, )).fetchone()
-    if row is not None:
-        logging.debug("Test run %s already exists as ID %i, skipping", url, row[0])
-        return row[0]
     return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?)", (project, context, url)).lastrowid
 
 
