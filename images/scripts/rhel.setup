@@ -71,36 +71,6 @@ gpgcheck=0
 EOF
         $YUM_INSTALL yum-utils
 
-    elif [ "$IMAGE" = "rhel-7-8" ]; then
-        # disable all default repos
-        rm -f --verbose /etc/yum.repos.d/*.repo
-cat <<EOF > /etc/yum.repos.d/nightly.repo
-[RHEL-7.8]
-name=base-rhel
-baseurl=http://download.devel.redhat.com/rhel-7/rel-eng/latest-RHEL-7.8/compose/Server/x86_64/os/
-enabled=1
-gpgcheck=0
-
-[EXTRAS-7.8]
-name=rhel-extras-compose
-baseurl=http://download.devel.redhat.com/rhel-7/nightly/EXTRAS-7/latest-EXTRAS-7.8-RHEL-7/compose/Server/x86_64/os
-enabled=1
-gpgcheck=0
-
-[RHEL-7.8-DEBUG]
-name=base-rhel-debug
-baseurl=http://download.devel.redhat.com/rhel-7/rel-eng/latest-RHEL-7.8/compose/Server/x86_64/debug/tree
-enabled=0
-gpgcheck=0
-
-[EXTRAS-7.8-DEBUG]
-name=rhel-extras-compose-debug
-baseurl=http://download.devel.redhat.com/rhel-7/nightly/EXTRAS-7/latest-EXTRAS-7.8-RHEL-7/compose/Server/x86_64/debug/tree
-enabled=0
-gpgcheck=0
-EOF
-        $YUM_INSTALL yum-utils
-
     elif [ "$IMAGE" = "rhel-7-9" ]; then
         # disable all default repos
         rm -f --verbose /etc/yum.repos.d/*.repo
@@ -255,7 +225,7 @@ fi
 if [ "${IMAGE#rhel-7}" != "$IMAGE" ] || [ "$IMAGE" == "centos-7" ]; then
     COCKPIT_DEPS="$COCKPIT_DEPS kubernetes-client"
 fi
-if [ "$IMAGE" = "rhel-7-8" ] || [ "$IMAGE" = "rhel-7-9" ]; then
+if [ "$IMAGE" = "rhel-7-9" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} insights-client"
 fi
 if [ "${IMAGE#rhel-7}" != "$IMAGE" ]; then
