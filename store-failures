@@ -94,7 +94,6 @@ def init_db(cursor):
                     (testname TEXT NOT NULL,
                      retry_reason TEXT,
                      run INTEGER NOT NULL,
-                     UNIQUE (testname, retry_reason, run)
                      FOREIGN KEY (run) REFERENCES TestRuns(id))
                    """)
 
@@ -108,7 +107,7 @@ def insert_run(cursor, project, context, url):
 
 
 def insert_failure(cursor, run_id, testname, retry_reason):
-    cursor.execute("INSERT OR REPLACE INTO Failures VALUES (?, ?, ?)", (testname, retry_reason, run_id))
+    cursor.execute("INSERT INTO Failures VALUES (?, ?, ?)", (testname, retry_reason, run_id))
 
 
 def find_failed_tests(fp):
