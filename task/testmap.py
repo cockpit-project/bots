@@ -147,9 +147,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-2/chrome',
             'rhel-8-2/firefox',
             'rhel-8-2/edge',
-            'rhel-7-8/firefox',
-            'rhel-7-8/chrome',
-            'rhel-7-8/edge',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
