@@ -27,8 +27,10 @@ import logging
 import os
 import socket
 import smtplib
+import pika
 
 from task import redhat_network, distributed_queue
+from machine.machine_core.directories import get_images_data_dir
 
 logging.basicConfig(level=logging.INFO)
 
@@ -55,9 +57,21 @@ def consume_webhook_queue(channel, amqp):
         # scan for body changes (edited) and the bots label
         if action == 'labeled' or (action == 'edited' and 'body' in request.get('changes', {})):
             cmd = ['./issue-scan', '--issues-data', json.dumps(request), '--amqp', amqp]
-        if request['action'] in ['opened', 'synchronize']:
+        elif action in ['opened', 'synchronize']:
             repo = pull_request['base']['repo']['full_name']
             cmd = ['./tests-scan', '--pull-data', json.dumps(request), '--amqp', amqp, '--repo', repo]
+        # When PR was merged, generate task for storing failures
+        elif action == 'closed' and pull_request.get('merged', False):
+            sha = pull_request['head']['sha']
+            db = os.path.join(get_images_data_dir(), "test-failures.db")
+            cmd = ['./store-failures', "--db", db, "--repo", repo, sha]
+            body = {
+                "command": " ".join(cmd),
+            }
+            channel.basic_publish('', 'statistics', json.dumps(body),
+                                  properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
+            return None, None
+
     elif event == 'status':
         repo = request['repository']['full_name']
         sha = request['sha']
