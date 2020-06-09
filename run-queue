@@ -32,6 +32,8 @@ from task import redhat_network, distributed_queue
 
 logging.basicConfig(level=logging.INFO)
 
+statistics_queue = os.environ.get("RUN_STATISTICS_QUEUE")
+
 # Returns a command to execute and the delivery tag needed to ack the message
 
 
@@ -75,7 +77,7 @@ def consume_webhook_queue(channel, amqp):
 # Returns a command to execute and the delivery tag needed to ack the message
 
 
-def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result):
+def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result, declare_stats_result):
     queue = 'public'
     if redhat_network():
         # Try the rhel queue if the public queue is empty
@@ -84,6 +86,9 @@ def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result
             # If both are non-empty, shuffle
         elif declare_rhel_result.method.message_count > 0:
             queue = ['public', 'rhel'][random.randrange(2)]
+
+    if statistics_queue and declare_stats_result.method.message_count > 0:
+        queue = [queue, 'statistics'][random.randrange(2)]
 
     method_frame, header_frame, body = channel.basic_get(queue=queue)
     if not method_frame:
@@ -118,7 +123,7 @@ def main():
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
     opts = parser.parse_args()
 
-    with distributed_queue.DistributedQueue(opts.amqp, ['webhook', 'rhel', 'public']) as q:
+    with distributed_queue.DistributedQueue(opts.amqp, ['webhook', 'rhel', 'public', 'statistics']) as q:
         channel = q.channel
 
         cmd, delivery_tag = consume_webhook_queue(channel, opts.amqp)
@@ -132,7 +137,8 @@ def main():
                 channel,
                 opts.amqp,
                 q.declare_results['public'],
-                q.declare_results['rhel'])
+                q.declare_results['rhel'],
+                q.declare_results['statistics'])
         if not cmd:
             logging.info("All queues are empty")
             return 1

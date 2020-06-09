@@ -46,6 +46,9 @@ arguments = {
     'public': {
         "x-max-priority": MAX_PRIORITY
     },
+    'statistics': {
+        "x-max-priority": MAX_PRIORITY
+    },
 }
 
 
