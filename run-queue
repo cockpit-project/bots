@@ -53,12 +53,12 @@ def consume_webhook_queue(channel, amqp):
     cmd = None
     if event == 'pull_request':
         pull_request = request['pull_request']
+        repo = pull_request['base']['repo']['full_name']
         action = request['action']
         # scan for body changes (edited) and the bots label
         if action == 'labeled' or (action == 'edited' and 'body' in request.get('changes', {})):
             cmd = ['./issue-scan', '--issues-data', json.dumps(request), '--amqp', amqp]
         elif action in ['opened', 'synchronize']:
-            repo = pull_request['base']['repo']['full_name']
             cmd = ['./tests-scan', '--pull-data', json.dumps(request), '--amqp', amqp, '--repo', repo]
         # When PR was merged, generate task for storing failures
         elif action == 'closed' and pull_request.get('merged', False):
