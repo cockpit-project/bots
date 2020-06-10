@@ -31,7 +31,7 @@ def main():
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
     opts = parser.parse_args()
 
-    with distributed_queue.DistributedQueue(opts.amqp, ['public', 'rhel'], passive=True) as q:
+    with distributed_queue.DistributedQueue(opts.amqp, ['public', 'rhel', 'statistics'], passive=True) as q:
         def print_queue(queue):
             if q.declare_results[queue] is None:
                 print("queue {} does not exist".format(queue))
@@ -49,6 +49,8 @@ def main():
         print_queue('public')
         print('rhel queue:')
         print_queue('rhel')
+        print('statistics queue:')
+        print_queue('statistics')
 
 
 if __name__ == '__main__':
