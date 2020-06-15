@@ -70,7 +70,7 @@ def consume_webhook_queue(channel, amqp):
             }
             channel.basic_publish('', 'statistics', json.dumps(body),
                                   properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
-            return None, None
+            cmd = None
 
     elif event == 'status':
         repo = request['repository']['full_name']
@@ -142,7 +142,7 @@ def main():
 
         cmd, delivery_tag = consume_webhook_queue(channel, opts.amqp)
         if not cmd and delivery_tag:
-            logging.info("Webhook message interpretation resulted in nop")
+            logging.info("Webhook message interpretation generated no command")
             channel.basic_ack(delivery_tag)
             return 0
 
