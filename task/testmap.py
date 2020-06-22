@@ -122,6 +122,15 @@ REPO_BRANCH_CONTEXT = {
             # alibaba keeps failing with "resource is out of stock in the specified zone"
             'fedora-31/alibaba',
             'centos-8-stream',
+
+            'fedora-32',
+            'fedora-32/tar',
+            'fedora-32/live-iso',
+            'fedora-32/qcow2',
+            'fedora-32/aws',
+            'fedora-32/azure',
+            'fedora-32/openstack',
+            'fedora-32/vmware',
         ],
     },
     'osbuild/cockpit-composer': {
