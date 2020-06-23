@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-multi-machine", line *, in testFIPS
-    self.machine.wait_reboot()
-*
-* Timeout waiting for system to reboot properly
