@@ -437,17 +437,24 @@ class SSHConnection(object):
         except:
             self.message("Error while downloading directory '{0}'".format(source))
 
-    def write(self, dest, content):
+    def write(self, dest, content, append=False, owner=None, perm=None):
         """Write a file into the test machine
 
         Arguments:
             content: Raw data to write to file
             dest: The file name in the machine to write to
+            append: If True, append to existing file instead of replacing it
+            owner: If set, call chown on the file with the given owner string
+            perm: Optional file permission as chmod shell string (e.g. "0600")
         """
         assert dest
         assert self.ssh_address
 
-        cmd = "cat > '%s'" % dest
+        cmd = "cat %s '%s'" % (append and '>>' or '>', dest)
+        if owner:
+            cmd += " && chown '%s' '%s'" % (owner, dest)
+        if perm:
+            cmd += " && chmod '%s' '%s'" % (perm, dest)
         self.execute(command=cmd, input=content)
 
     def spawn(self, shell_cmd, log_id):
