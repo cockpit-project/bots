@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+
+# This file is part of Cockpit.
+#
+# Copyright (C) 2020 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+import time
+import sqlite3
+import argparse
+import logging
+import json
+
+# Seconds in two weeks
+TWO_WEEKS = 1209600
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Generate statistics about failed tests')
+    parser.add_argument("--db", default="cockpit-failures.db", help="Database name")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
+    opts = parser.parse_args()
+
+    if opts.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    db_conn = sqlite3.connect(opts.db)
+    cursor = db_conn.cursor()
+
+    all_tables = []
+    since = time.time() - TWO_WEEKS
+
+    # Get all failures sorted by number of occurrences
+    top10 = []
+    rows = cursor.execute("""\
+            SELECT testname, COUNT(run)
+            FROM Failures
+            JOIN TestRuns ON Failures.run = TestRuns.id
+            WHERE TestRuns.time > ?
+            GROUP BY testname
+            ORDER BY COUNT(run) DESC
+            LIMIT 10;""", (since, )).fetchall()
+    for row in rows:
+        urls = cursor.execute("""\
+                SELECT DISTINCT TestRuns.url
+                FROM TestRuns JOIN Failures ON TestRuns.id = Failures.run
+                WHERE testname = ?
+                ORDER BY run DESC
+                LIMIT 2;""", (row[0], )).fetchall()
+        links = [urls[0][0]] if len(urls) > 0 else []
+        if len(urls) > 1:
+            links.append(urls[1][0])
+        top10.append([row[0], row[1], links])
+
+    all_tables.append({"name": "Top failures", "columns": ["Test name", "Count", "Logs"], "data": top10})
+
+    # Get failures by OS
+    contexts = cursor.execute("SELECT DISTINCT context FROM TestRuns;").fetchall()
+    for context in contexts:
+        # For each OS get top 10 failures
+        context = context[0]
+        top10 = []
+        rows = cursor.execute("""\
+                SELECT testname, COUNT(run)
+                FROM Failures
+                JOIN TestRuns ON Failures.run = TestRuns.id
+                WHERE TestRuns.context = ? AND TestRuns.time > ?
+                GROUP BY testname
+                ORDER BY COUNT(run) DESC
+                LIMIT 10;""", (context, since,)).fetchall()
+        for row in rows:
+            urls = cursor.execute("""\
+                    SELECT DISTINCT TestRuns.url
+                    FROM TestRuns JOIN Failures ON TestRuns.id = Failures.run
+                    WHERE testname = ? and context = ?
+                    ORDER BY run DESC
+                    LIMIT 2;""", (row[0], context,)).fetchall()
+            links = [urls[0][0]] if len(urls) > 0 else []
+            if len(urls) > 1:
+                links.append(urls[1][0])
+            top10.append([row[0], row[1], links])
+
+        all_tables.append({"name": "Top failures for " + context,
+                           "columns": ["Test name", "Count", "Logs"],
+                           "data": top10})
+
+    # Sort tables
+    all_tables = sorted(all_tables, key=lambda x: x["data"][0][1], reverse=True)
+
+    print("const tables = {0};".format(json.dumps(all_tables)))
+
+    db_conn.close()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

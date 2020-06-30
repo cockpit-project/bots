@@ -64,9 +64,11 @@ def consume_webhook_queue(channel, amqp):
         elif action == 'closed' and pull_request.get('merged', False):
             sha = pull_request['head']['sha']
             db = os.path.join(get_images_data_dir(), "test-failures.db")
-            cmd = ['./store-failures', "--db", db, "--repo", repo, sha]
+            data = os.path.join(get_images_data_dir(), "failure-stats.js")
+            cmd = "./store-failures --db {0} --repo {1} {2} && ./generate-stats --db {0} > {3}".format(
+                db, repo, sha, data)
             body = {
-                "command": " ".join(cmd),
+                "command": cmd,
             }
             channel.basic_publish('', 'statistics', json.dumps(body),
                                   properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
