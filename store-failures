@@ -93,7 +93,7 @@ def main():
         with urllib.request.urlopen(raw_log, context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
             for (testname, retry_reason) in find_failed_tests(fp):
                 if run_id is None:
-                    run_id = insert_run(cursor, repo, context, url, time)
+                    run_id = insert_run(cursor, repo, opts.revision, context, url, time)
                 insert_failure(cursor, run_id, testname, retry_reason)
 
     db_conn.commit()
@@ -104,6 +104,7 @@ def init_db(cursor):
     cursor.execute("""CREATE TABLE if not exists TestRuns
                     (id INTEGER PRIMARY KEY,
                      project TEXT,
+                     revision TEXT,
                      context TEXT,
                      url TEXT,
                      time TIMESTAMP,
@@ -117,8 +118,9 @@ def init_db(cursor):
                    """)
 
 
-def insert_run(cursor, project, context, url, time):
-    return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?, ?)", (project, context, url, time)).lastrowid
+def insert_run(cursor, project, revision, context, url, time):
+    return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?, ?, ?)",
+                          (project, revision, context, url, time)).lastrowid
 
 
 def insert_failure(cursor, run_id, testname, retry_reason):
