@@ -26,6 +26,8 @@ import argparse
 import logging
 import re
 
+from datetime import datetime
+
 from task import github
 from machine.machine_core.constants import IMAGES_DIR
 
@@ -78,10 +80,20 @@ def main():
         raw_log = url[:-5] if url.endswith(".html") else url
         logging.debug("scanning log %s", raw_log)
 
+        # Parse time from log file name. Wrap in try/except block if the url would be unexpected
+        try:
+            parts = url.split("/")[-2].split("-")
+            day = parts[2]
+            hours = parts[3]
+            dtime = datetime.strptime("{0} {1}".format(day, hours), "%Y%m%d %H%M%S")
+            time = datetime.timestamp(dtime)
+        except IndexError:
+            time = datetime.timestamp(datetime.now())
+
         with urllib.request.urlopen(raw_log, context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
             for (testname, retry_reason) in find_failed_tests(fp):
                 if run_id is None:
-                    run_id = insert_run(cursor, repo, context, url)
+                    run_id = insert_run(cursor, repo, context, url, time)
                 insert_failure(cursor, run_id, testname, retry_reason)
 
     db_conn.commit()
@@ -94,6 +106,7 @@ def init_db(cursor):
                      project TEXT,
                      context TEXT,
                      url TEXT,
+                     time TIMESTAMP,
                      UNIQUE (url))
                    """)
     cursor.execute("""CREATE TABLE if not exists Failures
@@ -104,8 +117,8 @@ def init_db(cursor):
                    """)
 
 
-def insert_run(cursor, project, context, url):
-    return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?)", (project, context, url)).lastrowid
+def insert_run(cursor, project, context, url, time):
+    return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?, ?)", (project, context, url, time)).lastrowid
 
 
 def insert_failure(cursor, run_id, testname, retry_reason):
