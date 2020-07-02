@@ -95,6 +95,7 @@ ntp \
 libvirt-daemon-config-network \
 tlog \
 nginx \
+tcsh \
 "
 
 ABRT_PACKAGES="\
