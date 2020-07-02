@@ -68,6 +68,7 @@ xfsprogs \
 sosreport \
 open-iscsi \
 targetcli-fb \
+tcsh \
 "
 
 # wait until cloud-init finishes, so that it doesn't clobber sources.list
