@@ -263,7 +263,7 @@ class SSHConnection(object):
         elif environment == {}:
             pass
         else:
-            raise Exception("enviroment support dict or list items given: ".format(environment))
+            raise Exception("enviroment support dict or list items given: {0}".format(environment))
         default_ssh_params = [
             "ssh",
             "-p", str(self.ssh_port),

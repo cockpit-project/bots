@@ -56,8 +56,8 @@ def close_issues(api, opts):
         count = len(issues)
         for issue in issues:
             labels = api.get("issues/%i/labels" % issue["number"])
-            enhancement = [l for l in labels if l["name"] == "enhancement"]
-            bug = [l for l in labels if l["name"] == "bug"]
+            enhancement = [la for la in labels if la["name"] == "enhancement"]
+            bug = [la for la in labels if la["name"] == "bug"]
             if bug:
                 print("Closing #%i as stale bug" % issue["number"])
                 api.post("issues/%i/comments" % issue["number"], {"body": bug_msg})
