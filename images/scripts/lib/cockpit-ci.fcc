@@ -2,7 +2,7 @@
 # Download compiler from https://github.com/coreos/fcct/releases
 # Build with fcct-x86_64-unknown-linux-gnu --pretty --output images/scripts/lib/cockpit-ci.ign images/scripts/lib/cockpit-ci.fcc
 variant: fcos
-version: 1.0.0
+version: 1.1.0
 passwd:
   users:
     - name: admin
@@ -20,6 +20,16 @@ passwd:
         - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDUOtNJdBEXyKxBB898rdT54ULjMGuO6v4jLXmRsdRhR5Id/lKNc9hsdioPWUePgYlqML2iSV72vKQoVhkyYkpcsjr3zvBny9+5xej3+TBLoEMAm2hmllKPmxYJDU8jQJ7wJuRrOVOnk0iSNF+FcY/yaQ0owSF02Nphx47j2KWc0IjGGlt4fl0fmHJuZBA2afN/4IYIIsEWZziDewVtaEjWV3InMRLllfdqGMllhFR+ed2hQz9PN2QcapmEvUR4UCy/mJXrke5htyFyHi8ECfyMMyYeHwbWLFQIve4CWix9qtksvKjcetnxT+WWrutdr3c9cfIj/c0v/Zg/c4zETxtp cockpit-test
 storage:
   files:
+    # enable ssh password authentication
+    # https://docs.fedoraproject.org/en-US/fedora-coreos/authentication/#_enabling_ssh_password_authentication
+    - path: /etc/ssh/sshd_config.d/02-enable-passwords.conf
+      mode: 0644
+      contents:
+        inline: |
+          # Fedora CoreOS disables SSH password login by default.
+          # Enable it.
+          # This file must sort before 04-disable-passwords.conf.
+          PasswordAuthentication yes
     # don't hang/fail on non-existing DHCP on eth1 on boot
     # similar to images/scripts/network-ifcfg-eth1 for Fedora/RHEL images
     - path: /etc/NetworkManager/system-connections/eth1.nmconnection
