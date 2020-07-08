@@ -45,6 +45,7 @@ udisks2-lvm2 \
 # that we don't have to go to the network during a test run.
 IPA_CLIENT_PACKAGES="\
 freeipa-client \
+python3-gssapi \
 sssd-tools \
 sssd-dbus \
 "
