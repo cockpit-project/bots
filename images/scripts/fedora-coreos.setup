@@ -9,10 +9,6 @@ podman pull docker.io/cockpit/ws
 # Prevent SSH from hanging for a long time when no external network access
 echo 'UseDNS no' >> /etc/ssh/sshd_config.d/10-no-usedns.conf
 
-# HACK: Enable ssh password authentication; see https://github.com/coreos/fedora-coreos-tracker/issues/138
-# Move this to Ignition once a knob exists
-rm -f /etc/ssh/sshd_config.d/04-disable-passwords.conf
-
 # pre-install the distro version, which is useful for testing extensions and manual experiments
 # also pre-install dnsmasq which we need for testing
 rpm-ostree install cockpit-system cockpit-bridge cockpit-networkmanager dnsmasq
