@@ -103,7 +103,6 @@ EOF
 
     elif [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
         case "$IMAGE" in
-            rhel-8-2) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.2.1" ;;
             rhel-8-3) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.3" ;;
             *) echo "Unknown image $IMAGE"; exit 1
         esac
@@ -314,7 +313,6 @@ if [ "$DO_BUILD" -eq 1 ]; then
         dnf config-manager --set-disabled epel
 
         case "$IMAGE" in
-            rhel-8-2) REPO="rhel-8.2.1-build" ;;
             rhel-8-3) REPO="rhel-8.3.0-build" ;;
             *) echo "Unknown image $IMAGE"; exit 1
         esac
