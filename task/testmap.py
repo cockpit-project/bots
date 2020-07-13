@@ -87,14 +87,14 @@ REPO_BRANCH_CONTEXT = {
     },
     'weldr/lorax': {
         'master': [
-            'fedora-31',
-            'fedora-31/tar',
-            'fedora-31/live-iso',
-            'fedora-31/qcow2',
-            'fedora-31/aws',
-            'fedora-31/azure',
-            'fedora-31/openstack',
-            'fedora-31/vmware',
+            'fedora-32',
+            'fedora-32/tar',
+            'fedora-32/live-iso',
+            'fedora-32/qcow2',
+            'fedora-32/aws',
+            'fedora-32/azure',
+            'fedora-32/openstack',
+            'fedora-32/vmware',
         ],
         'rhel8-branch': [
             'rhel-8-3',
@@ -122,15 +122,6 @@ REPO_BRANCH_CONTEXT = {
             # alibaba keeps failing with "resource is out of stock in the specified zone"
             'fedora-31/alibaba',
             'centos-8-stream',
-
-            'fedora-32',
-            'fedora-32/tar',
-            'fedora-32/live-iso',
-            'fedora-32/qcow2',
-            'fedora-32/aws',
-            'fedora-32/azure',
-            'fedora-32/openstack',
-            'fedora-32/vmware',
         ],
     },
     'osbuild/cockpit-composer': {
