@@ -121,6 +121,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'fedora-32/osbuild-composer',
             # alibaba keeps failing with "resource is out of stock in the specified zone"
             'fedora-31/alibaba',
             'centos-8-stream',
