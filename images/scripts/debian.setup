@@ -179,8 +179,8 @@ rm -rf /tmp/out
 # Debian does not automatically start the default libvirt network
 virsh net-autostart default
 
-# Don't automatically update on boot or daily
-systemctl disable apt-daily.service apt-daily.timer || true
+# Disable expensive maintenance jobs
+systemctl disable apt-daily.timer apt-daily-upgrade.timer fstrim.timer man-db.timer || true
 
 # Enable coredumping via systemd
 echo "kernel.core_pattern=|/lib/systemd/systemd-coredump %P %u %g %s %t %c %e" > /etc/sysctl.d/50-coredump.conf
