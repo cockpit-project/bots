@@ -68,7 +68,7 @@ def main():
     all_tables.append({"name": "Top failures", "columns": ["Test name", "Count", "Logs"], "data": top10})
 
     # Get failures by OS
-    contexts = cursor.execute("SELECT DISTINCT context FROM TestRuns;").fetchall()
+    contexts = cursor.execute("SELECT DISTINCT context FROM TestRuns WHERE TestRuns.time > ? ;", (since, )).fetchall()
     for context in contexts:
         # For each OS get top 10 failures
         context = context[0]
