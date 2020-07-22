@@ -90,13 +90,6 @@ REPO_BRANCH_CONTEXT = {
     'weldr/lorax': {
         'master': [
             'fedora-32',
-            'fedora-32/tar',
-            'fedora-32/live-iso',
-            'fedora-32/qcow2',
-            'fedora-32/aws',
-            'fedora-32/azure',
-            'fedora-32/openstack',
-            'fedora-32/vmware',
         ],
         'rhel8-branch': [
             'rhel-8-3',
@@ -122,8 +115,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-32/osbuild-composer',
-            # alibaba keeps failing with "resource is out of stock in the specified zone"
-            'fedora-31/alibaba',
             'centos-8-stream',
         ],
     },
