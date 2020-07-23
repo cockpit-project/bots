@@ -85,6 +85,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'debian-testing',
         ],
     },
     'weldr/lorax': {
