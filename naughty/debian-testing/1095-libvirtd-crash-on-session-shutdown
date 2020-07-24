@@ -1,0 +1,4 @@
+  File "test/common/testlib.py", line *, in tearDown
+    self.check_journal_messages()
+*
+Process * (libvirtd) of user 10* dumped core.
