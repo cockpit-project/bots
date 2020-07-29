@@ -30,6 +30,8 @@ from . import timeout as timeoutlib
 
 
 class SSHConnection(object):
+    ssh_default_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "BatchMode=yes"]
+
     def __init__(self, user, address, ssh_port, identity_file, verbose=False):
         self.verbose = verbose
 
@@ -142,9 +144,7 @@ class SSHConnection(object):
             "ssh",
             "-p", str(self.ssh_port),
             "-i", self.identity_file,
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "BatchMode=yes",
+            *self.ssh_default_opts,
             "-M",  # ControlMaster, no stdin
             "-o", "ControlPath=" + control,
             "-o", "LogLevel=ERROR",
@@ -212,9 +212,7 @@ class SSHConnection(object):
             "ssh",
             "-q",
             "-p", str(self.ssh_port),
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "BatchMode=yes",
+            *self.ssh_default_opts,
             "-S", self.ssh_master,
             "-O", "check",
             "-l", self.ssh_user,
@@ -230,6 +228,16 @@ class SSHConnection(object):
     def _ensure_ssh_master(self):
         if not self._check_ssh_master():
             self._start_ssh_master()
+
+    def __ssh_direct_opt_var(self, direct=False):
+        return os.getenv("SSH_DIRECT", direct)
+
+    def __execution_opts(self, direct=False):
+        direct = self.__ssh_direct_opt_var(direct=direct)
+        if direct:
+            return ["-i", self.identity_file]
+        else:
+            return ["-o", "ControlPath=" + self.ssh_master]
 
     def execute(self, command=None, script=None, input=None, environment={},
                 stdout=None, quiet=False, direct=False, timeout=120,
@@ -250,7 +258,7 @@ class SSHConnection(object):
         assert command or script
         assert self.ssh_address
 
-        if not direct:
+        if not self.__ssh_direct_opt_var(direct=direct):
             self._ensure_ssh_master()
 
         env_script = ""
@@ -267,20 +275,15 @@ class SSHConnection(object):
         default_ssh_params = [
             "ssh",
             "-p", str(self.ssh_port),
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
+            *self.ssh_default_opts,
             "-o", "LogLevel=ERROR",
-            "-o", "BatchMode=yes",
             "-l", self.ssh_user,
             self.ssh_address
         ]
         additional_ssh_params = []
         cmd = []
 
-        if direct:
-            additional_ssh_params += ["-i", self.identity_file]
-        else:
-            additional_ssh_params += ["-o", "ControlPath=" + self.ssh_master]
+        additional_ssh_params += self.__execution_opts(direct=direct)
 
         if command:
             if getattr(command, "strip", None):  # Is this a string?
@@ -356,16 +359,15 @@ class SSHConnection(object):
         assert sources and dest
         assert self.ssh_address
 
-        self._ensure_ssh_master()
+        if not self.__ssh_direct_opt_var():
+            self._ensure_ssh_master()
 
         cmd = [
             "scp", "-B",
             "-r", "-p",
             "-P", str(self.ssh_port),
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "ControlPath=" + self.ssh_master,
-            "-o", "BatchMode=yes",
+            *self.ssh_default_opts,
+            *self.__execution_opts(),
         ]
         if not self.verbose:
             cmd += ["-q"]
@@ -386,16 +388,15 @@ class SSHConnection(object):
         assert source and dest
         assert self.ssh_address
 
-        self._ensure_ssh_master()
+        if not self.__ssh_direct_opt_var():
+            self._ensure_ssh_master()
         dest = os.path.join(relative_dir, dest)
 
         cmd = [
             "scp", "-B",
             "-P", str(self.ssh_port),
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "ControlPath=" + self.ssh_master,
-            "-o", "BatchMode=yes",
+            *self.ssh_default_opts,
+            *self.__execution_opts(),
         ]
         if not self.verbose:
             cmd += ["-q"]
@@ -411,16 +412,15 @@ class SSHConnection(object):
         assert source and dest
         assert self.ssh_address
 
-        self._ensure_ssh_master()
+        if not self.__ssh_direct_opt_var():
+            self._ensure_ssh_master()
         dest = os.path.join(relative_dir, dest)
 
         cmd = [
             "scp", "-B",
             "-P", str(self.ssh_port),
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "ControlPath=" + self.ssh_master,
-            "-o", "BatchMode=yes",
+            *self.ssh_default_opts,
+            *self.__execution_opts(),
             "-r",
         ]
         if not self.verbose:
