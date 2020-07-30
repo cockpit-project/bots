@@ -230,7 +230,7 @@ class SSHConnection(object):
             self._start_ssh_master()
 
     def __ssh_direct_opt_var(self, direct=False):
-        return os.getenv("SSH_DIRECT", direct)
+        return os.getenv("TEST_SSH_DIRECT", direct)
 
     def __execution_opts(self, direct=False):
         direct = self.__ssh_direct_opt_var(direct=direct)
