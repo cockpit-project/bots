@@ -32,6 +32,7 @@ FRAGILE = [
     "react-bootstrap",
     "angular",
     "angular-route",
+    "@novnc/novnc",  # See cockpit/cockpit#14356
 ]
 
 import collections
