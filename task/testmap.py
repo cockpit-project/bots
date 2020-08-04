@@ -87,13 +87,13 @@ REPO_BRANCH_CONTEXT = {
         'master': [
             'fedora-31',
             'fedora-32',
+            'debian-testing',
         ],
         'rhel8': [
             'rhel-8-3',
         ],
         '_manual': [
             'centos-8-stream',
-            'debian-testing',
         ],
     },
     'weldr/lorax': {
