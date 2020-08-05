@@ -120,11 +120,6 @@ chown -R admin:admin ~admin/.ssh
 mkdir -p /etc/NetworkManager/conf.d/
 printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
 
-if [ "$1" = "debian-stable" ]; then
-    # HACK: Debian 10's cloud-init generates a *.cfg file, but /etc/network/interfaces sources extension-less files
-    mv /etc/network/interfaces.d/50-cloud-init.cfg /etc/network/interfaces.d/50-cloud-init
-fi
-
 export DEBIAN_FRONTEND=noninteractive
 apt-get -y update
 # apt go-faster
