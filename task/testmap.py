@@ -162,9 +162,9 @@ REPO_BRANCH_CONTEXT = {
         'master': [
             'fedora-31',
             'fedora-32',
+            'rhel-8-3',
         ],
         '_manual': [
-            'rhel-8-3',
             'centos-8-stream',
         ]
     },
