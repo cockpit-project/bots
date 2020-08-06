@@ -94,6 +94,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-32/rawhide',
         ],
     },
     'weldr/lorax': {
