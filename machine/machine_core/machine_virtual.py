@@ -562,7 +562,7 @@ class VirtMachine(Machine):
                 with stdchannel_redirected(sys.stderr, os.devnull):
                     self._domain.destroyFlags(libvirt.VIR_DOMAIN_DESTROY_DEFAULT)
             except libvirt.libvirtError as le:
-                if 'not found' not in str(le):
+                if 'not found' not in str(le) and 'not running' not in str(le):
                     raise
         self._cleanup(quick=True)
 
