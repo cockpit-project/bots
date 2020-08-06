@@ -87,6 +87,7 @@ REPO_BRANCH_CONTEXT = {
         'master': [
             'fedora-31',
             'fedora-32',
+            'fedora-32/rawhide',
             'debian-testing',
         ],
         'rhel8': [
@@ -94,7 +95,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
-            'fedora-32/rawhide',
         ],
     },
     'weldr/lorax': {
