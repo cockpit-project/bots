@@ -83,7 +83,7 @@ case "$RELEASE" in
         COCKPIT_DEPS="${COCKPIT_DEPS/libvirt-dbus /}"
         TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
         ;;
-    eoan|buster)
+    buster)
         # timesyncd got split out in Ubuntu 20.04 and Debian 11
         TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
         ;;
@@ -133,12 +133,6 @@ for p in lxd snapd landscape-common accountsservice open-vm-tools ufw cloud-init
 # HACK: debian-stable image got /usr/bin/qemu-img removed, even though qemu-utils package is installed
 if [ "$1" = "debian-stable" ]; then
     $APT install --reinstall -y qemu-utils
-fi
-
-# HACK https://launchpad.net/bugs/1850281: disable pmlogger for image build, to avoid package install failure
-if [ "$1" = "ubuntu-stable" ]; then
-    mkdir -p /run/systemd/system/pmlogger.service.d
-    printf '[Service]\nType=simple\nExecStart=\nExecStart=/bin/true\n' > /run/systemd/system/pmlogger.service.d/disable.conf
 fi
 
 # python3-rtslib-fb postinst starts rtslib-fb-targetctl.service , but that may fail due to kernel being upgraded
