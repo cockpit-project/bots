@@ -1,0 +1,4 @@
+  File "test/verify/check-storage-hidden", line *, in testHiddenLuks
+    self.assertEqual(m.execute("grep %s /etc/fstab || true" % mount_point_1), "")
+*
+AssertionError: 'UUID=*' != ''
