@@ -85,10 +85,14 @@ class Sink(object):
         shutil.rmtree(self.attachments)
 
         # All done sending output
-        self.ssh.stdin.close()
+        try:
+            self.ssh.stdin.close()
+        except BrokenPipeError:
+            # SSH already terminated
+            pass
 
-        # SSH should terminate by itself
+        # SSH should terminate by itself; It legitimately exits with 77 on collisions
         ret = self.ssh.wait()
-        if ret != 0:
+        if ret not in [0, 77]:
             raise subprocess.CalledProcessError(ret, "ssh")
         self.ssh = None
