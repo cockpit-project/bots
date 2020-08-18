@@ -140,8 +140,13 @@ mkdir -p /run/systemd/system
 ln -s /dev/null /run/systemd/system/rtslib-fb-targetctl.service
 systemctl daemon-reload
 
-# install our dependencies
+# upgrade the system
 $APT dist-upgrade
+
+# HACK: on systemd update `systemd-network` may end up in failed state
+systemctl restart systemd-networkd.service || true
+
+# install our dependencies
 $APT install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
 
 # Prepare for building
