@@ -63,6 +63,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'rhel-8-3-distropkg',
+            'fedora-33',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -95,6 +96,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-33',
         ],
     },
     'weldr/lorax': {
@@ -143,6 +145,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'fedora-33',
         ],
     },
     'candlepin/subscription-manager': {
