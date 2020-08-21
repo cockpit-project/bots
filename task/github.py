@@ -380,6 +380,15 @@ class GitHub(object):
         else:
             raise KeyError("Team {0} not found".format(name))
 
+    def is_user_allowed(self, user):
+        # Firstly check if user has push access
+        data = self.get("/repos/{0}/collaborators/{1}/permission".format(self.repo, user)) or {}
+        if data.get("permission") in ["admin", "write"]:
+            return True
+
+        # User does not have push access, lets check if in `Contributors` group
+        return user in self.whitelist()
+
 
 class Checklist(object):
     def __init__(self, body=None):

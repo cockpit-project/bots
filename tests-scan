@@ -292,7 +292,6 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
     else:
         pulls = api.pulls()
 
-    whitelist = api.whitelist()
     for pull in pulls:
         title = pull["title"]
         number = pull["number"]
@@ -300,6 +299,8 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
         statuses = api.statuses(revision)
         login = pull["head"]["user"]["login"]
         base = pull["base"]["ref"]  # The branch this pull request targets
+
+        allowed = api.is_user_allowed(login)
 
         logging.info("Processing #{0} titled '{1}' on revision {2}".format(number, title, revision))
 
@@ -387,11 +388,11 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
 
             ref = "pull/%d/head" % number
 
-            # For unmarked and untested status, user must be in whitelist
+            # For unmarked and untested status, user must be allowed
             # Not this only applies to this specific commit. A new status
             # will apply if the user pushes a new commit.
             status = todos[context]
-            if login not in whitelist and status.get("description", github.NO_TESTING) == github.NO_TESTING:
+            if not allowed and status.get("description", github.NO_TESTING) == github.NO_TESTING:
                 priority = github.NO_TESTING
                 changes = {"description": github.NO_TESTING, "context": context, "state": "pending"}
             else:

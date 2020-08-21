@@ -128,13 +128,12 @@ def tasks_for_issues(issues_data):
     else:
         api = github.GitHub()
         issues = api.issues(state="open")
-    whitelist = api.whitelist()
 
     for issue in issues:
         if issue["title"].strip().startswith("WIP"):
             continue
         login = issue.get("user", {}).get("login", {})
-        if login not in whitelist:
+        if not api.is_user_allowed(login):
             continue
 
         #
