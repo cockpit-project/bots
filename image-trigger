@@ -22,7 +22,6 @@ DAYS = 7
 REFRESH = {
     "centos-7": {},
     "centos-8-stream": {},
-    "continuous-atomic": {},
     "debian-testing": {},
     "debian-stable": {},
     "fedora-31": {},
