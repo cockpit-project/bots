@@ -53,7 +53,6 @@ REPO_BRANCH_CONTEXT = {
         'rhel-7.9': [
             'rhel-7-9',
             'rhel-atomic',
-            'continuous-atomic',
             'fedora-31/container-bastion',
             'fedora-31/selenium-firefox',
             'fedora-31/selenium-chrome',
@@ -77,7 +76,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-ostree': {
         'master': [
-            'continuous-atomic',
             'rhel-atomic',
             'fedora-coreos',
         ],
@@ -179,7 +177,6 @@ REPO_BRANCH_CONTEXT = {
 OSTREE_BUILD_IMAGE = {
     "fedora-coreos": "fedora-32",
     "rhel-atomic": "rhel-7-9",
-    "continuous-atomic": "centos-7",
 }
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
