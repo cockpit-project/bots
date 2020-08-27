@@ -1,0 +1,1 @@
+b.wait_present("table.reporting-table tr:first-child a[href$='/reports/bthash/123deadbeef'")

@@ -1,0 +1,1 @@
+b.click("#journal-entry-fields #accordion-markup .accordion-toggle:contains('core_backtrace')")

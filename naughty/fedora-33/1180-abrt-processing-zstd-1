@@ -1,0 +1,1 @@
+b.click("table.reporting-table tr:contains('Report to Cockpit') button:contains('Report')")
