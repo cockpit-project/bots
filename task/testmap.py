@@ -36,6 +36,7 @@ REPO_BRANCH_CONTEXT = {
             'ubuntu-stable',
             'fedora-31',
             'fedora-32',
+            'fedora-33',
             'fedora-coreos',
             'fedora-31/firefox',
             'rhel-8-3',
@@ -62,7 +63,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'rhel-8-3-distropkg',
-            'fedora-33',
         ],
     },
     'cockpit-project/starter-kit': {
