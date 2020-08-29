@@ -9,7 +9,7 @@ unset LANG
 export LC_ALL=C.utf8
 
 # keep this in sync with avocado/selenium image mapping in testmap
-if [ "$IMAGE" = fedora-31 ]; then
+if [ "$IMAGE" = fedora-32 ]; then
     AVOCADO=1
 fi
 
