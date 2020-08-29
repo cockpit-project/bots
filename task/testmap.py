@@ -27,9 +27,9 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit': {
         'master': [
             'fedora-31/container-bastion',
-            'fedora-31/selenium-firefox',
-            'fedora-31/selenium-chrome',
-            'fedora-31/selenium-edge',
+            'fedora-32/selenium-firefox',
+            'fedora-32/selenium-chrome',
+            'fedora-32/selenium-edge',
             'debian-stable',
             'debian-testing',
             'ubuntu-2004',
@@ -48,15 +48,15 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-3-distropkg',
             'centos-8-stream',
             'fedora-31/container-bastion',
-            'fedora-31/selenium-firefox',
-            'fedora-31/selenium-chrome',
+            'fedora-32/selenium-firefox',
+            'fedora-32/selenium-chrome',
         ],
         'rhel-7.9': [
             'rhel-7-9',
             'rhel-atomic',
             'fedora-31/container-bastion',
-            'fedora-31/selenium-firefox',
-            'fedora-31/selenium-chrome',
+            'fedora-32/selenium-firefox',
+            'fedora-32/selenium-chrome',
             'centos-7',
         ],
         # These can be triggered manually with bots/tests-trigger
@@ -65,9 +65,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-3-distropkg',
             'fedora-32/firefox',
             'fedora-32/container-bastion',
-            'fedora-32/selenium-firefox',
-            'fedora-32/selenium-chrome',
-            'fedora-32/selenium-edge',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -194,8 +191,8 @@ IMAGE_REFRESH_TRIGGERS = {
     ],
     "services": [
         "fedora-31@cockpit-project/cockpit",
-        "fedora-31/selenium-firefox@cockpit-project/cockpit",
-        "fedora-31/selenium-chrome@cockpit-project/cockpit",
+        "fedora-32/selenium-firefox@cockpit-project/cockpit",
+        "fedora-32/selenium-chrome@cockpit-project/cockpit",
         "ubuntu-2004@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
         "rhel-8-3@cockpit-project/cockpit",
