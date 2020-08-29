@@ -35,5 +35,5 @@ SCRIPTS_DIR = os.path.join(IMAGES_DIR, "scripts")
 
 DEFAULT_IDENTITY_FILE = os.path.join(MACHINE_DIR, "identity")
 
-TEST_OS_DEFAULT = "fedora-31"
+TEST_OS_DEFAULT = "fedora-32"
 DEFAULT_IMAGE = os.environ.get("TEST_OS", TEST_OS_DEFAULT)
