@@ -63,6 +63,11 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'rhel-8-3-distropkg',
+            'fedora-32/firefox',
+            'fedora-32/container-bastion',
+            'fedora-32/selenium-firefox',
+            'fedora-32/selenium-chrome',
+            'fedora-32/selenium-edge',
         ],
     },
     'cockpit-project/starter-kit': {
