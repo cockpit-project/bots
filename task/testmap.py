@@ -38,7 +38,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-32',
             'fedora-33',
             'fedora-coreos',
-            'fedora-31/firefox',
+            'fedora-32/firefox',
             'rhel-8-3',
             'rhel-8-3-distropkg',
             'centos-8-stream',
@@ -63,7 +63,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'rhel-8-3-distropkg',
-            'fedora-32/firefox',
             'fedora-32/container-bastion',
         ],
     },
@@ -197,7 +196,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "debian-stable@cockpit-project/cockpit",
         "rhel-8-3@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
-        "fedora-31/firefox@osbuild/cockpit-composer",
+        "fedora-32/firefox@osbuild/cockpit-composer",
     ]
 }
 
