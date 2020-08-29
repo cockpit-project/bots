@@ -189,7 +189,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
     ],
     "services": [
-        "fedora-31@cockpit-project/cockpit",
+        "fedora-32@cockpit-project/cockpit",
         "fedora-32/selenium-firefox@cockpit-project/cockpit",
         "fedora-32/selenium-chrome@cockpit-project/cockpit",
         "ubuntu-2004@cockpit-project/cockpit",
