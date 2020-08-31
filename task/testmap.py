@@ -34,7 +34,6 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'ubuntu-2004',
             'ubuntu-stable',
-            'fedora-31',
             'fedora-32',
             'fedora-33',
             'fedora-coreos',
