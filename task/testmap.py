@@ -161,12 +161,12 @@ REPO_BRANCH_CONTEXT = {
     },
     'martinpitt/performance-graphs': {
         'master': [
-            'fedora-31',
             'fedora-32',
             'rhel-8-3',
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-33',
         ]
     },
 }
