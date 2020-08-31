@@ -15,11 +15,11 @@ def trigger_pull(api, opts):
         sys.stderr.write("{0} is not a pull request.\n".format(opts.pull))
         return 1
 
-    # triggering is manual, so don't prevent triggering a user that isn't on the whitelist
-    # but issue a warning in case of an oversight
+    # triggering is manual, so don't prevent triggering a user that does not have push access
+    # nor isn't in the 'Contributors' group, but issue a warning in case of an oversight
     login = pull["head"]["user"]["login"]
-    if not opts.allow and login not in api.whitelist():
-        sys.stderr.write("Pull request author '{0}' isn't whitelisted. Override with --allow.\n".format(login))
+    if not opts.allow and not api.is_user_allowed(login):
+        sys.stderr.write("Pull request author '{0}' isn't allowed. Override with --allow.\n".format(login))
         return 1
 
     revision = pull['head']['sha']
@@ -71,7 +71,7 @@ def main():
     parser.add_argument('-f', '--force', action="store_true",
                         help='Force setting the status even if the program logic thinks it shouldn''t be done')
     parser.add_argument('-a', '--allow', action='store_true', dest='allow',
-                        help="Allow triggering for users that aren't whitelisted")
+                        help="Allow triggering for users that aren't allowed")
     parser.add_argument('--requeue', action="store_true",
                         help='Re-queue pending test requests (workaround for occasionally ignored webhook events)')
     parser.add_argument('--repo', help="The repository to trigger the robots in", default=None)
