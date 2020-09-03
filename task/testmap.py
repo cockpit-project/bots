@@ -83,7 +83,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-podman': {
         'master': [
-            'fedora-31',
             'fedora-32',
             'fedora-32/rawhide',
             'fedora-33',
