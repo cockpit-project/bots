@@ -132,6 +132,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-31',
             'fedora-32',
             'fedora-32/firefox',
+            'fedora-33',
             'rhel-8-3',
             'rhel-8-3/firefox',
         ],
@@ -141,7 +142,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-33',
         ],
     },
     'candlepin/subscription-manager': {
