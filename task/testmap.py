@@ -17,6 +17,7 @@
 
 import os.path
 
+from machine.machine_core.constants import TEST_OS_DEFAULT
 
 REPO_BRANCH_CONTEXT = {
     'cockpit-project/bots': {
@@ -181,6 +182,10 @@ OSTREE_BUILD_IMAGE = {
 IMAGE_REFRESH_TRIGGERS = {
     "fedora-testing": [
         "fedora-testing@cockpit-project/cockpit"
+    ],
+    # some tests run against centos-7's cockpit-ws for backwards compat testing
+    "centos-7": [
+        TEST_OS_DEFAULT + "@cockpit-project/cockpit",
     ],
     "openshift": [
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
