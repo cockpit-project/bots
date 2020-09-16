@@ -257,6 +257,11 @@ if [ "${IMAGE#rhel-7}" != "$IMAGE" ] || [ "${IMAGE#centos-7}" != "$IMAGE" ] ; th
     TEST_PACKAGES="${TEST_PACKAGES/boom-boot/lvm2-python-boom}"
 fi
 
+if [ "$IMAGE" = "centos-8-stream" ]; then
+    # HACK: work around https://bugs.centos.org/view.php?id=17731
+    yum install -y --allowerasing gnutls-utils
+fi
+
 pkgs="$TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES"
 $YUM_INSTALL $pkgs
 

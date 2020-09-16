@@ -1,0 +1,1 @@
+audit: type=1400 audit(*): avc:  denied  { sys_chroot } for  *comm="plymouthd"
