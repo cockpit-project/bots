@@ -5,4 +5,7 @@ set -e
 # remove cockpit distro packages, testing with upstream master
 rpm --erase --verbose cockpit cockpit-ws cockpit-bridge cockpit-system
 
+# HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1879851
+rm -f /var/lib/sss/db/*
+
 /var/lib/testvm/fedora.install "$@"
