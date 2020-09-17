@@ -36,12 +36,6 @@ $2"
                 do_install=t
                 ;;
             --rhel)
-                # For RHEL we actually build in EPEL, which is based
-                # on CentOS.  On CentOS, the spec file has both
-                # %centos and %rhel defined, but it gives precedence
-                # to %centos, as it must.  To make it produce the RHEL
-                # packages, we explicitly undefine %centos here.
-                mock_opts="$mock_opts --define='centos 0'"
                 ;;
 	    --)
 		shift
