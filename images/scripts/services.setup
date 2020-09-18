@@ -22,6 +22,9 @@ systemctl enable --now docker
 #
 #############
 
+# see https://github.com/freeipa/freeipa-container/issues/348
+rm /usr/libexec/oci/hooks.d/oci-systemd-hook
+
 # see https://hub.docker.com/r/freeipa/freeipa-server
 # and https://github.com/freeipa/freeipa-container/issues/346
 # there is no :latest so we go with :fedora-rawhide
@@ -34,6 +37,7 @@ docker run -d --rm --name freeipa -ti -h f0.cockpit.lan \
     -e IPA_SERVER_IP=$SERVER_IP \
     -p 53:53/udp -p 53:53 -p 80:80 -p 443:443 -p 389:389 -p 636:636 -p 88:88 -p 464:464 -p 88:88/udp -p 464:464/udp -p 123:123/udp \
     -v /var/lib/ipa-data:/data:Z \
+    -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
     freeipa/freeipa-server:fedora-rawhide \
     -U -p foobarfoo -a foobarfoo -n cockpit.lan -r COCKPIT.LAN --setup-dns --no-forwarders --no-ntp
 EOF
