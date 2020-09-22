@@ -1,11 +1,7 @@
 #! /bin/bash
 set -eux
 
-BASE=$(dirname $0)
+URL=https://cloud.centos.org/centos/8-stream/x86_64/images/
+LATEST_DAILY=$(curl -s "$URL" | sed -n '/<a href=.*GenericCloud.*qcow2/ { s/^.*href="//; s_".*$__; p }')
 
-# virt-install: using the url "http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/" as --location is broken
-
-CUR=$(curl --show-error --silent https://mirrors.mit.edu/centos/8-stream/isos/x86_64/ | grep -o '"CentOS-Stream.*-dvd1.iso"' | sed 's/"//g')
-wget --continue https://mirrors.mit.edu/centos/8-stream/isos/x86_64/$CUR -O "$BASE/centos-8-stream.iso"
-$BASE/virt-install-fedora "$1" x86_64 "$BASE/centos-8-stream.iso"
-rm "$BASE/centos-8-stream.iso"
+exec $(dirname $0)/lib/debian.bootstrap "$1" "$URL/$LATEST_DAILY"
