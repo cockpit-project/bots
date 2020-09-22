@@ -103,6 +103,20 @@ if [ -n "$do_install" ]; then
     packages=$(find build-results -name "*.rpm" -not -name "*.src.rpm" | grep -vG "$skip")
     rpm -U --force $packages
 
+    # check for files that are shipped by more than one RPM
+    DUPES=0
+    for f in $(rpm -ql $(rpm -qa '*cockpit*') | sort -u); do
+        [ -f "$f" ] || continue
+        # -debugsource overlap is legit
+        [ "${f#/usr/src/debug}" = "$f" ] || continue
+        pkgs=($(rpm -qf $f))
+        if [ ${#pkgs[@]} -ne 1 ]; then
+            echo "ERROR: $f is shipped by multiple packages: ${pkgs[@]}" >&2
+            ((DUPES=DUPESRC+1))
+        fi
+    done
+    [ "$DUPES" -eq 0 ] || exit "$DUPES"
+
     if type firewall-cmd > /dev/null 2> /dev/null; then
         systemctl start firewalld
         firewall-cmd --add-service=cockpit --permanent
