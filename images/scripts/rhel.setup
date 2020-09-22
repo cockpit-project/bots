@@ -159,6 +159,7 @@ COCKPIT_DEPS="\
 atomic \
 device-mapper-multipath \
 docker \
+firewalld \
 glib-networking \
 json-glib \
 kexec-tools \
@@ -257,13 +258,13 @@ if [ "${IMAGE#rhel-7}" != "$IMAGE" ] || [ "${IMAGE#centos-7}" != "$IMAGE" ] ; th
     TEST_PACKAGES="${TEST_PACKAGES/boom-boot/lvm2-python-boom}"
 fi
 
-if [ "$IMAGE" = "centos-8-stream" ]; then
-    # HACK: work around https://bugs.centos.org/view.php?id=17731
-    yum install -y --allowerasing gnutls-utils
-fi
-
 pkgs="$TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES"
 $YUM_INSTALL $pkgs
+
+# we only need cloud-init for the initial boot, afterwards it just slows down booting
+if rpm -q cloud-init; then
+    yum remove -y cloud-init
+fi
 
 # If the insights-client is installed, update the insights-client
 # "egg" and make sure that only the newest one is used.
@@ -377,8 +378,18 @@ fi
 
 echo 'NETWORKING=yes' > /etc/sysconfig/network
 
-useradd -c Administrator -G wheel admin
-echo foobar | passwd --stdin admin
+if [ "$IMAGE" = "centos-8-stream" ]; then
+    # centos-8-stream builds from cloud image, set up network-scripts for eth1 to avoid long boot hang on
+    # NetworkManager-wait-online.service
+    printf 'BOOTPROTO=none\nDEVICE=eth1\nONBOOT=no\n' > /etc/sysconfig/network-scripts/ifcfg-eth1
+    # our cloud-init.iso does not set up the host name
+    echo "127.0.1.1 $(hostname)" >> /etc/hosts
+fi
+
+if ! getent passwd admin >/dev/null; then
+    useradd -c Administrator -G wheel admin
+    echo foobar | passwd --stdin admin
+fi
 
 # To enable persistent logging
 mkdir -p /var/log/journal
