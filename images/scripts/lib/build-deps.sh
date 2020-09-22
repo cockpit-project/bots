@@ -15,8 +15,9 @@ case "$1" in
 esac
 
 # Download cockpit.spec, replace `npm-version` macro and then query all build requires
+# also re-enable building of optional packages by default, so that we get libssh-devel
 curl -s https://raw.githubusercontent.com/cockpit-project/cockpit/$branch/tools/cockpit.spec |
-    sed 's/%{npm-version:.*}/0/; /Recommends:/d' |
+    sed 's/%{npm-version:.*}/0/; /Recommends:/d; s/build_optional 0/build_optional 1/' |
     rpmspec -D "$1" --buildrequires --query /dev/stdin |
     sed 's/.*/"&"/' |
     tr '\n' ' '
