@@ -117,13 +117,13 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-9/live-iso',
             'rhel-7-9/qcow2',
             'rhel-7-9/aws',
-            'rhel-7-9/azure',
             'rhel-7-9/openstack',
             'rhel-7-9/vmware',
             'rhel-7-9/tar',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'rhel-7-9/azure',
             'rhel-8-3/osbuild-composer',
             'centos-8-stream',
         ],
