@@ -18,4 +18,4 @@ rel=${rel##*/}
 # Pin release to 20.10 (groovy) development series while the current stable is 20.04 LTS, as we have a separate image for that (ubuntu-2004)
 rel=groovy
 
-exec $(dirname $0)/lib/debian.bootstrap "$1" "https://cloud-images.ubuntu.com/daily/server/$rel/current/$rel-server-cloudimg-amd64.img"
+exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "https://cloud-images.ubuntu.com/daily/server/$rel/current/$rel-server-cloudimg-amd64.img"
