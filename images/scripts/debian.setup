@@ -81,7 +81,7 @@ case "$RELEASE" in
         # timesyncd got split out in Ubuntu 20.04 and Debian 11
         TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
         ;;
-    focal|bullseye)
+    bullseye)
         # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
         IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
 esac
