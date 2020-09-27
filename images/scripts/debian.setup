@@ -13,7 +13,6 @@ sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT/# GRUB_CMDLINE_LINUX_DEFAULT/' /etc/default
 #
 COCKPIT_DEPS="\
 cryptsetup \
-docker.io \
 libblockdev-mdraid2 \
 libjson-glib-1.0-0 \
 libpcp3 \
@@ -174,20 +173,6 @@ systemctl disable apt-daily.timer apt-daily-upgrade.timer fstrim.timer man-db.ti
 # Enable coredumping via systemd
 echo "kernel.core_pattern=|/lib/systemd/systemd-coredump %P %u %g %s %t %c %e" > /etc/sysctl.d/50-coredump.conf
 printf 'DefaultLimitCORE=infinity\n' >> /etc/systemd/system.conf
-
-# HACK: we need to restart it in case aufs-dkms was installed after docker.io
-# and thus docker.io auto-switches its backend
-systemctl restart docker || journalctl -u docker
-I=$(docker info)
-if ! echo "$I" | grep -Eq 'Storage.*(aufs|overlay)'; then
-    echo "ERROR! docker does not use aufs or overlayfs"
-    exit 1
-fi
-
-# docker images that we need for integration testing
-/var/lib/testvm/docker-images.setup
-
-rm -rf /var/lib/docker/devicemapper
 
 # in case there are unnecessary packages
 $APT autoremove || true
