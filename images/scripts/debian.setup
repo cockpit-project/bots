@@ -86,16 +86,14 @@ case "$RELEASE" in
         IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
 esac
 
-if [ "${1#ubuntu}" != "$1" ]; then
-    # our tests need scsi_debug, which the cloud kernel does not have; install full kernel
-    TEST_PACKAGES="$TEST_PACKAGES linux-image-generic"
-fi
-
 # our cloud-init.iso does not set up the host name
 echo "127.0.1.1 $(hostname)" >> /etc/hosts
 
 if grep -q 'ID=ubuntu' /etc/os-release; then
     PBUILDER_OPTS='COMPONENTS="main universe"'
+
+    # our tests need scsi_debug, which the cloud kernel does not have; install full kernel
+    TEST_PACKAGES="$TEST_PACKAGES linux-image-generic"
 
     # We want to use/test NetworkManager instead of netplan/networkd for ethernets
     mkdir -p /etc/NetworkManager/conf.d
