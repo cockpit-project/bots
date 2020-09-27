@@ -182,7 +182,8 @@ OSTREE_BUILD_IMAGE = {
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
 IMAGE_REFRESH_TRIGGERS = {
     "fedora-testing": [
-        "fedora-testing@cockpit-project/cockpit"
+        "fedora-testing@cockpit-project/cockpit",
+        "fedora-testing/dnf-copr@cockpit-project/cockpit",
     ],
     # some tests run against centos-7's cockpit-ws for backwards compat testing
     "centos-7": [
