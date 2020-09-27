@@ -78,11 +78,6 @@ until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 RELEASE=$(grep -m1 ^deb /etc/apt/sources.list | awk '{print $3}')
 
 case "$RELEASE" in
-    bionic)
-        # these packages are not in Ubuntu 18.04
-        COCKPIT_DEPS="${COCKPIT_DEPS/libvirt-dbus /}"
-        TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
-        ;;
     buster)
         # timesyncd got split out in Ubuntu 20.04 and Debian 11
         TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
