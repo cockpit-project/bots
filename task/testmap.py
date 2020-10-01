@@ -99,7 +99,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'weldr/lorax': {
         'master': [
-            'fedora-32',
             'fedora-32/osbuild-composer',
         ],
         'rhel8-branch': [
