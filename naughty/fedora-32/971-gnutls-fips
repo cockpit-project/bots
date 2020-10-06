@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-multi-machine", line *, in testFIPS
-    self.login_and_go("/dashboard")
-*
-    self.wait_visible("#login")
-*
-testlib.Error: timeout
