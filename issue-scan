@@ -47,8 +47,10 @@ import argparse
 import pipes
 import sys
 import json
+import logging
 
 sys.dont_write_bytecode = True
+logging.basicConfig(level=logging.INFO)
 
 from task import github, redhat_network, distributed_queue, labels_of_pull
 
@@ -206,10 +208,10 @@ def queue_task(channel, result):
     queue = 'rhel' if contains_any(result, REDHAT_TASKS) else 'public'
     channel.basic_publish('', queue, json.dumps(body),
                           properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
+    logging.info("Published issue task with command: '{0}'".format(result))
+
 
 # Default scan behavior run for each task
-
-
 def scan(issues_data, verbose, opts_repo):
     global issues
 
