@@ -152,13 +152,12 @@ REPO_BRANCH_CONTEXT = {
     },
     'skobyda/cockpit-certificates': {
         'master': [
-            'fedora-31',
+            'fedora-32',
+            'fedora-33',
         ],
         '_manual': [
             'rhel-8-3',
             'centos-8-stream',
-            'fedora-32',
-            'fedora-33',
         ]
     },
     'martinpitt/performance-graphs': {
