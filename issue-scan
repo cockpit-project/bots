@@ -67,6 +67,8 @@ def main():
                         help='The host:port of the AMQP server to publish to (format host:port)')
     parser.add_argument('--issues-data', default=None,
                         help='issues or pull request event GitHub JSON data to evaluate')
+    parser.add_argument('--repo', default=None,
+                        help='Repository to scan and checkout.')
     opts = parser.parse_args()
 
     if opts.amqp and no_amqp:
@@ -79,7 +81,7 @@ def main():
     except IOError:
         namespace = None
 
-    for result in scan(opts.issues_data, opts.verbose):
+    for result in scan(opts.issues_data, opts.verbose, opts.repo):
         if opts.amqp:
             with distributed_queue.DistributedQueue(opts.amqp, queues=['rhel', 'public']) as q:
                 queue_task(q.channel, result)
@@ -113,7 +115,7 @@ def contains_any(string, matches):
 # Map all checkable work items to fixtures
 
 
-def tasks_for_issues(issues_data):
+def tasks_for_issues(issues_data, opts_repo):
     results = []
     issues = []
 
@@ -126,7 +128,7 @@ def tasks_for_issues(issues_data):
             issues.append(issue)
         api = github.GitHub(repo=repo)
     else:
-        api = github.GitHub()
+        api = github.GitHub(repo=opts_repo)
         issues = api.issues(state="open")
 
     for issue in issues:
@@ -208,13 +210,13 @@ def queue_task(channel, result):
 # Default scan behavior run for each task
 
 
-def scan(issues_data, verbose):
+def scan(issues_data, verbose, opts_repo):
     global issues
 
     results = []
 
     # Now go through each fixture
-    for (command, issue, repo) in tasks_for_issues(issues_data):
+    for (command, issue, repo) in tasks_for_issues(issues_data, opts_repo):
         result = output_task(command, issue, repo, verbose)
         if result is not None:
             results.append(result)
