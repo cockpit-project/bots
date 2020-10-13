@@ -269,6 +269,17 @@ class GitHub(object):
         self.cache.mark()
         return json.loads(response['data'])
 
+    def put(self, resource, data, accept=[]):
+        response = self.request("PUT", resource, json.dumps(data), {"Content-Type": "application/json"})
+        status = response['status']
+        if (status < 200 or status >= 300) and status not in accept:
+            raise GitHubError(self.qualify(resource), response)
+        self.cache.mark()
+        if response['data']:
+            return json.loads(response['data'])
+        else:
+            return None
+
     def delete(self, resource, accept=[]):
         response = self.request("DELETE", resource, "", {"Content-Type": "application/json"})
         status = response['status']
