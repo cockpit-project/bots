@@ -406,8 +406,16 @@ def branch(context, message, pathspec=".", issue=None, branch=None, push=True, *
     except subprocess.CalledProcessError:
         raise RuntimeError("Couldn't configure git config with our API token")
 
-    user = api.get("/user")['login']
-    fork_repo = find_our_fork(user)
+    try:
+        user = api.get("/user")['login']
+        fork_repo = find_our_fork(user)
+    except github.GitHubError as ex:
+        if ex.status == 403:
+            sys.stderr.write("token is not authorized for the /user GitHub API, stay on origin repo %s\n" % api.repo)
+            user = api.repo.split('/')[0]
+            fork_repo = api.repo
+        else:
+            raise
 
     clean = "https://github.com/{0}".format(fork_repo)
 
