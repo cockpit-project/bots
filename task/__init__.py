@@ -376,10 +376,11 @@ def find_our_fork(user):
     raise RuntimeError("%s doesn't have a fork of %s" % (user, api.repo))
 
 
-def push_branch(user, branch, force=False):
-    fork_repo = find_our_fork(user)
+def push_branch(user, branch, force=False, push_repo=None):
+    if not push_repo:
+        push_repo = find_our_fork(user)
 
-    url = "https://github.com/{0}".format(fork_repo)
+    url = "https://github.com/{0}".format(push_repo)
     cmd = ["git", "push", url, "+HEAD:refs/heads/{0}".format(branch)]
     if force:
         cmd.insert(2, "-f")
@@ -416,7 +417,7 @@ def branch(context, message, pathspec=".", issue=None, branch=None, push=True, *
 
     # No need to push if we want to add another commits into the same branch
     if push:
-        push_branch(user, branch)
+        push_branch(user, branch, push_repo=fork_repo)
 
     # Comment on the issue if present and we pushed the branch
     if issue and push:
