@@ -358,7 +358,12 @@ def execute(*args):
     # No prompting for passwords
     if "GIT_ASKPASS" not in env:
         env["GIT_ASKPASS"] = "/bin/true"
-    output = subprocess.check_output(args, cwd=BASE_DIR, stderr=subprocess.STDOUT, env=env, universal_newlines=True)
+    try:
+        output = subprocess.check_output(args, cwd=BASE_DIR, stderr=subprocess.STDOUT, env=env, universal_newlines=True)
+    except subprocess.CalledProcessError as e:
+        if verbose:
+            sys.stderr.write("! " + str(e))
+        raise
     sys.stderr.write(censored(output))
     return output
 
