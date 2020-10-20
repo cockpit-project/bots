@@ -178,12 +178,12 @@ class TestGitHub(unittest.TestCase):
         self.assertEqual(len(issues), 1)
         self.assertEqual(issues[0]["number"], "7")
 
-    def testWhitelist(self):
-        whitelist = self.api.whitelist()
-        self.assertTrue(len(whitelist) > 0)
-        self.assertEqual(whitelist, set(["one", "two", "three", "candlepin"]))
-        self.assertNotIn("four", whitelist)
-        self.assertNotIn("", whitelist)
+    def testAllowlist(self):
+        allowlist = self.api.allowlist()
+        self.assertTrue(len(allowlist) > 0)
+        self.assertEqual(allowlist, set(["one", "two", "three", "candlepin"]))
+        self.assertNotIn("four", allowlist)
+        self.assertNotIn("", allowlist)
 
     def testTeamIdFromName(self):
         self.assertEqual(self.api.teamIdFromName(github.TEAM_CONTRIBUTORS), 1)
