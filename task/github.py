@@ -369,7 +369,7 @@ class GitHub(object):
                 yield commit
                 count += 1
 
-    def whitelist(self):
+    def allowlist(self):
         # organizations which are allowed to use our CI (these use branches within the main repo for PRs)
         users = {"candlepin"}
 
@@ -398,7 +398,7 @@ class GitHub(object):
             return True
 
         # User does not have push access, lets check if in `Contributors` group
-        return user in self.whitelist()
+        return user in self.allowlist()
 
 
 class Checklist(object):
