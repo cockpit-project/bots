@@ -10,8 +10,7 @@ podman pull docker.io/cockpit/ws
 echo 'UseDNS no' >> /etc/ssh/sshd_config.d/10-no-usedns.conf
 
 # pre-install the distro version, which is useful for testing extensions and manual experiments
-# also pre-install dnsmasq which we need for testing
-rpm-ostree install cockpit-system cockpit-bridge cockpit-networkmanager dnsmasq
+rpm-ostree install cockpit-system cockpit-bridge cockpit-networkmanager
 
 # reduce image size
 rpm-ostree cleanup --repomd
