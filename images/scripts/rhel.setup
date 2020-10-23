@@ -77,7 +77,7 @@ EOF
 cat <<EOF > /etc/yum.repos.d/nightly.repo
 [RHEL-7.9]
 name=base-rhel
-baseurl=http://download.devel.redhat.com/rhel-7/nightly/RHEL-7/latest-RHEL-7.9/compose/Server/x86_64/os
+baseurl=http://download.devel.redhat.com/rhel-7/nightly/updates/RHEL-7/latest-RHEL-7.9/compose/Server/x86_64/os
 enabled=1
 gpgcheck=0
 
@@ -89,7 +89,7 @@ gpgcheck=0
 
 [RHEL-7.9-DEBUG]
 name=base-rhel-debug
-baseurl=http://download.devel.redhat.com/nightly/latest-RHEL-7/compose/Server/x86_64/debug/tree
+baseurl=http://download.devel.redhat.com/rhel-7/nightly/updates/RHEL-7/latest-RHEL-7.9/compose/Server/x86_64/debug/tree
 enabled=0
 gpgcheck=0
 
