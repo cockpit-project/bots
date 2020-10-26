@@ -5,7 +5,7 @@ on:
   # can be run manually on https://github.com/cockpit-project/bots/actions
   workflow_dispatch:
 jobs:
-  npm-update:
+  maintenance:
     runs-on: ubuntu-latest
     steps:
       - name: Set up secrets
