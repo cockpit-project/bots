@@ -160,16 +160,6 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ]
     },
-    'martinpitt/performance-graphs': {
-        'master': [
-            'fedora-32',
-            'fedora-33',
-            'rhel-8-3',
-        ],
-        '_manual': [
-            'centos-8-stream',
-        ]
-    },
 }
 
 # The OSTree variants can't build their own packages, so we build in
