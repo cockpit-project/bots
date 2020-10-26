@@ -129,6 +129,7 @@ CANDLEPIN_DEPS="\
 ansible \
 git \
 openssl \
+java-11-openjdk-devel \
 "
 
 $YUM_INSTALL $CANDLEPIN_DEPS
@@ -156,7 +157,7 @@ cat > playbook.yml <<- EOF
 - hosts: dev
 
   environment:
-    JAVA_HOME: /usr/lib/jvm/java-1.8.0/
+    JAVA_HOME: /usr/lib/jvm/java-11/
 
   roles:
      - role: candlepin
