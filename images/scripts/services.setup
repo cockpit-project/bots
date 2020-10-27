@@ -138,10 +138,6 @@ mkdir -p playbookdir; cd playbookdir;
 
 mkdir -p roles
 git clone https://github.com/candlepin/ansible-role-candlepin.git roles/candlepin
-# HACK: # https://github.com/candlepin/ansible-role-candlepin/commit/2591186f3abad014a414a56d7bfbee185682728e fails with
-# TASK [candlepin : Find host ip & netmask] **************************************
-#   The task includes an option with an undefined variable. The error was: \"hostvars['dev']\
-(cd roles/candlepin; git checkout 9450792c0bd577)
 
 # Run the playbook
 cat > inventory <<- EOF
