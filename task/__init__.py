@@ -53,6 +53,7 @@ sys.dont_write_bytecode = True
 
 # Servers which have public images
 PUBLIC_STORES = [
+    "https://images-frontdoor.apps.ocp.ci.centos.org/",
     "https://images-cockpit.apps.ci.centos.org/",
 ]
 
