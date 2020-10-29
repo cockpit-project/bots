@@ -17,9 +17,7 @@ fi
 # depending on how it was compiled and which plugins are installed,
 # and will just silently not do it.  So we do it here.
 #
-if [ "$IMAGE" != fedora-31 ]; then
-    xfs_growfs /
-fi
+xfs_growfs /
 df -h /
 
 # make libpwquality less aggressive, so that our "foobar" password works
