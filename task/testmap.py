@@ -131,7 +131,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'osbuild/cockpit-composer': {
         'master': [
-            'fedora-31',
             'fedora-32',
             'fedora-32/firefox',
             'fedora-33',
