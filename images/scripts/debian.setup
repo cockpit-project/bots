@@ -71,6 +71,8 @@ targetcli-fb \
 tcsh \
 "
 
+DEBUG_PACKAGES=''
+
 # wait until cloud-init finishes, so that it doesn't clobber sources.list
 until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 
@@ -85,6 +87,17 @@ case "$RELEASE" in
         # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
         IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
 esac
+
+if grep -q 'ID=debian' /etc/os-release; then
+    # For debugging libvirt crashes
+    DEBUG_PACKAGES="\
+libvirt0-dbgsym  \
+libglib2.0-0-dbgsym \
+"
+    cat <<EOF | sudo tee /etc/apt/sources.list.d/dbgsym.list
+deb http://debug.mirrors.debian.org/debian-debug/ ${RELEASE}-debug main
+EOF
+fi
 
 # our cloud-init.iso does not set up the host name
 echo "127.0.1.1 $(hostname)" >> /etc/hosts
@@ -139,7 +152,7 @@ $APT dist-upgrade
 systemctl restart systemd-networkd.service || true
 
 # install our dependencies
-$APT install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
+$APT install $TEST_PACKAGES $COCKPIT_DEPS $DEBUG_PACKAGES $IPA_CLIENT_PACKAGES
 
 # Prepare for building
 #
