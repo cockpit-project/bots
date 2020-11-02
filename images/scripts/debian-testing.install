@@ -6,3 +6,6 @@ set -e
 
 # make libpwquality less aggressive, so that our "foobar" password works
 printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
+
+# Allow libvirtd coredumps
+echo '* soft core unlimited' >> /etc/security/limits.conf
