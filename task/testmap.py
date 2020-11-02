@@ -91,6 +91,8 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            # runs in Travis
+            'ubuntu-stable',
         ],
     },
     'weldr/lorax': {
