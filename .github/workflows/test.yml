@@ -1,0 +1,14 @@
+name: test
+on: [push, pull_request]
+jobs:
+  bots:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: sudo -n apt-get install -y python3-pyflakes python3-pycodestyle
+
+      - name: Run test
+        run: test/run
