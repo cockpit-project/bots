@@ -20,11 +20,6 @@ import os.path
 from machine.machine_core.constants import TEST_OS_DEFAULT
 
 REPO_BRANCH_CONTEXT = {
-    'cockpit-project/bots': {
-        'master': [
-            'host'  # bots doesn't need a vm
-        ],
-    },
     'cockpit-project/cockpit': {
         'master': [
             'fedora-32/container-bastion',
@@ -239,8 +234,5 @@ def tests_for_image(image):
         if image == i:
             tests.update(tests_for_image(a))
             break
-
-    # bots' own unit test ("host") is required for all bots PRs
-    tests.add("host")
 
     return list(tests)
