@@ -13,6 +13,8 @@ jobs:
 
       - name: Clone repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Trigger image refreshes
         run: ./image-trigger
