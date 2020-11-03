@@ -2,6 +2,7 @@
 set -eux
 
 URL=https://cloud.centos.org/centos/8-stream/x86_64/images/
-LATEST_DAILY=$(curl -s "$URL" | sed -n '/<a href=.*GenericCloud.*qcow2/ { s/^.*href="//; s_".*$__; p }')
+DAILIES=$(curl -s "$URL" | sed -n '/<a href=.*GenericCloud.*qcow2/ { s/^.*href="//; s_".*$__; p }')
+LATEST_DAILY=$(echo "$DAILIES" | sort -u | tail -n1)
 
 exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL/$LATEST_DAILY"
