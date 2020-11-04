@@ -1,0 +1,8 @@
+*TestMachines*
+*
+Process * (libvirtd) of user * dumped core.
+*
+#1  * virQEMUDriverGetConfig (libvirt_driver_qemu.so)
+*
+#3  * virStateStop (libvirt.so.0)
+*
