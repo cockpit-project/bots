@@ -1,0 +1,7 @@
+*TestMachines*
+*
+Process * (libvirtd) of user * dumped core.
+*
+#1  * virCondWait (libvirt.so.0)
+#2  * virThreadPoolWorker (libvirt.so.0)
+#3  * virThreadHelper (libvirt.so.0)
