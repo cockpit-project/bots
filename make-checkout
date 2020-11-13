@@ -22,7 +22,6 @@ import os
 import shutil
 import subprocess
 import sys
-from task import github
 from machine.machine_core.constants import BASE_DIR
 
 sys.dont_write_bytecode = True
@@ -36,7 +35,7 @@ TARGET_DIR = "make-checkout-workdir"
 def main():
     parser = argparse.ArgumentParser(description="Fetch and checkout specific revision")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
-    parser.add_argument("--repo", nargs='?', help="Repository to check out")
+    parser.add_argument("--repo", required=True, help="Repository to check out")
     parser.add_argument("--rebase", metavar="branch", help="Branch to rebase to")
     parser.add_argument("ref", help="The git ref to fetch")
     parser.add_argument("revision", nargs='?', help="Actual commit to check out, defaults to ref")
@@ -44,8 +43,6 @@ def main():
     opts = parser.parse_args()
     if not opts.revision:
         opts.revision = "FETCH_HEAD"
-
-    api = github.GitHub(repo=opts.repo)
 
     def execute(*args, cwd=BASE_DIR, error_on_fail=True):
         output = None
@@ -63,7 +60,7 @@ def main():
     if os.path.exists(TARGET_DIR):
         shutil.rmtree(TARGET_DIR)
 
-    execute("git", "clone", "https://github.com/{}".format(api.repo), TARGET_DIR)
+    execute("git", "clone", "https://github.com/{}".format(opts.repo), TARGET_DIR)
     execute("git", "fetch", "origin", opts.ref, cwd=TARGET_DIR, error_on_fail=False)
     execute("git", "checkout", "--detach", opts.revision, cwd=TARGET_DIR, error_on_fail=False)
 
