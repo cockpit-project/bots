@@ -1,75 +1,44 @@
-#!/usr/bin/env python3
+#!/bin/sh
 
-# This file is part of Cockpit.
-#
-# Copyright (C) 2017 Red Hat, Inc.
-#
-# Cockpit is free software; you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 2.1 of the License, or
-# (at your option) any later version.
-#
-# Cockpit is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+usage()
+{
+    echo "usage: make-checkout [-v] [--rebase BRANCH] --repo REPO REF [REVISION]" >&2
+}
 
-import argparse
-import os
-import shutil
-import subprocess
-import sys
-from machine.machine_core.constants import BASE_DIR
+eval set -- "$(getopt -o vh -l repo:,rebase:,help -- "$@")"
 
-sys.dont_write_bytecode = True
+while true; do
+  case "${1:-}" in
+    -v) set -x ;;
+    -h|--help) usage; exit 0 ;;
+    --repo) shift; REPO="$1" ;;
+    --rebase) shift; REBASE="$1" ;;
+    -- ) shift; break ;;
+    * ) break ;;
+  esac
+  shift
+done
 
-# Check out the given ref and if necessary overlay the bots
-# directory on top of it as expected on non-master branches
+if [ $# -gt 2 ] || [ $# -lt 1 ] || [ -z "${REPO:-}" ]; then
+    usage
+    exit 1
+fi
 
-TARGET_DIR = "make-checkout-workdir"
+REF="$1"
+REV=${2:-"FETCH_HEAD"}
 
+TARGET_DIR="make-checkout-workdir"
+rm -rf "$TARGET_DIR"
 
-def main():
-    parser = argparse.ArgumentParser(description="Fetch and checkout specific revision")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
-    parser.add_argument("--repo", required=True, help="Repository to check out")
-    parser.add_argument("--rebase", metavar="branch", help="Branch to rebase to")
-    parser.add_argument("ref", help="The git ref to fetch")
-    parser.add_argument("revision", nargs='?', default="FETCH_HEAD", help="Actual commit to check out, defaults to ref")
+git clone "https://github.com/$REPO" "$TARGET_DIR"
+cd "$TARGET_DIR"
 
-    opts = parser.parse_args()
+git fetch origin "$REF"
+git checkout --detach "$REV"
 
-    def execute(*args, cwd=BASE_DIR, error_on_fail=True):
-        output = None
-        if opts.verbose:
-            sys.stderr.write("+ " + " ".join(args) + "\n")
-        try:
-            output = subprocess.check_output(args, cwd=cwd, universal_newlines=True)
-        except subprocess.CalledProcessError as ex:
-            sys.exit(ex.returncode if error_on_fail else 0)
-        finally:
-            if opts.verbose and output:
-                sys.stderr.write("> " + output + "\n")
-        return output
-
-    if os.path.exists(TARGET_DIR):
-        shutil.rmtree(TARGET_DIR)
-
-    execute("git", "clone", "https://github.com/{}".format(opts.repo), TARGET_DIR)
-    execute("git", "fetch", "origin", opts.ref, cwd=TARGET_DIR, error_on_fail=False)
-    execute("git", "checkout", "--detach", opts.revision, cwd=TARGET_DIR, error_on_fail=False)
-
-    if opts.rebase:
-        remote_base = "origin/" + opts.rebase
-
-        execute("git", "fetch", "origin", opts.rebase, cwd=TARGET_DIR, error_on_fail=False)
-        sha = execute("git", "rev-parse", remote_base, cwd=TARGET_DIR, error_on_fail=False).strip()
-        sys.stderr.write("Rebasing onto {0} ({1}) ...\n".format(remote_base, sha))
-        execute("git", "rebase", remote_base, cwd=TARGET_DIR, error_on_fail=False)
-
-
-if __name__ == '__main__':
-    sys.exit(main())
+if [ -n "$REBASE" ]; then
+    git fetch origin "$REBASE"
+    SHA=`git rev-parse "origin/$REBASE"`
+    echo "Rebasing onto origin/$REBASE $SHA ..."
+    git rebase "origin/$REBASE"
+fi
