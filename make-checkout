@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 usage()
 {
     echo "usage: make-checkout [-v] [--rebase BRANCH] --repo REPO REF [REVISION]" >&2
