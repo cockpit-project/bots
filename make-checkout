@@ -38,11 +38,9 @@ def main():
     parser.add_argument("--repo", required=True, help="Repository to check out")
     parser.add_argument("--rebase", metavar="branch", help="Branch to rebase to")
     parser.add_argument("ref", help="The git ref to fetch")
-    parser.add_argument("revision", nargs='?', help="Actual commit to check out, defaults to ref")
+    parser.add_argument("revision", nargs='?', default="FETCH_HEAD", help="Actual commit to check out, defaults to ref")
 
     opts = parser.parse_args()
-    if not opts.revision:
-        opts.revision = "FETCH_HEAD"
 
     def execute(*args, cwd=BASE_DIR, error_on_fail=True):
         output = None
