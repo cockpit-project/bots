@@ -38,7 +38,7 @@ cd "$TARGET_DIR"
 git fetch origin "$REF"
 git checkout --detach "$REV"
 
-if [ -n "$REBASE" ]; then
+if [ -n "${REBASE:-}" ]; then
     git fetch origin "$REBASE"
     SHA=`git rev-parse "origin/$REBASE"`
     echo "Rebasing onto origin/$REBASE $SHA ..."
