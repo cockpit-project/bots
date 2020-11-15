@@ -7,11 +7,11 @@ usage()
     echo "usage: make-checkout [-v] [--rebase BRANCH] --repo REPO REF [REVISION]" >&2
 }
 
-eval set -- "$(getopt -o vh -l repo:,rebase:,help -- "$@")"
+eval set -- "$(getopt -o vh -l repo:,rebase:,help,verbose -- "$@")"
 
 while true; do
   case "${1:-}" in
-    -v) set -x ;;
+    -v|--verbose) set -x ;;
     -h|--help) usage; exit 0 ;;
     --repo) shift; REPO="$1" ;;
     --rebase) shift; REBASE="$1" ;;
