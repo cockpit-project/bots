@@ -163,8 +163,8 @@ fi
 
 opsys=$(cut -d '-' -f 1 <<< "$IMAGE")
 version=$(cut -d '-' -f 2 <<< "$IMAGE")
-# If version is not number (testing/i386) then use Fedora 32
-if ! [ "$version" -eq "$version" ] 2>/dev/null; then version=32; fi
+# If version is not number (ie: testing) then use Fedora 33
+if ! [ "$version" -eq "$version" ] 2>/dev/null; then version=33; fi
 
 # don't use a bootstrap chroot to save time and space; everything is offline, and we always just do exactly one build
 echo "config_opts['use_bootstrap'] = False" >>/etc/mock/site-defaults.cfg
