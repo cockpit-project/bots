@@ -128,8 +128,19 @@ def insert_failure(cursor, run_id, testname, retry_reason):
 
 
 def find_failed_tests(fp):
+    last_msg = ""
+    save_message = False
     for line in fp:
         line = line.decode('utf-8')
+
+        if save_message:
+            last_msg = line.strip()
+            save_message = False
+            continue
+
+        if "FAIL: Test completed, but found unexpected" in line and "raise" not in line:
+            save_message = True
+
         if line.startswith("not ok "):
             # Result line has form like:
             # not ok 24 test/verify/check-foobar TestExample.testBasic [ND] # RETRY 2 (be robust against unstable tests)
@@ -141,7 +152,8 @@ def find_failed_tests(fp):
             fields[4] = fields[4].rstrip("#")
             testname = "{0} {1}".format(fields[3], fields[4])
             m = re_retry.search(line)
-            yield (testname, m and m.group(1) or None)
+            yield (testname, last_msg or (m and m.group(1) or None))
+            last_msg = ""
 
 
 if __name__ == '__main__':
