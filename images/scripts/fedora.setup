@@ -127,6 +127,9 @@ fi
 dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $ABRT_PACKAGES
 
+# Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
+dnf --setopt=install_weak_deps=False install -y cockpit
+
 # clean up old kernels
 dnf remove --oldinstallonly -y || true
 # also removes gcc and some -devel packages
