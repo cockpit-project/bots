@@ -297,13 +297,13 @@ if [ -x /usr/bin/insights-client ]; then
     insights-client --version
 fi
 
-# Pre-install cockpit packages from base preinstalled, to check for API breakages
+# Pre-install cockpit packages from base, to check for API breakages
 # and more convenient interactive debugging
 if [ "${IMAGE#rhel-7}" != "$IMAGE" ] || [ "${IMAGE#centos-7}" != "$IMAGE" ] ; then
     $YUM_INSTALL cockpit cockpit-dashboard
 else
     # >= 8 supports weak dependencies
-    sudo dnf --setopt=install_weak_deps=False install -y cockpit
+    dnf --setopt=install_weak_deps=False install -y cockpit
 fi
 
 # For debugging udisks/storaged crashes
