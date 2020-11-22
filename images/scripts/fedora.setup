@@ -174,7 +174,7 @@ echo "config_opts['use_bootstrap'] = False" >>/etc/mock/site-defaults.cfg
 su builder -c "/usr/bin/mock --no-bootstrap-chroot --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
 su builder -c "/usr/bin/mock --install --verbose rpmlint"
 
-podman build --tag cockpit/base --build-arg VERSION=$version /var/tmp/cockpit-base
+/var/lib/testvm/podman-images.setup "$version"
 
 ln -sf ../selinux/config /etc/sysconfig/selinux
 printf "SELINUX=enforcing\nSELINUXTYPE=targeted\n" > /etc/selinux/config
