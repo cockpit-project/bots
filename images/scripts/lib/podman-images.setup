@@ -1,0 +1,15 @@
+#!/bin/bash
+set -eux
+
+# Fedora version
+version="$1"
+
+# for containers.install and cockpit's container/* tests
+podman build --tag cockpit/base --build-arg VERSION=$version /var/tmp/cockpit-base
+
+if [ $(uname -m) = x86_64 ]; then
+    # images for testing cockpit-podman
+    podman pull quay.io/libpod/busybox
+    podman pull quay.io/libpod/alpine
+    podman pull quay.io/cockpit/registry:2
+fi
