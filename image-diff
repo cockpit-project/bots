@@ -1,0 +1,74 @@
+#!/usr/bin/python3
+
+# This file is part of Cockpit.
+#
+# Copyright (C) 2020 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+
+from machine import testvm
+
+
+def get_packages(machine):
+    # List all packages, irrespective of package manager (rpm or dpkg).
+    # If both are missing, then the command will fail.
+    #
+    # We'd ideally like to get source packages everywhere, but it's a
+    # bit more difficult on RPM. (TODO)
+    pkgcmd = """dpkg-query -W -f='${source:Package}\t${version}\n' 2>/dev/null ||
+                rpm -qa --qf '%{NAME}\t%{EVR}\n' 2>/dev/null"""
+
+    output = machine.execute(pkgcmd)
+
+    return dict(line.split('\t') for line in output.splitlines())
+
+
+parser = argparse.ArgumentParser(description='Compare package versions on VM images')
+parser.add_argument('old', help='the "old" image to compare')
+parser.add_argument('new', help='the "new" image to compare')
+args = parser.parse_args()
+
+# boot the machines in parallel
+old_vm = testvm.VirtMachine(image=args.old)
+new_vm = testvm.VirtMachine(image=args.new)
+
+old_vm.start()
+new_vm.start()
+
+old_vm.wait_boot()
+new_vm.wait_boot()
+
+old_pkgs = get_packages(old_vm)
+new_pkgs = get_packages(new_vm)
+
+old_vm.kill()
+new_vm.kill()
+
+print('Removed:')
+for name in sorted(set(old_pkgs) - set(new_pkgs)):
+    print(f'  {name} ({old_pkgs[name]})')
+print()
+
+print('Added:')
+for name in sorted(set(new_pkgs) - set(old_pkgs)):
+    print(f'  {name} ({new_pkgs[name]})')
+print()
+
+print('Changed:')
+for name in sorted(set.intersection(set(new_pkgs), set(old_pkgs))):
+    if new_pkgs[name] != old_pkgs[name]:
+        print(f'  {name} ({old_pkgs[name]} -> {new_pkgs[name]})')
+print()
