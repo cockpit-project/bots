@@ -236,3 +236,9 @@ def tests_for_image(image):
             break
 
     return list(tests)
+
+
+def tests_for_po_refresh(project):
+    if project == "cockpit-project/cockpit":
+        return [TEST_OS_DEFAULT]
+    return REPO_BRANCH_CONTEXT.get(project, {}).get("master", [])

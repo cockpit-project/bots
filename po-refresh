@@ -26,6 +26,7 @@ import sys
 sys.dont_write_bytecode = True
 
 import task
+from task import github, testmap
 from machine.machine_core.constants import BASE_DIR
 
 
@@ -168,19 +169,28 @@ def run(context, verbose=False, **kwargs):
             else:
                 execute("git", "checkout", "--", name)
 
-    # Create a pull request from these changes
     branch = task.branch(context, "po: Update from Fedora Weblate", pathspec="po/",
                          branch=local_branch, **kwargs)
 
-    if branch:
-        task.pull(branch, **kwargs)
-    elif local_branch:
+    if local_branch and not branch:  # We only introduced/dropped language but otherwise no updates
         if kwargs["issue"]:
             clean = "https://github.com/{0}".format(task.find_our_fork(user))
             task.comment_done(kwargs["issue"], "po-refresh", clean, local_branch, context)
 
         task.push_branch(user, local_branch)
-        task.pull("{0}:{1}".format(user, local_branch), **kwargs)
+        branch = "{0}:{1}".format(user, local_branch)
+
+    # Create a pull request from these changes
+    pull = task.pull(branch, labels=['bot', 'no-test'], run_tests=False, **kwargs)
+
+    # Trigger this pull request
+    api = github.GitHub()
+    head = pull["head"]["sha"]
+
+    triggers = testmap.tests_for_po_refresh(api.repo)
+    for trigger in triggers:
+        api.post("statuses/{0}".format(head), {"state": "pending", "context": trigger,
+                                               "description": github.NOT_TESTED_DIRECT})
 
 
 if __name__ == '__main__':
