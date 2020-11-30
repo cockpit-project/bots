@@ -16,6 +16,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Log into quay
+        run: docker login -u="${{ secrets.QUAY_BOTUSER }}" -p="${{ secrets.QUAY_TOKEN }}" quay.io
+
+      - name: Synchronize container image mirror
+        run: ./sync-quay
+
       - name: Trigger image refreshes
         run: ./image-trigger
 
