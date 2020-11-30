@@ -1,0 +1,13 @@
+#! /bin/bash
+
+set -xe
+
+function sync() {
+    skopeo copy "docker://docker.io/$1/$2" "docker://quay.io/cockpit/$1-$2"
+}
+
+sync freeipa freeipa-server:fedora-rawhide
+sync nowsci samba-domain
+sync selenium hub:3
+sync selenium node-chrome-debug:3
+sync selenium node-firefox-debug:3
