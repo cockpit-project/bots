@@ -16,6 +16,11 @@ hostnamectl set-hostname services.cockpit.lan
 systemctl disable firewalld kdump crond
 systemctl enable --now docker
 
+function docker_pull() {
+    # we get images from quay to work around dockerhub rate limits
+    docker pull "quay.io/cockpit/$1-$2" && docker tag "quay.io/cockpit/$1-$2" "docker.io/$1/$2"
+}
+
 #############
 #
 # FreeIPA setup
@@ -28,7 +33,7 @@ rm /usr/libexec/oci/hooks.d/oci-systemd-hook
 # see https://hub.docker.com/r/freeipa/freeipa-server
 # and https://github.com/freeipa/freeipa-container/issues/346
 # there is no :latest so we go with :fedora-rawhide
-docker pull freeipa/freeipa-server:fedora-rawhide
+docker_pull freeipa freeipa-server:fedora-rawhide
 setsebool -P container_manage_cgroup 1
 mkdir /var/lib/ipa-data
 
@@ -76,7 +81,7 @@ poweroff
 #############
 
 # See https://hub.docker.com/r/nowsci/samba-domain
-docker pull docker.io/nowsci/samba-domain
+docker_pull nowsci samba-domain
 mkdir -p /var/lib/samba-data/config /var/lib/samba-data/data
 
 # "foobarfoo" password is not accepted:
@@ -176,9 +181,9 @@ rm -rf playbookdir
 #############################
 
 # docker images that we need for integration testing
-docker pull selenium/hub:3
-docker pull selenium/node-chrome-debug:3
-docker pull selenium/node-firefox-debug:3
+docker_pull selenium hub:3
+docker_pull selenium node-chrome-debug:3
+docker_pull selenium node-firefox-debug:3
 
 
 #############################
