@@ -4,7 +4,7 @@ set -eux
 # install/upgrade RPMs that apply to Fedora CoreOS
 # Note: cockpit-selinux would be desirable, but needs setroubleshoot-server which isn't installed
 cd /var/tmp/build-results/
-rpm-ostree install cockpit-bridge-*.rpm cockpit-dashboard-*.rpm \
+rpm-ostree install cockpit-bridge-*.rpm \
     cockpit-networkmanager-*.rpm cockpit-system-*.rpm cockpit-tests-*.rpm
 
 # update cockpit-ws and install scripts in the container
@@ -12,7 +12,7 @@ podman run --name build-cockpit -i \
     -v /var/tmp/build-results:/run/build-results:Z \
     -v /var/tmp/containers:/run/containers:Z \
     cockpit/ws sh -exc '
-rpm --freshen --verbose /run/build-results/cockpit-ws-*.rpm /run/build-results/cockpit-bridge-*.rpm /run/build-results/cockpit-dashboard-*.rpm
+rpm --freshen --verbose /run/build-results/cockpit-ws-*.rpm /run/build-results/cockpit-bridge-*.rpm
 cp /run/containers/ws/atomic-* /container/
 '
 podman commit build-cockpit cockpit/ws
