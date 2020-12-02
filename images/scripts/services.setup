@@ -17,7 +17,7 @@ systemctl disable firewalld kdump crond
 systemctl enable --now docker
 
 function docker_pull() {
-    # we get images from quay to work around dockerhub rate limits
+    # we get images from our mirror on quay to work around dockerhub rate limits, see sync-quay
     docker pull "quay.io/cockpit/$1-$2" && docker tag "quay.io/cockpit/$1-$2" "docker.io/$1/$2"
 }
 
@@ -33,7 +33,7 @@ rm /usr/libexec/oci/hooks.d/oci-systemd-hook
 # see https://hub.docker.com/r/freeipa/freeipa-server
 # and https://github.com/freeipa/freeipa-container/issues/346
 # there is no :latest so we go with :fedora-rawhide
-docker_pull freeipa freeipa-server:fedora-rawhide
+docker pull quay.io/freeipa/freeipa-server:fedora-rawhide
 setsebool -P container_manage_cgroup 1
 mkdir /var/lib/ipa-data
 
