@@ -86,10 +86,11 @@ REPO_BRANCH_CONTEXT = {
             'fedora-33',
             'debian-testing',
         ],
-        'rhel8': [
-            'rhel-8-3',
-        ],
         '_manual': [
+            # See https://github.com/cockpit-project/cockpit-podman/pull/617
+            # for progress on getting cockpit-podman master green on
+            # rhel-8-3 and rhel-8-4.  Once that has happened, we can
+            # include rhel-8-3 and rhel-8-4 in the automated master tests.
             'rhel-8-3',
             'rhel-8-4',
             'centos-8-stream',
