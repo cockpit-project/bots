@@ -90,6 +90,8 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-3',
         ],
         '_manual': [
+            'rhel-8-3',
+            'rhel-8-4',
             'centos-8-stream',
             # runs in Travis
             'ubuntu-stable',
