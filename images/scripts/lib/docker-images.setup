@@ -18,9 +18,16 @@ set -ex
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+function pull_and_tag() {
+    # We get images from quay to work around dockerhub rate limits but
+    # we give them the name they have on dockerhub so that we
+    # don't have to change any code that references them.
+    docker pull "quay.io/$1" && docker tag "quay.io/$1" "docker.io/$2" && docker rmi "quay.io/$1"
+}
+
 if [ $(uname -m) = x86_64 ]; then
-    docker pull busybox:latest
-    docker pull busybox:buildroot-2014.02
+    pull_and_tag libpod/busybox:latest library/busybox:latest
+    pull_and_tag libpod/busybox:glibc library/busybox:buildroot-2014.02
     docker pull gcr.io/google_containers/pause:0.8.0
     docker pull k8s.gcr.io/pause-amd64:3.1
     # some aliases for different k8s variants
