@@ -35,6 +35,9 @@ os.environ["GITHUB_BASE"] = "project/repo"
 
 
 DATA = {
+    "/repos/project/repo": {
+        "default_branch": "main"
+    },
     "/repos/project/repo/issues/3333": {
         "title": "The issue title"
     },
