@@ -45,6 +45,7 @@ __all__ = (
     "verbose",
     "stale",
     "redhat_network",
+    "default_branch",
     "PUBLIC_STORES",
     "REDHAT_STORES",
 )
@@ -440,13 +441,13 @@ def branch(context, message, pathspec=".", issue=None, branch=None, push=True, *
     return "{0}:{1}".format(user, branch)
 
 
-def pull(branch, body=None, issue=None, base="master", labels=['bot'], run_tests=True, **kwargs):
+def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=True, **kwargs):
     if "pull" in kwargs:
         return kwargs["pull"]
 
     data = {
         "head": branch,
-        "base": base,
+        "base": default_branch() if base is None else base,
         "maintainer_can_modify": True
     }
     if issue:
@@ -558,3 +559,12 @@ def redhat_network():
 
 
 redhat_network.result = None
+
+
+def default_branch():
+    '''Returns the default branch of a repository
+
+    The default branch should be used as a default base.
+    '''
+
+    return api.get()["default_branch"]

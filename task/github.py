@@ -169,14 +169,16 @@ class GitHub(object):
         if not self._url:
             if not self._base:
                 netloc = os.environ.get("GITHUB_API", "https://api.github.com")
-                self._base = "{0}/repos/{1}/".format(netloc, self.repo)
+                self._base = "{0}/repos/{1}".format(netloc, self.repo)
 
             self._url = urllib.parse.urlparse(self._base)
 
         return self._url
 
     def qualify(self, resource):
-        return urllib.parse.urljoin(self.url.path, resource)
+        if resource is None:
+            return self.url.path
+        return urllib.parse.urljoin("{0}/".format(self.url.path), resource)
 
     def request(self, method, resource, data="", headers=None):
         if headers is None:
@@ -236,7 +238,7 @@ class GitHub(object):
             "data": response.read().decode('utf-8')
         }
 
-    def get(self, resource):
+    def get(self, resource=None):
         headers = {}
         qualified = self.qualify(resource)
         cached = self.cache.read(qualified)
