@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/usr/lib64/python3.9/unittest/case.py", line *, in _callTestMethod
+    method()
+  File "test/verify/check-kdump", line *, in testBasic
+    m.wait_boot(timeout_sec=300)
+  File "ssh_connection.py", line *, in wait_boot
+    raise exceptions.Failure("Unable to reach machine {0} via ssh: {1}:{2}".format(
