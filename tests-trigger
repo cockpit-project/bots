@@ -30,6 +30,8 @@ def trigger_pull(api, opts):
             if cntx.startswith("image:"):
                 contexts.update(testmap.tests_for_image(cntx.split(':', 1)[1]))
             elif github.known_context(cntx):
+                if opts.bots_pr:
+                    cntx += "@bots#" + opts.bots_pr
                 contexts.add(cntx)
             else:
                 sys.stderr.write("ignoring unknown context {0}\n".format(cntx))
@@ -75,6 +77,7 @@ def main():
     parser.add_argument('--requeue', action="store_true",
                         help='Re-queue pending test requests (workaround for occasionally ignored webhook events)')
     parser.add_argument('--repo', help="The repository to trigger the robots in", default=None)
+    parser.add_argument('--bots-pr', help="Use the bots code from this PR instead of master")
     parser.add_argument('pull', help='The pull request to trigger')
     parser.add_argument('context', nargs='*', help='The github task context(s) to trigger; can also be '
                                                    '"image:<imagename>" to trigger all tests related to that image')
