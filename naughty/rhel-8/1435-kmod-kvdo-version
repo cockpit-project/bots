@@ -1,3 +1,3 @@
 *__main__.TestStorageVDO*
 *
-*vdo: ERROR - modprobe: FATAL: Module kvdo not found in directory /lib/modules/4.18.0-255.el8.x86_64*
+*vdo: ERROR - modprobe: FATAL: Module kvdo not found in directory /lib/modules/4.18.0-25*.el8.x86_64*
