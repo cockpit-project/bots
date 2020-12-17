@@ -90,6 +90,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-33/rawhide',
             # runs in Travis
             'ubuntu-stable',
         ],
