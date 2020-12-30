@@ -34,9 +34,9 @@
         "mode": 420
       },
       {
-        "path": "/etc/NetworkManager/system-connections/eth1.nmconnection",
+        "path": "/etc/NetworkManager/system-connections/mcast1.nmconnection",
         "contents": {
-          "source": "data:,%5Bconnection%5D%0Aid%3Deth1%0Atype%3Dethernet%0Ainterface-name%3Deth1%0A%0A%5Bipv4%5D%0Amethod%3Ddisabled%0A%0A%5Bipv6%5D%0Amethod%3Dignore%0A"
+          "source": "data:,%5Bconnection%5D%0Aid%3Dmcast1%0Atype%3Dethernet%0Ainterface-name%3Dens15%0A%0A%5Bipv4%5D%0Amethod%3Ddisabled%0A%0A%5Bipv6%5D%0Amethod%3Dignore%0A"
         },
         "mode": 384
       }

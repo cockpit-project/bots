@@ -30,16 +30,16 @@ storage:
           # Enable it.
           # This file must sort before 04-disable-passwords.conf.
           PasswordAuthentication yes
-    # don't hang/fail on non-existing DHCP on eth1 on boot
+    # don't hang/fail on non-existing DHCP on ens15 (second interface for mcast) on boot
     # similar to images/scripts/network-ifcfg-eth1 for Fedora/RHEL images
-    - path: /etc/NetworkManager/system-connections/eth1.nmconnection
+    - path: /etc/NetworkManager/system-connections/mcast1.nmconnection
       mode: 0600
       contents:
         inline: |
           [connection]
-          id=eth1
+          id=mcast1
           type=ethernet
-          interface-name=eth1
+          interface-name=ens15
 
           [ipv4]
           method=disabled
