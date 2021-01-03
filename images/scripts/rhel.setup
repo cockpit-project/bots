@@ -346,7 +346,7 @@ EOF
 
         # build mock for CentOS stream repo
         ln -sf centos-stream-x86_64.cfg /etc/mock/default.cfg
-    elif [ "$IMAGE" = "centos-7" ]; then
+    else  # rhel-7-9, centos-7
         # enable epel for mock
         if [ ! -f "$SKIP_REPO_FLAG" ]; then
             mkdir /tmp/dep
