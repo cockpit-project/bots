@@ -460,13 +460,7 @@ def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=Tru
         if body:
             data["body"] = body
 
-    pull = api.post("pulls", data, accept=[422])
-
-    # If we were refused to grant maintainer_can_modify, then try without
-    if "errors" in pull:
-        if pull["errors"][0]["field"] == "fork_collab":
-            data["maintainer_can_modify"] = False
-        pull = api.post("pulls", data)
+    pull = api.post("pulls", data)
 
     # Update the pull request
     label(pull, labels)
