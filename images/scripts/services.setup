@@ -14,7 +14,8 @@ nmcli con add con-name "static-eth1" ifname eth1 type ethernet ip4 "$SERVER_IP/2
 nmcli con up "static-eth1"
 hostnamectl set-hostname services.cockpit.lan
 
-systemctl disable firewalld kdump crond
+systemctl disable firewalld || true
+systemctl disable kdump crond
 systemctl enable --now docker
 
 function docker_pull() {
@@ -151,7 +152,7 @@ cat > inventory <<- EOF
 localhost
 EOF
 
-useradd -m admin
+getent passwd admin >/dev/null || useradd -m admin
 echo admin:foobar | chpasswd
 echo 'admin ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/admin
 
