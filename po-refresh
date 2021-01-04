@@ -180,6 +180,10 @@ def run(context, verbose=False, **kwargs):
         task.push_branch(user, local_branch)
         branch = "{0}:{1}".format(user, local_branch)
 
+    if not branch:
+        # Nothing to update
+        return
+
     # Create a pull request from these changes
     pull = task.pull(branch, labels=['bot', 'no-test', 'release-blocker'], run_tests=False, **kwargs)
 
