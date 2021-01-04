@@ -1,4 +1,2 @@
 #! /bin/bash
-
-BASE=$(dirname $0)
-$BASE/virt-install-fedora "$1" x86_64 "http://mirror.centos.org/centos/7/os/x86_64/"
+exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2.xz"

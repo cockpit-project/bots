@@ -9,5 +9,9 @@ image_url="$2"
 image=tmp/$(basename $image_url)
 mkdir -p $(dirname $image)
 [ -f "$image" ] || curl -L -o "$image" "$image_url"
-cp "$image" "$out"
+if [ "${image%.xz}" != "${image}" ]; then
+    xz -cd "$image" > "$out"
+else
+    cp "$image" "$out"
+fi
 qemu-img resize -f qcow2 "$out" +8G
