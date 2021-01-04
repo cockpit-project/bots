@@ -6,7 +6,8 @@ YUM_INSTALL="yum --setopt=skip_missing_names_on_install=False -y install"
 SERVER_IP=10.111.112.100
 
 yum -y upgrade
-$YUM_INSTALL docker
+$YUM_INSTALL docker NetworkManager
+systemctl start NetworkManager
 
 # static host name and IP so that peer VMs can find us
 nmcli con add con-name "static-eth1" ifname eth1 type ethernet ip4 "$SERVER_IP/20" ipv4.dns "$SERVER_IP" gw4 "10.111.112.1"
