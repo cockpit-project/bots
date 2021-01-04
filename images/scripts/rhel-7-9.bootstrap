@@ -2,5 +2,7 @@
 
 set -ex
 
-BASE=$(dirname $0)
-$BASE/virt-install-fedora "$1" x86_64 "http://download.devel.redhat.com/rhel-7/nightly/updates/RHEL-7/latest-RHEL-7.9/compose/Server/x86_64/os"
+URL=http://download.devel.redhat.com/rhel-7/nightly/updates/RHEL-7/latest-RHEL-7.9/compose/Server/x86_64/images/
+IMAGE=$(curl -L -s "$URL" | sed -n '/<a href=.*rhel-guest-image.*qcow2"/ { s/^.*href="//; s_".*$__; p }')
+
+exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL/$IMAGE"
