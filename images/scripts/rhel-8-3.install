@@ -7,3 +7,14 @@ set -e
 rpm --erase --nodeps --verbose cockpit cockpit-ws cockpit-bridge cockpit-system
 
 /var/lib/testvm/fedora.install --rhel "$@"
+
+# authselect changed the default pam_pwquality config; our tests assume retry > 1, so change it back
+# TODO: Move that into the cockpit test
+sed -i '/password.*requisite.*pam_pwquality/ s/$/ retry=3/' /etc/pam.d/password-auth
+
+# Enable subscription-manager (disabled by default on cloud images)
+# TODO: Move that into the cockpit test
+sed -i '/enabled/ s/0/1/' /etc/yum/pluginconf.d/subscription-manager.conf
+
+# HACK: missing /etc/crypttab file upsets storage page: https://github.com/cockpit-project/cockpit/issues/15100
+touch /etc/crypttab
