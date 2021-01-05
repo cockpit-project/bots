@@ -7,3 +7,6 @@ set -e
 rpm --erase --nodeps --verbose cockpit cockpit-ws cockpit-bridge cockpit-system
 
 /var/lib/testvm/fedora.install --rhel "$@"
+
+# HACK: missing /etc/crypttab file upsets storage page: https://github.com/cockpit-project/cockpit/issues/15100
+touch /etc/crypttab
