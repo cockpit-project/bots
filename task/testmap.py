@@ -136,12 +136,14 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'rhel-8-3',
         ],
     },
     'candlepin/subscription-manager': {
         'master': [
             'rhel-8-3',
+        ],
+        '_manual': [
+            'rhel-8-4',
         ],
     },
     'skobyda/cockpit-certificates': {
@@ -150,7 +152,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-33',
         ],
         '_manual': [
-            'rhel-8-3',
+            'rhel-8-4',
             'centos-8-stream',
         ]
     },
