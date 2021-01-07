@@ -87,12 +87,11 @@ REPO_BRANCH_CONTEXT = {
             'fedora-32/rawhide',
             'fedora-33',
             'debian-testing',
+            'ubuntu-stable',
         ],
         '_manual': [
             'centos-8-stream',
             'fedora-33/rawhide',
-            # runs in Travis
-            'ubuntu-stable',
         ],
     },
     'weldr/lorax': {
