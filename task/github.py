@@ -91,7 +91,7 @@ class GitHubError(RuntimeError):
 
     def __init__(self, url, response):
         self.url = url
-        self.data = response.get('data')
+        self.data = response.get('data', "")
         self.status = response.get('status')
         self.reason = response.get('reason')
 
