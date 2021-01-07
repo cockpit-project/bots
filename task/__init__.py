@@ -460,7 +460,15 @@ def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=Tru
         if body:
             data["body"] = body
 
-    pull = api.post("pulls", data)
+    try:
+        pull = api.post("pulls", data)
+    except RuntimeError as e:
+        # If we were refused to grant maintainer_can_modify, then try without
+        if "fork_collab" in e.data:
+            data["maintainer_can_modify"] = False
+            pull = api.post("pulls", data)
+        else:
+            raise e
 
     # Update the pull request
     label(pull, labels)
