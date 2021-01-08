@@ -83,14 +83,13 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-3',
             'rhel-8-4',
             'fedora-32',
-            'fedora-32/rawhide',
             'fedora-33',
+            'fedora-33/rawhide',
             'debian-testing',
             'ubuntu-stable',
         ],
         '_manual': [
             'centos-8-stream',
-            'fedora-33/rawhide',
         ],
     },
     'weldr/lorax': {
