@@ -1,1 +1,0 @@
-starting container process caused "error adding seccomp rule for syscall socket: permission denied": OCI permission denied
