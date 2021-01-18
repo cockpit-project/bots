@@ -4,5 +4,5 @@ set -e
 
 /var/lib/testvm/fedora.install --rhel "$@"
 
-# HACK: missing /etc/crypttab file upsets storage page: https://github.com/cockpit-project/cockpit/issues/15100
+# HACK: missing /etc/crypttab file upsets udisks: https://github.com/storaged-project/udisks/pull/835
 touch /etc/crypttab

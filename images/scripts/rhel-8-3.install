@@ -16,5 +16,5 @@ sed -i '/password.*requisite.*pam_pwquality/ s/$/ retry=3/' /etc/pam.d/password-
 # TODO: Move that into the cockpit test
 sed -i '/enabled/ s/0/1/' /etc/yum/pluginconf.d/subscription-manager.conf
 
-# HACK: missing /etc/crypttab file upsets storage page: https://github.com/cockpit-project/cockpit/issues/15100
+# HACK: missing /etc/crypttab file upsets udisks: https://github.com/storaged-project/udisks/pull/835
 touch /etc/crypttab
