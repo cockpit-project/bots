@@ -5,7 +5,4 @@ set -e
 # remove cockpit distro packages, testing with upstream master
 rpm --erase --verbose cockpit cockpit-ws cockpit-bridge cockpit-system
 
-# authselect changed the default pam_pwquality config; our tests assume retry > 1, so change it back
-sed -i '/password.*requisite.*pam_pwquality/ s/$/ retry=3/' /etc/pam.d/password-auth
-
 /var/lib/testvm/fedora.install "$@"
