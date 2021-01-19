@@ -17,12 +17,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import sys
 import time
 import sqlite3
 import argparse
 import logging
 import json
+from collections import Counter
 
 # Seconds in two weeks
 TWO_WEEKS = 1209600
@@ -99,6 +101,34 @@ def main():
 
     # Sort tables
     all_tables = sorted(all_tables, key=lambda x: x["data"][0][1], reverse=True)
+
+    # Select unexpected messages
+    messages = cursor.execute("""\
+            SELECT retry_reason, TestRuns.url
+            FROM Failures
+            JOIN TestRuns ON Failures.run = TestRuns.id
+            WHERE TestRuns.time > ? AND
+                retry_reason IS NOT null AND
+                retry_reason IS NOT 'be robust against unstable tests' AND
+                retry_reason IS NOT 'due to failure of test harness or framework';""", (since,)).fetchall()
+
+    messages = [m for m in messages if m[0] is not None]
+    # Replace any numbers > 100 with 0 (usually time stamps or PIDs)
+    messages = [(re.sub(r'\d\d[\d\.]+', '0', m[0]), m[1]) for m in messages]
+
+    # Replace any partial paths like dracut.xf8hG with dracut.xxx
+    messages = [(re.sub(r'(/[^/ \t]{3,}\.)[^/ \t]+', r'\1xxx', m[0]), m[1]) for m in messages]
+
+    data = []
+    for c in Counter([m[0] for m in messages]).most_common():
+        if (c[1] > 1):  # Don't show message that happened just once
+            logs = [m[1] for m in messages if m[0] == c[0]][:2]
+            data.append([c[0], c[1], logs])
+
+    if data:
+        all_tables.insert(0, {"name": "Unexpected messages",
+                              "columns": ["Message", "Count", "Logs"],
+                              "data": data})
 
     print("const tables = {0};".format(json.dumps(all_tables)))
 
