@@ -138,6 +138,11 @@ def find_failed_tests(fp):
             save_message = False
             continue
 
+        # If the issue is known, don't save unexpected messages
+        if line.startswith("ok ") and "SKIP Known issue" in line:
+            save_message = False
+            last_msg = ""
+
         if "FAIL: Test completed, but found unexpected" in line and "raise" not in line:
             save_message = True
 
