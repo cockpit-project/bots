@@ -33,7 +33,7 @@ from .constants import TEST_DIR, BOTS_DIR
 
 sys.path.insert(1, BOTS_DIR)
 
-MEMORY_MB = 1152
+MEMORY_MB = 2048
 
 
 # based on http://stackoverflow.com/a/17753573
