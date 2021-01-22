@@ -26,13 +26,15 @@ import logging
 import json
 from collections import Counter
 
-# Seconds in two weeks
-TWO_WEEKS = 1209600
+# Seconds in a day
+DAY = 86400
 
 
 def main():
     parser = argparse.ArgumentParser(description='Generate statistics about failed tests')
     parser.add_argument("--db", default="cockpit-failures.db", help="Database name")
+    parser.add_argument("--days", default=14, type=int,
+                        help="Number of days to take statistics from. Default is %(default)s.")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     opts = parser.parse_args()
 
@@ -43,7 +45,7 @@ def main():
     cursor = db_conn.cursor()
 
     all_tables = []
-    since = time.time() - TWO_WEEKS
+    since = time.time() - opts.days * DAY
 
     # Get all failures sorted by number of occurrences
     top10 = []
