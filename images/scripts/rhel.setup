@@ -306,6 +306,12 @@ else
     dnf --setopt=install_weak_deps=False install -y cockpit
 fi
 
+# HACK: 8.4 has broken NTP
+# https://bugzilla.redhat.com/show_bug.cgi?id=1918340
+if [ "$IMAGE" = "rhel-8-4" ]; then
+    dnf install -y timedatex
+fi
+
 # For debugging udisks/storaged crashes
 debuginfo-install -y udisks2
 
