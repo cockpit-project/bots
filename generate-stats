@@ -69,6 +69,9 @@ def main():
             links.append(urls[1][0])
         top10.append([row[0], row[1], links])
 
+    if not top10:
+        top10.append(["No failures in the last {0} days".format(opts.days), 0, []])
+
     all_tables.append({"name": "Top failures", "columns": ["Test name", "Count", "Logs"], "data": top10})
 
     # Get failures by OS
