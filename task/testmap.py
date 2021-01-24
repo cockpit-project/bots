@@ -108,7 +108,16 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-9/openstack',
             'rhel-7-9/vmware',
             'rhel-7-9/tar',
-            'rhel-8-3/osbuild-composer',
+            'rhel-8-4',
+            'rhel-8-4/live-iso',
+            'rhel-8-4/qcow2',
+            'rhel-8-4/aws',
+            'rhel-8-4/azure',
+            'rhel-8-4/openstack',
+            'rhel-8-4/vmware',
+            'rhel-8-4/tar',
+            'rhel-8-4/ci',
+            'rhel-8-4/osbuild-composer',
             'centos-8-stream',
         ],
     },
@@ -125,6 +134,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'rhel-8-4/firefox',
         ],
     },
     'candlepin/subscription-manager': {
