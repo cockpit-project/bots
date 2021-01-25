@@ -313,6 +313,18 @@ class GitHub(object):
                 count = len(data["statuses"])
         return result
 
+    def all_statuses(self, revision):
+        result = []
+        page = 1
+        count = 100
+        while count == 100:
+            data = self.get("statuses/{0}?page={1}&per_page={2}".format(revision, page, count))
+            count = 0
+            page += 1
+            result += data
+            count = len(data)
+        return result
+
     def pulls(self, state='open', since=None):
         result = []
         page = 1
