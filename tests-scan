@@ -386,7 +386,8 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                 project = "/".join(repo_branch[:2])
                 branch = repo_branch[2]
 
-            ref = "pull/%d/head" % number
+            # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
+            ref = revision
 
             # For unmarked and untested status, user must be allowed
             # Not this only applies to this specific commit. A new status
@@ -410,7 +411,9 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                     bots_ref = None if repo == project else ref
                 else:
                     if bots_pr:
-                        bots_ref = "pull/%d/head" % bots_pr
+                        # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
+                        bots_api = github.GitHub(repo="cockpit-project/bots")
+                        bots_ref = bots_api.getHead(bots_pr) or "xxx"  # Make sure we fail when cannot get the head
                     else:
                         bots_ref = "master"
 

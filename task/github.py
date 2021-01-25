@@ -371,6 +371,12 @@ class GitHub(object):
                 yield commit
                 count += 1
 
+    def getHead(self, pr):
+        pull = self.get("pulls/{0}".format(pr))
+        if pull:
+            return pull.get("head", {}).get("sha")
+        return None
+
     def allowlist(self):
         # bots and organizations which are allowed to use our CI (these use branches within the main repo for PRs)
         users = {"github-actions[bot]", "candlepin", "cockpit-project"}

@@ -74,7 +74,7 @@ def get_refs(open_pull_requests=True, offline=False):
             if images:
                 sha = p["head"]["sha"]
                 considerable[sha] = images
-                subprocess.call(["git", "fetch", "origin", "pull/{0}/head".format(p["number"])])
+                subprocess.call(["git", "fetch", "origin", "{0}".format(sha)])
                 refs["pull request #{} ({})".format(p["number"], p["title"])] = sha
 
     git_cmd = "show-ref" if offline else "ls-remote"
