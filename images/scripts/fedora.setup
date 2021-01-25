@@ -47,6 +47,7 @@ openssl \
 PackageKit \
 pcp \
 pcp-libs \
+python3-tracer \
 qemu-system-x86-core \
 realmd \
 selinux-policy-targeted \
