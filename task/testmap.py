@@ -140,9 +140,9 @@ REPO_BRANCH_CONTEXT = {
     'candlepin/subscription-manager': {
         'master': [
             'rhel-8-3',
+            'rhel-8-4',
         ],
         '_manual': [
-            'rhel-8-4',
         ],
     },
     'skobyda/cockpit-certificates': {
