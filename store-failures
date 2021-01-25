@@ -32,6 +32,8 @@ from task import github, CA_PEM
 # regexp for retry reason in a "not ok" line
 re_retry = re.compile(r"# RETRY .* \(([^)]+)\)")
 
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
+
 
 def main():
     parser = argparse.ArgumentParser(description='Store information about failed tests')
@@ -52,46 +54,86 @@ def main():
     init_db(cursor)
 
     api = github.GitHub(repo=opts.repo)
-    statuses = api.statuses(opts.revision)
+    statuses = api.all_statuses(opts.revision)
     if not statuses:
         logging.warning("Revision %s has no statuses", opts.revision)
         return 0
 
-    for status in statuses:
-        run_id = None
+    contexts = {}
+
+    # Read the "status story"
+    # First we get 'Not yet tested' or 'Not yet tested (direct trigger)'
+    # Then when it is picked up we get "Testing in progress" and finally it is either red or green
+    # Putting it all together can give us data like number of retries, how long it waited to get
+    # testes, how long testing took...
+    # Create map from 'context' to array of 'testrun's where each is a map containing: (order in the
+    # array indicates retries, the first is original run, the second is the first retry...)
+    # 'repo', 'url', 'state', 'description'
+    # 'started' - when this run was picked by bot
+    # 'posted' - when this run was triggered
+    # 'finished' - when this run finished - 'state' is then either 'success', 'failure' or 'error'
+    for status in reversed(statuses):
         repo = api.repo
-        context = status
-        url = statuses[status]["target_url"]
-        if "@" in status:
-            parts = status.split("@")
+        context = status["context"]
+        if "@" in context:
+            parts = context.split("@")
             context = parts[0]
             if not parts[1].startswith("bots"):
                 # Can contain branch, as it diffs between master and branches (e.g `cockpit-project/cockpit/rhel-7.9`)
                 repo = parts[1]
 
-        row = cursor.execute("SELECT id FROM TestRuns WHERE url = ?", (url, )).fetchone()
-        if row is not None:
-            logging.warning("Test run %s already exists as ID %i, skipping", url, row[0])
-            continue
+        cc = contexts.setdefault(context, [])
 
-        raw_log = url[:-5] if url.endswith(".html") else url
-        logging.debug("scanning log %s", raw_log)
+        desc = status["description"]
+        if status["state"] == "pending":
+            if "Testing in progress" in desc:
+                cc[-1]["url"] = status["target_url"]
+                cc[-1]["started"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()
+            elif "Not yet tested" in desc:
+                new_run = {"posted": datetime.strptime(status["created_at"], DATE_FORMAT).timestamp(), "repo": repo}
+                cc.append(new_run)
+            else:
+                logging.warning("Pending status has unexpected description '{0}', skipping.".format(desc))
+        elif status["state"] in ["success", "failure", "error"]:
+            cc[-1]["finished"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()
+            cc[-1]["state"] = status["state"]
+            if status["state"] == "error":
+                cc[-1]["description"] = desc
+        else:
+            logging.warning("Status has unexpected state '{0}', skipping.".format(status["state"]))
 
-        # Parse time from log file name. Wrap in try/except block if the url would be unexpected
-        try:
-            parts = url.split("/")[-2].split("-")
-            day = parts[2]
-            hours = parts[3]
-            dtime = datetime.strptime("{0} {1}".format(day, hours), "%Y%m%d %H%M%S")
-            time = datetime.timestamp(dtime)
-        except IndexError:
-            time = datetime.timestamp(datetime.now())
+    for context, statuses in contexts.items():
+        for retry, status in enumerate(statuses):
+            if not status.get("finished"):
+                # TODO: Store partial, store as non-finished?
+                logging.debug("Test hasn't finished, skipping")
+                continue
 
-        with urllib.request.urlopen(raw_log, context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
-            for (testname, retry_reason) in find_failed_tests(fp):
-                if run_id is None:
-                    run_id = insert_run(cursor, repo, opts.revision, context, url, time)
-                insert_failure(cursor, run_id, testname, retry_reason)
+            url = status["url"]
+            waited = status["started"] - status["posted"]
+            took = status["finished"] - status["started"]
+            logging.debug("Processing {0}{1} as {2} that waited {3}s and took {4}s in {5}. {6}".format(
+                context,
+                "(retry no." + str(retry) + ")" if retry else "",
+                status["state"] + (" (" + status["description"] + ")" if status.get("description") else ""),
+                waited, took, status["repo"], url
+            ))
+
+            row = cursor.execute("SELECT id FROM TestRuns WHERE url = ?", (url, )).fetchone()
+            if row is not None:
+                logging.warning("Test run %s already exists as ID %i, skipping", url, row[0])
+                continue
+
+            run_id = insert_run(cursor, status["repo"], opts.revision, context, url,
+                                status["posted"], retry, waited, took, status["state"],
+                                status.get("description"))
+
+            raw_log = url[:-5] if url.endswith(".html") else url
+            logging.debug("scanning log %s", raw_log)
+
+            with urllib.request.urlopen(raw_log, context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
+                for (testname, retry_reason) in find_failed_tests(fp):
+                    insert_failure(cursor, run_id, testname, retry_reason)
 
     db_conn.commit()
     db_conn.close()
@@ -105,6 +147,11 @@ def init_db(cursor):
                      context TEXT,
                      url TEXT,
                      time TIMESTAMP,
+                     retry INTEGER,
+                     wait_seconds INTEGER,
+                     run_seconds INTEGER,
+                     state TEXT,
+                     description TEXT,
                      UNIQUE (url))
                    """)
     cursor.execute("""CREATE TABLE if not exists Failures
@@ -115,9 +162,9 @@ def init_db(cursor):
                    """)
 
 
-def insert_run(cursor, project, revision, context, url, time):
-    return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?, ?, ?)",
-                          (project, revision, context, url, time)).lastrowid
+def insert_run(cursor, project, revision, context, url, time, retry, waited, took, state, desc):
+    return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                          (project, revision, context, url, time, retry, waited, took, state, desc)).lastrowid
 
 
 def insert_failure(cursor, run_id, testname, retry_reason):
