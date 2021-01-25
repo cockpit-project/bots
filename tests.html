@@ -1,0 +1,231 @@
+<meta charset="utf8" />
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.2.1/dist/sql-wasm.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+</head>
+<html>
+    <body>
+        <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
+            <div>
+                <h4 class="my-0 mr-md-auto font-weight-normal">CI Weather Report</h4>
+                <small>Brought to you by <b>MM</b></small>
+            </div>
+        </div>
+        <div class="container-fluid px-5">
+            <div class="row">
+                <div class="col-md-6">
+                    <div id="t1"></div>
+                </div>
+                <div class="col-md-6">
+                    <div id="t2"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 id="g1-title"></h2>
+                    <canvas id="g1" style="width: 100%; height: 256px"></canvas>
+                </div>
+            </div>
+        </div>
+  </body>
+  <script>
+    const DAY = 86400;
+    const days = 14; // TODO this should be dynamic
+
+    const config = {
+      locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.2.1/dist/${filename}`
+    };
+    initSqlJs(config).then(SQL => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'test-results.db', true);
+        xhr.responseType = 'arraybuffer';
+
+        xhr.onload = e => {
+            const uInt8Array = new Uint8Array(xhr.response);
+            const db = new SQL.Database(uInt8Array);
+
+            const since = (new Date().getTime() / 1000) - days * DAY;
+
+            // Select unexpected messages
+            let messages = db.exec(`
+                SELECT retry_reason, TestRuns.url
+                FROM Tests
+                JOIN TestRuns ON Tests.run = TestRuns.id
+                WHERE TestRuns.time > ${since} AND
+                    retry_reason IS NOT null AND
+                    retry_reason IS NOT 'be robust against unstable tests' AND
+                    retry_reason IS NOT 'due to failure of test harness or framework'`);
+            messages = messages[0].values.reduce((a, m) => {if (m) a.push([m[0], m[1]]); return a;}, []);
+
+            // Replace any numbers > 100 with 0 (usually time stamps or PIDs)
+            messages = messages.map(m => [m[0].replace(/\d\d[\d\.]+/, '0'), m[1]]);
+
+            // Replace any partial paths like dracut.xf8hG with dracut.xxx
+            messages = messages.map(m => [m[0].replace(/(\/[^\/ \t]{3,}\.)[^\/ \t]+/, "$1xxx"), m[1]]);
+
+            const counter = messages.reduce((counter, m) => {
+                counter[m[0]] = ++counter[m[0]] || 1;
+                return counter;
+            }, {});
+
+            const data = [];
+            Object.keys(counter).forEach(m => {
+                if (counter[m] > 1) { // Don't show message that happened just once
+                    logs = messages.reduce((a, mx) => {if (mx[0] === m && a.indexOf(mx[1]) < 0) a.push(mx[1]); return a;}, []).splice(0, 2);
+                    data.push([m, counter[m], logs]);
+                }
+            });
+            data.sort((a, b) => a[1] < b[1]);
+
+            if (data.length > 0)
+                createTable("t2", "Unexpected messages", ["Message", "Count", "Logs"], data);
+
+            // Get all failures sorted by number of occurrences
+            top10 = []
+            const rows = db.exec(`
+                    SELECT t1.testname, (t2.failed * 100.0) / COUNT(run) AS percent
+                    FROM Tests AS t1
+                    JOIN TestRuns ON t1.run = TestRuns.id
+                    JOIN (
+                        SELECT testname, COUNT(run) as failed
+                        FROM Tests
+                        JOIN TestRuns ON Tests.run = TestRuns.id
+                        WHERE TestRuns.time > ${since} AND Tests.failed = 1
+                        GROUP BY testname
+                    ) AS t2 ON t1.testname = t2.testname
+                    WHERE TestRuns.time > ${since} AND t2.failed > 0
+                    GROUP BY t1.testname
+                    ORDER BY percent DESC
+                    LIMIT 10`);
+
+            rows[0].values.forEach(row => {
+                const urls = db.exec(`
+                    SELECT DISTINCT TestRuns.url
+                    FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
+                    WHERE testname = '${row[0]}' AND failed = 1
+                    ORDER BY run DESC
+                    LIMIT 2`);
+                const links = urls[0].values.map(u => u[0]);
+                top10.push([row[0], row[1].toFixed(2), links]);
+            });
+
+            if (!top10.length)
+                top10.push(["No failures in the last {0} days".format(opts.days), 0, []]);
+
+            createTable("t1", "Top failures", ["Test name", "Fail rate (%)", "Logs"], top10);
+
+            // Show % of failed tests per day
+            const labels = [];
+            const points = [];
+            const limit_points = [];
+            const yesterday = new Date();
+            yesterday.setHours(0, 0, 0, 0);
+            for (let i = 0; i < days; i++) {
+                const to = new Date(yesterday);
+                to.setDate(yesterday.getDate() - i);
+                const since = new Date(yesterday);
+                since.setDate(yesterday.getDate() - i - 1);
+                const failed = db.exec(`
+                        SELECT (t2.count * 100.0) / COUNT(*) AS percent
+                        FROM Tests AS t1
+                        JOIN TestRuns ON t1.run = TestRuns.id
+                        JOIN (
+                            SELECT COUNT(*) as count
+                            FROM Tests
+                            JOIN TestRuns ON Tests.run = TestRuns.id
+                            WHERE TestRuns.time > ${since.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1
+                        ) AS t2
+                        WHERE TestRuns.time > ${since.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000}`);
+                labels.unshift(since.getDate() + "." + (since.getMonth() + 1));
+                points.unshift(failed[0].values[0]);
+                limit_points.push(10);
+            }
+            createGraph("g1", "Percentage of failed tests per day", labels, points, limit_points);
+        };
+        xhr.send();
+    });
+
+    function createGraph(id, name, labels, points, limit_points) {
+        document.getElementById(id).innerHTML = "";
+        document.getElementById(id + "-title").innerHTML = name;
+
+        // Create graph itself
+        const ctx = document.getElementById(id);
+        const chart = new Chart(ctx, {
+            type: "line",
+
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: points,
+                    borderColor: "rgba(24, 42, 94, 0.8)",
+                    fill: false,
+                }, {
+                    data: limit_points,
+                    borderColor: "rgba(1, 2, 3, 0.3)",
+                    fill: false,
+                }]
+            },
+
+            options: {
+                legend: {
+                    display: false,
+                },
+                responsive: false,
+            }
+        });
+    }
+
+    function createTable(id, name, columns, data) {
+        const wrapper = document.createElement("DIV");
+
+        // Create title of the table
+        const title = document.createElement("H2");
+        title.textContent = name;
+        wrapper.appendChild(title);
+
+        // Create table itself
+        const table = document.createElement("TABLE");
+        table.className="table table-striped";
+
+        // Create heading
+        const head = document.createElement("THEAD");
+        let row = document.createElement("TR");
+        columns.forEach(c => {
+            const th = document.createElement("TH");
+            th.textContent = c;
+            row.appendChild(th);
+        });
+        head.appendChild(row);
+        table.appendChild(head);
+
+        // Fill the table with data
+        const body = document.createElement("TBODY");
+        data.forEach(r => {
+            row = document.createElement("TR");
+            r.forEach(d => {
+                // Array with logs
+                const td = document.createElement("TD");
+                if (typeof d === "object")
+                    d.forEach(a => {
+                        const ea = document.createElement("A");
+                        ea.className="btn btn-link py-0";
+                        ea.textContent = "log";
+                        ea.href = a;
+                        td.appendChild(ea);
+                    });
+                else
+                    td.textContent = d;
+                row.appendChild(td);
+            });
+            body.appendChild(row);
+        });
+        table.appendChild(body);
+
+        wrapper.appendChild(table);
+        document.getElementById(id).innerHTML = "";
+        document.getElementById(id).appendChild(wrapper);
+    }
+  </script>
+</html>
