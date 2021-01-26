@@ -124,9 +124,9 @@ REPO_BRANCH_CONTEXT = {
     'osbuild/cockpit-composer': {
         'master': [
             'fedora-32',
-            'fedora-32/firefox',
             'fedora-33',
             'rhel-8-4',
+            'rhel-8-4/firefox',
         ],
         'rhel-8': [
             'rhel-8-4',
@@ -134,7 +134,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'rhel-8-4/firefox',
+            'fedora-33/firefox',
         ],
     },
     'candlepin/subscription-manager': {
