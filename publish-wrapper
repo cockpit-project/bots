@@ -163,7 +163,25 @@ class PullTask():
 
         return ret
 
+    def detect_collisions(self, opts):
+        statuses = self.api.get("commits/{0}/statuses".format(opts.revision))
+        for status in statuses:
+            if status.get("context") == opts.github_context:
+                if status.get("state") != "pending":
+                    return "Status is not pending"
+                if status.get("description") not in [github.NOT_TESTED, github.NOT_TESTED_DIRECT]:
+                    return "Status description is not in [{0}, {1}]".format(
+                        github.NOT_TESTED, github.NOT_TESTED_DIRECT)
+                return None  # only check the newest status of the supplied context
+        return None
+
     def run(self, opts):
+        ret = self.detect_collisions(opts)
+        if ret:
+            sys.stderr.write("Collision detected: {0}".format(ret))
+            sys.stderr.flush()
+            return 0
+
         self.start_publishing(opts)
         os.environ["TEST_ATTACHMENTS"] = self.sink.attachments
 
