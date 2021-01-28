@@ -75,6 +75,7 @@ def output(*args):
 
 def run(specified_package, verbose=False, **kwargs):
     pending_updates = []
+    updated_packages = []
 
     if not kwargs["dry"]:
         api = task.github.GitHub()
@@ -128,27 +129,25 @@ def run(specified_package, verbose=False, **kwargs):
 
             # Write out the original package.json with the updated version
             package_json(orig_package_json, package, new_version)
-            if not kwargs["dry"]:
-                # Create a pull request from these changes
-                title = "package.json: Update {0} package dependency".format(package)
-                branch = task.branch(package, title, pathspec="package.json", **kwargs)
+            updated_packages.append(package)
+            # only update one dep, so that updates can be tested one by one
+            break
 
-                # List of files that probably touch this package
-                lines = output("git", "grep", "-w", package)
-                comment = "Please manually check features related to these files:\n\n```\n{0}```".format(lines)
+    if updated_packages and not kwargs["dry"]:
+        # Create a pull request from these changes
+        title = "package.json: Update " + ', '.join(updated_packages)
+        branch = task.branch(updated_packages[0], title, pathspec="package.json", **kwargs)
 
-                if branch:
-                    kwargs["title"] = title
-                    pull = task.pull(branch, **kwargs)
+        # List of files that probably touch this package
+        lines = output("git", "grep", "-Ew", '|'.join(updated_packages))
+        comment = "Please manually check features related to these files:\n\n```\n{0}```".format(lines)
 
-                    task.comment(pull, comment)
-                    break
-            else:
-                # in dry mode, still only update one dep, so that updates can be tested one by one
-                break
+        kwargs["title"] = title
+        pull = task.pull(branch, **kwargs)
 
-    # Undo our changes
-    if not kwargs["dry"]:
+        task.comment(pull, comment)
+
+        # Undo our changes
         package_json(orig_package_json)
 
 
