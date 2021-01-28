@@ -25,7 +25,11 @@
 # Dependencies where minor updates break, only bump microversion
 FRAGILE = [
     "jquery",
-    "patternfly",
+]
+
+# Dependencies which have to be updated in lockstep, not individually
+GROUP = [
+    "@patternfly"
 ]
 
 import collections
@@ -107,8 +111,17 @@ def run(specified_package, verbose=False, **kwargs):
             return "^" + version
         return "~" + version
 
+    group = None
+
     for package in packages:
         if package in pending_updates:
+            continue
+
+        # once we updated the first member of a group, only consider other group members
+        if group and group not in package:
+            if task.verbose:
+                sys.stderr.write("Ignoring '{0}' as it does not belong to current update group {1}\n"
+                                 .format(package, group))
             continue
 
         orig_version = orig_package_json["dependencies"][package]
@@ -126,12 +139,25 @@ def run(specified_package, verbose=False, **kwargs):
         new_version = package_json()["dependencies"][package].lstrip("^~")
 
         if new_version != orig_version:
-
             # Write out the original package.json with the updated version
             package_json(orig_package_json, package, new_version)
             updated_packages.append(package)
-            # only update one dep, so that updates can be tested one by one
-            break
+
+            # part of a group?
+            if not group:
+                for g in GROUP:
+                    if g in package:
+                        group = g
+                        if task.verbose:
+                            sys.stderr.write("Updated package '{0}' is in group {1}\n".format(package, group))
+                        break
+
+            if group:
+                # run the next iteration to the updated package.json
+                orig_package_json = package_json()
+            else:
+                # only update one dep, so that updates can be tested one by one
+                break
 
     if updated_packages and not kwargs["dry"]:
         # Create a pull request from these changes
