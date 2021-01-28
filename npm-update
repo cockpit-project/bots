@@ -22,8 +22,7 @@
 #  * [ ] npm-update patternfly
 #
 
-# Dependencies that are either fragile (minor updates break)
-# or are part of our public Javascript API and need caution
+# Dependencies where minor updates break, only bump microversion
 FRAGILE = [
     "jquery",
     "patternfly",
