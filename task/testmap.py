@@ -85,15 +85,15 @@ REPO_BRANCH_CONTEXT = {
     },
     'weldr/lorax': {
         'master': [
+            'fedora-32/lorax',
             'fedora-32/osbuild-composer',
         ],
         'rhel8-branch': [
             'rhel-8-4/osbuild-composer',
+            'rhel-8-4/lorax',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-32/lorax',
-            'rhel-8-4/lorax',
             'rhel-7-9',
             'rhel-7-9/azure',
             'rhel-7-9/live-iso',
