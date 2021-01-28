@@ -27,7 +27,6 @@
 FRAGILE = [
     "jquery",
     "patternfly",
-    "@novnc/novnc",  # See cockpit/cockpit#14356
 ]
 
 import collections
