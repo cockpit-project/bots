@@ -104,7 +104,7 @@ def find(name, stores, latest, quiet):
 
     # Find the most recent version of this file
     def header_date(args):
-        cmd, output, message, latency = args
+        cmd, output, message = args
         try:
             reply_line, headers_alone = output.split('\n', 1)
             last_modified = email.message_from_file(io.StringIO(headers_alone)).get("Last-Modified", "")
