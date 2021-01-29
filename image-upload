@@ -65,7 +65,7 @@ def upload(store, source):
     ai = socket.getaddrinfo(url.hostname, url.port or defport, socket.AF_INET, 0, socket.IPPROTO_TCP)
     for (family, socktype, proto, canonname, sockaddr) in ai:
         resolve = "cockpit-tests:{1}:{0}".format(*sockaddr)
-        curl_url = "https://cockpit-tests:{0}{1}".format(url.port or defport, url.path)
+        curl_url = "{0}://cockpit-tests:{1}{2}".format(url.scheme, url.port or defport, url.path)
         ret = try_curl(cmd + ["--resolve", resolve, curl_url])
         if ret == 0:
             return 0
