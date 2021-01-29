@@ -22,7 +22,6 @@ import socket
 import subprocess
 import select
 import errno
-import shlex
 import sys
 import tempfile
 
@@ -248,8 +247,7 @@ class SSHConnection(object):
         Either specify @command or @script
 
         Arguments:
-            command: The string to execute by /bin/sh; or
-                     an argument list execute without shell interpretation
+            command: The string to execute by /bin/sh.
             script: A multi-line script to execute in /bin/sh
             input: Input to send to the command
             environment: Additional environment variables
@@ -293,7 +291,7 @@ class SSHConnection(object):
                 if not quiet:
                     self.message("+", command)
             else:
-                cmd.append(shlex.join(command))
+                cmd += command
                 if not quiet:
                     self.message("+", *command)
         else:
