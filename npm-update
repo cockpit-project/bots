@@ -88,10 +88,11 @@ def run(specified_package, verbose=False, **kwargs):
         for issue in api.issues(state="open"):
             title = issue["title"]
             if title.startswith("package.json: Update "):
-                package = title.split(" ")[2]
-                pending_updates.append(package)
-                if task.verbose:
-                    sys.stderr.write("Ignoring '{0}' as there is pending PR #{1}\n".format(package, issue["number"]))
+                packages = title.split(" ", 2)[2]
+                for pkg in packages.split(", "):
+                    pending_updates.append(pkg)
+                    if task.verbose:
+                        sys.stderr.write("Ignoring '{0}' as there is pending PR #{1}\n".format(pkg, issue["number"]))
 
     # Force all current dependencies in place
     execute("npm", "install")
