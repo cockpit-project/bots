@@ -370,24 +370,8 @@ def execute(*args):
     return output
 
 
-def find_our_fork(user):
-    repos = api.get("/users/{0}/repos".format(user))
-    for r in repos:
-        if r["full_name"] == api.repo:
-            # We actually own the origin repo, so use that.
-            return api.repo
-        if r["fork"]:
-            full = api.get("/repos/{0}/{1}".format(user, r["name"]))
-            if full["parent"]["full_name"] == api.repo:
-                return full["full_name"]
-    raise RuntimeError("%s doesn't have a fork of %s" % (user, api.repo))
-
-
-def push_branch(user, branch, force=False, push_repo=None):
-    if not push_repo:
-        push_repo = find_our_fork(user)
-
-    url = "https://github.com/{0}".format(push_repo)
+def push_branch(branch, force=False):
+    url = "https://github.com/{0}".format(api.repo)
     cmd = ["git", "push", url, "+HEAD:refs/heads/{0}".format(branch)]
     if force:
         cmd.insert(2, "-f")
@@ -408,18 +392,8 @@ def branch(context, message, pathspec=".", issue=None, branch=None, push=True, *
     except subprocess.CalledProcessError:
         raise RuntimeError("Couldn't configure git config with our API token")
 
-    try:
-        user = api.get("/user")['login']
-        fork_repo = find_our_fork(user)
-    except github.GitHubError as ex:
-        if ex.status == 403:
-            sys.stderr.write("token is not authorized for the /user GitHub API, stay on origin repo %s\n" % api.repo)
-            user = api.repo.split('/')[0]
-            fork_repo = api.repo
-        else:
-            raise
-
-    clean = "https://github.com/{0}".format(fork_repo)
+    user = api.repo.split('/')[0]
+    clean = "https://github.com/{0}".format(api.repo)
 
     if pathspec is not None:
         execute("git", "add", "--", pathspec)
@@ -432,7 +406,7 @@ def branch(context, message, pathspec=".", issue=None, branch=None, push=True, *
 
     # No need to push if we want to add another commits into the same branch
     if push:
-        push_branch(user, branch, push_repo=fork_repo)
+        push_branch(branch)
 
     # Comment on the issue if present and we pushed the branch
     if issue and push:
@@ -490,8 +464,8 @@ def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=Tru
         last_commit_m = execute("git", "show", "--no-patch", "--format=%B")
         last_commit_m += "Closes #" + str(pull["number"])
         execute("git", "commit", "--amend", "-m", last_commit_m)
-        (user, branch) = branch.split(":")
-        push_branch(user, branch, True)
+        branch = branch.split(":")[1]
+        push_branch(branch, force=True)
 
         # Make sure we return the updated pull data
         for retry in range(20):

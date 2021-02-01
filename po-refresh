@@ -172,12 +172,14 @@ def run(context, verbose=False, **kwargs):
     branch = task.branch(context, "po: Update from Fedora Weblate", pathspec="po/",
                          branch=local_branch, **kwargs)
 
+    api = github.GitHub()
+
     if local_branch and not branch:  # We only introduced/dropped language but otherwise no updates
         if kwargs["issue"]:
-            clean = "https://github.com/{0}".format(task.find_our_fork(user))
+            clean = "https://github.com/{0}".format(api.repo)
             task.comment_done(kwargs["issue"], "po-refresh", clean, local_branch, context)
 
-        task.push_branch(user, local_branch)
+        task.push_branch(local_branch)
         branch = "{0}:{1}".format(user, local_branch)
 
     if not branch:
@@ -188,7 +190,6 @@ def run(context, verbose=False, **kwargs):
     pull = task.pull(branch, labels=['bot', 'no-test', 'release-blocker'], run_tests=False, **kwargs)
 
     # Trigger this pull request
-    api = github.GitHub()
     head = pull["head"]["sha"]
 
     triggers = testmap.tests_for_po_refresh(api.repo)
