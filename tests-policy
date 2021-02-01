@@ -20,15 +20,11 @@
 import argparse
 import datetime
 import fnmatch
-import json
 import re
 import os
 import socket
-import ssl
 import sys
-import time
 import traceback
-import urllib
 
 sys.dont_write_bytecode = True
 
@@ -85,8 +81,6 @@ def main():
             output = filterSkip(output, "# SKIP Known issue #{0}".format(number))
         elif checkRetry(output):
             output = filterRetry(output, "# RETRY due to failure of test harness or framework")
-        elif not opts.offline:
-            output = guessFlake(output, context, opts.verbose)
 
         sys.stdout.write(output)
         return 0
@@ -131,79 +125,6 @@ def parseName(output):
             name = name.strip()
             return name
     return ""
-
-
-# -----------------------------------------------------------------------------
-# Flakiness Checks
-
-def guessFlake(output, context, verbose=False):
-    host = os.environ.get("COCKPIT_LEARN_SERVICE_HOST")
-    port = os.environ.get("COCKPIT_LEARN_SERVICE_PORT", "443")
-
-    if not host:
-        return output
-
-    # Build up an item just like in tests-data
-    item = {
-        "pull": None,
-        "revision": os.environ.get("TEST_REVISION"),
-        "status": "failure",
-        "context": context,
-        "date": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "merged": None,
-        "test": parseName(output),
-        "url": None,
-        "log": output
-    }
-
-    response = {}
-    flake = False
-
-    url = "{0}://{1}:{2}/predict".format("https" if port == "443" else "http", host, port)
-    cafile = os.path.join(BOTS_DIR, "images", "files", "ca.pem")
-    context = ssl.create_default_context(cafile=cafile)
-    jsonl = json.dumps(item) + "\n"
-    try:
-        data = urllib.request.urlopen(url, data=jsonl.encode('utf-8'), context=context).read()
-    except (ConnectionResetError, urllib.error.URLError, socket.gaierror) as ex:
-        sys.stderr.write("{0}: {1}\n".format(url, ex))
-        data = b"{ }"
-    try:
-        response = json.loads(data.decode('utf-8'))
-    except ValueError as ex:
-        sys.stderr.write("{0}: {1}\n".format(url, ex))
-
-    if verbose and response:
-        sys.stderr.write(json.dumps(response, indent=4) + "\n")
-
-    def count(record, field, only):
-        values = record.get(field, [])
-        for value, count in values:
-            if value != only:
-                continue
-            return count
-        return 0
-
-    merged = count(response, "merged", True)
-    not_merged = count(response, "merged", False)
-    null_merged = count(response, "merged", None)
-
-    score = 0
-    total = merged + not_merged + null_merged
-    if total:
-        score = (merged / total)
-    if score > FLAKE_THRESHOLD:
-        output += "\n# Flake likely: {0:.3f} (clustering). Please file issue if this not a flake\n".format(score)
-        flake = True
-    elif merged > 0:
-        output += "\n# Flake probability: {0:.3f} (clustering)\n".format(score)
-        if "trackers" in response:
-            tracker = response["trackers"][0]
-            output += "# Flake tracked {0} likelihood {1:.3f}\n".format(tracker[0], tracker[1])
-
-    if flake:
-        output = filterRetry(output, "# RETRY due to flakiness")
-    return output
 
 
 # -----------------------------------------------------------------------------
