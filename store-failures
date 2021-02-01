@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import ssl
 import sys
 import sqlite3
@@ -28,8 +27,7 @@ import re
 
 from datetime import datetime
 
-from task import github
-from machine.machine_core.constants import IMAGES_DIR
+from task import github, CA_PEM
 
 # regexp for retry reason in a "not ok" line
 re_retry = re.compile(r"# RETRY .* \(([^)]+)\)")
@@ -46,9 +44,8 @@ def main():
     if opts.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    ca = os.path.join(IMAGES_DIR, "files", "ca.pem")
     ctx = ssl.create_default_context()
-    ctx.load_verify_locations(cafile=ca)
+    ctx.load_verify_locations(cafile=CA_PEM)
 
     db_conn = sqlite3.connect(opts.db)
     cursor = db_conn.cursor()

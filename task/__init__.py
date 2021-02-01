@@ -31,7 +31,7 @@ import urllib.parse
 
 from . import github
 from . import sink
-from machine.machine_core.constants import BASE_DIR
+from machine.machine_core.constants import BASE_DIR, IMAGES_DIR
 
 
 __all__ = (
@@ -46,11 +46,15 @@ __all__ = (
     "stale",
     "redhat_network",
     "default_branch",
+    "CA_PEM",
     "PUBLIC_STORES",
     "REDHAT_STORES",
 )
 
 sys.dont_write_bytecode = True
+
+# Cockpit image/log server CA
+CA_PEM = os.getenv("COCKPIT_CA_PEM", os.path.join(IMAGES_DIR, "files", "ca.pem"))
 
 # Servers which have public images
 PUBLIC_STORES = [

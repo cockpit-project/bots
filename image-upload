@@ -25,18 +25,17 @@ import subprocess
 import sys
 import urllib.parse
 
-from machine.machine_core.constants import BOTS_DIR, IMAGES_DIR
+from machine.machine_core.constants import IMAGES_DIR
 from machine.machine_core.directories import get_images_data_dir
 
-from task import api, PUBLIC_STORES, REDHAT_STORES
+from task import api, PUBLIC_STORES, REDHAT_STORES, CA_PEM
 
 
 def upload(store, source):
-    ca = os.path.join(BOTS_DIR, "images", "files", "ca.pem")
     url = urllib.parse.urlparse(store)
 
     # Start building the command
-    cmd = ["curl", "--progress-bar", "--cacert", ca, "--fail", "--upload-file", source]
+    cmd = ["curl", "--progress-bar", "--cacert", CA_PEM, "--fail", "--upload-file", source]
 
     def try_curl(cmd):
         print("Uploading to", cmd[-1])

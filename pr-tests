@@ -21,12 +21,10 @@ import sys
 import urllib.request
 import ssl
 import json
-import os
 
-from machine.machine_core.constants import IMAGES_DIR
 import task
 
-logs_ssl_cockpit = ssl.create_default_context(cafile=os.path.join(IMAGES_DIR, "files", "ca.pem"))
+logs_ssl_cockpit = ssl.create_default_context(cafile=task.CA_PEM)
 
 
 def ssl_context_for(log_url):
