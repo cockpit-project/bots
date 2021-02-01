@@ -6,10 +6,21 @@
 </head>
 <html>
     <body>
-        <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
+        <div class="d-flex justify-content-between flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
             <div>
                 <h4 class="my-0 mr-md-auto font-weight-normal">CI Weather Report</h4>
                 <small>Brought to you by <b>MM</b></small>
+            </div>
+            <div class="form-group row">
+                <label for="days" class="col-sm-6 col-form-label">Days</label>
+                <select id="days" class="form-control col-sm-6">
+                    <option value="3">3</option>
+                    <option value="5">5</option>
+                    <option value="7">7</option>
+                    <option value="9">9</option>
+                    <option value="14">14</option>
+                    <option value="21">21</option>
+                </select>
             </div>
         </div>
         <div class="container-fluid px-5">
@@ -31,7 +42,18 @@
   </body>
   <script>
     const DAY = 86400;
-    const days = 14; // TODO this should be dynamic
+    const params = new URLSearchParams(window.location.search);
+
+    const days_select = document.getElementById("days");
+    const days = params.get('days') || 14;
+    Array.from(days_select.options).forEach(o => {
+        o.selected = o.value == days;
+    });
+    days_select.addEventListener("change", e => {
+        params.set("days", e.target.value);
+        history.replaceState(null, null, "?"+params.toString());
+        location.reload();
+    });
 
     const config = {
       locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.2.1/dist/${filename}`
