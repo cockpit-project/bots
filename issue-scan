@@ -19,9 +19,7 @@
 
 NAMES = [
     "example-task",
-    "po-refresh",
     "image-refresh",
-    "npm-update",
     "naughty-prune",
     "learn-tests",
     "tests-data",
