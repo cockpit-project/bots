@@ -44,6 +44,12 @@
                     <canvas id="g1" style="width: 100%; height: 256px"></canvas>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 id="g2-title"></h2>
+                    <canvas id="g2" style="width: 100%; height: 256px"></canvas>
+                </div>
+            </div>
         </div>
   </body>
   <script>
@@ -185,6 +191,27 @@
                     top10.push([`No failures in the last ${days} days`, 0, []]);
 
                 createTable("t1", "Top failures", ["Test name", "Fail rate (%)", "Logs"], top10);
+
+                // Show average waiting time in queue per day
+                const labels = [];
+                const points = [];
+                const limit_points = [];
+                const yesterday = new Date();
+                yesterday.setHours(0, 0, 0, 0);
+                for (let i = 0; i < days; i++) {
+                    const to = new Date(yesterday);
+                    to.setDate(yesterday.getDate() - i);
+                    const since = new Date(yesterday);
+                    since.setDate(yesterday.getDate() - i - 1);
+                    const time = db.exec(`
+                            SELECT SUM(wait_seconds) / COUNT(*)
+                            FROM TestRuns
+                            WHERE time > ${since.getTime() / 1000} AND time < ${to.getTime() / 1000}`);
+                    labels.unshift(since.getDate() + "." + (since.getMonth() + 1));
+                    points.unshift(time[0].values[0]);
+                    limit_points.push(300);
+                }
+                createGraph("g2", "Average time waiting in queue (s)", labels, points, limit_points);
             }
 
             // Show % of failed tests per day
