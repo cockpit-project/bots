@@ -43,9 +43,10 @@
   <script>
     const DAY = 86400;
     const params = new URLSearchParams(window.location.search);
+    const days = params.get('days') || 14;
+    const test = params.get('test');
 
     const days_select = document.getElementById("days");
-    const days = params.get('days') || 14;
     Array.from(days_select.options).forEach(o => {
         o.selected = o.value == days;
     });
@@ -69,73 +70,104 @@
 
             const since = (new Date().getTime() / 1000) - days * DAY;
 
-            // Select unexpected messages
-            let messages = db.exec(`
-                SELECT retry_reason, TestRuns.url
-                FROM Tests
-                JOIN TestRuns ON Tests.run = TestRuns.id
-                WHERE TestRuns.time > ${since} AND
-                    retry_reason IS NOT null AND
-                    retry_reason IS NOT 'be robust against unstable tests' AND
-                    retry_reason IS NOT 'due to failure of test harness or framework'`);
-            messages = messages[0].values.reduce((a, m) => {if (m) a.push([m[0], m[1]]); return a;}, []);
+            if (test) {
+                top10 = []
+                const rows = db.exec(`
+                        SELECT context, COUNT(*) AS failed
+                        FROM TestRuns
+                        JOIN Tests ON Tests.run = TestRuns.id
+                        WHERE time > ${since} AND Tests.failed = 1 AND Tests.testname = '${test}'
+                        GROUP BY context
+                        ORDER BY COUNT(*) DESC`);
+                const all = db.exec(`
+                        SELECT COUNT(*) AS failed
+                        FROM TestRuns
+                        JOIN Tests ON Tests.run = TestRuns.id
+                        WHERE time > ${since} AND Tests.failed = 1 AND Tests.testname = '${test}'`)[0].values[0][0];
 
-            // Replace any numbers > 100 with 0 (usually time stamps or PIDs)
-            messages = messages.map(m => [m[0].replace(/\d\d[\d\.]+/, '0'), m[1]]);
+                rows[0].values.forEach(row => {
+                    const urls = db.exec(`
+                        SELECT DISTINCT TestRuns.url
+                        FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
+                        WHERE testname = '${test}' AND TestRuns.context = '${row[0]}' AND failed = 1
+                        ORDER BY run DESC
+                        LIMIT 2`);
+                    const links = urls[0].values.map(u => u[0]);
+                    top10.push([row[0], ((row[1] * 100) / all).toFixed(2), links]);
+                });
+                if (!top10.length)
+                    top10.push([`No failures in the last ${days} days`, 0, []]);
 
-            // Replace any partial paths like dracut.xf8hG with dracut.xxx
-            messages = messages.map(m => [m[0].replace(/(\/[^\/ \t]{3,}\.)[^\/ \t]+/, "$1xxx"), m[1]]);
+                createTable("t1", "Most affected OSes", ["Operating system", "Fail rate (%)", "Logs"], top10);
+            } else {
+                // Select unexpected messages
+                let messages = db.exec(`
+                    SELECT retry_reason, TestRuns.url
+                    FROM Tests
+                    JOIN TestRuns ON Tests.run = TestRuns.id
+                    WHERE TestRuns.time > ${since} AND
+                        retry_reason IS NOT null AND
+                        retry_reason IS NOT 'be robust against unstable tests' AND
+                        retry_reason IS NOT 'due to failure of test harness or framework'`);
+                messages = messages[0].values.reduce((a, m) => {if (m) a.push([m[0], m[1]]); return a;}, []);
 
-            const counter = messages.reduce((counter, m) => {
-                counter[m[0]] = ++counter[m[0]] || 1;
-                return counter;
-            }, {});
+                // Replace any numbers > 100 with 0 (usually time stamps or PIDs)
+                messages = messages.map(m => [m[0].replace(/\d\d[\d\.]+/, '0'), m[1]]);
 
-            const data = [];
-            Object.keys(counter).forEach(m => {
-                if (counter[m] > 1) { // Don't show message that happened just once
-                    logs = messages.reduce((a, mx) => {if (mx[0] === m && a.indexOf(mx[1]) < 0) a.push(mx[1]); return a;}, []).splice(0, 2);
-                    data.push([m, counter[m], logs]);
-                }
-            });
-            data.sort((a, b) => a[1] < b[1]);
+                // Replace any partial paths like dracut.xf8hG with dracut.xxx
+                messages = messages.map(m => [m[0].replace(/(\/[^\/ \t]{3,}\.)[^\/ \t]+/, "$1xxx"), m[1]]);
 
-            if (data.length > 0)
-                createTable("t2", "Unexpected messages", ["Message", "Count", "Logs"], data);
+                const counter = messages.reduce((counter, m) => {
+                    counter[m[0]] = ++counter[m[0]] || 1;
+                    return counter;
+                }, {});
 
-            // Get all failures sorted by number of occurrences
-            top10 = []
-            const rows = db.exec(`
-                    SELECT t1.testname, (t2.failed * 100.0) / COUNT(run) AS percent
-                    FROM Tests AS t1
-                    JOIN TestRuns ON t1.run = TestRuns.id
-                    JOIN (
-                        SELECT testname, COUNT(run) as failed
-                        FROM Tests
-                        JOIN TestRuns ON Tests.run = TestRuns.id
-                        WHERE TestRuns.time > ${since} AND Tests.failed = 1
-                        GROUP BY testname
-                    ) AS t2 ON t1.testname = t2.testname
-                    WHERE TestRuns.time > ${since} AND t2.failed > 0
-                    GROUP BY t1.testname
-                    ORDER BY percent DESC
-                    LIMIT 10`);
+                const data = [];
+                Object.keys(counter).forEach(m => {
+                    if (counter[m] > 1) { // Don't show message that happened just once
+                        logs = messages.reduce((a, mx) => {if (mx[0] === m && a.indexOf(mx[1]) < 0) a.push(mx[1]); return a;}, []).splice(0, 2);
+                        data.push([m, counter[m], logs]);
+                    }
+                });
+                data.sort((a, b) => a[1] < b[1]);
 
-            rows[0].values.forEach(row => {
-                const urls = db.exec(`
-                    SELECT DISTINCT TestRuns.url
-                    FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
-                    WHERE testname = '${row[0]}' AND failed = 1
-                    ORDER BY run DESC
-                    LIMIT 2`);
-                const links = urls[0].values.map(u => u[0]);
-                top10.push([row[0], row[1].toFixed(2), links]);
-            });
+                if (data.length > 0)
+                    createTable("t2", "Unexpected messages", ["Message", "Count", "Logs"], data);
 
-            if (!top10.length)
-                top10.push(["No failures in the last {0} days".format(opts.days), 0, []]);
+                // Get all failures sorted by number of occurrences
+                top10 = []
+                const rows = db.exec(`
+                        SELECT t1.testname, (t2.failed * 100.0) / COUNT(run) AS percent
+                        FROM Tests AS t1
+                        JOIN TestRuns ON t1.run = TestRuns.id
+                        JOIN (
+                            SELECT testname, COUNT(run) as failed
+                            FROM Tests
+                            JOIN TestRuns ON Tests.run = TestRuns.id
+                            WHERE TestRuns.time > ${since} AND Tests.failed = 1
+                            GROUP BY testname
+                        ) AS t2 ON t1.testname = t2.testname
+                        WHERE TestRuns.time > ${since} AND t2.failed > 0
+                        GROUP BY t1.testname
+                        ORDER BY percent DESC
+                        LIMIT 10`);
 
-            createTable("t1", "Top failures", ["Test name", "Fail rate (%)", "Logs"], top10);
+                rows[0].values.forEach(row => {
+                    const urls = db.exec(`
+                        SELECT DISTINCT TestRuns.url
+                        FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
+                        WHERE testname = '${row[0]}' AND failed = 1
+                        ORDER BY run DESC
+                        LIMIT 2`);
+                    const links = urls[0].values.map(u => u[0]);
+                    top10.push([{name: row[0], key: "test"}, row[1].toFixed(2), links]);
+                });
+
+                if (!top10.length)
+                    top10.push([`No failures in the last ${days} days`, 0, []]);
+
+                createTable("t1", "Top failures", ["Test name", "Fail rate (%)", "Logs"], top10);
+            }
 
             // Show % of failed tests per day
             const labels = [];
@@ -148,22 +180,29 @@
                 to.setDate(yesterday.getDate() - i);
                 const since = new Date(yesterday);
                 since.setDate(yesterday.getDate() - i - 1);
+                let tq = "";
+                if (test)
+                    tq = ` AND Tests.testname = '${test}' `;
                 const failed = db.exec(`
                         SELECT (t2.count * 100.0) / COUNT(*) AS percent
-                        FROM Tests AS t1
-                        JOIN TestRuns ON t1.run = TestRuns.id
+                        FROM Tests
+                        JOIN TestRuns ON Tests.run = TestRuns.id
                         JOIN (
                             SELECT COUNT(*) as count
                             FROM Tests
                             JOIN TestRuns ON Tests.run = TestRuns.id
-                            WHERE TestRuns.time > ${since.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1
+                            WHERE TestRuns.time > ${since.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1${tq}
                         ) AS t2
-                        WHERE TestRuns.time > ${since.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000}`);
+                        WHERE TestRuns.time > ${since.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000}${tq}`);
                 labels.unshift(since.getDate() + "." + (since.getMonth() + 1));
                 points.unshift(failed[0].values[0]);
                 limit_points.push(10);
             }
-            createGraph("g1", "Percentage of failed tests per day", labels, points, limit_points);
+            let label = "Percentage of failed tests per day";
+            if (test)
+                label = "Percentage of failures per day";
+
+            createGraph("g1", label, labels, points, limit_points);
         };
         xhr.send();
     });
@@ -229,7 +268,7 @@
             r.forEach(d => {
                 // Array with logs
                 const td = document.createElement("TD");
-                if (typeof d === "object")
+                if (d instanceof Array) {
                     d.forEach(a => {
                         const ea = document.createElement("A");
                         ea.className="btn btn-link py-0";
@@ -237,8 +276,20 @@
                         ea.href = a;
                         td.appendChild(ea);
                     });
-                else
+                } else if (typeof d == "object") {
+                    const ea = document.createElement("A");
+                    ea.className="btn btn-link py-0";
+                    ea.textContent = d.name;
+                    ea.href="#";
+                    ea.onclick = () => {
+                        params.set(d.key, d.name);
+                        history.replaceState(null, null, "?"+params.toString());
+                        location.reload();
+                    };
+                    td.appendChild(ea);
+                } else {
                     td.textContent = d;
+                }
                 row.appendChild(td);
             });
             body.appendChild(row);
