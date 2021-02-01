@@ -46,7 +46,7 @@ import urllib.parse
 from machine.machine_core.constants import IMAGES_DIR
 from machine.machine_core.directories import get_images_data_dir
 
-from task import PUBLIC_STORES, REDHAT_STORES
+from task import PUBLIC_STORES, REDHAT_STORES, CA_PEM
 from task.testmap import get_test_image
 
 CONFIG = "~/.config/image-stores"
@@ -62,7 +62,6 @@ else:
 
 def find(name, stores, latest, quiet):
     found = []
-    ca = os.path.join(IMAGES_DIR, "files", "ca.pem")
 
     for store in stores:
         url = urllib.parse.urlparse(store)
@@ -78,7 +77,7 @@ def find(name, stores, latest, quiet):
             def curl(*args):
                 try:
                     cmd = ["curl"] + list(args) + ["--head", "--connect-timeout", "10", "--silent",
-                                                   "--fail", "--cacert", ca, source]
+                                                   "--fail", "--cacert", CA_PEM, source]
                     output = subprocess.check_output(cmd, universal_newlines=True)
                     found.append((cmd, output, store))
                     if not quiet:
