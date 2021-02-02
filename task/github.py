@@ -36,7 +36,8 @@ __all__ = (
     'Checklist',
     'TESTING',
     'NO_TESTING',
-    'NOT_TESTED'
+    'NOT_TESTED',
+    'NOT_TESTED_DIRECT',
 )
 
 TESTING = "Testing in progress"
