@@ -390,13 +390,12 @@ def branch(context, message, pathspec=".", issue=None, branch=None, push=True, *
         branch = "{0} {1} {2}".format(name, context or "", current).strip()
         branch = branch.replace(" ", "-").replace("--", "-")
 
-    # Tell git about our github token as a user name
+    # Tell git about our github token for authentication
     try:
         subprocess.check_call(["git", "config", "credential.https://github.com.username", api.token])
     except subprocess.CalledProcessError:
         raise RuntimeError("Couldn't configure git config with our API token")
 
-    user = api.repo.split('/')[0]
     clean = "https://github.com/{0}".format(api.repo)
 
     if pathspec is not None:
@@ -416,7 +415,7 @@ def branch(context, message, pathspec=".", issue=None, branch=None, push=True, *
     if issue and push:
         comment_done(issue, name, clean, branch, context)
 
-    return "{0}:{1}".format(user, branch)
+    return branch
 
 
 def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=True, **kwargs):
@@ -468,7 +467,6 @@ def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=Tru
         last_commit_m = execute("git", "show", "--no-patch", "--format=%B")
         last_commit_m += "Closes #" + str(pull["number"])
         execute("git", "commit", "--amend", "-m", last_commit_m)
-        branch = branch.split(":")[1]
         push_branch(branch, force=True)
 
         # Make sure we return the updated pull data
