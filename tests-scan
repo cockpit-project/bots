@@ -199,7 +199,7 @@ def queue_test(priority, name, number, revision, ref, context, base,
         logging.info("Published '{0}' on '{1}' with command: '{2}'".format(name, revision, command))
 
 
-def prioritize(status, title, labels, priority, context, number):
+def prioritize(status, title, labels, priority, context, number, direct):
     state = status.get("state", None)
     update = {"state": "pending"}
 
@@ -246,7 +246,7 @@ def prioritize(status, title, labels, priority, context, number):
             logging.info("Not updating status for '{0}' on #{1} because of low priority".format(context, number))
             update = None
         else:
-            update["description"] = github.NOT_TESTED
+            update["description"] = github.NOT_TESTED_DIRECT if direct else github.NOT_TESTED
 
     return [priority, update]
 
@@ -353,7 +353,10 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                 priority = github.NO_TESTING
                 changes = {"description": github.NO_TESTING, "context": context, "state": "pending"}
             else:
-                (priority, changes) = prioritize(status, title, labels, baseline, context, number)
+                # with --amqp (as called from run-queue), trigger tests as NOT_TESTED, as they already get queued;
+                # without --amqp (as called manually or from workflows), trigger tests as NOT_TESTED_DIRECT,
+                # so that the webhook queues them
+                (priority, changes) = prioritize(status, title, labels, baseline, context, number, direct=not amqp)
             if not update or update_status(api, revision, context, status, changes):
                 checkout_ref = ref
                 if project != repo:
