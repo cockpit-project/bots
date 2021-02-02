@@ -48,7 +48,7 @@ DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
 def main():
     parser = argparse.ArgumentParser(description='Store information about failed tests')
-    parser.add_argument("--db", default="cockpit-failures.db", help="Database name")
+    parser.add_argument("--db", default="test-results.db", help="Database name")
     parser.add_argument("--repo", help="Repository from which to process failures")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument("revision", help="SHA for which failures should be stored")
