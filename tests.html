@@ -133,7 +133,8 @@
                         retry_reason IS NOT null AND
                         retry_reason IS NOT 'be robust against unstable tests' AND
                         retry_reason IS NOT 'due to failure of test harness or framework'`);
-                messages = messages[0].values.reduce((a, m) => {if (m) a.push([m[0], m[1]]); return a;}, []);
+                if (messages.length)
+                    messages = messages[0].values.reduce((a, m) => {if (m) a.push([m[0], m[1]]); return a;}, []);
 
                 // Replace any numbers > 100 with 0 (usually time stamps or PIDs)
                 messages = messages.map(m => [m[0].replace(/\d\d[\d\.]+/, '0'), m[1]]);
