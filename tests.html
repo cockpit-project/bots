@@ -199,18 +199,21 @@
                 const limit_points = [];
                 const yesterday = new Date();
                 yesterday.setHours(0, 0, 0, 0);
+                let to = new Date();
+                let from = yesterday;
                 for (let i = 0; i < days; i++) {
-                    const to = new Date(yesterday);
-                    to.setDate(yesterday.getDate() - i);
-                    const since = new Date(yesterday);
-                    since.setDate(yesterday.getDate() - i - 1);
                     const time = db.exec(`
                             SELECT SUM(wait_seconds) / COUNT(*)
                             FROM TestRuns
-                            WHERE time > ${since.getTime() / 1000} AND time < ${to.getTime() / 1000}`);
-                    labels.unshift(since.getDate() + "." + (since.getMonth() + 1));
+                            WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000}`);
+                    labels.unshift(from.getDate() + "." + (from.getMonth() + 1));
                     points.unshift(time[0].values[0]);
                     limit_points.push(300);
+
+                    to = new Date(yesterday);
+                    to.setDate(yesterday.getDate() - i);
+                    from = new Date(yesterday);
+                    from.setDate(yesterday.getDate() - i - 1);
                 }
                 createGraph("g2", "Average time waiting in queue (s)", labels, points, limit_points);
             }
@@ -221,11 +224,9 @@
             const limit_points = [];
             const yesterday = new Date();
             yesterday.setHours(0, 0, 0, 0);
+            let to = new Date();
+            let from = yesterday;
             for (let i = 0; i < days; i++) {
-                const to = new Date(yesterday);
-                to.setDate(yesterday.getDate() - i);
-                const since = new Date(yesterday);
-                since.setDate(yesterday.getDate() - i - 1);
                 let tq = "";
                 if (test)
                     tq = ` AND Tests.testname = '${test}' `;
@@ -237,12 +238,17 @@
                             SELECT COUNT(*) as count
                             FROM Tests
                             JOIN TestRuns ON Tests.run = TestRuns.id
-                            WHERE TestRuns.time > ${since.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1${tq}
+                            WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1${tq}
                         ) AS t2
-                        WHERE TestRuns.time > ${since.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000}${tq}`);
-                labels.unshift(since.getDate() + "." + (since.getMonth() + 1));
+                        WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000}${tq}`);
+                labels.unshift(from.getDate() + "." + (from.getMonth() + 1));
                 points.unshift(failed[0].values[0]);
                 limit_points.push(10);
+
+                to = new Date(yesterday);
+                to.setDate(yesterday.getDate() - i);
+                from = new Date(yesterday);
+                from.setDate(yesterday.getDate() - i - 1);
             }
             let label = "Percentage of failed tests per day";
             if (test)
