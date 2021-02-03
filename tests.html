@@ -50,12 +50,6 @@
                     <canvas id="g2" style="width: 100%; height: 256px"></canvas>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <h2 id="g3-title"></h2>
-                    <canvas id="g3" style="width: 100%; height: 256px"></canvas>
-                </div>
-            </div>
         </div>
   </body>
   <script>
@@ -129,6 +123,44 @@
                     top10.push([`No failures in the last ${days} days`, 0, []]);
 
                 createTable("t1", "Most affected OSes", ["Operating system", "Fail rate (%)", "Logs"], top10);
+
+                // Show % of failed tests per day
+                const labels = [];
+                const points = [];
+                const yesterday = new Date();
+                yesterday.setHours(0, 0, 0, 0);
+                let to = new Date();
+                let from = yesterday;
+                for (let i = 0; i < days; i++) {
+                    const failed = db.exec(`
+                            SELECT (t2.count * 100.0) / COUNT(*) AS percent
+                            FROM Tests
+                            JOIN TestRuns ON Tests.run = TestRuns.id
+                            JOIN (
+                                SELECT COUNT(*) as count
+                                FROM Tests
+                                JOIN TestRuns ON Tests.run = TestRuns.id
+                                WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1 AND Tests.testname = '${test}'
+                            ) AS t2
+                            WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.testname = '${test}'`);
+                    labels.unshift(from.getDate() + "." + (from.getMonth() + 1));
+                    points.unshift(failed[0].values[0]);
+
+                    to = new Date(yesterday);
+                    to.setDate(yesterday.getDate() - i);
+                    from = new Date(yesterday);
+                    from.setDate(yesterday.getDate() - i - 1);
+                }
+
+                createGraph("g1", "Percentage of failures per day", labels, [{
+                        data: points,
+                        borderColor: "rgba(24, 42, 94, 0.8)",
+                        fill: false,
+                    }, {
+                        data: Array(days + 1).fill(10),
+                        borderColor: "rgba(1, 2, 3, 0.3)",
+                        fill: false,
+                    }]);
             } else {
                 // Select unexpected messages
                 let messages = db.exec(`
@@ -250,7 +282,7 @@
                     from.setDate(yesterday.getDate() - i - 1);
                 }
 
-                createGraph("g2", "Pull requests semaphore", labels, [{
+                createGraph("g1", "Pull requests semaphore", labels, [{
                         data: Array(days + 1).fill(10),
                         borderColor: "rgba(50, 150, 50, 0.3)",
                         fill: false,
@@ -305,7 +337,7 @@
                         responsive: false,
                     });
 
-                createGraph("g3", "Average time waiting in queue (s)", labels, [{
+                createGraph("g2", "Average time waiting in queue (s)", labels, [{
                         data: wait_points,
                         borderColor: "rgba(24, 42, 94, 0.8)",
                         fill: false,
@@ -315,50 +347,6 @@
                         fill: false,
                     }]);
             }
-
-            // Show % of failed tests per day
-            const labels = [];
-            const points = [];
-            const yesterday = new Date();
-            yesterday.setHours(0, 0, 0, 0);
-            let to = new Date();
-            let from = yesterday;
-            for (let i = 0; i < days; i++) {
-                let tq = "";
-                if (test)
-                    tq = ` AND Tests.testname = '${test}' `;
-                const failed = db.exec(`
-                        SELECT (t2.count * 100.0) / COUNT(*) AS percent
-                        FROM Tests
-                        JOIN TestRuns ON Tests.run = TestRuns.id
-                        JOIN (
-                            SELECT COUNT(*) as count
-                            FROM Tests
-                            JOIN TestRuns ON Tests.run = TestRuns.id
-                            WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1${tq}
-                        ) AS t2
-                        WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000}${tq}`);
-                labels.unshift(from.getDate() + "." + (from.getMonth() + 1));
-                points.unshift(failed[0].values[0]);
-
-                to = new Date(yesterday);
-                to.setDate(yesterday.getDate() - i);
-                from = new Date(yesterday);
-                from.setDate(yesterday.getDate() - i - 1);
-            }
-            let label = "Percentage of failed tests per day";
-            if (test)
-                label = "Percentage of failures per day";
-
-            createGraph("g1", label, labels, [{
-                    data: points,
-                    borderColor: "rgba(24, 42, 94, 0.8)",
-                    fill: false,
-                }, {
-                    data: Array(days + 1).fill(10),
-                    borderColor: "rgba(1, 2, 3, 0.3)",
-                    fill: false,
-                }]);
         };
         xhr.send();
     });
