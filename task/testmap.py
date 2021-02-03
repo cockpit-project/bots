@@ -139,11 +139,6 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ]
     },
-    'cockpit-project/cockpituous': {
-        '_manual': [
-            'unit-tests',
-        ]
-    }
 }
 
 # The OSTree variants can't build their own packages, so we build in
@@ -200,7 +195,13 @@ def projects():
 
 def tests_for_project(project):
     """Return branch -> contexts map."""
-    return REPO_BRANCH_CONTEXT.get(project, {})
+    res = REPO_BRANCH_CONTEXT.get(project, {})
+    # allow bots/cockpituous integration tests to inject a new context
+    inject = os.getenv("COCKPIT_TESTMAP_INJECT")
+    if inject:
+        branch, context = inject.split('/', 1)
+        res.setdefault(branch, []).append(context)
+    return res
 
 
 def tests_for_image(image):
