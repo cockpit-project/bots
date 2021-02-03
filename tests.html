@@ -55,7 +55,7 @@
   <script>
     const DAY = 86400;
     const params = new URLSearchParams(window.location.search);
-    const days = params.get('days') || 14;
+    const days = Number(params.get('days') || 14);
     const test = params.get('test');
 
     const days_select = document.getElementById("days");
