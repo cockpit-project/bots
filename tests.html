@@ -50,6 +50,12 @@
                     <canvas id="g2" style="width: 100%; height: 256px"></canvas>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 id="g3-title"></h2>
+                    <canvas id="g3" style="width: 100%; height: 256px"></canvas>
+                </div>
+            </div>
         </div>
   </body>
   <script>
@@ -195,8 +201,9 @@
 
                 // Show average waiting time in queue per day
                 const labels = [];
-                const points = [];
-                const limit_points = [];
+                const wait_points = [];
+                const pr_points = [];
+                let max = 0;
                 const yesterday = new Date();
                 yesterday.setHours(0, 0, 0, 0);
                 let to = new Date();
@@ -207,21 +214,111 @@
                             FROM TestRuns
                             WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000}`);
                     labels.unshift(from.getDate() + "." + (from.getMonth() + 1));
-                    points.unshift(time[0].values[0]);
-                    limit_points.push(300);
+                    wait_points.unshift(time[0].values[0]);
+
+                    const prs = db.exec(`
+                                SELECT revision, context, state, MAX(retry) as top
+                                FROM TestRuns
+                                WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000}
+                                GROUP BY revision, context`);
+                    if (prs.length) {
+                        shas = {};
+                        prs[0].values.forEach(i => {
+                            if (i[2] !== "success")
+                                shas[i[0]] = -1;
+                            else if (shas[i[0]] !== -1) // No context failed
+                                shas[i[0]] = Math.max(shas[i[0]] || 0, i[3]);
+                        });
+                        const all = Object.keys(shas).length;
+                        let red = 0; // Merged with failed test
+                        let orange = 0; // Merged green with one max one retry
+                        let green = 0; // Merged green without any retry
+                        Object.values(shas).forEach(v => {
+                            if (v === -1) red++;
+                            else if (v === 0) green++;
+                            else if (v === 1) orange++;
+                        });
+                        pr_points.unshift([(orange * 100) / all, ((all - green - orange - red) * 100) / all, (red * 100) / all]);
+                        max = Math.max(max, 100 - (green * 100) / all);
+                    } else {
+                        pr_points.unshift([0, 0, 0]);
+                    }
 
                     to = new Date(yesterday);
                     to.setDate(yesterday.getDate() - i);
                     from = new Date(yesterday);
                     from.setDate(yesterday.getDate() - i - 1);
                 }
-                createGraph("g2", "Average time waiting in queue (s)", labels, points, limit_points);
+
+                createGraph("g2", "Pull requests semaphore", labels, [{
+                        data: Array(days + 1).fill(10),
+                        borderColor: "rgba(50, 150, 50, 0.3)",
+                        fill: false,
+                        label: "Limit for one retry",
+                        yAxisID: "limit",
+                    }, {
+                        data: Array(days + 1).fill(5),
+                        borderColor: "rgba(120, 120, 50, 0.3)",
+                        fill: false,
+                        label: "Limit for any retry",
+                        yAxisID: "limit",
+                    }, {
+                        data: pr_points.map(p => p[2]),
+                        borderColor: "rgba(180, 25, 52, 0.8)",
+                        backgroundColor: "rgba(180, 25, 52, 0.8)",
+                        label: "Merged red",
+                        yAxisID: "main",
+                    }, {
+                        data: pr_points.map(p => p[1]),
+                        borderColor: "rgba(180, 100, 25, 0.8)",
+                        backgroundColor: "rgba(180, 100, 25, 0.8)",
+                        label: "Green with 2+ retries",
+                        yAxisID: "main",
+                    }, {
+                        data: pr_points.map(p => p[0]),
+                        borderColor: "rgba(180, 180, 25, 0.8)",
+                        backgroundColor: "rgba(180, 180, 25, 0.8)",
+                        label: "Green with 1 retry",
+                        yAxisID: "main",
+                    }], {
+                        scales: {
+                            yAxes: [{
+                                id: "limit",
+                                display: false,
+                                ticks: {
+                                    min: 0,
+                                    max: max,
+                                },
+                            }, {
+                                id: "main",
+                                stacked: true,
+                                ticks: {
+                                    min: 0,
+                                    max: max,
+                                },
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: "% (stacked)",
+                                },
+                            }]
+                        },
+                        responsive: false,
+                    });
+
+                createGraph("g3", "Average time waiting in queue (s)", labels, [{
+                        data: wait_points,
+                        borderColor: "rgba(24, 42, 94, 0.8)",
+                        fill: false,
+                    }, {
+                        data: Array(days + 1).fill(300),
+                        borderColor: "rgba(1, 2, 3, 0.3)",
+                        fill: false,
+                    }]);
             }
 
             // Show % of failed tests per day
             const labels = [];
             const points = [];
-            const limit_points = [];
             const yesterday = new Date();
             yesterday.setHours(0, 0, 0, 0);
             let to = new Date();
@@ -243,7 +340,6 @@
                         WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000}${tq}`);
                 labels.unshift(from.getDate() + "." + (from.getMonth() + 1));
                 points.unshift(failed[0].values[0]);
-                limit_points.push(10);
 
                 to = new Date(yesterday);
                 to.setDate(yesterday.getDate() - i);
@@ -254,39 +350,40 @@
             if (test)
                 label = "Percentage of failures per day";
 
-            createGraph("g1", label, labels, points, limit_points);
+            createGraph("g1", label, labels, [{
+                    data: points,
+                    borderColor: "rgba(24, 42, 94, 0.8)",
+                    fill: false,
+                }, {
+                    data: Array(days + 1).fill(10),
+                    borderColor: "rgba(1, 2, 3, 0.3)",
+                    fill: false,
+                }]);
         };
         xhr.send();
     });
 
-    function createGraph(id, name, labels, points, limit_points) {
+    function createGraph(id, name, labels, datasets, options) {
         document.getElementById(id).innerHTML = "";
         document.getElementById(id + "-title").innerHTML = name;
+
+        if (!options)
+            options = {
+                legend: {
+                    display: false,
+                },
+                responsive: false,
+            };
 
         // Create graph itself
         const ctx = document.getElementById(id);
         const chart = new Chart(ctx, {
             type: "line",
-
             data: {
                 labels: labels,
-                datasets: [{
-                    data: points,
-                    borderColor: "rgba(24, 42, 94, 0.8)",
-                    fill: false,
-                }, {
-                    data: limit_points,
-                    borderColor: "rgba(1, 2, 3, 0.3)",
-                    fill: false,
-                }]
+                datasets: datasets,
             },
-
-            options: {
-                legend: {
-                    display: false,
-                },
-                responsive: false,
-            }
+            options: options,
         });
     }
 
