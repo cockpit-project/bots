@@ -84,16 +84,7 @@ def main():
     # 'posted' - when this run was triggered
     # 'finished' - when this run finished - 'state' is then either 'success', 'failure' or 'error'
     for status in reversed(statuses):
-        repo = api.repo
-        context = status["context"]
-        if "@" in context:
-            parts = context.split("@")
-            context = parts[0]
-            if not parts[1].startswith("bots"):
-                # Can contain branch, as it diffs between master and branches (e.g `cockpit-project/cockpit/rhel-7.9`)
-                repo = parts[1]
-
-        cc = contexts.setdefault(context, [])
+        cc = contexts.setdefault(status["context"], [])
 
         desc = status["description"]
         if status["state"] == "pending":
@@ -101,7 +92,7 @@ def main():
                 cc[-1]["url"] = status["target_url"]
                 cc[-1]["started"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()
             elif "Not yet tested" in desc:
-                new_run = {"posted": datetime.strptime(status["created_at"], DATE_FORMAT).timestamp(), "repo": repo}
+                new_run = {"posted": datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()}
                 cc.append(new_run)
             else:
                 logging.warning("Pending status has unexpected description '{0}', skipping.".format(desc))
@@ -114,6 +105,14 @@ def main():
             logging.warning("Status has unexpected state '{0}', skipping.".format(status["state"]))
 
     for context, statuses in contexts.items():
+        repo = api.repo
+        if "@" in context:
+            parts = context.split("@")
+            context = parts[0]
+            if not parts[1].startswith("bots"):
+                # Can contain branch, as it diffs between master and branches (e.g `cockpit-project/cockpit/rhel-7.9`)
+                repo = parts[1]
+
         for retry, status in enumerate(statuses):
             if not status.get("finished"):
                 # TODO: Store partial, store as non-finished?
@@ -127,7 +126,7 @@ def main():
                 context,
                 "(retry no." + str(retry) + ")" if retry else "",
                 status["state"] + (" (" + status["description"] + ")" if status.get("description") else ""),
-                waited, took, status["repo"], url
+                waited, took, repo, url
             ))
 
             row = cursor.execute("SELECT id FROM TestRuns WHERE url = ?", (url, )).fetchone()
@@ -135,7 +134,7 @@ def main():
                 logging.warning("Test run %s already exists as ID %i, skipping", url, row[0])
                 continue
 
-            run_id = insert_run(cursor, status["repo"], opts.revision, context, url,
+            run_id = insert_run(cursor, repo, opts.revision, context, url,
                                 status["posted"], retry, waited, took, status["state"],
                                 status.get("description"))
 
