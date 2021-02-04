@@ -44,6 +44,7 @@ parser.add_argument('-u', '--upload', action='append', dest="uploadlist", defaul
                     help='Upload file/dir to destination file/dir separated by ":" example: -u file.txt:/var/lib')
 parser.add_argument('--base-image', help='Base image name, if "image" does not match a standard Cockpit VM image name')
 parser.add_argument('--resize', help="Resize the image. Size in bytes with using K, M, or G suffix.")
+parser.add_argument('-n', '--no-network', action='store_true', help='Do not connect the machine to the Internet')
 parser.add_argument('image', help='The image to use (destination name when using --base-image)')
 args = parser.parse_args()
 
@@ -146,8 +147,11 @@ def install_packages(machine_instance, packagelist, install_command):
 if args.commandlist or args.packagelist or args.scriptlist or args.uploadlist or args.resize:
     if '/' not in args.base_image:
         subprocess.check_call(["image-download", args.base_image])
+    network = testvm.VirtNetwork(0, image=args.base_image)
     machine = testvm.VirtMachine(maintain=True,
-                                 verbose=args.verbose, image=prepare_install_image(args.base_image, args.image))
+                                 verbose=args.verbose,
+                                 networking=network.host(restrict=args.no_network),
+                                 image=prepare_install_image(args.base_image, args.image))
     machine.start()
     machine.wait_boot()
     try:
