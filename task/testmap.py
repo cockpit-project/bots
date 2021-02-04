@@ -16,6 +16,7 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import os.path
+import itertools
 
 from machine.machine_core.constants import TEST_OS_DEFAULT
 
@@ -186,6 +187,50 @@ def get_build_image(image):
 # test context image to an actual physical image name
 def get_test_image(image):
     return image.replace("-distropkg", "")
+
+
+def split_context(context):
+    os_scenario = ""
+    bots_pr = ""
+    repo_branch = ""
+
+    context_parts = context.split("@")
+    os_scenario = context_parts[0]
+
+    # Second part can be be either `bots#<pr_number>` or repo specification
+    if len(context_parts) > 1:
+        if context_parts[1].startswith("bots#"):
+            bots_pr = int(context_parts[1][5:])
+        else:
+            repo_branch = context_parts[1]
+
+    if len(context_parts) > 2:
+        repo_branch = context_parts[2]
+    return (os_scenario, bots_pr, repo_branch)
+
+
+def is_valid_context(context, repo, contexts=[]):
+    branch_contexts = tests_for_project(repo).values()
+    repo_contexts = set(itertools.chain(*branch_contexts))
+
+    os_scenario, bots_pr, repo_branch = split_context(context)
+
+    # If contexts were specified, only those are valid
+    if contexts:
+        for c in contexts:
+            c = c.split("@")[0]
+            if c == os_scenario:
+                return True
+        return False
+
+    # If repo in context, consider only contexts from the given repo
+    if repo_branch:
+        repo_branch = "/".join(repo_branch.split("/")[:2])
+        repo_cs = tests_for_project(repo_branch).values()
+        return os_scenario in set(itertools.chain(*repo_cs))
+
+    # Valid contexts are the ones that exist in the current repo
+    return os_scenario in repo_contexts
 
 
 def projects():

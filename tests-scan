@@ -23,7 +23,6 @@ import pipes
 import sys
 import time
 import logging
-import itertools
 
 sys.dont_write_bytecode = True
 logging.basicConfig(level=logging.INFO)
@@ -277,8 +276,6 @@ def update_status(api, revision, context, last, changes):
 def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp):
     results = []
     pulls = []
-    branch_contexts = testmap.tests_for_project(repo).values()
-    repo_contexts = set(itertools.chain(*branch_contexts))
 
     if pull_data:
         pulls.append(json.loads(pull_data)['pull_request'])
@@ -317,51 +314,10 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
             # end up with a bunch of half tested pull requests
             baseline += 1.0 - (min(100000, float(number)) / 100000)
 
-        def split_context(context):
-            os_scenario = ""
-            bots_pr = ""
-            repo_branch = ""
-
-            context_parts = context.split("@")
-            os_scenario = context_parts[0]
-
-            # Second part can be be either `bots#<pr_number>` or repo specification
-            if len(context_parts) > 1:
-                if context_parts[1].startswith("bots#"):
-                    bots_pr = int(context_parts[1][5:])
-                else:
-                    repo_branch = context_parts[1]
-
-            if len(context_parts) > 2:
-                repo_branch = context_parts[2]
-            return (os_scenario, bots_pr, repo_branch)
-
-        def is_valid_context(context):
-            os_scenario, bots_pr, repo_branch = split_context(context)
-
-            # If contexts were specified on commandline, only those are valid
-            # Of course if you specify invalid context in `tests-scan` it will be happy about it
-            # But this can be used when want to try new context which does not yet exists in map
-            if contexts:
-                for c in contexts:
-                    c = c.split("@")[0]
-                    if c == os_scenario:
-                        return True
-                return False
-
-            # If repo in context, consider only contexts from the given repo
-            if repo_branch:
-                repo_branch = "/".join(repo_branch.split("/")[:2])
-                repo_cs = testmap.tests_for_project(repo_branch).values()
-                return os_scenario in set(itertools.chain(*repo_cs))
-
-            # Valid contexts are the ones that exist in the current repo
-            return os_scenario in repo_contexts
-
         # Create list of statuses to process
         todos = {}
         for status in statuses:  # Firstly add all valid contexts that already exist in github
-            if is_valid_context(status):
+            if testmap.is_valid_context(status, repo, contexts):
                 todos[status] = statuses[status]
         if not statuses:  # If none defined in github add basic set of contexts
             for context in build_policy(repo, contexts).get(base, []):
@@ -376,7 +332,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
             # Get correct project and branch. Ones from test name have priority
             project = repo
             branch = base
-            os_scenario, bots_pr, repo_branch = split_context(context)
+            os_scenario, bots_pr, repo_branch = testmap.split_context(context)
 
             repo_branch = repo_branch.split("/")
             if len(repo_branch) == 2:
