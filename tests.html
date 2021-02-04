@@ -263,18 +263,18 @@
                         ORDER BY percent DESC
                         LIMIT 10`);
 
-                rows[0].values.forEach(row => {
-                    const urls = db.exec(`
-                        SELECT DISTINCT TestRuns.url
-                        FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
-                        WHERE testname = '${row[0]}' AND failed = 1 AND project LIKE '${repo}'
-                        ORDER BY run DESC
-                        LIMIT 2`);
-                    const links = urls[0].values.map(u => u[0]);
-                    top10.push([{name: normalize(row[0]), key_name: row[0], key: "test"}, row[1].toFixed(2), links]);
-                });
-
-                if (!top10.length)
+                if (rows.length)
+                    rows[0].values.forEach(row => {
+                        const urls = db.exec(`
+                            SELECT DISTINCT TestRuns.url
+                            FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
+                            WHERE testname = '${row[0]}' AND failed = 1 AND project LIKE '${repo}'
+                            ORDER BY run DESC
+                            LIMIT 2`);
+                        const links = urls[0].values.map(u => u[0]);
+                        top10.push([{name: normalize(row[0]), key_name: row[0], key: "test"}, row[1].toFixed(2), links]);
+                    });
+                else
                     top10.push([`No failures in the last ${days} days`, 0, []]);
 
                 createTable("t1", "Top failures", ["Test name", "Fail rate (%)", "Logs"], top10);
