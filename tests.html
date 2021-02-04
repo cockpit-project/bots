@@ -137,7 +137,7 @@
                 let from = yesterday;
                 for (let i = 0; i < days; i++) {
                     const failed = db.exec(`
-                            SELECT (t2.count * 100.0) / COUNT(*) AS percent
+                            SELECT (t2.count * 100.0) / COUNT(*), COUNT(*)
                             FROM Tests
                             JOIN TestRuns ON Tests.run = TestRuns.id
                             JOIN (
@@ -147,8 +147,8 @@
                                 WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1 AND Tests.testname = '${test}'
                             ) AS t2
                             WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.testname = '${test}'`);
-                    labels.unshift(from.getDate() + "." + (from.getMonth() + 1));
-                    points.unshift(failed[0].values[0]);
+                    labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${failed[0].values[0][1]} runs)`);
+                    points.unshift(failed[0].values[0][0]);
 
                     to = new Date(yesterday);
                     to.setDate(yesterday.getDate() - i);
