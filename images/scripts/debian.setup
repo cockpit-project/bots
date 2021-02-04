@@ -59,6 +59,7 @@ ltrace \
 iproute2 \
 mdadm \
 nfs-server \
+podman \
 qemu-kvm \
 socat \
 systemd-coredump \
@@ -82,10 +83,17 @@ case "$RELEASE" in
     buster)
         # timesyncd got split out in Ubuntu 20.04 and Debian 11
         TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
+        # no podman package yet
+        TEST_PACKAGES="${TEST_PACKAGES/podman /}"
         ;;
     bullseye)
         # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
         IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
+        ;;
+    focal)
+        # no podman package yet
+        TEST_PACKAGES="${TEST_PACKAGES/podman /}"
+        ;;
 esac
 
 if grep -q 'ID=debian' /etc/os-release; then
