@@ -57,6 +57,11 @@
         </div>
   </body>
   <script>
+    // Pretty format test names
+    function normalize(name) {
+        return name.slice(name.lastIndexOf("/") + 1);
+    }
+
     const DAY = 86400;
     const params = new URLSearchParams(window.location.search);
     const days = Number(params.get('days') || 14);
@@ -245,7 +250,7 @@
                         ORDER BY run DESC
                         LIMIT 2`);
                     const links = urls[0].values.map(u => u[0]);
-                    top10.push([{name: row[0], key: "test"}, row[1].toFixed(2), links]);
+                    top10.push([{name: normalize(row[0]), key_name: row[0], key: "test"}, row[1].toFixed(2), links]);
                 });
 
                 if (!top10.length)
@@ -446,7 +451,7 @@
                     ea.textContent = d.name;
                     ea.href="#";
                     ea.onclick = () => {
-                        params.set(d.key, d.name);
+                        params.set(d.key, d.key_name);
                         history.replaceState(null, null, "?"+params.toString());
                         location.reload();
                     };
