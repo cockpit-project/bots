@@ -12,3 +12,56 @@ jobs:
 
       - name: Run test
         run: test/run
+
+  cockpituous:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+        with:
+          # need this to get origin/master for git diff
+          fetch-depth: 0
+
+      - name: Rebase to current master
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git rebase origin/master
+
+      - name: Check whether anything besides images/ or naughty/ changed
+        id: changes
+        run: |
+          changes=$(git diff --name-only origin/master..HEAD | grep -Ev '^(images|naughty)/' || true)
+          # print for debugging
+          echo "changes:"
+          echo "$changes"
+          [ -z "$changes" ] || echo "::set-output name=changed::true"
+
+      - name: Clone cockpituous repository
+        if: steps.changes.outputs.changed
+        uses: actions/checkout@v2
+        with:
+          repository: cockpit-project/cockpituous
+          path: cockpituous
+
+      - name: Test local CI deployment
+        if: steps.changes.outputs.changed
+        run: |
+          set -ex
+          if [ -n '${{ github.event.pull_request.number }}' ]; then
+              # pull_request
+              #
+              # default workflow token is too weak for tests-scan; only PRs from origin repo have the cockpituous token
+              if [ -n '${{ secrets.COCKPITUOUS_TOKEN }}' ]; then
+                  echo '${{ secrets.COCKPITUOUS_TOKEN }}' > /tmp/github-token
+                  pr_args='-r ${{ github.event.pull_request.base.user.login }}/bots -p ${{ github.event.pull_request.number }} -t /tmp/github-token'
+              fi
+              repo='${{ github.event.pull_request.head.repo.clone_url }}'
+              branch='${{ github.event.pull_request.head.ref }}'
+          else
+              # push event; skip testing a PR
+              repo='${{ github.event.repository.clone_url }}'
+              branch="${GITHUB_REF##*/}"
+          fi
+          cd cockpituous
+          sudo COCKPIT_BOTS_REPO=$repo COCKPIT_BOTS_BRANCH=$branch tasks/run-local.sh ${pr_args:-}
