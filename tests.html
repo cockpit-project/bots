@@ -298,7 +298,7 @@
                         max = Math.max(max, 100 - (green * 100) / all);
                     } else {
                         all = 0;
-                        pr_points.unshift([0, 0, 0]);
+                        pr_points.unshift([null, null, null]);
                     }
 
                     pr_labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${all} PRs)`);
