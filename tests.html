@@ -11,6 +11,10 @@
                 <h4 class="my-0 mr-md-auto font-weight-normal">CI Weather Report</h4>
                 <small>Brought to you by <b>MM</b></small>
             </div>
+            <div>
+                <h4 class="my-0 mr-md-auto font-weight-normal" id="weather"></h4>
+                <small id="description"></small>
+            </div>
             <div class="form-group row">
                 <label for="days" class="col-sm-6 col-form-label">Days</label>
                 <select id="days" class="form-control col-sm-6">
@@ -162,6 +166,17 @@
                         fill: false,
                     }]);
             } else {
+                const prs_count = db.exec(`
+                    SELECT COUNT(DISTINCT(revision))
+                    FROM TestRuns
+                    WHERE time > ${since}`)[0].values[0][0];
+                const tests_count = db.exec(`
+                    SELECT COUNT(*)
+                    FROM Tests
+                    JOIN TestRuns ON Tests.run = TestRuns.id
+                    WHERE time > ${since}`)[0].values[0][0];
+                document.getElementById("description").innerHTML = `Showing results from ${prs_count} PRs and ${tests_count} tests.`;
+
                 // Select unexpected messages
                 let messages = db.exec(`
                     SELECT retry_reason, TestRuns.url
