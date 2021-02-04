@@ -107,7 +107,7 @@
                         WHERE time > ${since} AND Tests.failed = 1 AND Tests.testname = '${test}'
                         GROUP BY context
                         ORDER BY COUNT(*) DESC`);
-                const all = db.exec(`
+                const failed = db.exec(`
                         SELECT COUNT(*) AS failed
                         FROM TestRuns
                         JOIN Tests ON Tests.run = TestRuns.id
@@ -121,7 +121,7 @@
                         ORDER BY run DESC
                         LIMIT 2`);
                     const links = urls[0].values.map(u => u[0]);
-                    top10.push([row[0], ((row[1] * 100) / all).toFixed(2), links]);
+                    top10.push([row[0], ((row[1] * 100) / failed).toFixed(2), links]);
                 });
                 if (!top10.length)
                     top10.push([`No failures in the last ${days} days`, 0, []]);
@@ -165,6 +165,13 @@
                         borderColor: "rgba(1, 2, 3, 0.3)",
                         fill: false,
                     }]);
+
+                const all = db.exec(`
+                        SELECT COUNT(*) AS failed
+                        FROM TestRuns
+                        JOIN Tests ON Tests.run = TestRuns.id
+                        WHERE time > ${since} AND Tests.testname = '${test}'`)[0].values[0][0];
+                document.getElementById("description").innerHTML = `Showing results from ${all} tests (${failed} failed).`;
             } else {
                 const prs_count = db.exec(`
                     SELECT COUNT(DISTINCT(revision))
