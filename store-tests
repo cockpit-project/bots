@@ -27,7 +27,7 @@ import re
 
 from datetime import datetime
 
-from task import github, CA_PEM
+from task import github, testmap, CA_PEM
 
 # Result line has form like:
 # ok 2 test/verify/check-accounts TestAccounts.testExpire [ND@1]
@@ -84,6 +84,9 @@ def main():
     # 'posted' - when this run was triggered
     # 'finished' - when this run finished - 'state' is then either 'success', 'failure' or 'error'
     for status in reversed(statuses):
+        if not testmap.is_valid_context(status["context"], api.repo):
+            continue
+
         cc = contexts.setdefault(status["context"], [])
 
         desc = status["description"]
