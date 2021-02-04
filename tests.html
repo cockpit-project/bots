@@ -15,17 +15,16 @@
                 <h4 class="my-0 mr-md-auto font-weight-normal" id="weather"></h4>
                 <small id="description"></small>
             </div>
-            <div class="form-group row">
-                <label for="days" class="col-sm-6 col-form-label">Days</label>
-                <select id="days" class="form-control col-sm-6">
-                    <option value="3">3</option>
-                    <option value="5">5</option>
-                    <option value="7">7</option>
-                    <option value="9">9</option>
-                    <option value="14">14</option>
-                    <option value="21">21</option>
-                </select>
-            </div>
+            <form action="" class="form-inline">
+                <div class="form-group">
+                    <label for="repo" class="col-sm-3 col-form-label">Repo</label>
+                    <select id="repo" class="form-control col-sm-9"></select>
+                </div>
+                <div class="form-group">
+                    <label for="days" class="col-sm-6 col-form-label">Days</label>
+                    <select id="days" class="form-control col-sm-6"></select>
+                </div>
+            </form>
         </div>
         <nav aria-label="breadcrumb" id="nav" hidden>
             <ol class="breadcrumb">
@@ -62,20 +61,30 @@
         return name.slice(name.lastIndexOf("/") + 1);
     }
 
+    // Init select
+    function select(selector, key, value, values) {
+        const elem = document.getElementById(selector);
+        values.forEach(v => {
+            const option = document.createElement("OPTION");
+            option.value = v;
+            option.innerHTML = v;
+            option.selected = v == value;
+            elem.appendChild(option);
+        });
+        elem.addEventListener("change", e => {
+            params.set(key, e.target.value);
+            history.replaceState(null, null, "?"+params.toString());
+            location.reload();
+        });
+    }
+
     const DAY = 86400;
     const params = new URLSearchParams(window.location.search);
     const days = Number(params.get('days') || 14);
     const test = params.get('test');
+    let repo = params.get('repo') || "All";
 
-    const days_select = document.getElementById("days");
-    Array.from(days_select.options).forEach(o => {
-        o.selected = o.value == days;
-    });
-    days_select.addEventListener("change", e => {
-        params.set("days", e.target.value);
-        history.replaceState(null, null, "?"+params.toString());
-        location.reload();
-    });
+    select("days", "days", days, [3, 5, 7, 9, 14, 21]);
 
     if (test) {
         document.getElementById("nav").hidden = false;
@@ -103,26 +112,38 @@
 
             const since = (new Date().getTime() / 1000) - days * DAY;
 
+            // Find what repos we have reports in the last N days
+            const repos = db.exec(`
+                    SELECT DISTINCT(project)
+                    FROM TestRuns
+                    WHERE time > ${since}`)[0].values;
+            repos.unshift("All");
+
+            // Init repos select only here as we need to read from DB first
+            select("repo", "repo", repo, repos);
+            if (repo === "All")
+                repo = "%"; // Use SQL wildcard
+
             if (test) {
                 top10 = []
                 const rows = db.exec(`
                         SELECT context, COUNT(*) AS failed
                         FROM TestRuns
                         JOIN Tests ON Tests.run = TestRuns.id
-                        WHERE time > ${since} AND Tests.failed = 1 AND Tests.testname = '${test}'
+                        WHERE time > ${since} AND Tests.failed = 1 AND Tests.testname = '${test}' AND project LIKE '${repo}'
                         GROUP BY context
                         ORDER BY COUNT(*) DESC`);
                 const failed = db.exec(`
                         SELECT COUNT(*) AS failed
                         FROM TestRuns
                         JOIN Tests ON Tests.run = TestRuns.id
-                        WHERE time > ${since} AND Tests.failed = 1 AND Tests.testname = '${test}'`)[0].values[0][0];
+                        WHERE time > ${since} AND Tests.failed = 1 AND Tests.testname = '${test}' AND project LIKE '${repo}'`)[0].values[0][0];
 
                 rows[0].values.forEach(row => {
                     const urls = db.exec(`
                         SELECT DISTINCT TestRuns.url
                         FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
-                        WHERE testname = '${test}' AND TestRuns.context = '${row[0]}' AND failed = 1
+                        WHERE testname = '${test}' AND TestRuns.context = '${row[0]}' AND failed = 1 AND project LIKE '${repo}'
                         ORDER BY run DESC
                         LIMIT 2`);
                     const links = urls[0].values.map(u => u[0]);
@@ -149,9 +170,9 @@
                                 SELECT COUNT(*) as count
                                 FROM Tests
                                 JOIN TestRuns ON Tests.run = TestRuns.id
-                                WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1 AND Tests.testname = '${test}'
+                                WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1 AND Tests.testname = '${test}' AND project LIKE '${repo}'
                             ) AS t2
-                            WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.testname = '${test}'`);
+                            WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.testname = '${test}' AND project LIKE '${repo}'`);
                     labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${failed[0].values[0][1]} runs)`);
                     points.unshift(failed[0].values[0][0]);
 
@@ -175,18 +196,18 @@
                         SELECT COUNT(*) AS failed
                         FROM TestRuns
                         JOIN Tests ON Tests.run = TestRuns.id
-                        WHERE time > ${since} AND Tests.testname = '${test}'`)[0].values[0][0];
+                        WHERE time > ${since} AND Tests.testname = '${test}' AND project LIKE '${repo}'`)[0].values[0][0];
                 document.getElementById("description").innerHTML = `Showing results from ${all} tests (${failed} failed).`;
             } else {
                 const prs_count = db.exec(`
                     SELECT COUNT(DISTINCT(revision))
                     FROM TestRuns
-                    WHERE time > ${since}`)[0].values[0][0];
+                    WHERE time > ${since} AND project LIKE '${repo}'`)[0].values[0][0];
                 const tests_count = db.exec(`
                     SELECT COUNT(*)
                     FROM Tests
                     JOIN TestRuns ON Tests.run = TestRuns.id
-                    WHERE time > ${since}`)[0].values[0][0];
+                    WHERE time > ${since} AND project LIKE '${repo}'`)[0].values[0][0];
                 document.getElementById("description").innerHTML = `Showing results from ${prs_count} PRs and ${tests_count} tests.`;
 
                 // Select unexpected messages
@@ -194,7 +215,7 @@
                     SELECT retry_reason, TestRuns.url
                     FROM Tests
                     JOIN TestRuns ON Tests.run = TestRuns.id
-                    WHERE TestRuns.time > ${since} AND
+                    WHERE TestRuns.time > ${since} AND project LIKE '${repo}' AND
                         retry_reason IS NOT null AND
                         retry_reason IS NOT 'be robust against unstable tests' AND
                         retry_reason IS NOT 'due to failure of test harness or framework'`);
@@ -234,10 +255,10 @@
                             SELECT testname, COUNT(run) as failed
                             FROM Tests
                             JOIN TestRuns ON Tests.run = TestRuns.id
-                            WHERE TestRuns.time > ${since} AND Tests.failed = 1
+                            WHERE TestRuns.time > ${since} AND Tests.failed = 1 AND project LIKE '${repo}'
                             GROUP BY testname
                         ) AS t2 ON t1.testname = t2.testname
-                        WHERE TestRuns.time > ${since} AND t2.failed > 0
+                        WHERE TestRuns.time > ${since} AND t2.failed > 0 AND project LIKE '${repo}'
                         GROUP BY t1.testname
                         ORDER BY percent DESC
                         LIMIT 10`);
@@ -246,7 +267,7 @@
                     const urls = db.exec(`
                         SELECT DISTINCT TestRuns.url
                         FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
-                        WHERE testname = '${row[0]}' AND failed = 1
+                        WHERE testname = '${row[0]}' AND failed = 1 AND project LIKE '${repo}'
                         ORDER BY run DESC
                         LIMIT 2`);
                     const links = urls[0].values.map(u => u[0]);
@@ -273,14 +294,14 @@
                     const time = db.exec(`
                             SELECT SUM(wait_seconds) / COUNT(*), COUNT(*)
                             FROM TestRuns
-                            WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000}`);
+                            WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000} AND project LIKE '${repo}'`);
                     wait_points.unshift(time[0].values[0][0]);
                     wait_labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${time[0].values[0][1]} runs)`);
 
                     const prs = db.exec(`
                                 SELECT revision, context, state, MAX(retry) as top
                                 FROM TestRuns
-                                WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000}
+                                WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000} AND project LIKE '${repo}'
                                 GROUP BY revision, context`);
                     if (prs.length) {
                         shas = {};
