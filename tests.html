@@ -232,21 +232,23 @@
                 createTable("t1", "Top failures", ["Test name", "Fail rate (%)", "Logs"], top10);
 
                 // Show average waiting time in queue per day
-                const labels = [];
                 const wait_points = [];
+                const wait_labels = [];
+                const pr_labels = [];
                 const pr_points = [];
                 let max = 0;
+                let all = 0;
                 const yesterday = new Date();
                 yesterday.setHours(0, 0, 0, 0);
                 let to = new Date();
                 let from = yesterday;
                 for (let i = 0; i < days; i++) {
                     const time = db.exec(`
-                            SELECT SUM(wait_seconds) / COUNT(*)
+                            SELECT SUM(wait_seconds) / COUNT(*), COUNT(*)
                             FROM TestRuns
                             WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000}`);
-                    labels.unshift(from.getDate() + "." + (from.getMonth() + 1));
-                    wait_points.unshift(time[0].values[0]);
+                    wait_points.unshift(time[0].values[0][0]);
+                    wait_labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${time[0].values[0][1]} runs)`);
 
                     const prs = db.exec(`
                                 SELECT revision, context, state, MAX(retry) as top
@@ -261,7 +263,7 @@
                             else if (shas[i[0]] !== -1) // No context failed
                                 shas[i[0]] = Math.max(shas[i[0]] || 0, i[3]);
                         });
-                        const all = Object.keys(shas).length;
+                        all = Object.keys(shas).length;
                         let red = 0; // Merged with failed test
                         let orange = 0; // Merged green with one max one retry
                         let green = 0; // Merged green without any retry
@@ -273,8 +275,11 @@
                         pr_points.unshift([(orange * 100) / all, ((all - green - orange - red) * 100) / all, (red * 100) / all]);
                         max = Math.max(max, 100 - (green * 100) / all);
                     } else {
+                        all = 0;
                         pr_points.unshift([0, 0, 0]);
                     }
+
+                    pr_labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${all} PRs)`);
 
                     to = new Date(yesterday);
                     to.setDate(yesterday.getDate() - i);
@@ -282,7 +287,7 @@
                     from.setDate(yesterday.getDate() - i - 1);
                 }
 
-                createGraph("g1", "Pull requests semaphore", labels, [{
+                createGraph("g1", "Pull requests semaphore", pr_labels, [{
                         data: Array(days + 1).fill(10),
                         borderColor: "rgba(50, 150, 50, 0.3)",
                         fill: false,
@@ -337,7 +342,7 @@
                         responsive: false,
                     });
 
-                createGraph("g2", "Average time waiting in queue (s)", labels, [{
+                createGraph("g2", "Average time waiting in queue (s)", wait_labels, [{
                         data: wait_points,
                         borderColor: "rgba(24, 42, 94, 0.8)",
                         fill: false,
