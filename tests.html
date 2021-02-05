@@ -57,8 +57,14 @@
   </body>
   <script>
     // Pretty format test names
-    function normalize(name) {
-        return name.slice(name.lastIndexOf("/") + 1);
+    function normalize(name, project) {
+        name = name.slice(name.lastIndexOf("/") + 1);
+        if (project !== "cockpit-project/cockpit") {
+            project = project.slice(project.indexOf("/") + 1); // Remove org
+            project = project.replace("cockpit-", ""); // Remove "cockpit-" prefix
+            name = `(${project}) ${name}`;
+        }
+        return name;
     }
 
     // Init select
@@ -248,7 +254,7 @@
                 // Get all failures sorted by number of occurrences
                 top10 = []
                 const rows = db.exec(`
-                        SELECT t1.testname, (t2.failed * 100.0) / COUNT(run) AS percent
+                        SELECT t1.testname, TestRuns.project, (t2.failed * 100.0) / COUNT(run) AS percent
                         FROM Tests AS t1
                         JOIN TestRuns ON t1.run = TestRuns.id
                         JOIN (
@@ -272,7 +278,7 @@
                             ORDER BY run DESC
                             LIMIT 2`);
                         const links = urls[0].values.map(u => u[0]);
-                        top10.push([{name: normalize(row[0]), key_name: row[0], key: "test"}, row[1].toFixed(2), links]);
+                        top10.push([{name: normalize(row[0], row[1]), key_name: row[0], key: "test"}, row[2].toFixed(2), links]);
                     });
                 else
                     top10.push([`No failures in the last ${days} days`, 0, []]);
