@@ -192,10 +192,12 @@
                         data: points,
                         borderColor: "rgba(24, 42, 94, 0.8)",
                         fill: false,
+                        spanGaps: true,
                     }, {
                         data: Array(days + 1).fill(10),
                         borderColor: "rgba(1, 2, 3, 0.3)",
                         fill: false,
+                        spanGaps: true,
                     }]);
 
                 const all = db.exec(`
@@ -345,30 +347,35 @@
                         data: Array(days + 1).fill(10),
                         borderColor: "rgba(50, 150, 50, 0.3)",
                         fill: false,
+                        spanGaps: true,
                         label: "Limit for one retry",
                         yAxisID: "limit",
                     }, {
                         data: Array(days + 1).fill(5),
                         borderColor: "rgba(120, 120, 50, 0.3)",
                         fill: false,
+                        spanGaps: true,
                         label: "Limit for any retry",
                         yAxisID: "limit",
                     }, {
                         data: pr_points.map(p => p[2]),
                         borderColor: "rgba(180, 25, 52, 0.8)",
                         backgroundColor: "rgba(180, 25, 52, 0.8)",
+                        spanGaps: true,
                         label: "Merged red",
                         yAxisID: "main",
                     }, {
                         data: pr_points.map(p => p[1]),
                         borderColor: "rgba(180, 100, 25, 0.8)",
                         backgroundColor: "rgba(180, 100, 25, 0.8)",
+                        spanGaps: true,
                         label: "Green with 2+ retries",
                         yAxisID: "main",
                     }, {
                         data: pr_points.map(p => p[0]),
                         borderColor: "rgba(180, 180, 25, 0.8)",
                         backgroundColor: "rgba(180, 180, 25, 0.8)",
+                        spanGaps: true,
                         label: "Green with 1 retry",
                         yAxisID: "main",
                     }], {
@@ -400,10 +407,12 @@
                         data: wait_points,
                         borderColor: "rgba(24, 42, 94, 0.8)",
                         fill: false,
+                        spanGaps: true,
                     }, {
                         data: Array(days + 1).fill(300),
                         borderColor: "rgba(1, 2, 3, 0.3)",
                         fill: false,
+                        spanGaps: true,
                     }]);
             }
         };
