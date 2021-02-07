@@ -209,6 +209,8 @@ def find_tests(fp):
             # sometimes line breaks are missing:
             # not ok 117 test/verify/check-metrics TestMetrics.testPcp# ------
             testname = "{0} {1}".format(m.group(2), m.group(3)).rstrip("#")
+            if "make-checkout-workdir" in testname:
+                testname = testname.split("make-checkout-workdir")[1]
             r = re_retry.search(line)
             yield (testname, bool(m.group(1)), last_msg or (r and r.group(1) or None))
             last_msg = ""
