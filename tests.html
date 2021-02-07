@@ -53,6 +53,12 @@
                     <canvas id="g2" style="width: 100%; height: 256px"></canvas>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 id="g3-title"></h2>
+                    <canvas id="g3" style="width: 100%; height: 256px"></canvas>
+                </div>
+            </div>
         </div>
   </body>
   <script>
@@ -288,6 +294,7 @@
                 createTable("t1", "Top failures", ["Test name", "Fail rate (%)", "Logs"], top10);
 
                 // Show average waiting time in queue per day
+                const time_points = [];
                 const wait_points = [];
                 const wait_labels = [];
                 const pr_labels = [];
@@ -299,12 +306,19 @@
                 let to = new Date();
                 let from = yesterday;
                 for (let i = 0; i < days; i++) {
-                    const time = db.exec(`
+                    const wait = db.exec(`
                             SELECT SUM(wait_seconds) / COUNT(*), COUNT(*)
                             FROM TestRuns
                             WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000} AND project LIKE '${repo}'`);
-                    wait_points.unshift(time[0].values[0][0]);
-                    wait_labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${time[0].values[0][1]} runs)`);
+                    wait_points.unshift(wait[0].values[0][0]);
+                    wait_labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${wait[0].values[0][1]} runs)`);
+
+                    // % of tests that took longer than 60 minutes from trigger to completion
+                    const time = db.exec(`
+                            SELECT COUNT(*)
+                            FROM TestRuns
+                            WHERE wait_seconds + run_seconds > 3600 AND time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000} AND project LIKE '${repo}'`);
+                    time_points.unshift((time[0].values[0][0] * 100) / wait[0].values[0][1]);
 
                     const prs = db.exec(`
                                 SELECT revision, context, state, MAX(retry) as top
@@ -403,7 +417,19 @@
                         responsive: false,
                     });
 
-                createGraph("g2", "Average time waiting in queue (s)", wait_labels, [{
+                createGraph("g2", "Percents of tests that did not finish in 60 minutes", wait_labels, [{
+                        data: time_points,
+                        borderColor: "rgba(94, 42, 24, 0.8)",
+                        fill: false,
+                        spanGaps: true,
+                    }, {
+                        data: Array(days + 1).fill(5),
+                        borderColor: "rgba(1, 2, 3, 0.3)",
+                        fill: false,
+                        spanGaps: true,
+                    }]);
+
+                createGraph("g3", "Average time waiting in queue (s)", wait_labels, [{
                         data: wait_points,
                         borderColor: "rgba(24, 42, 94, 0.8)",
                         fill: false,
