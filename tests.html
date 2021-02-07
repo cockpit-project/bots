@@ -323,7 +323,11 @@
                     const prs = db.exec(`
                                 SELECT revision, context, state, MAX(retry) as top
                                 FROM TestRuns
-                                WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000} AND project LIKE '${repo}'
+                                JOIN ( SELECT revision AS rev, MAX(time) AS time
+                                        FROM TestRuns
+                                        GROUP BY revision
+                                ) AS t1 ON t1.rev = revision
+                                WHERE t1.time > ${from.getTime() / 1000} AND t1.time < ${to.getTime() / 1000} AND project LIKE '${repo}'
                                 GROUP BY revision, context`);
                     if (prs.length) {
                         shas = {};
