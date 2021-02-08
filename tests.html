@@ -51,6 +51,7 @@
                 <div class="col-md-12">
                     <h2 id="g2-title"></h2>
                     <canvas id="g2" style="width: 100%; height: 256px"></canvas>
+                    <div id="g2-details"></div>
                 </div>
             </div>
             <div class="row">
@@ -71,6 +72,10 @@
             name = `(${project}) ${name}`;
         }
         return name;
+    }
+
+    function formatDate(date) {
+        return `${date.getDate()}.${date.getMonth() + 1}`;
     }
 
     // Init select
@@ -185,7 +190,7 @@
                                 WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1 AND Tests.testname = '${test}' AND project LIKE '${repo}'
                             ) AS t2
                             WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.testname = '${test}' AND project LIKE '${repo}'`);
-                    labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${failed[0].values[0][1]} runs)`);
+                    labels.unshift(`${formatDate(from)} (${failed[0].values[0][1]} runs)`);
                     points.unshift(failed[0].values[0][0]);
 
                     to = new Date(yesterday);
@@ -311,7 +316,7 @@
                             FROM TestRuns
                             WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000} AND project LIKE '${repo}'`);
                     wait_points.unshift(wait[0].values[0][0]);
-                    wait_labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${wait[0].values[0][1]} runs)`);
+                    wait_labels.unshift(`${formatDate(from)} (${wait[0].values[0][1]} runs)`);
 
                     // % of tests that took longer than 60 minutes from trigger to completion
                     const time = db.exec(`
@@ -353,7 +358,7 @@
                         pr_points.unshift([null, null, null]);
                     }
 
-                    pr_labels.unshift(`${from.getDate()}.${from.getMonth() + 1} (${all} PRs)`);
+                    pr_labels.unshift(`${formatDate(from)} (${all} PRs)`);
 
                     to = new Date(yesterday);
                     to.setDate(yesterday.getDate() - i);
@@ -433,6 +438,23 @@
                         spanGaps: true,
                     }], null, "%");
 
+                // Render logs for last 15 tests that did not finish within 60 minutes
+                const time_logs = db.exec(`
+                        SELECT context, time, url, wait_seconds + run_seconds AS took
+                        FROM TestRuns
+                        WHERE wait_seconds + run_seconds > 3600 AND time > ${since} AND project LIKE '${repo}'
+                        ORDER BY time DESC
+                        LIMIT 15`)[0].values;
+                const parent_logs = document.createElement("div");
+                time_logs.forEach(t => {
+                    const ea = document.createElement("A");
+                    ea.className="btn btn-link py-0";
+                    ea.textContent = `${formatDate(new Date(t[1] * 1000))} ${t[0]} (${Math.floor(t[3]/60)}mins)`;
+                    ea.href = t[2];
+                    parent_logs.appendChild(ea);
+                });
+                document.getElementById("g2-details").appendChild(parent_logs);
+
                 createGraph("g3", "Average time waiting in queue", wait_labels, [{
                         data: wait_points,
                         borderColor: "rgba(24, 42, 94, 0.8)",
@@ -444,6 +466,7 @@
                         fill: false,
                         spanGaps: true,
                     }], null, "seconds");
+
             }
         };
         xhr.send();
