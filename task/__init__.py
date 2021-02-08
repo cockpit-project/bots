@@ -65,8 +65,8 @@ PUBLIC_STORES = [
 # Servers which have the private RHEL/Windows images
 REDHAT_STORES = [
     "https://cockpit-11.e2e.bos.redhat.com:8493",
-    # fallback RedHat-internal image server in AWS (internal VPN only), running only on demand
-    "https://10.29.163.169:8493/",
+    # fallback RedHat-internal image server in AWS (internal VPN only)
+    "https://10.29.162.239:8493/",
 ]
 
 api = github.GitHub()
