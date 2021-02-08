@@ -194,7 +194,7 @@
                     from.setDate(yesterday.getDate() - i - 1);
                 }
 
-                createGraph("g1", "Percentage of failures per day", labels, [{
+                createGraph("g1", "Failures per day", labels, [{
                         data: points,
                         borderColor: "rgba(24, 42, 94, 0.8)",
                         fill: false,
@@ -204,7 +204,7 @@
                         borderColor: "rgba(1, 2, 3, 0.3)",
                         fill: false,
                         spanGaps: true,
-                    }]);
+                    }], null, "%");
 
                 const all = db.exec(`
                         SELECT COUNT(*) AS failed
@@ -421,7 +421,7 @@
                         responsive: false,
                     });
 
-                createGraph("g2", "Percents of tests that did not finish in 60 minutes", wait_labels, [{
+                createGraph("g2", "Tests that did not finish within 60 minutes", wait_labels, [{
                         data: time_points,
                         borderColor: "rgba(94, 42, 24, 0.8)",
                         fill: false,
@@ -431,9 +431,9 @@
                         borderColor: "rgba(1, 2, 3, 0.3)",
                         fill: false,
                         spanGaps: true,
-                    }]);
+                    }], null, "%");
 
-                createGraph("g3", "Average time waiting in queue (s)", wait_labels, [{
+                createGraph("g3", "Average time waiting in queue", wait_labels, [{
                         data: wait_points,
                         borderColor: "rgba(24, 42, 94, 0.8)",
                         fill: false,
@@ -443,13 +443,13 @@
                         borderColor: "rgba(1, 2, 3, 0.3)",
                         fill: false,
                         spanGaps: true,
-                    }]);
+                    }], null, "seconds");
             }
         };
         xhr.send();
     });
 
-    function createGraph(id, name, labels, datasets, options) {
+    function createGraph(id, name, labels, datasets, options, ylabel) {
         document.getElementById(id).innerHTML = "";
         document.getElementById(id + "-title").innerHTML = name;
 
@@ -459,6 +459,14 @@
                     display: false,
                 },
                 responsive: false,
+                scales: {
+                    yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: ylabel,
+                        },
+                    }]
+                }
             };
 
         // Create graph itself
