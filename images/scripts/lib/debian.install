@@ -39,12 +39,14 @@ if [ -n "$do_build" ]; then
     rm -rf build-results
     mkdir build-results
     resultdir=$PWD/build-results
-    upstream_ver=$(ls cockpit-*.tar.gz | sed 's/^.*-//; s/.tar.gz//' | head -n1)
+    dist_tar="$(ls cockpit-*.tar.?z)"
+    compression="${dist_tar##*.}"
+    upstream_ver=$(echo "$dist_tar" | sed 's/^.*-//; s/.tar\..z//' | head -n1)
 
-    ln -sf cockpit-*.tar.gz cockpit_${upstream_ver}.orig.tar.gz
+    ln -sf "$dist_tar" "cockpit_${upstream_ver}.orig.tar.$compression"
 
     rm -rf cockpit-*/
-    tar -xzf cockpit-*.tar.gz
+    tar -xf $dist_tar
     ( cd cockpit-*/
       cp -rp tools/debian debian
       # put proper version into changelog, as we have versioned dependencies
