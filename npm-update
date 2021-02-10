@@ -159,6 +159,9 @@ def run(specified_package, verbose=False, **kwargs):
             else:
                 # only update one dep, so that updates can be tested one by one
                 break
+        else:
+            # if the version was not updated revert package.json changes
+            package_json(orig_package_json, package, orig_version)
 
     if updated_packages and not kwargs["dry"]:
         # Create a pull request from these changes
