@@ -44,6 +44,8 @@ jobs:
           repository: cockpit-project/cockpituous
           path: cockpituous
 
+      - uses: mxschmitt/action-tmate@v3
+
       - name: Test local CI deployment
         if: steps.changes.outputs.changed
         run: |
