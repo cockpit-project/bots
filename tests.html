@@ -47,13 +47,19 @@
                 <div class="col-md-12">
                     <h2 id="g2-title"></h2>
                     <canvas id="g2" style="width: 100%; height: 256px"></canvas>
-                    <div id="g2-details"></div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-12">
                     <h2 id="g3-title"></h2>
                     <canvas id="g3" style="width: 100%; height: 256px"></canvas>
+                    <div id="g3-details"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 id="g4-title"></h2>
+                    <canvas id="g4" style="width: 100%; height: 256px"></canvas>
                 </div>
             </div>
         </div>
@@ -297,11 +303,14 @@
                 // Show average waiting time in queue per day
                 const time_points = [];
                 const wait_points = [];
+                const test_points = [];
                 const wait_labels = [];
                 const pr_labels = [];
                 const pr_points = [];
                 let max = 0;
                 let all = 0;
+                let all_runs = 0;
+                let max_runs = 0;
                 const yesterday = new Date();
                 yesterday.setHours(0, 0, 0, 0);
                 let to = new Date();
@@ -311,15 +320,42 @@
                             SELECT SUM(wait_seconds) / COUNT(*), COUNT(*)
                             FROM TestRuns
                             WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000} AND project LIKE '${repo}'`);
+                    all_runs = wait[0].values[0][1];
                     wait_points.unshift(wait[0].values[0][0]);
-                    wait_labels.unshift(`${formatDate(from)} (${wait[0].values[0][1]} runs)`);
+                    wait_labels.unshift(`${formatDate(from)} (${all_runs} runs)`);
 
                     // % of tests that took longer than 60 minutes from trigger to completion
                     const time = db.exec(`
                             SELECT COUNT(*)
                             FROM TestRuns
                             WHERE wait_seconds + run_seconds > 3600 AND time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000} AND project LIKE '${repo}'`);
-                    time_points.unshift((time[0].values[0][0] * 100) / wait[0].values[0][1]);
+                    time_points.unshift((time[0].values[0][0] * 100) / all_runs);
+
+                    const tests = db.exec(`
+                                SELECT state, description, COUNT(TestRuns.id)
+                                FROM TestRuns
+                                LEFT JOIN Tests ON Tests.run = TestRuns.id
+                                WHERE time > ${from.getTime() / 1000} AND time < ${to.getTime() / 1000} AND project LIKE '${repo}'
+                                    AND state != "success"
+                                GROUP BY TestRuns.id`);
+                    if (tests.length) {
+                        let not_tested = 0; // Never picked
+                        let testing = 0; // Never finished (merged while still running)
+                        let error = 0; // Aborted without status
+                        let in_prep = 0; // Failed in preparation
+                        let failed = 0; // Some tests failed
+                        tests[0].values.forEach(v => {
+                            if (v[0] === "pending" && v[2] <= 1) not_tested++;
+                            else if (v[0] === "pending") testing++;
+                            else if (v[0] === "error") error++;
+                            else if (v[2] <= 1) in_prep++;
+                            else failed++;
+                        });
+                        test_points.unshift([(not_tested * 100) / all_runs, (testing * 100) / all_runs, (error * 100) / all_runs, (in_prep * 100) / all_runs, (failed * 100) / all_runs]);
+                        max_runs = Math.max(max_runs, 100 - ((all_runs - (not_tested + testing + error + in_prep + failed)) * 100) / all_runs);
+                    } else {
+                        test_points.unshift([null, null, null, null, null]);
+                    }
 
                     const prs = db.exec(`
                                 SELECT revision, context, state, MAX(retry) as top
@@ -422,7 +458,74 @@
                         responsive: false,
                     });
 
-                createGraph("g2", "Tests that did not finish within 60 minutes", wait_labels, [{
+                createGraph("g2", "Test runs semaphore", wait_labels, [{
+                        data: Array(days + 1).fill(10),
+                        borderColor: "rgba(120, 120, 50, 0.3)",
+                        fill: false,
+                        spanGaps: true,
+                        label: "Limit for non-completed (except 'Failed tests')",
+                        yAxisID: "limit",
+                    }, {
+                        data: test_points.map(p => p[0]),
+                        borderColor: "rgba(25, 52, 180, 0.8)",
+                        backgroundColor: "rgba(25, 52, 180, 0.8)",
+                        spanGaps: true,
+                        label: "Never picked",
+                        yAxisID: "main",
+                    }, {
+                        data: test_points.map(p => p[1]),
+                        borderColor: "rgba(25, 180, 180, 0.8)",
+                        backgroundColor: "rgba(25, 180, 180, 0.8)",
+                        spanGaps: true,
+                        label: "Never finished",
+                        yAxisID: "main",
+                    }, {
+                        data: test_points.map(p => p[2]),
+                        borderColor: "rgba(180, 25, 25, 0.8)",
+                        backgroundColor: "rgba(180, 25, 25, 0.8)",
+                        spanGaps: true,
+                        label: "Aborted",
+                        yAxisID: "main",
+                    }, {
+                        data: test_points.map(p => p[3]),
+                        borderColor: "rgba(180, 100, 25, 0.8)",
+                        backgroundColor: "rgba(180, 100, 25, 0.8)",
+                        spanGaps: true,
+                        label: "Failed in preparation",
+                        yAxisID: "main",
+                    }, {
+                        data: test_points.map(p => p[4]),
+                        borderColor: "rgba(180, 180, 25, 0.8)",
+                        backgroundColor: "rgba(180, 180, 25, 0.8)",
+                        spanGaps: true,
+                        label: "Failed tests",
+                        yAxisID: "main",
+                    }], {
+                        scales: {
+                            yAxes: [{
+                                id: "limit",
+                                display: false,
+                                ticks: {
+                                    min: 0,
+                                    max: max_runs,
+                                },
+                            }, {
+                                id: "main",
+                                stacked: true,
+                                ticks: {
+                                    min: 0,
+                                    max: max_runs,
+                                },
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: "% (stacked)",
+                                },
+                            }]
+                        },
+                        responsive: false,
+                    });
+
+                createGraph("g3", "Tests that did not finish within 60 minutes", wait_labels, [{
                         data: time_points,
                         borderColor: "rgba(94, 42, 24, 0.8)",
                         fill: false,
@@ -450,10 +553,10 @@
                         ea.href = t[2];
                         parent_logs.appendChild(ea);
                     });
-                    document.getElementById("g2-details").appendChild(parent_logs);
+                    document.getElementById("g3-details").appendChild(parent_logs);
                 }
 
-                createGraph("g3", "Average time waiting in queue", wait_labels, [{
+                createGraph("g4", "Average time waiting in queue", wait_labels, [{
                         data: wait_points,
                         borderColor: "rgba(24, 42, 94, 0.8)",
                         fill: false,
