@@ -30,7 +30,11 @@ REF="$1"
 REV=${2:-"FETCH_HEAD"}
 
 TARGET_DIR="make-checkout-workdir"
-rm -rf "$TARGET_DIR"
+# avoid failures with non-writable subdirectories
+if [ -e "$TARGET_DIR" ]; then
+    chmod -R u+w "$TARGET_DIR"
+    rm -rf "$TARGET_DIR"
+fi
 
 git clone "https://github.com/$REPO" "$TARGET_DIR"
 cd "$TARGET_DIR"
