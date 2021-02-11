@@ -440,16 +440,18 @@
                         FROM TestRuns
                         WHERE wait_seconds + run_seconds > 3600 AND time > ${since} AND project LIKE '${repo}'
                         ORDER BY time DESC
-                        LIMIT 15`)[0].values;
-                const parent_logs = document.createElement("div");
-                time_logs.forEach(t => {
-                    const ea = document.createElement("A");
-                    ea.className="btn btn-link py-0";
-                    ea.textContent = `${formatDate(new Date(t[1] * 1000))} ${t[0]} (${Math.floor(t[3]/60)}mins)`;
-                    ea.href = t[2];
-                    parent_logs.appendChild(ea);
-                });
-                document.getElementById("g2-details").appendChild(parent_logs);
+                        LIMIT 15`);
+                if (time_logs.length) {
+                    const parent_logs = document.createElement("div");
+                    time_logs[0].values.forEach(t => {
+                        const ea = document.createElement("A");
+                        ea.className="btn btn-link py-0";
+                        ea.textContent = `${formatDate(new Date(t[1] * 1000))} ${t[0]} (${Math.floor(t[3]/60)}mins)`;
+                        ea.href = t[2];
+                        parent_logs.appendChild(ea);
+                    });
+                    document.getElementById("g2-details").appendChild(parent_logs);
+                }
 
                 createGraph("g3", "Average time waiting in queue", wait_labels, [{
                         data: wait_points,
