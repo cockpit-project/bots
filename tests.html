@@ -267,6 +267,8 @@
                     createTable("t2", "Unexpected messages", ["Message", "Count", "Logs"], data);
 
                 // Get all failures sorted by number of occurrences
+                // Ignore selenium tests as they have a bug where skipped tests show up as failures.
+                // They are also deprecated and not very flaky, so not interesting to show.
                 top10 = []
                 const rows = db.exec(`
                         SELECT t1.testname, TestRuns.project, (t2.failed * 100.0) / COUNT(run) AS percent
@@ -276,7 +278,7 @@
                             SELECT testname, COUNT(run) as failed
                             FROM Tests
                             JOIN TestRuns ON Tests.run = TestRuns.id
-                            WHERE TestRuns.time > ${since} AND Tests.failed = 1 AND project LIKE '${repo}'
+                            WHERE TestRuns.time > ${since} AND Tests.failed = 1 AND project LIKE '${repo}' AND testname NOT LIKE '%selenium%'
                             GROUP BY testname
                         ) AS t2 ON t1.testname = t2.testname
                         WHERE TestRuns.time > ${since} AND t2.failed > 0 AND project LIKE '${repo}'
