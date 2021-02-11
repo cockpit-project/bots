@@ -96,6 +96,7 @@ def main():
                 cc[-1]["started"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()
             elif "Not yet tested" in desc:
                 new_run = {"posted": datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()}
+                new_run["state"] = "pending"
                 cc.append(new_run)
             else:
                 logging.warning("Pending status has unexpected description '{0}', skipping.".format(desc))
@@ -117,14 +118,11 @@ def main():
                 repo = parts[1]
 
         for retry, status in enumerate(statuses):
-            if not status.get("finished"):
-                # TODO: Store partial, store as non-finished?
-                logging.debug("Test hasn't finished, skipping")
-                continue
-
-            url = status["url"]
-            waited = status["started"] - status["posted"]
-            took = status["finished"] - status["started"]
+            posted = status["posted"]  # This must be always present, lets fails if it isn't
+            url = status.get("url")
+            started = status.get("started", posted)
+            waited = started - posted
+            took = status.get("finished", started) - started
             logging.debug("Processing {0}{1} as {2} that waited {3}s and took {4}s in {5}. {6}".format(
                 context,
                 "(retry no." + str(retry) + ")" if retry else "",
@@ -132,21 +130,27 @@ def main():
                 waited, took, repo, url
             ))
 
+            # URL is our primary key, so if we don't have one, just fake something unique
+            if not url:
+                url = "-".join(["queued", opts.revision, context, str(retry)])
+
             row = cursor.execute("SELECT id FROM TestRuns WHERE url = ?", (url, )).fetchone()
             if row is not None:
                 logging.warning("Test run %s already exists as ID %i, skipping", url, row[0])
                 continue
 
             run_id = insert_run(cursor, repo, opts.revision, context, url,
-                                status["posted"], retry, waited, took, status["state"],
+                                posted, retry, waited, took, status["state"],
                                 status.get("description"))
 
-            raw_log = url[:-5] if url.endswith(".html") else url
-            logging.debug("scanning log %s", raw_log)
+            if status.get("url"):  # If we faked 'url' then don't try to scan it
+                raw_log = url[:-5] if url.endswith(".html") else url
+                logging.debug("scanning log %s", raw_log)
 
-            with urllib.request.urlopen(raw_log, context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
-                for (testname, failed, retry_reason) in find_tests(fp):
-                    insert_test(cursor, run_id, testname, failed, retry_reason)
+                with urllib.request.urlopen(raw_log,
+                                            context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
+                    for (testname, failed, retry_reason) in find_tests(fp):
+                        insert_test(cursor, run_id, testname, failed, retry_reason)
 
     db_conn.commit()
     db_conn.close()
