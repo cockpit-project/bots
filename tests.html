@@ -281,7 +281,7 @@
                             WHERE TestRuns.time > ${since} AND Tests.failed = 1 AND project LIKE '${repo}' AND testname NOT LIKE '%selenium%'
                             GROUP BY testname
                         ) AS t2 ON t1.testname = t2.testname
-                        WHERE TestRuns.time > ${since} AND t2.failed > 0 AND project LIKE '${repo}'
+                        WHERE TestRuns.time > ${since} AND t2.failed > 1 AND project LIKE '${repo}'
                         GROUP BY t1.testname
                         ORDER BY percent DESC
                         LIMIT 10`);
