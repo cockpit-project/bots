@@ -550,9 +550,10 @@
                         LIMIT 15`);
                 if (time_logs.length) {
                     const parent_logs = document.createElement("div");
-                    time_logs[0].values.forEach(t => {
+                    time_logs[0].values.forEach((t, i) => {
                         const ea = document.createElement("A");
-                        ea.className="btn btn-link py-0";
+                        if (i < time_logs[0].values.length - 1)
+                            ea.className="mr-3";
                         ea.textContent = `${formatDate(new Date(t[1] * 1000))} ${t[0]} (${Math.floor(t[3]/60)}mins)`;
                         ea.href = t[2];
                         parent_logs.appendChild(ea);
@@ -640,16 +641,17 @@
                 // Array with logs
                 const td = document.createElement("TD");
                 if (d instanceof Array) {
-                    d.forEach(a => {
+                    d.forEach((a, i) => {
                         const ea = document.createElement("A");
-                        ea.className="btn btn-link py-0";
+                        if (i < d.length - 1)
+                            ea.className="mr-3";
                         ea.textContent = "log";
                         ea.href = a;
                         td.appendChild(ea);
                     });
                 } else if (typeof d == "object") {
                     const ea = document.createElement("A");
-                    ea.className="btn btn-link py-0";
+                    ea.className="mr-3";
                     ea.textContent = d.name;
                     ea.href="#";
                     ea.onclick = () => {
