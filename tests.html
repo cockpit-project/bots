@@ -355,6 +355,8 @@
                         });
                         test_points.unshift([(not_tested * 100) / all_runs, (testing * 100) / all_runs, (error * 100) / all_runs, (in_prep * 100) / all_runs, (failed * 100) / all_runs]);
                         max_runs = Math.max(max_runs, 100 - ((all_runs - (not_tested + testing + error + in_prep + failed)) * 100) / all_runs);
+                    } else if (all_runs > 0) {
+                        test_points.unshift([0, 0, 0, 0, 0]);
                     } else {
                         test_points.unshift([null, null, null, null, null]);
                     }
