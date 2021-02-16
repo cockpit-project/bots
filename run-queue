@@ -133,7 +133,7 @@ Subject: cockpituous: run-queue crash on %s
 # Consume from the task queue (endpoint)
 def main():
     parser = argparse.ArgumentParser(description='Bot: read a single test command from the queue and execute it')
-    parser.add_argument('--amqp', default='localhost:5671',
+    parser.add_argument('--amqp', default=distributed_queue.DEFAULT_AMQP_SERVER,
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
     opts = parser.parse_args()
 

@@ -33,6 +33,7 @@ logging.getLogger("pika").propagate = False
 __all__ = (
     'DistributedQueue',
     'DEFAULT_SECRETS_DIR',
+    'DEFAULT_AMQP_SERVER',
     'BASELINE_PRIORITY',
     'MAX_PRIORITY',
     'no_amqp',
@@ -42,6 +43,7 @@ BASELINE_PRIORITY = 5
 MAX_PRIORITY = 9
 # see https://github.com/cockpit-project/cockpituous/blob/master/tasks/cockpit-tasks-webhook.yaml
 DEFAULT_SECRETS_DIR = '/run/secrets/webhook'
+DEFAULT_AMQP_SERVER = 'amqp-frontdoor.apps.ocp.ci.centos.org:443'
 
 arguments = {
     'rhel': {
