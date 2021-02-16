@@ -51,6 +51,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-testing/dnf-copr',
+            'fedora-34',
             'rhel-8-4-distropkg',
         ],
     },
