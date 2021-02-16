@@ -29,9 +29,12 @@ def main():
     parser = argparse.ArgumentParser(description='Read and print messages from the queue without acknowleding them')
     parser.add_argument('--amqp', default='localhost:5671',
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
+    parser.add_argument('--secrets-dir', default=distributed_queue.DEFAULT_SECRETS_DIR,
+                        help='Directory with ca.pem and amqp-client.{pem,key} (default: %(default)s)')
     opts = parser.parse_args()
 
-    with distributed_queue.DistributedQueue(opts.amqp, ['public', 'rhel', 'statistics'], passive=True) as q:
+    with distributed_queue.DistributedQueue(opts.amqp, ['public', 'rhel', 'statistics'],
+                                            secrets_dir=opts.secrets_dir, passive=True) as q:
         def print_queue(queue):
             if q.declare_results[queue] is None:
                 print("queue {} does not exist".format(queue))
