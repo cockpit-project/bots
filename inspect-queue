@@ -27,7 +27,7 @@ from task import distributed_queue
 
 def main():
     parser = argparse.ArgumentParser(description='Read and print messages from the queue without acknowleding them')
-    parser.add_argument('--amqp', default='localhost:5671',
+    parser.add_argument('--amqp', default=distributed_queue.DEFAULT_AMQP_SERVER,
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
     parser.add_argument('--secrets-dir', default=distributed_queue.DEFAULT_SECRETS_DIR,
                         help='Directory with ca.pem and amqp-client.{pem,key} (default: %(default)s)')
