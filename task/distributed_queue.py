@@ -18,8 +18,9 @@
 # Shared GitHub code. When run as a script, we print out info about
 # our GitHub interacition.
 
-import ssl
 import logging
+import os
+import ssl
 
 no_amqp = False
 try:
@@ -31,6 +32,7 @@ logging.getLogger("pika").propagate = False
 
 __all__ = (
     'DistributedQueue',
+    'DEFAULT_SECRETS_DIR',
     'BASELINE_PRIORITY',
     'MAX_PRIORITY',
     'no_amqp',
@@ -38,6 +40,8 @@ __all__ = (
 
 BASELINE_PRIORITY = 5
 MAX_PRIORITY = 9
+# see https://github.com/cockpit-project/cockpituous/blob/master/tasks/cockpit-tasks-webhook.yaml
+DEFAULT_SECRETS_DIR = '/run/secrets/webhook'
 
 arguments = {
     'rhel': {
@@ -53,13 +57,16 @@ arguments = {
 
 
 class DistributedQueue(object):
-    def __init__(self, amqp_server, queues, **kwargs):
+    def __init__(self, amqp_server, queues, secrets_dir=DEFAULT_SECRETS_DIR, **kwargs):
         """connect to some AMQP queues
 
         amqp_server should be formatted as host:port
 
         queues should be a list of strings with the names of queues, each queue
         will be declared and usable
+
+        secrets_dir can be passed for enviroments where the AMQP secrets are not
+        in DEFAULT_SECRETS_DIR.
 
         any extra arguments in **kwargs will be passed to queue_declare()
 
@@ -76,9 +83,9 @@ class DistributedQueue(object):
             host, port = amqp_server.split(':')
         except ValueError:
             raise ValueError('Please format amqp_server as host:port')
-        context = ssl.create_default_context(cafile='/run/secrets/webhook/ca.pem')
-        context.load_cert_chain(keyfile='/run/secrets/webhook/amqp-client.key',
-                                certfile='/run/secrets/webhook/amqp-client.pem')
+        context = ssl.create_default_context(cafile=os.path.join(secrets_dir, 'ca.pem'))
+        context.load_cert_chain(keyfile=os.path.join(secrets_dir, 'amqp-client.key'),
+                                certfile=os.path.join(secrets_dir, 'amqp-client.pem'))
         context.check_hostname = False
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
             host=host,
