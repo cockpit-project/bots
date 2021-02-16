@@ -252,6 +252,10 @@ if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} subscription-manager-cockpit"
     # Install insights-client for external subscription-manager tests
     TEST_PACKAGES="${TEST_PACKAGES} insights-client"
+    # 8.4+ has tracer
+    if [ "$IMAGE" != "rhel-8-3" ]; then
+        TEST_PACKAGES="${TEST_PACKAGES} python3-tracer"
+    fi
 fi
 
 # in RHEL/CentOS 7, boom is shipped in a different package
