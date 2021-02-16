@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+# This file is part of Cockpit.
+#
+# Copyright (C) 2021 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import sys
+
+import pika
+
+from task import distributed_queue
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Publish a command (read from stdin) to an AMQP task queue')
+    parser.add_argument('-q', '--queue', required=True,
+                        help='Queue name where to submit the command')
+    parser.add_argument('--amqp', default=distributed_queue.DEFAULT_AMQP_SERVER,
+                        help='The host:port of the AMQP server to consume from (default: %(default)s)')
+    parser.add_argument('--secrets-dir', default=distributed_queue.DEFAULT_SECRETS_DIR,
+                        help='Directory with ca.pem and amqp-client.{pem,key} (default: %(default)s)')
+    parser.add_argument('--create', action='store_true',
+                        help='Create the queue if it does not exist yet')
+    opts = parser.parse_args()
+
+    with distributed_queue.DistributedQueue(opts.amqp, [opts.queue], secrets_dir=opts.secrets_dir,
+                                            passive=not opts.create) as q:
+        command = sys.stdin.read().strip()
+        q.channel.basic_publish('', opts.queue, body='{"command": "%s"}' % command,
+                                properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
+
+
+if __name__ == '__main__':
+    sys.exit(main())
