@@ -239,6 +239,7 @@
                     WHERE TestRuns.time > ${since} AND project LIKE '${repo}' AND
                         retry_reason IS NOT null AND
                         retry_reason IS NOT 'be robust against unstable tests' AND
+                        retry_reason IS NOT 'test affected tests 3 times' AND
                         retry_reason IS NOT 'due to failure of test harness or framework'`);
                 if (messages.length)
                     messages = messages[0].values.reduce((a, m) => {if (m) a.push([m[0], m[1]]); return a;}, []);
