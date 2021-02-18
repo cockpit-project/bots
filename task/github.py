@@ -392,7 +392,7 @@ class GitHub(object):
 
     def allowlist(self):
         # bots and organizations which are allowed to use our CI (these use branches within the main repo for PRs)
-        users = {"github-actions[bot]", "candlepin", "cockpit-project"}
+        users = {"github-actions[bot]", "candlepin", "cockpit-project", "osbuild"}
 
         # individual persons from https://github.com/orgs/cockpit-project/teams/contributors/members
         teamId = self.teamIdFromName(TEAM_CONTRIBUTORS)
