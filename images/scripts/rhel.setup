@@ -310,6 +310,11 @@ else
     dnf --setopt=install_weak_deps=False install -y cockpit
 fi
 
+if [ "$IMAGE" = "rhel-8-4" ]; then
+    # HACK: 8.4 cloud images have subscription-manager disabled: https://bugzilla.redhat.com/show_bug.cgi?id=1930037
+    sed -i 's/^enabled=0/enabled=1/' /etc/yum/pluginconf.d/subscription-manager.conf /etc/yum/pluginconf.d/product-id.conf
+fi
+
 # For debugging udisks/storaged crashes
 debuginfo-install -y udisks2
 
