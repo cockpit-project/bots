@@ -114,7 +114,7 @@
         <script id="TestingOverview" type="text/template">
             <div id="testing">
                 {{total}} tests, {{passed}} passed, {{failed}} failed,
-                {{skipped}} skipped, {{left}} to go ({{retries}} retries).<br>
+                {{skipped}} skipped, {{left}} to go ({{retries}} retries of failures, {{affected_retries}} retries of successes).<br>
 
                 <span>Failed and retried tests:</span>
                 <ul>
@@ -183,6 +183,7 @@ function extract(text) {
         failed = 0;
         skipped = 0;
         retries = 0;
+        affected_retries = 0;
 
         var segments = text.split(test_header_start);
         $('#test-info').text(text.slice(0, text.indexOf('\n')));
@@ -222,7 +223,17 @@ function extract(text) {
                 if (m[4])
                     entry.title += ", duration: " + m[4];
 
-                if(m[1] == "ok") {
+                if (segment.indexOf("# RETRY") !== -1) {
+                    if (segment.indexOf("(test affected tests 3 times)") !== -1) {
+                        affected_retries += 1;
+                        entry.passed = true;
+                    } else {
+                        retries += 1;
+                        entry.passed = true;
+                        entry.retried = true;
+                        entry.interesting = true;
+                    }
+                } else if(m[1] == "ok") {
                     if (m = tap_skipped.exec(segment)) {
                         entry.title = entry.id + ": " + m[1];
                         entry.reason = m[3];
@@ -232,11 +243,6 @@ function extract(text) {
                     } else {
                         passed += 1;
                     }
-		} else if (segment.indexOf("# RETRY") !== -1) {
-                    retries += 1;
-                    entry.passed = true;
-                    entry.retried = true;
-                    entry.interesting = true;
                 } else {
                     entry.passed = false;
                     entry.interesting = true;
@@ -292,6 +298,7 @@ function extract(text) {
                                                                 failed: failed,
                                                                 skipped: skipped,
                                                                 retries: retries,
+                                                                affected_retries: affected_retries,
                                                                 total: total,
                                                                 left: total - passed - failed - skipped
                                                               })
