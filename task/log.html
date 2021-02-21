@@ -5,40 +5,40 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js" type="text/javascript"></script>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.min.js"></script>
         <!-- nicer arrows for the collapsible panels and preformatted text-->
         <style>
         * {
          font-family: "Open Sans";
+         font-size
         }
         body {
             margin: 10px;
         }
-        .panel-heading:last-child:after {
-            font-family:'Glyphicons Halflings';
-            content:"\e114";
-            float: right;
-            color: grey;
-        }
-        .panel-heading:last-child.collapsed:after {
-            content:"\e080";
-        }
-        .panel-heading.failed {
+
+        .card-header.failed {
             color: #A94442;
             background-color: #F2DEDE;
             border-color: #EBCCD1;
         }
-        .panel-heading.retried {
+        .card-header.retried {
             background-color: #f7bd7f;
             border-color: #b35c00;
         }
-        .panel-heading.skipped {
+        .card-header.skipped {
             color: #8A6D3B;
             background-color: #FCF8E3;
             border-color: #FAEBCC;
         }
+
+        span.bi {
+            vertical-align: text-bottom;
+            font-size: 1.2rem;
+        }
+
         li.failed {
             color: #A94442;
             background-color: #F2DEDE;
@@ -46,68 +46,66 @@
         }
         </style>
         <script id="Tests" type="text/template">
-            <div class="panel-group" id="accordion">
+            <div id="accordion">
                 {{#tests}} {{{html}}} {{/tests}}
             </div>
         </script>
         <script id="ScreenshotLink" type="text/template">
             <a href="./{{screenshot}}" title="{{screenshot}}">
-                <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+                <span class="bi bi-camera-fill" aria-hidden="true"></span>
                 screenshot
             </a>
         </script>
         <script id="JournalLink" type="text/template">
             <a href="./{{journal}}" title="{{journal}}">
-                <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
+                <span class="bi bi-card-text" aria-hidden="true"></span>
                 journal
             </a>
         </script>
         <script id="TestEntry" type="text/template">
-            <div class="panel panel-default" id="{{id}}">
-                <div class="panel-heading
+            <div class="card" id="{{id}}">
+                <div class="card-header
                             {{#collapsed}}collapsed{{/collapsed}}
                             {{^passed}}failed{{/passed}}
                             {{#retried}}retried{{/retried}}
                             {{#skipped}}skipped{{/skipped}}" data-toggle="collapse" data-target="#collapse{{id}}"
                             style="cursor: pointer">
-                    <h4 class="panel-title">
-                        {{#failed}}
-                            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                        {{/failed}}
-                        {{#retried}}
-                            <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
-                        {{/retried}}
-                        <span>
-                          {{title}}
-                        </span>
-                        {{#reason}}<span>-- skipped: {{reason}}</span>{{/reason}}
-                        {{#screenshots}}
-                            {{{screenshot_html}}}
-                        {{/screenshots}}
-                        {{#journals}}
-                            {{{journal_html}}}
-                        {{/journals}}
-                    </h4>
+                    {{#failed}}
+                        <span class="bi bi-exclamation-circle" aria-hidden="true"></span>
+                    {{/failed}}
+                    {{#retried}}
+                        <span class="bi bi-question-circle" aria-hidden="true"></span>
+                    {{/retried}}
+                    <span>
+                      {{title}}
+                    </span>
+                    {{#reason}}<span>-- skipped: {{reason}}</span>{{/reason}}
+                    {{#screenshots}}
+                        {{{screenshot_html}}}
+                    {{/screenshots}}
+                    {{#journals}}
+                        {{{journal_html}}}
+                    {{/journals}}
                 </div>
-                <div id="collapse{{id}}" class="panel-collapse collapse {{^collapsed}}in{{/collapsed}}">
-                    <pre class="panel-body">{{text}}</pre>
+                <div id="collapse{{id}}" class="collapse {{^collapsed}}show{{/collapsed}}" data-parent="#accordion">
+                    <pre class="card-body">{{text}}</pre>
                 </div>
             </div>
         </script>
         <script id="TextOnly" type="text/template">
-            <pre class="panel-body">{{text}}</pre>
+            <pre class="card-body">{{text}}</pre>
         </script>
         <script id="TestProgress" type="text/template">
             <div class="progress" style="width: 40%">
-                <div class="progress-bar progress-bar-success" style="width: {{percentage_passed}}%">
+                <div class="progress-bar bg-success" style="width: {{percentage_passed}}%">
                     {{num_passed}}
                     <span class="sr-only">{{percentage_passed}}% Passed</span>
                 </div>
-                <div class="progress-bar progress-bar-warning" style="width: {{percentage_skipped}}%">
+                <div class="progress-bar bg-warning" style="width: {{percentage_skipped}}%">
                     {{num_skipped}}
                     <span class="sr-only">{{percentage_skipped}}% Skipped</span>
                 </div>
-                <div class="progress-bar progress-bar-danger" style="width: {{percentage_failed}}%">
+                <div class="progress-bar bg-danger" style="width: {{percentage_failed}}%">
                     {{num_failed}}
                     <span class="sr-only">{{percentage_failed}}% Failed</span>
                 </div>
