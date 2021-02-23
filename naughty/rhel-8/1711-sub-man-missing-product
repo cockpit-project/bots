@@ -1,0 +1,5 @@
+warning: [Errno 20] Not a directory: '/etc/pki/product'
+*
+Traceback (most recent call last):
+*
+  File "integration-tests/check-subscriptions", *
