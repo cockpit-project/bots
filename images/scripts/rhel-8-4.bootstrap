@@ -1,8 +1,7 @@
 #!/bin/bash
 set -ex
 
-# HACK: move back to download.devel after mirroring gets fixed
-URL=http://download.eng.blr.redhat.com/rhel-8/nightly/RHEL-8/latest-RHEL-8.4/compose/BaseOS/x86_64/images/
+URL=http://download.devel.redhat.com/rhel-8/nightly/RHEL-8/latest-RHEL-8.4/compose/BaseOS/x86_64/images/
 IMAGE=$(curl -L -s "$URL" | sed -n '/<a href=.*rhel-guest-image.*qcow2"/ { s/^.*href="//; s_".*$__; p }')
 [ -n "$IMAGE" ]
 
