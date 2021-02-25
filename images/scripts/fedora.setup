@@ -9,7 +9,7 @@ unset LANG
 export LC_ALL=C.utf8
 
 # keep this in sync with avocado/selenium image mapping in testmap
-if [ "$IMAGE" = fedora-32 ]; then
+if [ "$IMAGE" = fedora-32 ] || [ "$IMAGE" = fedora-33 ]; then
     AVOCADO=1
 fi
 
@@ -153,7 +153,11 @@ dnf remove -y kernel-headers
 if [ -n "$AVOCADO" ]; then
 
     # enable python3 avocado support repository
-    dnf module install -y avocado:69lts
+    if [ "$IMAGE" = fedora-32 ]; then
+        dnf module install -y avocado:69lts
+    else
+        dnf module install -y avocado:latest
+    fi
 
     dnf $DNF_OPTS -y install \
         fontconfig \
