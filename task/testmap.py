@@ -60,6 +60,9 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing/dnf-copr',
             'fedora-34',
             'rhel-8-4-distropkg',
+            'fedora-33/selenium-firefox',
+            'fedora-33/selenium-chrome',
+            'fedora-33/selenium-edge',
         ],
     },
     'cockpit-project/starter-kit': {
