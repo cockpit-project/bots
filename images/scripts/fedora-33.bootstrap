@@ -17,5 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
-BASE=$(dirname $0)
-$BASE/virt-install-fedora "$1" x86_64 "https://dl.fedoraproject.org/pub/fedora/linux/releases/33/Server/x86_64/os/"
+URL=https://download.fedoraproject.org/pub/fedora/linux/releases/33/Cloud/x86_64/images/
+IMAGE=$(curl -L -s "$URL" | sed -n '/<a href=.*Fedora-Cloud-Base-33.*qcow2"/ { s/^.*href="//; s_".*$__; p }')
+[ -n "$IMAGE" ]
+
+exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL/$IMAGE"
