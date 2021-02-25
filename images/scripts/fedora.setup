@@ -89,6 +89,7 @@ targetcli \
 dnf-automatic \
 cryptsetup \
 clevis-luks \
+firewalld \
 socat \
 tang \
 podman \
@@ -114,11 +115,6 @@ if [ "$IMAGE" = "fedora-34" ]; then
 fi
 
 rm -rf /etc/sysconfig/iptables
-
-maybe() { if type "$1" >/dev/null 2>&1; then "$@"; fi; }
-
-# For the D-Bus test server
-maybe firewall-cmd --permanent --add-port 8765/tcp
 
 echo 'NETWORKING=yes' > /etc/sysconfig/network
 
@@ -200,6 +196,10 @@ printf "SELINUX=enforcing\nSELINUXTYPE=targeted\n" > /etc/selinux/config
 
 # Prevent SSH from hanging for a long time when no external network access
 echo 'UseDNS no' >> /etc/ssh/sshd_config
+
+# For the D-Bus test server
+systemctl start firewalld
+firewall-cmd --permanent --add-port 8765/tcp
 
 # Audit events to the journal
 rm -f '/etc/systemd/system/multi-user.target.wants/auditd.service'
