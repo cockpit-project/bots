@@ -36,7 +36,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-coreos',
             'fedora-32/firefox',
             'rhel-8-4',
-            'rhel-8-4-distropkg',
             'centos-8-stream',
         ],
         'rhel-7.9': [
