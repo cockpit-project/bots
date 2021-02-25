@@ -19,8 +19,8 @@
 
 set -ex
 
-URL=https://download.fedoraproject.org/pub/fedora/linux//development/rawhide/Cloud/x86_64/images/
-IMAGE=$(curl -L -s "$URL" | sed -n '/<a href=.*Fedora-Cloud-Base-Rawhide.*qcow2"/ { s/^.*href="//; s_".*$__; p }')
+URL=https://download.fedoraproject.org/pub/fedora/linux//development/34/Cloud/x86_64/images/
+IMAGE=$(curl -L -s "$URL" | sed -n '/<a href=.*Fedora-Cloud-Base-34.*qcow2"/ { s/^.*href="//; s_".*$__; p }')
 [ -n "$IMAGE" ]
 
 exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL/$IMAGE"
