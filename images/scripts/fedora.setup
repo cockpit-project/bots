@@ -17,7 +17,7 @@ fi
 # depending on how it was compiled and which plugins are installed,
 # and will just silently not do it.  So we do it here.
 #
-if [ "$IMAGE" != fedora-34 ]; then
+if [ "$IMAGE" = fedora-32 ]; then
     xfs_growfs /
 fi
 df -h /
@@ -120,7 +120,7 @@ echo 'NETWORKING=yes' > /etc/sysconfig/network
 
 # These build from a cloud image, set up network-scripts for eth1 to avoid long boot hang on
 # NetworkManager-wait-online.service
-if [ "$IMAGE" = "fedora-34" ]; then
+if [ "$IMAGE" = "fedora-33" ] || [ "$IMAGE" = "fedora-testing" ] || [ "$IMAGE" = "fedora-34" ]; then
     printf 'BOOTPROTO=none\nDEVICE=eth1\nONBOOT=no\n' > /etc/sysconfig/network-scripts/ifcfg-eth1
     # our cloud-init.iso does not set up the host name
     echo "127.0.1.1 $(hostname)" >> /etc/hosts
