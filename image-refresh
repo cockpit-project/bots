@@ -39,13 +39,24 @@ def run(image, verbose=False, **kwargs):
     # Cleanup any extraneous disk usage elsewhere
     subprocess.check_call([os.path.join(BOTS_DIR, "vm-reset")])
 
-    cmd = [os.path.join(BOTS_DIR, "image-create"), "--verbose", "--upload", image]
+    # download the current image, for comparing them; that may not exist yet for newly introduced images
+    if subprocess.call([os.path.join(BOTS_DIR, "image-download"), image]) == 0:
+        old_image = os.path.realpath(os.path.join(BOTS_DIR, "images", image))
+    else:
+        old_image = None
 
+    # create the new image
+    cmd = [os.path.join(BOTS_DIR, "image-create"), "--verbose", "--upload", image]
     os.environ['VIRT_BUILDER_NO_CACHE'] = "yes"
     ret = subprocess.call(cmd)
     if ret:
         return ret
 
+    # compare it to the previous one
+    if old_image:
+        subprocess.check_call([os.path.join(BOTS_DIR, "image-diff"), old_image, image])
+
+    # trigger tests
     branch = task.branch(image, "images: Update {0} image".format(image), pathspec="images", **kwargs)
     if branch:
         pull = task.pull(branch, labels=['bot', 'no-test'], run_tests=False, **kwargs)
