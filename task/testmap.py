@@ -70,6 +70,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-32/firefox',
+            'fedora-34',
         ],
     },
     'cockpit-project/cockpit-ostree': {
@@ -91,6 +92,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-34',
         ],
     },
     'weldr/lorax': {
@@ -103,6 +105,7 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-32/lorax',
+            'fedora-34/lorax',
             'rhel-8-4/lorax',
             'rhel-7-9',
             'rhel-7-9/azure',
@@ -129,6 +132,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'fedora-34',
         ],
     },
     'candlepin/subscription-manager': {
@@ -145,6 +149,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-33',
         ],
         '_manual': [
+            'fedora-34',
             'rhel-8-4',
             'centos-8-stream',
         ]
