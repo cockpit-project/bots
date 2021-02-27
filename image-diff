@@ -28,11 +28,11 @@ def get_packages(machine):
     #
     # We'd ideally like to get source packages everywhere, but it's a
     # bit more difficult on RPM. (TODO)
-    pkgcmd = """dpkg-query -W -f='${source:Package}\t${version}\n' 2>/dev/null ||
-                rpm -qa --qf '%{NAME}\t%{EVR}\n' 2>/dev/null"""
+    pkgcmd = """if type dpkg-query > /dev/null 2>&1; then
+                    dpkg-query -W -f='${source:Package}\t${version}\n' 2>/dev/null;
+                else rpm -qa --qf '%{NAME}\t%{EVR}\n' 2>/dev/null; fi"""
 
-    output = machine.execute(pkgcmd)
-
+    output = machine.execute(pkgcmd).strip()
     return dict(line.split('\t') for line in output.splitlines())
 
 
