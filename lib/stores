@@ -1,0 +1,3 @@
+public	https://images-frontdoor.apps.ocp.ci.centos.org/
+redhat	https://cockpit-11.e2e.bos.redhat.com:8493/
+redhat	https://internal-images.cockpit-project.org:8493/
