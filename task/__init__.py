@@ -27,11 +27,10 @@ import subprocess
 import sys
 import time
 import traceback
-import urllib.parse
 
 from . import github
 from . import sink
-from lib.constants import BASE_DIR, IMAGES_DIR
+from lib.constants import BASE_DIR
 
 
 __all__ = (
@@ -44,30 +43,10 @@ __all__ = (
     "issue",
     "verbose",
     "stale",
-    "redhat_network",
     "default_branch",
-    "CA_PEM",
-    "PUBLIC_STORES",
-    "REDHAT_STORES",
 )
 
 sys.dont_write_bytecode = True
-
-# Cockpit image/log server CA
-CA_PEM = os.getenv("COCKPIT_CA_PEM", os.path.join(IMAGES_DIR, "files", "ca.pem"))
-
-# Servers which have public images
-PUBLIC_STORES = [
-    "https://images-frontdoor.apps.ocp.ci.centos.org/",
-    "https://images-cockpit.apps.ci.centos.org/",
-]
-
-# Servers which have the private RHEL/Windows images
-REDHAT_STORES = [
-    "https://cockpit-11.e2e.bos.redhat.com:8493",
-    # fallback RedHat-internal image server in AWS (internal VPN only)
-    "https://internal-images.cockpit-project.org:8493/",
-]
 
 api = github.GitHub()
 verbose = False
@@ -512,31 +491,6 @@ def comment_done(issue, name, clean, branch, context=None):
 def attach(filename):
     if "TEST_ATTACHMENTS" in os.environ:
         shutil.copy(filename, os.environ["TEST_ATTACHMENTS"])
-
-
-def redhat_network():
-    '''Check if we can access the Red Hat network
-
-    This checks if the image server can be accessed. The result gets cached,
-    so this can be called several times.
-    '''
-    if redhat_network.result is None:
-        redhat_network.result = False
-        for url in REDHAT_STORES:
-            store = urllib.parse.urlparse(url)
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.settimeout(10)
-                s.connect((store.hostname, store.port))
-                redhat_network.result = True
-                break
-            except OSError:
-                pass
-
-    return redhat_network.result
-
-
-redhat_network.result = None
 
 
 def default_branch():

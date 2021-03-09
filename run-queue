@@ -29,8 +29,9 @@ import socket
 import smtplib
 import pika
 
-from task import redhat_network, distributed_queue
 from lib.directories import get_images_data_dir
+from lib.stores import redhat_network
+from task import distributed_queue
 
 logging.basicConfig(level=logging.INFO)
 

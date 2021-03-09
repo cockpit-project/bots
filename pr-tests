@@ -22,9 +22,10 @@ import urllib.request
 import ssl
 import json
 
+from lib.stores import CA_PEM
 import task
 
-logs_ssl_cockpit = ssl.create_default_context(cafile=task.CA_PEM)
+logs_ssl_cockpit = ssl.create_default_context(cafile=CA_PEM)
 
 
 def ssl_context_for(log_url):
