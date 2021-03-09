@@ -1,1 +1,0 @@
-> error: Failed to commit container *: CommitFailure: error resolving name "*": could not get either XDG_CONFIG_HOME or HOME: Internal Server Error
