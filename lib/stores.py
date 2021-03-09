@@ -30,7 +30,6 @@ CA_PEM = os.getenv("COCKPIT_CA_PEM", os.path.join(IMAGES_DIR, "files", "ca.pem")
 # Servers which have public images
 PUBLIC_STORES = [
     "https://images-frontdoor.apps.ocp.ci.centos.org/",
-    "https://images-cockpit.apps.ci.centos.org/",
 ]
 
 # Servers which have the private RHEL/Windows images
