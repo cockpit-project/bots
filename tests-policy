@@ -32,7 +32,7 @@ FLAKE_THRESHOLD = 0.4
 
 from task import github
 from lib.constants import BOTS_DIR
-from task.testmap import get_test_image
+from lib.testmap import get_test_image
 
 
 def main():

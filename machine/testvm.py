@@ -35,7 +35,7 @@ from machine_core.machine_virtual import VirtMachine, VirtNetwork
 from lib.constants import BOTS_DIR, TEST_DIR, IMAGES_DIR, SCRIPTS_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT
 from lib.directories import get_images_data_dir
 from machine_core.cli import cmd_cli
-from task.testmap import get_build_image, get_test_image
+from lib.testmap import get_build_image, get_test_image
 
 
 __all__ = [

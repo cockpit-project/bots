@@ -28,7 +28,8 @@ sys.dont_write_bytecode = True
 logging.basicConfig(level=logging.INFO)
 
 from lib.stores import redhat_network
-from task import github, labels_of_pull, distributed_queue, testmap
+from task import github, labels_of_pull, distributed_queue
+from lib import testmap
 
 no_amqp = False
 try:

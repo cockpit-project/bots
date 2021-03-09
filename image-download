@@ -47,7 +47,7 @@ from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
 from lib.stores import PUBLIC_STORES, REDHAT_STORES, CA_PEM
 
-from task.testmap import get_test_image
+from lib.testmap import get_test_image
 
 CONFIG = "~/.config/image-stores"
 
