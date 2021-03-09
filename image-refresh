@@ -22,9 +22,10 @@ import subprocess
 import sys
 
 import task
-from task import github, testmap
+from task import github
 
 from lib.constants import BOTS_DIR
+from lib import testmap
 
 
 sys.dont_write_bytecode = True

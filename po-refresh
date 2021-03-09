@@ -26,8 +26,9 @@ import sys
 sys.dont_write_bytecode = True
 
 import task
-from task import github, testmap
+from task import github
 from lib.constants import BASE_DIR
+from lib import testmap
 
 
 def run(context, verbose=False, **kwargs):

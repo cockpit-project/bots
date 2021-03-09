@@ -28,7 +28,8 @@ import re
 from datetime import datetime
 
 from lib.stores import CA_PEM
-from task import github, testmap
+from lib import testmap
+from task import github
 
 # Result line has form like:
 # ok 2 test/verify/check-accounts TestAccounts.testExpire [ND@1]

@@ -29,7 +29,7 @@ import urllib.parse
 import subprocess
 import re
 
-from task.testmap import known_context
+from lib.testmap import known_context
 from . import cache
 
 __all__ = (
