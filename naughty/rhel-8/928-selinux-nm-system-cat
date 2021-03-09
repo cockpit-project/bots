@@ -1,1 +1,0 @@
-type=1400 audit(*): avc:  denied  { write } * comm="NetworkManager" path="/var/tmp/dracut.*/systemd-cat" * scontext=system_u:system_r:NetworkManager_t:s0 tcontext=system_u:object_r:kdumpctl_tmp_t:s0 tclass=fifo_file permissive=0
