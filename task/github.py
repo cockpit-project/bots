@@ -29,7 +29,8 @@ import urllib.parse
 import subprocess
 import re
 
-from . import cache, testmap
+from task.testmap import known_context
+from . import cache
 
 __all__ = (
     'GitHub',
@@ -58,15 +59,6 @@ ISSUE_TITLE_IMAGE_REFRESH = "Image refresh for {0}"
 TOKEN = "~/.config/github-token"
 
 TEAM_CONTRIBUTORS = "Contributors"
-
-
-def known_context(context):
-    context = context.split("@")[0]
-    for project in testmap.projects():
-        for branch_tests in testmap.tests_for_project(project).values():
-            if context in branch_tests:
-                return True
-    return False
 
 
 class Logger(object):
