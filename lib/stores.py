@@ -22,22 +22,18 @@ import os
 import socket
 import urllib
 
-from lib.constants import IMAGES_DIR
+from lib.constants import IMAGES_DIR, LIB_DIR
 
 # Cockpit image/log server CA
 CA_PEM = os.getenv("COCKPIT_CA_PEM", os.path.join(IMAGES_DIR, "files", "ca.pem"))
 
+ALL_STORES = [line.split() for line in open(os.path.join(LIB_DIR, 'stores'))]
+
 # Servers which have public images
-PUBLIC_STORES = [
-    "https://images-frontdoor.apps.ocp.ci.centos.org/",
-]
+PUBLIC_STORES = [url for scope, url in ALL_STORES if scope == 'public']
 
 # Servers which have the private RHEL/Windows images
-REDHAT_STORES = [
-    "https://cockpit-11.e2e.bos.redhat.com:8493",
-    # fallback RedHat-internal image server in AWS (internal VPN only)
-    "https://internal-images.cockpit-project.org:8493/",
-]
+REDHAT_STORES = [url for scope, url in ALL_STORES if scope == 'redhat']
 
 
 def redhat_network():
