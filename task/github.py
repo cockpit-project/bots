@@ -30,6 +30,7 @@ import subprocess
 import re
 
 from . import cache, testmap
+from machine.machine_core.directories import xdg_config_home, xdg_cache_home
 
 __all__ = (
     'GitHub',
@@ -54,8 +55,6 @@ NOT_TESTED = "Not yet tested"
 NOT_TESTED_DIRECT = "Not yet tested (direct trigger)"
 
 ISSUE_TITLE_IMAGE_REFRESH = "Image refresh for {0}"
-
-TOKEN = "~/.config/github-token"
 
 TEAM_CONTRIBUTORS = "Contributors"
 
@@ -130,12 +129,12 @@ class GitHub(object):
         self.token = None
         self.debug = False
         try:
-            with open(os.path.expanduser(TOKEN), "r") as f:
+            with open(xdg_config_home('github-token'), "r") as f:
                 self.token = f.read().strip()
         except FileNotFoundError:
             # fall back to GitHub's CLI token
             try:
-                with open(os.path.expanduser("~/.config/gh/config.yml")) as f:
+                with open(xdg_config_home("gh/config.yml")) as f:
                     match = re.search(r'oauth_token:\s*(\S+)', f.read())
                 if match:
                     self.token = match.group(1)
@@ -144,7 +143,7 @@ class GitHub(object):
 
         # default cache directory
         if not cacher:
-            cacher = cache.Cache(os.path.join(os.getenv('XDG_CACHE_HOME', os.path.expanduser("~/.cache")), "github"))
+            cacher = cache.Cache(xdg_cache_home('github'))
 
         self.cache = cacher
 

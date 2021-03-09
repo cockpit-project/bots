@@ -64,7 +64,6 @@ def get_images_data_dir():
         _images_data_dir = get_git_config('--type=path', 'cockpit.bots.images-data-dir')
 
         if _images_data_dir is None:
-            _images_data_dir = os.path.join(os.getenv('XDG_CACHE_HOME', os.path.expanduser("~/.cache")),
-                                            "cockpit-images")
+            _images_data_dir = xdg_cache_home('cockpit-images')
 
     return _images_data_dir
