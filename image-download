@@ -136,7 +136,7 @@ def download(dest, force, state, quiet, stores):
 
     if not stores:
         try:
-            with open(xdg_config_home('image-stores'), 'r') as fp:
+            with open(xdg_config_home('cockpit-dev', 'image-stores'), 'r') as fp:
                 stores = fp.read().strip().split("\n")
         except FileNotFoundError:
             stores = []
