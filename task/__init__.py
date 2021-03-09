@@ -42,7 +42,6 @@ __all__ = (
     "label",
     "issue",
     "verbose",
-    "stale",
     "default_branch",
 )
 
@@ -275,33 +274,6 @@ def run(context, function, **kwargs):
     finally:
         finish(publishing, ret, name, context, issue)
     return ret or 0
-
-# Check if the given files that match @pathspec are stale
-# and haven't been updated in @days.
-
-
-def stale(days, pathspec, ref="HEAD"):
-    global verbose
-
-    def execute(*args):
-        if verbose:
-            sys.stderr.write("+ " + " ".join(args) + "\n")
-        output = subprocess.check_output(args, cwd=BASE_DIR, universal_newlines=True)
-        if verbose:
-            sys.stderr.write("> " + output + "\n")
-        return output
-
-    timestamp = execute("git", "log", "--max-count=1", "--pretty=format:%ct", ref, "--", pathspec)
-    try:
-        timestamp = int(timestamp)
-    except ValueError:
-        timestamp = 0
-
-    # We randomize when we think this should happen over a day
-    offset = days * 86400
-    due = time.time() - random.randint(offset - 43200, offset + 43200)
-
-    return timestamp < due
 
 
 def issue(title, body, item, context=None, items=[], state="open", since=None):
