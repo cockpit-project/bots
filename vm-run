@@ -24,7 +24,7 @@ import subprocess
 import sys
 
 from machine import testvm
-from machine.machine_core.constants import BOTS_DIR
+from lib.constants import BOTS_DIR
 
 NETWORK_SCRIPT = b"""
     set -ex

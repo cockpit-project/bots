@@ -22,7 +22,7 @@ import re
 import sys
 import subprocess
 
-from machine.machine_core.constants import BOTS_DIR, TEST_DIR
+from lib.constants import BOTS_DIR, TEST_DIR
 os.environ["PATH"] = "{0}:{1}".format(os.environ.get("PATH"), BOTS_DIR)
 
 from machine import testvm

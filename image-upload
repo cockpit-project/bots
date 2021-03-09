@@ -25,8 +25,8 @@ import subprocess
 import sys
 import urllib.parse
 
-from machine.machine_core.constants import IMAGES_DIR
-from machine.machine_core.directories import get_images_data_dir
+from lib.constants import IMAGES_DIR
+from lib.directories import get_images_data_dir
 
 from task import api, PUBLIC_STORES, REDHAT_STORES, CA_PEM
 
