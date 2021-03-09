@@ -24,6 +24,26 @@ _images_data_dir = None
 _temp_dir = None
 
 
+def xdg_home(subdir, envvar, *components, override=None):
+    path = override and os.getenv(override)
+
+    if not path:
+        directory = os.getenv(envvar)
+        if not directory:
+            directory = os.path.join(os.path.expanduser('~'), subdir)
+        path = os.path.join(directory, *components)
+
+    return path
+
+
+def xdg_config_home(*components, envvar=None):
+    return xdg_home('.config', 'XDG_CONFIG_HOME', *components, override=envvar)
+
+
+def xdg_cache_home(*components, envvar=None):
+    return xdg_home('.cache', 'XDG_CACHE_HOME', *components, override=envvar)
+
+
 def get_git_config(*args):
     if not os.path.exists(GIT_DIR):
         return None
