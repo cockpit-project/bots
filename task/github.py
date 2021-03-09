@@ -23,11 +23,12 @@ import http.client
 from http import HTTPStatus
 import json
 import os
+import re
 import socket
+import subprocess
+import sys
 import time
 import urllib.parse
-import subprocess
-import re
 
 from . import cache, testmap
 from machine.machine_core.directories import xdg_config_home, xdg_cache_home
@@ -129,17 +130,23 @@ class GitHub(object):
         self.token = None
         self.debug = False
         try:
-            with open(xdg_config_home('github-token'), "r") as f:
+            with open(xdg_config_home('cockpit-dev', 'github-token'), "r") as f:
                 self.token = f.read().strip()
         except FileNotFoundError:
-            # fall back to GitHub's CLI token
             try:
-                with open(xdg_config_home("gh/config.yml")) as f:
-                    match = re.search(r'oauth_token:\s*(\S+)', f.read())
-                if match:
-                    self.token = match.group(1)
+                with open(xdg_config_home('github-token'), "r") as f:
+                    print('~/.config/github-token is deprecated.  ' +
+                          'Please move to ~/.config/cockpit-dev/github-token.', file=sys.stderr)
+                    self.token = f.read().strip()
             except FileNotFoundError:
-                pass
+                # fall back to GitHub's CLI token
+                try:
+                    with open(xdg_config_home("gh/config.yml")) as f:
+                        match = re.search(r'oauth_token:\s*(\S+)', f.read())
+                    if match:
+                        self.token = match.group(1)
+                except FileNotFoundError:
+                    pass
 
         # default cache directory
         if not cacher:
