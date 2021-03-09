@@ -19,9 +19,9 @@ import os
 import errno
 import subprocess
 
+from lib.constants import DEFAULT_IDENTITY_FILE, ATOMIC_IMAGES, OSTREE_IMAGES, TEST_DIR, BOTS_DIR
 from . import ssh_connection
 from . import timeout
-from .constants import DEFAULT_IDENTITY_FILE, ATOMIC_IMAGES, OSTREE_IMAGES, TEST_DIR, BOTS_DIR
 
 LOCAL_MESSAGE = """
 TTY LOGIN

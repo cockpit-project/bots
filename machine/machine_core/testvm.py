@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+from lib.constants import BOTS_DIR, TEST_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT
+
 from .timeout import Timeout
 from .machine import Machine
 from .exceptions import Failure, RepeatableFailure
 from .machine_virtual import VirtMachine, VirtNetwork
-from .constants import BOTS_DIR, TEST_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT
 
 __all__ = [
     Timeout, Machine, Failure, RepeatableFailure, VirtMachine, VirtNetwork,

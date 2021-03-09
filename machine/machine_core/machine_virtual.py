@@ -27,9 +27,9 @@ import tempfile
 import sys
 import time
 
+from lib.constants import TEST_DIR, BOTS_DIR
 from .exceptions import Failure, RepeatableFailure
 from .machine import Machine
-from .constants import TEST_DIR, BOTS_DIR
 
 sys.path.insert(1, BOTS_DIR)
 

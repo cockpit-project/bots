@@ -18,7 +18,7 @@
 import os.path
 import itertools
 
-from machine.machine_core.constants import TEST_OS_DEFAULT
+from lib.constants import TEST_OS_DEFAULT
 
 REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit': {
