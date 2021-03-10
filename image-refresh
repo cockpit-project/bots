@@ -24,7 +24,7 @@ import sys
 import task
 from task import github
 
-from lib.constants import BOTS_DIR
+from lib.constants import BOTS_DIR, SCRIPTS_DIR
 from lib import testmap
 
 
@@ -53,8 +53,8 @@ def run(image, verbose=False, **kwargs):
     if ret:
         return ret
 
-    # compare it to the previous one
-    if old_image:
+    # compare it to the previous one (on hosts we can ssh to)
+    if old_image and os.path.exists(os.path.join(SCRIPTS_DIR, image + '.setup')):
         subprocess.check_call([os.path.join(BOTS_DIR, "image-diff"), old_image, image])
 
     # trigger tests
