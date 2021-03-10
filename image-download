@@ -85,6 +85,17 @@ def find(name, stores, latest, quiet):
     for store in stores:
         url = urllib.parse.urlparse(urllib.parse.urljoin(store, name))
 
+        # First, try the easy case: for OpenShift proxied stores which send
+        # their own SSL cert initially host name has to match that
+        args = ['--cacert', CA_PEM, url.geturl()]
+        output = check_curl_args(args)
+        if output:
+            show_status(quiet, 'present', store)
+            found.append((args, output, store))
+            continue
+
+        # Otherwise, the server is expecting the hostname "cockpit-tests".
+        # We need to do a bit of work to make that happen.
         defport = url.scheme == 'http' and 80 or 443
 
         try:
@@ -93,7 +104,6 @@ def find(name, stores, latest, quiet):
             ai = []
 
         for (family, socktype, proto, canonname, (host, port)) in ai:
-            # first try with stores that accept the "cockpit-tests" host name
             args = ['--cacert', CA_PEM,
                     '--resolve', f'cockpit-tests:{host}:{port}',
                     f'{url.scheme}://cockpit-tests:{port}{url.path}']
@@ -101,17 +111,8 @@ def find(name, stores, latest, quiet):
             if output:
                 show_status(quiet, 'present', store)
                 found.append((args, output, store))
-                continue
-
-            # fall back for OpenShift proxied stores which send their own SSL cert initially
-            # host name has to match that
-            args = ['--cacert', CA_PEM, url.geturl()]
-            output = check_curl_args(args)
-            if output:
-                show_status(quiet, 'present', store, '(openshift)')
-                found.append((args, output, store))
-                continue
-
+                break
+        else:
             show_status(quiet, 'absent', store)
 
     # Find the most recent version of this file
