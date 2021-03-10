@@ -24,9 +24,6 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit': {
         'master': [
             'fedora-32/container-bastion',
-            'fedora-32/selenium-firefox',
-            'fedora-32/selenium-chrome',
-            'fedora-32/selenium-edge',
             'debian-stable',
             'debian-testing',
             'ubuntu-2004',
@@ -59,9 +56,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'rhel-8-4-distropkg',
-            'fedora-33/selenium-firefox',
-            'fedora-33/selenium-chrome',
-            'fedora-33/selenium-edge',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -179,8 +173,8 @@ IMAGE_REFRESH_TRIGGERS = {
     ],
     "services": [
         "fedora-32@cockpit-project/cockpit",
-        "fedora-32/selenium-firefox@cockpit-project/cockpit",
-        "fedora-32/selenium-chrome@cockpit-project/cockpit",
+        "fedora-32/selenium-firefox@cockpit-project/cockpit/rhel-8.4",
+        "fedora-32/selenium-chrome@cockpit-project/cockpit/rhel-8.4",
         "ubuntu-2004@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
         "rhel-8-4@cockpit-project/cockpit",
