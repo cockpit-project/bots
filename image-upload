@@ -27,19 +27,20 @@ import urllib.parse
 
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
-from lib.stores import PUBLIC_STORES, REDHAT_STORES, CA_PEM
+from lib.stores import HYBRID_STORES, PUBLIC_STORES, REDHAT_STORES, CA_PEM
+from lib import s3
 
 from task import api
 
 
-def upload(store, source):
-    url = urllib.parse.urlparse(store)
+def upload(dest, source, public):
+    url = urllib.parse.urlparse(dest)
 
     # Start building the command
-    cmd = ["curl", "--progress-bar", "--cacert", CA_PEM, "--fail", "--upload-file", source]
+    cmd = ["curl", "--progress-bar", "--fail", "--upload-file", source]
 
     def try_curl(cmd):
-        print("Uploading to", cmd[-1])
+        print("Uploading to", cmd[-1].split('?')[0])  # hide authentication info
         # Passing through a non terminal stdout is necessary to make progress work
         curl = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         cat = subprocess.Popen(["cat"], stdin=curl.stdout)
@@ -51,12 +52,25 @@ def upload(store, source):
         return ret
 
     # Pass credentials, if present
-    if api.token:
+    if s3.is_key_present(url):
+        # This is an S3 host for which we have a key
+        headers = []
+        if public:
+            headers = [s3.ACL_PUBLIC]
+            cmd.extend(['-H', s3.ACL_PUBLIC])
+        dest = s3.sign_url(url, verb='PUT', headers=headers)
+
+    elif api.token:
         user = url.username or getpass.getuser()
         cmd += ["--user", user + ":" + api.token]
 
-    # First try to use the original store URL, for stores with valid SSL cert on an OpenShift proxy
-    if try_curl(cmd + [store]) == 0:
+    # First try to use the original URL with no extra help
+    if try_curl(cmd + [dest]) == 0:
+        return 0
+
+    # Next, see if our CA_PEM helps, for stores with valid SSL cert on an OpenShift proxy
+    cmd += ['--cacert', CA_PEM]
+    if try_curl(cmd + [dest]) == 0:
         return 0
 
     # Fall back for stores that use our self-signed cockpit certificate
@@ -95,21 +109,28 @@ def main():
         sources.append(source)
 
     for source in sources:
+        basename = os.path.basename(source)
+        public = not any(basename.startswith(pfx) for pfx in ('rhel', 'windows'))
+
         # determine possible stores, unless explicitly given
         stores = args.store
         if not stores:
-            # these images are not freely redistributable, keep them Red Hat internal
-            b = os.path.basename(source)
-            if b.startswith("rhel") or image.startswith("windows"):
-                stores = REDHAT_STORES
-            else:
-                stores = PUBLIC_STORES
+            stores = list(HYBRID_STORES)
 
+            # these images are not freely redistributable, keep them Red Hat internal
+            if public:
+                stores.extend(PUBLIC_STORES)
+            else:
+                stores.extend(REDHAT_STORES)
+
+        success = False
         for store in stores:
-            ret = upload(store, source)
+            dest = urllib.parse.urljoin(store, basename)
+            ret = upload(dest, source, public)
             if ret == 0:
-                return ret
-        else:
+                success = True
+
+        if not success:
             # all stores failed, so return last exit code
             return ret
 

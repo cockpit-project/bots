@@ -45,9 +45,9 @@ import urllib.parse
 
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir, xdg_config_home
-from lib.stores import PUBLIC_STORES, REDHAT_STORES, CA_PEM
-
+from lib.stores import HYBRID_STORES, PUBLIC_STORES, REDHAT_STORES, CA_PEM
 from lib.testmap import get_test_image
+from lib import s3
 
 DEVNULL = open("/dev/null", "r+")
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
@@ -83,8 +83,23 @@ def find(name, stores, latest, quiet):
     for store in stores:
         url = urllib.parse.urlparse(urllib.parse.urljoin(store, name))
 
-        # First, try the easy case: for OpenShift proxied stores which send
-        # their own SSL cert initially host name has to match that
+        # First, check if this is an S3 store for which we have a key
+        if s3.is_key_present(url):
+            output = check_curl_args([s3.sign_url(url, verb='HEAD')])
+            if output:
+                show_status(quiet, 'present', store, '(authenticated)')
+                found.append(([s3.sign_url(url)], output, store))  # GET
+                continue
+
+        # Next, try to access the URL directly, without further help
+        args = [url.geturl()]
+        output = check_curl_args(args)
+        if output:
+            show_status(quiet, 'present', store)
+            found.append((args, output, store))
+            continue
+
+        # If that didn't work, try using our CA_PEM
         args = ['--cacert', CA_PEM, url.geturl()]
         output = check_curl_args(args)
         if output:
@@ -140,6 +155,7 @@ def download(dest, force, state, quiet, stores):
                 stores = fp.read().strip().split("\n")
         except FileNotFoundError:
             stores = []
+        stores += HYBRID_STORES
         # skip testing public stores for private images
         if not name.startswith("rhel") and not name.startswith("windows"):
             stores += PUBLIC_STORES
