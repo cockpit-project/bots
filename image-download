@@ -60,11 +60,30 @@ else:
     SYMBOLS = {'present': ' >', 'absent': ' x', 'selected': '=>'}
 
 
+def show_status(quiet, status, *args, prefix=''):
+    if not quiet:
+        message = ' '.join(args)
+        sys.stderr.write(f'{prefix}{SYMBOLS[status]} {message}\n')
+
+
+def curl_cmd(args):
+    return ['curl', '--connect-timeout', '10', '--fail'] + args
+
+
+def check_curl_args(args):
+    head_args = ['--silent', '--head']  # only used for this check
+
+    try:
+        return subprocess.check_output(curl_cmd(args + head_args), universal_newlines=True)
+    except subprocess.CalledProcessError:
+        return None
+
+
 def find(name, stores, latest, quiet):
     found = []
 
     for store in stores:
-        url = urllib.parse.urlparse(store)
+        url = urllib.parse.urlparse(urllib.parse.urljoin(store, name))
 
         defport = url.scheme == 'http' and 80 or 443
 
@@ -73,37 +92,31 @@ def find(name, stores, latest, quiet):
         except socket.gaierror:
             ai = []
 
-        for (family, socktype, proto, canonname, sockaddr) in ai:
-            def curl(*args):
-                try:
-                    cmd = ["curl"] + list(args) + ["--head", "--connect-timeout", "10", "--silent",
-                                                   "--fail", "--cacert", CA_PEM, source]
-                    output = subprocess.check_output(cmd, universal_newlines=True)
-                    found.append((cmd, output, store))
-                    if not quiet:
-                        sys.stderr.write("{0} {1}\n".format(SYMBOLS['present'], store))
-                    return True
-                except subprocess.CalledProcessError:
-                    return False
-
+        for (family, socktype, proto, canonname, (host, port)) in ai:
             # first try with stores that accept the "cockpit-tests" host name
-            resolve = "cockpit-tests:{1}:{0}".format(*sockaddr)
-            source = urllib.parse.urljoin("{0}://cockpit-tests:{1}{2}".format(url.scheme, sockaddr[1], url.path), name)
-            if curl("--resolve", resolve):
+            args = ['--cacert', CA_PEM,
+                    '--resolve', f'cockpit-tests:{host}:{port}',
+                    f'{url.scheme}://cockpit-tests:{port}{url.path}']
+            output = check_curl_args(args)
+            if output:
+                show_status(quiet, 'present', store)
+                found.append((args, output, store))
                 continue
 
             # fall back for OpenShift proxied stores which send their own SSL cert initially
             # host name has to match that
-            source = urllib.parse.urljoin(store, name)
-            if curl():
+            args = ['--cacert', CA_PEM, url.geturl()]
+            output = check_curl_args(args)
+            if output:
+                show_status(quiet, 'present', store, '(openshift)')
+                found.append((args, output, store))
                 continue
 
-            if not quiet:
-                sys.stderr.write("{0} {1}\n".format(SYMBOLS['absent'], store))
+            show_status(quiet, 'absent', store)
 
     # Find the most recent version of this file
     def header_date(args):
-        cmd, output, message = args
+        _, output, message = args
         try:
             reply_line, headers_alone = output.split('\n', 1)
             last_modified = email.message_from_file(io.StringIO(headers_alone)).get("Last-Modified", "")
@@ -141,7 +154,7 @@ def download(dest, force, state, quiet, stores):
     else:
         since = EPOCH
 
-    # returns [(cmd, HEAD output, store)]
+    # returns [(args, HEAD output, store)]
     stores = find(name, stores, latest=state, quiet=quiet)
 
     # If we couldn't find the file, but it exists, we're good
@@ -152,32 +165,32 @@ def download(dest, force, state, quiet, stores):
 
     # Start downloading from every store and keep the connection with the fastest throughput
     procs = []  # [(Popen object, output file)]
-    for (cmd, _, store) in stores:
+    for (args, _, store) in stores:
         temp = dest + "." + store.replace('/', '_') + ".partial"
 
-        # Adjust the command above that worked to make it visible and download real stuff
-        cmd.remove("--head")
-        cmd.append("--show-error")
+        # Adjust the arguments above that worked to make it visible and download real stuff
+        args.append("--show-error")
         if not quiet and os.isatty(sys.stdout.fileno()):
-            cmd.remove("--silent")
-            cmd.insert(1, "--progress-bar")
-        cmd.append("--remote-time")
-        cmd.append("--time-cond")
-        cmd.append(since)
-        cmd.append("--output")
-        cmd.append(temp)
+            args.append("--progress-bar")
+        else:
+            args.append("--silent")
+        args.append("--remote-time")
+        args.append("--time-cond")
+        args.append(since)
+        args.append("--output")
+        args.append(temp)
         if os.path.exists(temp):
             if force:
                 os.remove(temp)
             else:
-                cmd.append("-C")
-                cmd.append("-")
+                args.append("-C")
+                args.append("-")
 
         # Always create the destination file (because --state)
         else:
             open(temp, 'a').close()
 
-        procs.append((subprocess.Popen(cmd), temp))
+        procs.append((subprocess.Popen(curl_cmd(args)), temp))
 
     # now see which one downloads fastest
     time.sleep(7)
@@ -189,9 +202,9 @@ def download(dest, force, state, quiet, stores):
             max_size = s
             fastest_store = i
 
-    if not quiet:
-        sys.stderr.write("\n\n{0} {1} is the fastest store\n".format(SYMBOLS['selected'],
-                         urllib.parse.urljoin(stores[fastest_store][2], name)))
+    show_status(quiet, 'selected',
+                urllib.parse.urljoin(stores[fastest_store][2], name),
+                'is the fastest store', prefix='\n\n')
 
     # kill all the others
     for i, (proc, output) in enumerate(procs):
