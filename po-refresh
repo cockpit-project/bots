@@ -139,7 +139,7 @@ def run(context, verbose=False, **kwargs):
                 current_manifest["locales"].pop(locale[2])
             if current_linguas:
                 current_linguas.remove(locale[0])
-            local_branch = add_and_commit_lang(name, locale[0], "Drop").split(":")
+            local_branch = add_and_commit_lang(name, locale[0], "Drop")
 
     # HACK: Semicolon in some languages in 'Plural-Forms' header key can break translations
     # https://github.com/mikeedwards/po2json/issues/87
@@ -157,7 +157,7 @@ def run(context, verbose=False, **kwargs):
             if current_linguas:
                 current_linguas.append(locale[0])
                 current_linguas.sort()
-            local_branch = add_and_commit_lang(name, locale[0], "Add").split(":")
+            local_branch = add_and_commit_lang(name, locale[0], "Add")
 
     # Here we have logic to only include files that actually
     # changed translations, and reset all the remaining ones
