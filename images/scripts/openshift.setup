@@ -18,9 +18,11 @@ function docker_images_has() {
 }
 
 function docker_pull() {
-    docker pull $1
-    echo "$1" >> /tmp/pulledImages
-    docker_images_has $1
+    # we get images from our mirror on quay to work around dockerhub rate limits, see sync-quay
+    mirror_name=$(echo $1 | sed 's,/,-,')
+    docker pull "quay.io/cockpit/$mirror_name" && docker tag "quay.io/cockpit/$mirror_name" "docker.io/$1"
+    echo "${1#library/}" >> /tmp/pulledImages
+    docker_images_has "${1#library/}"
 }
 rm -f /tmp/pulledImages # will be populated by pulled images names
 
@@ -60,16 +62,7 @@ systemctl enable docker
 # HACK: docker falls over regularly, print its log if it does
 systemctl start docker || journalctl -u docker
 
-# Can't use latest because release on older versions are done out of order
-set +x
-RELEASES_JSON=$(curl -s https://api.github.com/repos/openshift/origin/releases)
-VERSION=$(echo "$RELEASES_JSON" | LC_ALL=C.UTF-8 python -c "import json, sys, distutils.version; obj=json.load(sys.stdin); releases = [x.get('tag_name', '') for x in obj if not x.get('prerelease')]; print(sorted (releases, reverse=True, key=distutils.version.LooseVersion)[0])") || {
-    echo "Failed to parse latest release:" >&2
-    echo "$RELEASES_JSON" >&2
-    echo "------------------------------------" >&2
-    exit 1
-}
-set -x
+VERSION=v3.11.0
 
 # origin is too rotund to build in a normal sized VM. The linker
 # step runs out of memory. In addition origin has no Fedora packages
@@ -117,7 +110,7 @@ docker_pull "openshift/origin-docker-registry:$VERSION"
 docker_pull "openshift/origin-pod:$VERSION"
 
 # Now pull images used for integration tests
-docker_pull registry:2
+docker_pull library/registry:2
 
 # HACK: Make openshift registry recognize docker registrys with the OpenShift CA
 # (https://github.com/openshift/origin/issues/1753)
@@ -193,7 +186,7 @@ echo '{"apiVersion":"v1","kind":"ImageStream","metadata": {"name":"origin"}}' > 
 oc create -f /tmp/imagestream.json
 
 # Get ready to push busybox into place
-docker_pull busybox
+docker_pull library/busybox
 docker tag busybox registry:5000/marmalade/busybee:latest
 docker tag busybox registry:5000/marmalade/busybee:0.x
 docker push registry:5000/marmalade/busybee

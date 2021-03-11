@@ -10,3 +10,13 @@ sync nowsci samba-domain
 sync selenium hub:3
 sync selenium node-chrome-debug:3
 sync selenium node-firefox-debug:3
+
+# For openshift.setup
+
+VERSION=v3.11.0
+sync openshift origin:$VERSION
+sync openshift origin-deployer:$VERSION
+sync openshift origin-docker-registry:$VERSION
+sync openshift origin-pod:$VERSION
+sync library registry:2
+sync library busybox
