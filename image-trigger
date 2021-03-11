@@ -48,7 +48,7 @@ import time
 
 sys.dont_write_bytecode = True
 
-from lib.CONSTANTS import BASE_DIR
+from lib.constants import BASE_DIR
 import task
 from task import github
 
@@ -72,9 +72,7 @@ def main():
 
 # Check if the given files that match @pathspec are stale
 # and haven't been updated in @days.
-def stale(days, pathspec, ref="HEAD"):
-    global verbose
-
+def stale(days, pathspec, ref="HEAD", verbose=False):
     def execute(*args):
         if verbose:
             sys.stderr.write("+ " + " ".join(args) + "\n")
@@ -105,7 +103,7 @@ def scan(api, force, verbose):
             perform = image == force
         else:
             days = options.get("refresh-days", DAYS)
-            perform = stale(days, os.path.join("images", image), "origin/master")
+            perform = stale(days, os.path.join("images", image), "origin/master", verbose)
 
         if perform:
             text = "Image refresh for {0}".format(image)
