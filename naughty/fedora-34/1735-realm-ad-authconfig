@@ -1,8 +1,5 @@
-*Authenticated as user: Administrator@COCKPIT.LAN
-*
-*/usr/sbin/authconfig: No such file or directory
-*
+*Authenticated as user: Administrator@COCKPIT.LAN*
+*/usr/sbin/authconfig: No such file or directory*
 realm: Couldn't join realm: Enabling SSSD in nsswitch.conf and PAM failed.
-Traceback (most recent call last):
-*
+Traceback (most recent call last):*
   File "test/verify/check-system-realms", line *
