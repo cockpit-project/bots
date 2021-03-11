@@ -10,3 +10,7 @@ sync nowsci samba-domain
 sync selenium hub:3
 sync selenium node-chrome-debug:3
 sync selenium node-firefox-debug:3
+
+# For openshift.setup
+
+sync openshift origin
