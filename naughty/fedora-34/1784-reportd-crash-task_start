@@ -1,0 +1,5 @@
+Stack trace of thread*
+#* reportd_task_start*
+*
+testlib.Error: FAIL: Test completed, but found unexpected journal messages:
+Process * (reportd) of user 0 dumped core.
