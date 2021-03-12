@@ -53,9 +53,8 @@ class SSHConnection(object):
 
     def message(self, *args):
         """Prints args if in verbose mode"""
-        if not self.verbose:
-            return
-        print(" ".join(args))
+        if self.verbose:
+            sys.stderr.write(" ".join(args) + '\n')
 
     # wait until we can execute something on the machine. ie: wait for ssh
     def wait_execute(self, timeout_sec=120):
