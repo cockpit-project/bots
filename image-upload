@@ -20,7 +20,6 @@
 import argparse
 import getpass
 import os
-import socket
 import subprocess
 import sys
 import urllib.parse
@@ -68,21 +67,10 @@ def upload(dest, source, public):
     if try_curl(cmd + [dest]) == 0:
         return 0
 
-    # Next, see if our CA_PEM helps, for stores with valid SSL cert on an OpenShift proxy
+    # Else, see if our CA_PEM helps
     cmd += ['--cacert', CA_PEM]
     if try_curl(cmd + [dest]) == 0:
         return 0
-
-    # Fall back for stores that use our self-signed cockpit certificate
-    # Parse out the actual address to connect to and override certificate info
-    defport = url.scheme == 'http' and 80 or 443
-    ai = socket.getaddrinfo(url.hostname, url.port or defport, socket.AF_INET, 0, socket.IPPROTO_TCP)
-    for (family, socktype, proto, canonname, sockaddr) in ai:
-        resolve = "cockpit-tests:{1}:{0}".format(*sockaddr)
-        curl_url = "https://cockpit-tests:{0}{1}".format(url.port or defport, url.path)
-        ret = try_curl(cmd + ["--resolve", resolve, curl_url])
-        if ret == 0:
-            return 0
 
     return 1
 
