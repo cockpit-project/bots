@@ -23,7 +23,7 @@ from lib.constants import TEST_OS_DEFAULT
 REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit': {
         'master': [
-            'fedora-32/container-bastion',
+            'fedora-33/container-bastion',
             'debian-stable',
             'debian-testing',
             'ubuntu-2004',
@@ -38,14 +38,13 @@ REPO_BRANCH_CONTEXT = {
         'rhel-7.9': [
             'rhel-7-9',
             'rhel-atomic',
-            'fedora-32/container-bastion',
             'centos-7',
         ],
         'rhel-8.4': [
             'rhel-8-4',
             'rhel-8-4-distropkg',
             'centos-8-stream',
-            'fedora-32/container-bastion',
+            'fedora-33/container-bastion',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
