@@ -157,7 +157,7 @@ def download(dest, force, state, quiet, stores):
             stores = []
         stores += HYBRID_STORES
         # skip testing public stores for private images
-        if not name.startswith("rhel") and not name.startswith("windows"):
+        if not name.startswith("rhel"):
             stores += PUBLIC_STORES
         stores += REDHAT_STORES
 

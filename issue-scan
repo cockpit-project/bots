@@ -29,11 +29,6 @@ REDHAT_TASKS = [
     "redhat"
 ]
 
-# Windows tasks have to be done by a human
-WINDOWS_TASKS = [
-    "windows"
-]
-
 KUBERNETES_TASKS = [
     ".svc.cluster.local"
 ]
@@ -87,9 +82,6 @@ def main():
 
         elif not redhat_network() and contains_any(result, REDHAT_TASKS):
             sys.stderr.write("issue-scan: skipping (outside redhat): {0}\n".format(result))
-            continue
-        elif contains_any(result, WINDOWS_TASKS):
-            sys.stderr.write("issue-scan: skipping (windows task): {0}\n".format(result))
             continue
         elif contains_any(result, KUBERNETES_TASKS):
             if not namespace:

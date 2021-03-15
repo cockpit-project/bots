@@ -110,7 +110,7 @@ def main():
 
     for source in sources:
         basename = os.path.basename(source)
-        public = not any(basename.startswith(pfx) for pfx in ('rhel', 'windows'))
+        public = not basename.startswith('rhel')
 
         # determine possible stores, unless explicitly given
         stores = args.store
