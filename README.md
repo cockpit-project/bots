@@ -110,6 +110,10 @@ EEVIDIDFSOQ0ABJ2LGTT    009rKOypIoqO44Q3VQGRyYPfugi84zANHF0pOW9f
 The "access key" and "secret key" is unique per-developer and can be
 obtained by talking to Allison.
 
+The images themselves are downloaded from a number of possible mirror
+servers.  A "preferred" mirror can be specified by writing a substring
+(eg. `eu-central-1`) to `~/.config/cockpit-dev/image-store-preference`.
+
 ### Test contexts
 
 For describing tests which we want to run we use __contexts__. A context has the form:

@@ -41,6 +41,7 @@ import tempfile
 import time
 import fcntl
 import urllib.parse
+import warnings
 
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir, xdg_config_home
@@ -79,6 +80,20 @@ def check_curl_args(args):
 def find(name, stores, latest, quiet):
     found = []
 
+    try:
+        with open(xdg_config_home('cockpit-dev', 'image-store-preference'), 'r') as fp:
+            pattern = fp.read().strip()
+            matches = [store for store in stores if pattern in store]
+            try:
+                # move it to the front of the list
+                preferred, = matches
+                stores.insert(0, preferred)
+            except ValueError:
+                n_matches = len(matches)
+                warnings.warn(f'image-store-preference matched {n_matches} stores (expecting 1).  ignoring.')
+    except FileNotFoundError:
+        preferred = None
+
     for store in stores:
         url = urllib.parse.urlparse(urllib.parse.urljoin(store, name))
 
@@ -88,6 +103,8 @@ def find(name, stores, latest, quiet):
             if output:
                 show_status(quiet, 'present', store, '(authenticated)')
                 found.append(([s3.sign_url(url)], output, store))  # GET
+                if store == preferred:
+                    break
                 continue
 
         # Next, try to access the URL directly, without further help
@@ -96,6 +113,8 @@ def find(name, stores, latest, quiet):
         if output:
             show_status(quiet, 'present', store)
             found.append((args, output, store))
+            if store == preferred:
+                break
             continue
 
         # If that didn't work, try using our CA_PEM
