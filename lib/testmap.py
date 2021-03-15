@@ -166,12 +166,12 @@ IMAGE_REFRESH_TRIGGERS = {
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
     ],
     "services": [
-        "fedora-32@cockpit-project/cockpit",
+        "fedora-33@cockpit-project/cockpit",
         "ubuntu-2004@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
         "rhel-8-4@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
-        "fedora-32/firefox@osbuild/cockpit-composer",
+        "fedora-33/firefox@osbuild/cockpit-composer",
     ]
 }
 
