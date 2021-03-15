@@ -100,23 +100,11 @@ try:
         if subprocess.call(["ip", "address", "show", "dev", "cockpit1"], stdout=fp, stderr=fp) == 0:
             bridge = "cockpit1"
 
-    # Lets make sure Windows has enough memory to be productive
-    memory = args.memory
-    if "windows" in args.image and memory is None:
-        memory = 4096
-
-    # Windows does not get along with the mcast network, use QEMU user network for it instead
-    if "windows" in args.image and not bridge:
-        isolate = "user"
-    else:
-        isolate = False
-
-    graphics = args.graphics or 'windows' in args.image
     network = testvm.VirtNetwork(0, bridge=bridge, image=args.image)
 
     machine = testvm.VirtMachine(verbose=args.verbose, image=args.image, maintain=args.maintain,
-                                 networking=network.host(restrict=args.no_network, isolate=isolate),
-                                 memory_mb=memory, cpus=args.cpus, graphics=graphics)
+                                 networking=network.host(restrict=args.no_network),
+                                 memory_mb=args.memory, cpus=args.cpus, graphics=args.graphics)
 
     # Hack to make things easier for users who don't know about kubeconfig
     if 'openshift' in args.image:
@@ -146,7 +134,7 @@ try:
 
     # for a bridged network, up its interface with DHCP and show it in the console message
     message = ""
-    if args.network and bridge and 'windows' not in args.image:
+    if args.network and bridge:
         machine.execute("nmcli connection modify 'System eth1' ipv4.method auto && nmcli connection up 'System eth1'")
         output = machine.execute("ip -4 a show dev eth1")
         ip = re.search("inet ([^/]+)", output).group(1)
@@ -164,7 +152,7 @@ try:
             machine.execute(cmd, stdout=1)
 
     # Graphics console necessary
-    if graphics:
+    if args.graphics:
         machine.graphics_console()
 
     # else, if -q not specified, text console

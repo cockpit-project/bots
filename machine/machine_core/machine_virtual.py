@@ -59,23 +59,6 @@ def stdchannel_redirected(stdchannel, dest_filename):
             dest_file.close()
 
 
-TEST_CONSOLE_XML = """
-    <console type='pty'>
-      <target type='serial' port='0'/>
-    </console>
-"""
-
-TEST_GRAPHICS_XML = """
-    <video>
-      <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
-      <alias name='video0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
-    </video>
-    <graphics type='vnc' autoport='yes' listen='127.0.0.1'>
-      <listen type='address' address='127.0.0.1'/>
-    </graphics>
-"""
-
 TEST_DOMAIN_XML = """
 <domain type='{type}' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
   <name>{label}</name>
@@ -83,7 +66,6 @@ TEST_DOMAIN_XML = """
   <os>
     <type arch='{arch}'>hvm</type>
     <boot dev='hd'/>
-    {loader}
   </os>
   <memory unit='MiB'>{memory_in_mib}</memory>
   <currentMemory unit='MiB'>{memory_in_mib}</currentMemory>
@@ -94,11 +76,13 @@ TEST_DOMAIN_XML = """
     <disk type='file' snapshot='external'>
       <driver name='qemu' type='qcow2' cache='unsafe'/>
       <source file='{drive}'/>
-      <target dev='vda' bus='{disk}'/>
+      <target dev='vda' bus='virtio'/>
       <serial>ROOT</serial>
     </disk>
     <controller type='scsi' model='virtio-scsi' index='0' id='hot'/>
-    {console}
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
     <disk type='file' device='cdrom'>
       <source file='{iso}'/>
       <target dev='hdb' bus='ide'/>
@@ -111,7 +95,10 @@ TEST_DOMAIN_XML = """
   </devices>
   <qemu:commandline>
     {ethernet}
-    {redir}
+    <qemu:arg value='-netdev'/>
+    <qemu:arg value='user,id=base0,restrict={restrict},net=172.27.0.0/24,hostname={name},{forwards}'/>
+    <qemu:arg value='-device'/>
+    <qemu:arg value='virtio-net-pci,netdev=base0,bus=pci.0,addr=0x0e'/>
   </qemu:commandline>
 </domain>
 """
@@ -136,30 +123,22 @@ TEST_MCAST_XML = """
     <qemu:arg value='-netdev'/>
     <qemu:arg value='socket,mcast=230.0.0.1:{mcast},id=mcast0'/>
     <qemu:arg value='-device'/>
-    <qemu:arg value='{netdriver},netdev=mcast0,mac={mac},bus=pci.0,addr=0x0f'/>
+    <qemu:arg value='virtio-net-pci,netdev=mcast0,mac={mac},bus=pci.0,addr=0x0f'/>
 """
 
 TEST_USERNET_XML = """
     <qemu:arg value='-netdev'/>
     <qemu:arg value='user,id=user0'/>
     <qemu:arg value='-device'/>
-    <qemu:arg value='{netdriver},netdev=user0,mac={mac},bus=pci.0,addr=0x0f'/>
+    <qemu:arg value='virtio-net-pci,netdev=user0,mac={mac},bus=pci.0,addr=0x0f'/>
 """
 
 TEST_BRIDGE_XML = """
     <interface type="bridge">
       <source bridge="{bridge}"/>
       <mac address="{mac}"/>
-      <model type="{netdriver}"/>
+      <model type="virtio-net-pci"/>
     </interface>
-"""
-
-# Used to access SSH from the main host into the virtual machines
-TEST_REDIR_XML = """
-    <qemu:arg value='-netdev'/>
-    <qemu:arg value='user,id=base0,restrict={restrict},net=172.27.0.0/24,hostname={name},{forwards}'/>
-    <qemu:arg value='-device'/>
-    <qemu:arg value='{netdriver},netdev=base0,bus=pci.0,addr=0x0e'/>
 """
 
 
@@ -242,7 +221,6 @@ class VirtNetwork:
         result["restrict"] = restrict and "on" or "off"
         result["forward"] = {"22": 2200, "9090": 9090}
         result["forward"].update(forward)
-        result["netdriver"] = ("windows" in self.image) and "rtl8139" or "virtio-net-pci"
         forwards = []
         for remote, local in result["forward"].items():
             local = self._lock(int(local) + result["number"])
@@ -270,7 +248,6 @@ class VirtNetwork:
             result["bridgedev"] = ""
             result["ethernet"] = TEST_MCAST_XML.format(**result)
         result["forwards"] = ",".join(forwards)
-        result["redir"] = TEST_REDIR_XML.format(**result)
         return result
 
     def kill(self):
@@ -295,7 +272,7 @@ class VirtMachine(Machine):
 
         self.memory_mb = memory_mb or VirtMachine.memory_mb or MEMORY_MB
         self.cpus = cpus or VirtMachine.cpus or 1
-        self.graphics = graphics or "windows" in image
+        self.graphics = graphics
 
         # Set up some temporary networking info if necessary
         if networking is None:
@@ -390,21 +367,6 @@ class VirtMachine(Machine):
 
         keys.update(self.networking)
         keys["name"] = "{image}-{control}".format(**keys)
-
-        # No need or use for redir network on windows
-        if "windows" in self.image:
-            keys["disk"] = "ide"
-            keys["redir"] = ""
-        else:
-            keys["disk"] = "virtio"
-        if self.graphics:
-            keys["console"] = TEST_GRAPHICS_XML.format(**keys)
-        else:
-            keys["console"] = TEST_CONSOLE_XML.format(**keys)
-        if "windows-10" in self.image:
-            keys["loader"] = "<loader readonly='yes' type='pflash'>/usr/share/edk2/ovmf/OVMF_CODE.fd</loader>"
-        else:
-            keys["loader"] = ""
         test_domain_desc = TEST_DOMAIN_XML.format(**keys)
 
         # add the virtual machine

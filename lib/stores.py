@@ -32,7 +32,7 @@ ALL_STORES = [line.split() for line in open(os.path.join(LIB_DIR, 'stores'))]
 # Servers which have public images
 PUBLIC_STORES = [url for scope, url in ALL_STORES if scope == 'public']
 
-# Servers which have the private RHEL/Windows images
+# Servers which have the private RHEL images
 REDHAT_STORES = [url for scope, url in ALL_STORES if scope == 'redhat']
 
 # Servers which can host either public or private images (via ACL specification)
