@@ -74,7 +74,6 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-podman': {
         'master': [
             'rhel-8-4',
-            'fedora-32',
             'fedora-33',
             'fedora-34',
             'fedora-33/rawhide',
@@ -109,7 +108,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'osbuild/cockpit-composer': {
         'master': [
-            'fedora-32',
             'fedora-33',
             'fedora-33/firefox',
             'rhel-8-4',
@@ -134,7 +132,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'skobyda/cockpit-certificates': {
         'master': [
-            'fedora-32',
             'fedora-33',
         ],
         '_manual': [
