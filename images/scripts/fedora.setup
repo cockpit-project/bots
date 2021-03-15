@@ -19,8 +19,6 @@ echo foobar | passwd --stdin root
 #
 COCKPIT_DEPS="\
 device-mapper-multipath \
-docker \
-etcd \
 glibc-all-langpacks \
 glib-networking \
 grubby \
@@ -66,8 +64,6 @@ libsss_sudo \
 
 TEST_PACKAGES="\
 ansible
-systemtap-runtime-virtguest \
-valgrind \
 gdb \
 strace \
 ltrace \
