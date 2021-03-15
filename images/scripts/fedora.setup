@@ -8,15 +8,6 @@ unset LANGUAGE
 unset LANG
 export LC_ALL=C.utf8
 
-# HACK - virt-resize might not be able to resize our xfs rootfs,
-# depending on how it was compiled and which plugins are installed,
-# and will just silently not do it.  So we do it here.
-#
-if [ "$IMAGE" = fedora-32 ]; then
-    xfs_growfs /
-fi
-df -h /
-
 # make libpwquality less aggressive, so that our "foobar" password works
 printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
 
