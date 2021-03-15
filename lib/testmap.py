@@ -39,8 +39,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-9',
             'rhel-atomic',
             'fedora-32/container-bastion',
-            'fedora-32/selenium-firefox',
-            'fedora-32/selenium-chrome',
             'centos-7',
         ],
         'rhel-8.4': [
@@ -48,8 +46,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-4-distropkg',
             'centos-8-stream',
             'fedora-32/container-bastion',
-            'fedora-32/selenium-firefox',
-            'fedora-32/selenium-chrome',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
@@ -173,8 +169,6 @@ IMAGE_REFRESH_TRIGGERS = {
     ],
     "services": [
         "fedora-32@cockpit-project/cockpit",
-        "fedora-32/selenium-firefox@cockpit-project/cockpit/rhel-8.4",
-        "fedora-32/selenium-chrome@cockpit-project/cockpit/rhel-8.4",
         "ubuntu-2004@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
         "rhel-8-4@cockpit-project/cockpit",
