@@ -8,11 +8,6 @@ unset LANGUAGE
 unset LANG
 export LC_ALL=C.utf8
 
-# keep this in sync with avocado/selenium image mapping in testmap
-if [ "$IMAGE" = fedora-32 ] || [ "$IMAGE" = fedora-33 ]; then
-    AVOCADO=1
-fi
-
 # HACK - virt-resize might not be able to resize our xfs rootfs,
 # depending on how it was compiled and which plugins are installed,
 # and will just silently not do it.  So we do it here.
@@ -149,31 +144,6 @@ dnf --setopt=install_weak_deps=False install -y cockpit
 dnf remove --oldinstallonly -y || true
 # also removes gcc and some -devel packages
 dnf remove -y kernel-headers
-
-if [ -n "$AVOCADO" ]; then
-
-    # enable python3 avocado support repository
-    if [ "$IMAGE" = fedora-32 ]; then
-        dnf module install -y avocado:69lts
-    else
-        dnf module install -y avocado:latest
-    fi
-
-    dnf $DNF_OPTS -y install \
-        fontconfig \
-        npm \
-        chromium-headless \
-        python3-libvirt \
-        python3-avocado \
-        python3-avocado-plugins-output-html \
-        python3-selenium
-
-    [ -e /root/npm-registry ] && npm config set registry "$(cat /root/npm-registry)"
-    [ -e /root/node_extra_ca_certs ] && export NODE_EXTRA_CA_CERTS=/root/node_extra_ca_certs
-    npm -g install chrome-remote-interface
-    rm -f /root/npm-registry /root/node_extra_ca_certs
-    echo 'NODE_PATH=/usr/lib/node_modules' >> /etc/environment
-fi
 
 dnf $DNF_OPTS -y install mock dnf-plugins-core rpm-build
 useradd -c Builder -G mock builder
