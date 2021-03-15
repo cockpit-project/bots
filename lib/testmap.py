@@ -60,7 +60,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
         '_manual': [
-            'fedora-32/firefox',
+            'fedora-34/firefox',
         ],
     },
     'cockpit-project/cockpit-ostree': {
@@ -94,7 +94,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-32/lorax',
             'fedora-34/lorax',
             'rhel-8-4/lorax',
             'rhel-7-9',
