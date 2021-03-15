@@ -34,7 +34,6 @@ import email
 import io
 import os
 import shutil
-import socket
 import stat
 import subprocess
 import sys
@@ -107,26 +106,7 @@ def find(name, stores, latest, quiet):
             found.append((args, output, store))
             continue
 
-        # Otherwise, the server is expecting the hostname "cockpit-tests".
-        # We need to do a bit of work to make that happen.
-        defport = url.scheme == 'http' and 80 or 443
-
-        try:
-            ai = socket.getaddrinfo(url.hostname, url.port or defport, socket.AF_INET, 0, socket.IPPROTO_TCP)
-        except socket.gaierror:
-            ai = []
-
-        for (family, socktype, proto, canonname, (host, port)) in ai:
-            args = ['--cacert', CA_PEM,
-                    '--resolve', f'cockpit-tests:{host}:{port}',
-                    f'{url.scheme}://cockpit-tests:{port}{url.path}']
-            output = check_curl_args(args)
-            if output:
-                show_status(quiet, 'present', store)
-                found.append((args, output, store))
-                break
-        else:
-            show_status(quiet, 'absent', store)
+        show_status(quiet, 'absent', store)
 
     # Find the most recent version of this file
     def header_date(args):
