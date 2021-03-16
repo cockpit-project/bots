@@ -188,8 +188,12 @@ class MachineBuilder:
 
 
 try:
-    testvm.VirtMachine.memory_mb = 2048
-    machine = testvm.VirtMachine(verbose=args.verbose, image=args.image, maintain=True)
+    if args.image == 'services':
+        # deploying candlepin needs oodles of memory
+        memory_mb = 3072
+    else:
+        memory_mb = 2048
+    machine = testvm.VirtMachine(verbose=args.verbose, image=args.image, memory_mb=memory_mb, maintain=True)
     builder = MachineBuilder(machine)
     builder.build()
     if not args.no_save:
