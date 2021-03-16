@@ -65,7 +65,9 @@ def consume_webhook_queue(channel, amqp):
         elif action == 'closed' and pull_request.get('merged', False):
             sha = pull_request['head']['sha']
             db = os.path.join(get_images_data_dir(), "test-results.db")
-            cmd = "./store-tests --db {0} --repo {1} {2}".format(db, repo, sha)
+            data = os.path.join(get_images_data_dir(), "prometheus")
+            cmd = "./store-tests --db {0} --repo {1} {2} && ./prometheus-stats --db {0} > {3}".format(
+                db, repo, sha, data)
             body = {
                 "command": cmd,
             }
