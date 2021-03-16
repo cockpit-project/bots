@@ -168,7 +168,6 @@ IMAGE_REFRESH_TRIGGERS = {
         "debian-stable@cockpit-project/cockpit",
         "rhel-8-4@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
-        "fedora-33/firefox@osbuild/cockpit-composer",
     ]
 }
 
