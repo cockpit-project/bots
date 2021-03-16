@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+# This file is part of Cockpit.
+#
+# Copyright (C) 2021 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+import time
+import sqlite3
+import argparse
+import logging
+
+# Seconds in an hour
+HOUR = 3600
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Generate statistics about failed tests')
+    parser.add_argument("--db", default="test-results.db", help="Database name")
+    parser.add_argument("--hours", default=1, type=int,
+                        help="Number of hours to take statistics from. Default is %(default)s.")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
+    opts = parser.parse_args()
+
+    if opts.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    db_conn = sqlite3.connect(opts.db)
+    cursor = db_conn.cursor()
+
+    since = time.time() - opts.hours * HOUR
+    output = ""
+
+    # Get average wait seconds in last N hours
+    rows = cursor.execute("""\
+            SELECT SUM(wait_seconds) / COUNT(*)
+            FROM TestRuns
+            WHERE time > ? ;""", (since, )).fetchall()
+
+    queue_time = rows[0][0] or 0
+
+    # Output in prometheus format, see:
+    # https://prometheus.io/docs/instrumenting/exposition_formats/
+    output += "# HELP queue_time Average queue waiting time\n"
+    output += "queue_time {0}".format(queue_time)
+
+    print(output)
+
+    db_conn.close()
+
+
+if __name__ == '__main__':
+    sys.exit(main())
