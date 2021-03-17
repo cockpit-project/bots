@@ -54,8 +54,9 @@ def main():
 
     # Output in prometheus format, see:
     # https://prometheus.io/docs/instrumenting/exposition_formats/
-    output += "# HELP queue_time Average queue waiting time\n"
-    output += "queue_time {0}".format(queue_time)
+    output += "# HELP queue_time_seconds Average queue waiting time\n"
+    output += "# TYPE queue_time_seconds gauge\n"
+    output += "queue_time_seconds {0}".format(queue_time)
 
     print(output)
 
