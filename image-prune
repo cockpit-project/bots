@@ -150,7 +150,7 @@ def prune_images(force, dryrun, quiet=False, open_pull_requests=True, offline=Fa
         path = os.path.join(IMAGES_DIR, filename)
 
         # only consider original image entries as trustworthy sources and ignore non-links
-        if path.endswith(".qcow2") or path.endswith(".partial") or not os.path.islink(path):
+        if '.' in path or not os.path.islink(path):
             continue
 
         target = os.readlink(path)
