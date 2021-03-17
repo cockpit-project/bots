@@ -179,13 +179,9 @@ def main():
                         help="Don't access external sources such as GitHub")
     args = parser.parse_args()
 
-    try:
-        prune_images(args.force, args.dryrun, quiet=args.quiet,
-                     open_pull_requests=(not args.branches_only),
-                     offline=args.offline, checkout_only=args.checkout_only)
-    except RuntimeError as ex:
-        sys.stderr.write("image-prune: {0}\n".format(str(ex)))
-        return 1
+    prune_images(args.force, args.dryrun, quiet=args.quiet,
+                 open_pull_requests=(not args.branches_only),
+                 offline=args.offline, checkout_only=args.checkout_only)
 
     return 0
 
