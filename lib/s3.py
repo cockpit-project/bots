@@ -11,6 +11,7 @@ import base64
 import hashlib
 import hmac
 import os.path
+import shlex
 import sys
 import time
 import urllib.parse
@@ -112,17 +113,23 @@ def sign_url(url: urllib.parse.ParseResult, method='GET', headers=[], duration=1
 
 
 def main():
+    # to be used like `python3 -m lib.s3 get https://...` from the toplevel dir
     prognam, cmd, uri = sys.argv
 
     url = urllib.parse.urlparse(uri)
     if cmd == 'get':
-        print(sign_url(url))
+        args = sign_curl(url)
+    elif cmd == 'rm':
+        args = ['-XDELETE'] + sign_curl(url, method='DELETE')
     elif cmd == 'put':
-        print(sign_url(url, method='PUT'))
+        args = [sign_url(url, method='PUT')]
     elif cmd == 'put-public':
-        print('-H{ACL_PUBLIC}', sign_url(url, method='PUT', headers=[ACL_PUBLIC]))
+        args = [sign_url(url, method='PUT', headers=[ACL_PUBLIC])]
     else:
         sys.exit(f'unknown command {cmd}')
+
+    # shlex.join() only from Python 3.8
+    print('curl', ' '.join(map(shlex.quote, args)))
 
 
 if __name__ == '__main__':
