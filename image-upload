@@ -38,41 +38,33 @@ def upload(dest, source, public):
     # Start building the command
     cmd = ["curl", "--progress-bar", "--fail", "--upload-file", source]
 
-    def try_curl(cmd):
-        print("Uploading to", cmd[-1].split('?')[0])  # hide authentication info
-        # Passing through a non terminal stdout is necessary to make progress work
-        curl = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        cat = subprocess.Popen(["cat"], stdin=curl.stdout)
-        curl.stdout.close()
-        ret = curl.wait()
-        cat.wait()
-        if ret != 0:
-            sys.stderr.write("image-upload: unable to upload image: {0}\n".format(cmd[-1]))
-        return ret
-
     # Pass credentials, if present
     if s3.is_key_present(url):
         # This is an S3 host for which we have a key
         headers = []
         if public:
             headers = [s3.ACL_PUBLIC]
-            cmd.extend(['-H', s3.ACL_PUBLIC])
-        dest = s3.sign_url(url, verb='PUT', headers=headers)
+        cmd += s3.sign_url(url, verb='PUT', headers=headers)
 
     elif api.token:
         user = url.username or getpass.getuser()
-        cmd += ["--user", user + ":" + api.token]
+        cmd += ["--user", user + ":" + api.token, '--cacert', CA_PEM, dest]
 
-    # First try to use the original URL with no extra help
-    if try_curl(cmd + [dest]) == 0:
-        return 0
+    else:
+        # No credentials?  That's not going to work...
+        sys.stderr.write(f"image-upload: no credentials for {dest}")
+        return 1
 
-    # Else, see if our CA_PEM helps
-    cmd += ['--cacert', CA_PEM]
-    if try_curl(cmd + [dest]) == 0:
-        return 0
+    print("Uploading to", dest, file=sys.stderr)
+    curl = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    cat = subprocess.Popen(["cat"], stdin=curl.stdout)
+    curl.stdout.close()
+    ret = curl.wait()
+    cat.wait()
+    if ret != 0:
+        sys.stderr.write(f"image-upload: unable to upload image: {dest}\n")
 
-    return 1
+    return ret
 
 
 def main():
