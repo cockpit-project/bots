@@ -185,15 +185,6 @@ def prune_images(force, dryrun, quiet=False, open_pull_requests=True, offline=Fa
                 os.unlink(path)
 
 
-def every_image():
-    result = []
-    for filename in os.listdir(IMAGES_DIR):
-        link = os.path.join(IMAGES_DIR, filename)
-        if os.path.islink(link):
-            result.append(filename)
-    return result
-
-
 def main():
     parser = argparse.ArgumentParser(description='Prune downloaded images')
     parser.add_argument("--force", action="store_true", help="Delete images even if they aren't old")
