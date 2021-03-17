@@ -40,11 +40,13 @@ def upload(dest, source, public):
 
     # Pass credentials, if present
     if s3.is_key_present(url):
-        # This is an S3 host for which we have a key
-        headers = []
-        if public:
-            headers = [s3.ACL_PUBLIC]
-        cmd += s3.sign_url(url, method='PUT', headers=headers)
+        headers = {s3.ACL: s3.PUBLIC} if public else {}
+
+        # slightly magic: image filenames always end with -{sha256}.qcow2
+        assert source.endswith('.qcow2')
+        hash_value = source[-70:-6]
+
+        cmd += s3.sign_curl(url, method='PUT', headers=headers, checksum=hash_value)
 
     elif api.token:
         user = url.username or getpass.getuser()

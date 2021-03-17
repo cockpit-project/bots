@@ -26,7 +26,6 @@ __all__ = (
     "is_key_present",
     "sign_curl",
     "sign_request",
-    "sign_url",
 )
 
 ACL = 'x-amz-acl'
