@@ -22,30 +22,33 @@ __all__ = (
 ACL_PUBLIC = 'x-amz-acl:public-read'
 
 
-def split_bucket(url):
-    return url.hostname.split('.', 1)
-
-
-def get_key_filename(endpoint):
+def get_key(hostname):
     s3_key_dir = xdg_config_home('cockpit-dev/s3-keys', envvar='COCKPIT_S3_KEY_DIR')
-    return os.path.join(s3_key_dir, endpoint)
+
+    # ie: 'cockpit-images.eu.linode.com' then 'eu.linode.com', then 'linode.com'
+    while '.' in hostname:
+        try:
+            with open(os.path.join(s3_key_dir, hostname)) as fp:
+                access, secret = fp.read().split()
+                return access, secret
+        except ValueError:
+            print('ignoring invalid content of {s3_key_dir}/{hostname}', file=sys.stderr)
+        except FileNotFoundError:
+            pass
+        _, _, hostname = hostname.partition('.')  # strip a leading component
+
+    return None
 
 
 def is_key_present(url: urllib.parse.ParseResult) -> bool:
     """Checks if an S3 key is available for the given url"""
-    try:
-        bucket, endpoint = split_bucket(url)
-    except ValueError:
-        # happens if there is no '.' in the hostname
-        return False
-
-    return os.path.exists(get_key_filename(endpoint))
+    return get_key(url.hostname) is not None
 
 
 def sign_url(url: urllib.parse.ParseResult, verb='GET', headers=[], duration=12 * 60 * 60) -> str:
     """Returns a "pre-signed" url for the given method and headers"""
-    bucket, endpoint = split_bucket(url)
-    access, secret = open(get_key_filename(endpoint)).read().split()
+    access, secret = get_key(url.hostname)
+    bucket = url.hostname.split('.')[0]
 
     expires = int(time.time()) + duration
     headers = ''.join(f'{h}\n' for h in headers)
