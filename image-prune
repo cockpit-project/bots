@@ -146,28 +146,23 @@ def prune_images(force, dryrun, quiet=False, open_pull_requests=True, offline=Fa
         targets = get_image_names(quiet, open_pull_requests, offline)
 
     # what we have in the current checkout might already have been added by its branch, but check anyway
-    for filename in os.listdir(IMAGES_DIR):
-        path = os.path.join(IMAGES_DIR, filename)
-
+    for entry in os.scandir(IMAGES_DIR):
         # only consider original image entries as trustworthy sources and ignore non-links
-        if '.' in path or not os.path.islink(path):
-            continue
-
-        target = os.readlink(path)
-        targets.add(target)
+        if '.' not in entry.name and entry.is_symlink():
+            target = os.readlink(entry.path)
+            targets.add(target)
 
     expiry_threshold = now - IMAGE_EXPIRE * 86400
-    for filename in os.listdir(get_images_data_dir()):
-        path = os.path.join(get_images_data_dir(), filename)
-        if not force and (enough_disk_space() and os.lstat(path).st_mtime > expiry_threshold):
+    for entry in os.scandir(get_images_data_dir()):
+        if not force and (enough_disk_space() and entry.stat(follow_symlinks=False).st_mtime > expiry_threshold):
             continue
-        if os.path.isfile(path) and \
-                (path.endswith(".qcow2") or path.endswith(".partial")) and \
-                filename not in targets:
+        if entry.is_file() and \
+                any(entry.name.endswith(ext) for ext in ['.qcow2', '.partial']) and \
+                entry.name not in targets:
             if not quiet or dryrun:
-                sys.stderr.write("Pruning {0}\n".format(filename))
+                sys.stderr.write("Pruning {0}\n".format(entry.name))
             if not dryrun:
-                os.unlink(path)
+                os.unlink(entry.path)
 
 
 def main():
