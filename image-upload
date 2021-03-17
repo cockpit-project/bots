@@ -44,7 +44,7 @@ def upload(dest, source, public):
         headers = []
         if public:
             headers = [s3.ACL_PUBLIC]
-        cmd += s3.sign_url(url, verb='PUT', headers=headers)
+        cmd += s3.sign_url(url, method='PUT', headers=headers)
 
     elif api.token:
         user = url.username or getpass.getuser()

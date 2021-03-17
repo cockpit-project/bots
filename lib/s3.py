@@ -45,7 +45,7 @@ def is_key_present(url: urllib.parse.ParseResult) -> bool:
     return get_key(url.hostname) is not None
 
 
-def sign_url(url: urllib.parse.ParseResult, verb='GET', headers=[], duration=12 * 60 * 60) -> str:
+def sign_url(url: urllib.parse.ParseResult, method='GET', headers=[], duration=12 * 60 * 60) -> str:
     """Returns a "pre-signed" url for the given method and headers"""
     access, secret = get_key(url.hostname)
     bucket = url.hostname.split('.')[0]
@@ -54,7 +54,7 @@ def sign_url(url: urllib.parse.ParseResult, verb='GET', headers=[], duration=12 
     headers = ''.join(f'{h}\n' for h in headers)
 
     h = hmac.HMAC(secret.encode('ascii'), digestmod='sha1')
-    h.update(f'{verb}\n\n\n{expires}\n{headers}/{bucket}{url.path}'.encode('ascii'))
+    h.update(f'{method}\n\n\n{expires}\n{headers}/{bucket}{url.path}'.encode('ascii'))
     signature = urllib.parse.quote_plus(base64.b64encode(h.digest()))
 
     query = f'AWSAccessKeyId={access}&Expires={expires}&Signature={signature}'
@@ -68,9 +68,9 @@ def main():
     if cmd == 'get':
         print(sign_url(url))
     elif cmd == 'put':
-        print(sign_url(url, verb='PUT'))
+        print(sign_url(url, method='PUT'))
     elif cmd == 'put-public':
-        print('-H{ACL_PUBLIC}', sign_url(url, verb='PUT', headers=[ACL_PUBLIC]))
+        print('-H{ACL_PUBLIC}', sign_url(url, method='PUT', headers=[ACL_PUBLIC]))
     else:
         sys.exit(f'unknown command {cmd}')
 

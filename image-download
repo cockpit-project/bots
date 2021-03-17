@@ -87,7 +87,7 @@ def find(name, stores, latest, quiet):
 
         # First, check if this is an S3 store for which we have a key
         if s3.is_key_present(url):
-            result = check_curl_args([s3.sign_url(url, verb='HEAD')])
+            result = check_curl_args([s3.sign_url(url, method='HEAD')])
             if result:
                 show_status(quiet, 'present', store, '(authenticated)')
                 found.append(([s3.sign_url(url)], result, store))  # GET
