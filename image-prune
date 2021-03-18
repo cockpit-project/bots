@@ -169,21 +169,6 @@ def prune_images(force, dryrun, quiet=False, open_pull_requests=True, offline=Fa
             if not dryrun:
                 os.unlink(path)
 
-    # now prune broken links
-    for filename in os.listdir(IMAGES_DIR):
-        path = os.path.join(IMAGES_DIR, filename)
-
-        # don't prune original image entries and ignore non-links
-        if not path.endswith(".qcow2") or not os.path.islink(path):
-            continue
-
-        # if the link isn't valid, prune
-        if not os.path.isfile(path):
-            if not quiet or dryrun:
-                sys.stderr.write("Pruning link {0}\n".format(path))
-            if not dryrun:
-                os.unlink(path)
-
 
 def main():
     parser = argparse.ArgumentParser(description='Prune downloaded images')
