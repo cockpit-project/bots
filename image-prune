@@ -198,7 +198,7 @@ def main():
     parser = argparse.ArgumentParser(description='Prune downloaded images')
     parser.add_argument("--force", action="store_true", help="Delete images even if they aren't old")
     parser.add_argument("--quiet", action="store_true", help="Make downloading quieter")
-    parser.add_argument("-d", "--dry-run-prune", dest="dryrun", action="store_true",
+    parser.add_argument("-n", "--dry-run", dest="dryrun", action="store_true",
                         help="Don't actually delete images and links")
     parser.add_argument("-b", "--branches-only", dest="branches_only", action="store_true",
                         help="Don't consider pull requests on GitHub, only look at branches")
