@@ -21,11 +21,13 @@
 IMAGE_EXPIRE = 14
 
 import argparse
+import datetime
 import logging
 import os
 import subprocess
 import sys
 import time
+import urllib.parse
 from typing import Iterable, Tuple
 from logging import debug
 
@@ -33,6 +35,7 @@ from task import github
 
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
+from lib import s3
 
 
 def get_refs(open_pull_requests=True, offline=False):
@@ -197,6 +200,32 @@ class LocalImageDirectory(ImageCache):
         return free >= self.space_threshold
 
 
+class S3ImageStore(ImageCache):
+    def __init__(self, url):
+        self.url = url
+        # A bit magic: we have 2 buckets and 250GB quota.  Try to keep each bucket below ca. 80GB.
+        self.max_bytes = float(os.environ.get("S3_IMAGES_MAX_GB", 80)) * 1000 * 1000 * 1000
+
+    def list_files(self):
+        result = s3.list_bucket(self.url)
+
+        # make sure this gets done before we start iterating
+        self.sizes = dict(s3.parse_list(result, "Key", "Size"))
+
+        RFC3339ish = '%Y-%m-%dT%H:%M:%S.%f%z'
+        for name, stamp in s3.parse_list(result, "Key", "LastModified"):
+            yield name, datetime.datetime.strptime(stamp, RFC3339ish).timestamp()
+
+    def delete_file(self, filename):
+        with s3.urlopen(self.url._replace(path='/' + filename), method='DELETE'):
+            pass
+        del self.sizes[filename]
+
+    def enough_space(self):
+        total = sum(int(bytes) for bytes in self.sizes.values())
+        return total < self.max_bytes
+
+
 def main():
     parser = argparse.ArgumentParser(description='Prune downloaded images')
     parser.add_argument("--debug", action="store_true", help="Enable debugging output")
@@ -210,12 +239,27 @@ def main():
                         help="Consider neither pull requests on GitHub nor branches, only look at the current checkout")
     parser.add_argument("-o", "--offline", dest="offline", action="store_true",
                         help="Don't access external sources such as GitHub")
+    cache_arg = parser.add_argument_group(title='Cache location',
+                                          description='default: --directory ~/.cache/cockpit-images')
+    cache_arg = cache_arg.add_mutually_exclusive_group()
+    cache_arg.add_argument('--directory', metavar='DIR', help="images cache directory to prune")
+    cache_arg.add_argument('--s3', metavar='URL', help="url of S3 store to prune", type=urllib.parse.urlparse)
     args = parser.parse_args()
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    collection = LocalImageDirectory()
+    if args.s3:
+        if args.s3.scheme != 'https':
+            sys.exit("S3 args must be https")
+
+        if not s3.is_key_present(args.s3):
+            sys.exit("No key found for {args.s3.hostname}")
+
+        collection = S3ImageStore(args.s3)
+
+    else:
+        collection = LocalImageDirectory(args.directory)
 
     keepers = get_keepers(quiet=args.quiet,
                           open_pull_requests=(not args.branches_only),
