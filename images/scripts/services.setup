@@ -119,7 +119,7 @@ chmod 755 /root/run-samba-domain
 # unfortunately the setup only works on RHEL/CentOS 7: https://github.com/candlepin/ansible-role-candlepin/pull/12
 # so we have to run that in a CentOS 7 container
 
-podman run --name=candlepin --publish=8443:8443 --privileged --detach quay.io/centos/centos:centos7 /sbin/init
+podman run --name=candlepin --uts=host --publish=8443:8443 --privileged --detach quay.io/centos/centos:centos7 /sbin/init
 
 podman exec -i candlepin sh -eux <<EOF
 # wait until booted
