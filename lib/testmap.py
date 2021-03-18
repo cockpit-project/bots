@@ -84,6 +84,23 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
     },
+    'cockpit-project/cockpit-machines': {
+        'main': [
+            'debian-stable',
+            'debian-testing',
+            'ubuntu-2004',
+            'ubuntu-stable',
+            'fedora-33',
+            'fedora-34',
+            'fedora-33/firefox',
+            'rhel-8-4',
+            'centos-8-stream',
+        ],
+        '_manual': [
+            'fedora-testing',
+            'rhel-8-4-distropkg',
+        ],
+    },
     'weldr/lorax': {
         'master': [
         ],
