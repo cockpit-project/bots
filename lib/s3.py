@@ -15,7 +15,9 @@ import shlex
 import sys
 import time
 import urllib.parse
-from typing import Dict, List
+import urllib.request
+from typing import Dict, List, Iterable, IO
+import xml.etree.ElementTree as ET
 
 from .directories import xdg_config_home
 
@@ -24,8 +26,11 @@ __all__ = (
     "ACL_PUBLIC",
     "PUBLIC",
     "is_key_present",
+    "list_bucket",
+    "parse_list",
     "sign_curl",
     "sign_request",
+    "urlopen",
 )
 
 ACL = 'x-amz-acl'
@@ -95,6 +100,27 @@ def sign_curl(url: urllib.parse.ParseResult, method='GET', checksum=SHA256_NIL, 
     return [f'-H{key}:{value}' for key, value in headers.items()] + [url.geturl()]
 
 
+def urlopen(url: urllib.parse.ParseResult, method='GET') -> IO:
+    """Same as sign_request() but calls urlopen() on the result"""
+    headers = sign_request(url, method=method)
+    request = urllib.request.Request(url.geturl(), headers=headers, method=method)
+    return urllib.request.urlopen(request)
+
+
+def list_bucket(url: urllib.parse.ParseResult) -> ET:
+    """Get the ListBucketResult as a xml.etree.ElementTree"""
+    with urlopen(url) as response:
+        return ET.fromstring(response.read())
+
+
+def parse_list(result: ET, *keys) -> Iterable[Iterable[str]]:
+    """For each item in the bucket, return the given keys"""
+    # 'http' url is API: see https://doc.s3.amazonaws.com/2006-03-01/AmazonS3.wsdl
+    xmlns = {'s3': 'http://s3.amazonaws.com/doc/2006-03-01/'}
+    for child in result.findall('s3:Contents', xmlns):
+        yield (child.find(f's3:{key}', xmlns).text for key in keys)
+
+
 def sign_url(url: urllib.parse.ParseResult, method='GET', headers=[], duration=12 * 60 * 60) -> str:
     """Returns a "pre-signed" url for the given method and headers"""
     access, secret = get_key(url.hostname)
@@ -118,6 +144,10 @@ def main():
     url = urllib.parse.urlparse(uri)
     if cmd == 'get':
         args = sign_curl(url)
+    elif cmd == 'ls':
+        for items in parse_list(list_bucket(url), "Size", "LastModified", "Key"):
+            print('\t'.join(items))
+        sys.exit(0)
     elif cmd == 'rm':
         args = ['-XDELETE'] + sign_curl(url, method='DELETE')
     elif cmd == 'put':
