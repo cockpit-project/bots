@@ -31,7 +31,8 @@ def get_key_filename(endpoint):
     return os.path.join(s3_key_dir, endpoint)
 
 
-def is_key_present(url):
+def is_key_present(url: urllib.parse.ParseResult) -> bool:
+    """Checks if an S3 key is available for the given url"""
     try:
         bucket, endpoint = split_bucket(url)
     except ValueError:
@@ -41,7 +42,8 @@ def is_key_present(url):
     return os.path.exists(get_key_filename(endpoint))
 
 
-def sign_url(url, verb='GET', headers=[], duration=12 * 60 * 60):
+def sign_url(url: urllib.parse.ParseResult, verb='GET', headers=[], duration=12 * 60 * 60) -> str:
+    """Returns a "pre-signed" url for the given method and headers"""
     bucket, endpoint = split_bucket(url)
     access, secret = open(get_key_filename(endpoint)).read().split()
 
