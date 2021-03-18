@@ -34,8 +34,6 @@ from task import github
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
 
-# threshold in G below which unreferenced qcow2 images will be pruned, even if they aren't old
-
 
 def get_refs(open_pull_requests=True, offline=False):
     """Return dictionary for available refs of the format {'rhel-7.4': 'ad50328990e44c22501bd5e454746d4b5e561b7c'}
