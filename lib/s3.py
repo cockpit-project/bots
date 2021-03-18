@@ -142,6 +142,10 @@ def main():
     prognam, cmd, uri = sys.argv
 
     url = urllib.parse.urlparse(uri)
+
+    if not is_key_present(url):
+        sys.exit(f'no key is available for {url.hostname}')
+
     if cmd == 'get':
         args = sign_curl(url)
     elif cmd == 'ls':
