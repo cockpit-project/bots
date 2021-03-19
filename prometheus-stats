@@ -30,7 +30,7 @@ HOUR = 3600
 def main():
     parser = argparse.ArgumentParser(description='Generate statistics about failed tests')
     parser.add_argument("--db", default="test-results.db", help="Database name")
-    parser.add_argument("--hours", default=1, type=int,
+    parser.add_argument("--hours", default=12, type=int,
                         help="Number of hours to take statistics from. Default is %(default)s.")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     opts = parser.parse_args()
@@ -42,21 +42,37 @@ def main():
     cursor = db_conn.cursor()
 
     since = time.time() - opts.hours * HOUR
-    output = ""
-
-    # Get average wait seconds in last N hours
-    rows = cursor.execute("""\
-            SELECT SUM(wait_seconds) / COUNT(*)
-            FROM TestRuns
-            WHERE time > ? ;""", (since, )).fetchall()
-
-    queue_time = rows[0][0] or 0
 
     # Output in prometheus format, see:
     # https://prometheus.io/docs/instrumenting/exposition_formats/
-    output += "# HELP queue_time_seconds Average queue waiting time\n"
-    output += "# TYPE queue_time_seconds gauge\n"
-    output += "queue_time_seconds {0}".format(queue_time)
+    output = ""
+
+    # Get total number of runs and wait time sum in last N hours
+    (test_runs, test_runs_queue_wait_sum) = cursor.execute("""\
+            SELECT COUNT(*), SUM(wait_seconds)
+            FROM TestRuns
+            WHERE time > ? ;""", (since, )).fetchone()
+
+    # Get how many test runs waited for more than 5 minutes
+    test_runs_wait_5m = cursor.execute("""\
+            SELECT COUNT(*)
+            FROM TestRuns
+            WHERE time > ? AND wait_seconds > 300; """, (since, )).fetchone()[0]
+
+    # Get how many test runs waited for more than 1 hour
+    test_runs_wait_1h = cursor.execute("""\
+            SELECT COUNT(*)
+            FROM TestRuns
+            WHERE time > ? AND wait_seconds > 3600; """, (since, )).fetchone()[0]
+
+    output += """# HELP queue_time_wait_seconds histogram of queue wait times in the last %i hours
+# TYPE queue_time_wait_seconds histogram\n"
+queue_time_wait_seconds_bucket{le="300"} %i
+queue_time_wait_seconds_bucket{le="3600"} %i
+queue_time_wait_seconds_bucket{le="+Inf"} %i
+queue_time_wait_seconds_sum %i
+queue_time_wait_seconds_count %i
+""" % (opts.hours, test_runs_wait_5m, test_runs_wait_1h, test_runs, test_runs_queue_wait_sum, test_runs)
 
     print(output)
 
