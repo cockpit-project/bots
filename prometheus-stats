@@ -74,7 +74,32 @@ queue_time_wait_seconds_bucket{{le="3600"}} {test_runs_wait_1h}
 queue_time_wait_seconds_bucket{{le="+Inf"}} {test_runs}
 queue_time_wait_seconds_sum {test_runs_queue_wait_sum}
 queue_time_wait_seconds_count {test_runs}
+
 """
+
+    # failures
+    top_failures = cursor.execute("""
+            SELECT TestRuns.project, t1.testname, (t2.failed * 100.0) / COUNT(run) AS percent
+            FROM Tests AS t1
+            JOIN TestRuns ON t1.run = TestRuns.id
+            JOIN (
+                SELECT testname, COUNT(run) as failed
+                FROM Tests
+                JOIN TestRuns ON Tests.run = TestRuns.id
+                WHERE TestRuns.time > strftime('%s', 'now', '-7 days') AND Tests.failed = 1
+                GROUP BY testname
+            ) AS t2 ON t1.testname = t2.testname
+            WHERE TestRuns.time > strftime('%s', 'now', '-7 days') AND t2.failed > 1
+            GROUP BY t1.testname
+            ORDER BY percent DESC
+            LIMIT 50""").fetchall()
+
+    output += """# HELP top_failures_pct Most unstable tests in the last 7 days (more than 10% failure rate)
+# TYPE top_failures_pct gauge
+"""
+    for (project, test, fail_pct) in top_failures:
+        if fail_pct > 10:
+            output += f'top_failures_pct{{project="{project}",test="{test}"}} {fail_pct}\n'
 
     print(output)
 
