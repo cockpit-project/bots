@@ -55,17 +55,17 @@ def main():
     if test_runs_queue_wait_sum is None:
         test_runs_queue_wait_sum = 0
 
-    # Get how many test runs waited for more than 5 minutes
+    # How many test runs waited for at most 5 minutes
     test_runs_wait_5m = cursor.execute("""\
             SELECT COUNT(*)
             FROM TestRuns
-            WHERE time > ? AND wait_seconds > 300; """, (since, )).fetchone()[0]
+            WHERE time > ? AND wait_seconds <= 300; """, (since, )).fetchone()[0]
 
-    # Get how many test runs waited for more than 1 hour
+    # Get how many test runs waited for at most 1 hour
     test_runs_wait_1h = cursor.execute("""\
             SELECT COUNT(*)
             FROM TestRuns
-            WHERE time > ? AND wait_seconds > 3600; """, (since, )).fetchone()[0]
+            WHERE time > ? AND wait_seconds <= 3600; """, (since, )).fetchone()[0]
 
     output += """# HELP queue_time_wait_seconds histogram of queue wait times in the last %i hours
 # TYPE queue_time_wait_seconds histogram
