@@ -52,6 +52,8 @@ def main():
             SELECT COUNT(*), SUM(wait_seconds)
             FROM TestRuns
             WHERE time > ? ;""", (since, )).fetchone()
+    if test_runs_queue_wait_sum is None:
+        test_runs_queue_wait_sum = 0
 
     # Get how many test runs waited for more than 5 minutes
     test_runs_wait_5m = cursor.execute("""\
