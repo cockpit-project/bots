@@ -67,14 +67,14 @@ def main():
             FROM TestRuns
             WHERE time > ? AND wait_seconds <= 3600; """, (since, )).fetchone()[0]
 
-    output += """# HELP queue_time_wait_seconds histogram of queue wait times in the last %i hours
+    output += f"""# HELP queue_time_wait_seconds histogram of queue wait times in the last {opts.hours} hours
 # TYPE queue_time_wait_seconds histogram
-queue_time_wait_seconds_bucket{le="300"} %i
-queue_time_wait_seconds_bucket{le="3600"} %i
-queue_time_wait_seconds_bucket{le="+Inf"} %i
-queue_time_wait_seconds_sum %i
-queue_time_wait_seconds_count %i
-""" % (opts.hours, test_runs_wait_5m, test_runs_wait_1h, test_runs, test_runs_queue_wait_sum, test_runs)
+queue_time_wait_seconds_bucket{{le="300"}} {test_runs_wait_5m}
+queue_time_wait_seconds_bucket{{le="3600"}} {test_runs_wait_1h}
+queue_time_wait_seconds_bucket{{le="+Inf"}} {test_runs}
+queue_time_wait_seconds_sum {test_runs_queue_wait_sum}
+queue_time_wait_seconds_count {test_runs}
+"""
 
     print(output)
 
