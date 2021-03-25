@@ -83,6 +83,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-34/rawhide',
         ],
     },
     'cockpit-project/cockpit-machines': {
