@@ -1,0 +1,4 @@
+error: Failed to destroy pool nfs-pool
+error: Requested operation is not valid: storage pool 'nfs-pool' is not active
+*
+RuntimeError: Timed out on 'virsh pool-define-as nfs-pool --type netfs --target /var/lib/cockpittest/nfs_pool --source-host 127.0.0.1 --source-path /var/lib/cockpittest/mnt_exports && virsh pool-start nfs-pool'
