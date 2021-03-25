@@ -1,0 +1,1 @@
+* type=1400 audit(*): avc:  denied  { watch } * comm="rpc.mountd" path="/proc/fs/nfsd/clients" dev="nfsd"

@@ -1,0 +1,4 @@
+warning: rpc mount export: RPC: Unable to receive; errno = Connection refused
+*
+  File "/work/bots/make-checkout-workdir/test/verify/check-storage-nfs", line *, in testNfsClient
+    self.dialog_set_val("remote", "/home/foo")
