@@ -18,6 +18,7 @@
 import os
 import errno
 import subprocess
+import re
 
 from lib.constants import DEFAULT_IDENTITY_FILE, ATOMIC_IMAGES, OSTREE_IMAGES, TEST_DIR, BOTS_DIR
 from . import ssh_connection
@@ -161,7 +162,7 @@ class Machine(ssh_connection.SSHConnection):
         """
         return self.execute("journalctl --show-cursor -n0 -o cat | sed 's/^.*cursor: *//'")
 
-    def journal_messages(self, syslog_ids, log_level, cursor=None):
+    def journal_messages(self, matches, log_level, cursor=None):
         """Return interesting journal messages"""
 
         # give the OS some time to write pending log messages, to make
@@ -169,12 +170,8 @@ class Machine(ssh_connection.SSHConnection):
         # yet know about --sync, so ignore failures
         self.execute("journalctl --sync 2>/dev/null || true; sleep 3; journalctl --sync 2>/dev/null || true")
 
-        # Journald does not always set trusted fields like
-        # _SYSTEMD_UNIT or _EXE correctly for the last few messages of
-        # a dying process, so we filter by the untrusted but reliable
-        # SYSLOG_IDENTIFIER instead
-
-        matches = " ".join(map(lambda id: "SYSLOG_IDENTIFIER=" + id, syslog_ids))
+        # Prepend "SYSLOG_IDENTIFIER=" as a default field, for backwards compatibility
+        matches = map(lambda m: m if re.match("[a-zA-Z0-9_]+=", m) else "SYSLOG_IDENTIFIER=" + m, matches)
 
         # Some versions of journalctl terminate unsuccessfully when
         # the output is empty.  We work around this by ignoring the
@@ -186,7 +183,7 @@ class Machine(ssh_connection.SSHConnection):
         else:
             cursor_arg = ""
 
-        cmd = "journalctl 2>&1 %s -o cat -p %d %s || true" % (cursor_arg, log_level, matches)
+        cmd = "journalctl 2>&1 %s -o cat -p %d %s || true" % (cursor_arg, log_level, " + ".join(matches))
         messages = self.execute(cmd).splitlines()
         if len(messages) == 1 and \
            ("Cannot assign requested address" in messages[0] or "-- No entries --" in messages[0]):
