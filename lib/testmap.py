@@ -32,7 +32,8 @@ REPO_BRANCH_CONTEXT = {
             'fedora-34',
             'fedora-coreos',
             'fedora-33/firefox',
-            'rhel-8-4',
+            'rhel-8-5',
+            'rhel-8-5-distropkg',
             'centos-8-stream',
         ],
         'rhel-7.9': [
@@ -50,9 +51,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-testing/dnf-copr',
-            'rhel-8-4-distropkg',
-            'rhel-8-5',
-            'rhel-8-5-distropkg',
         ],
     },
     'cockpit-project/starter-kit': {
