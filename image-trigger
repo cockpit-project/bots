@@ -35,6 +35,7 @@ REFRESH = {
     "rhel-8-3": {},
     "rhel-8-4": {},
     "rhel-8-5": {},
+    "rhel-9-0": {},
     "rhel-atomic": {},
     "services": {"refresh-days": 30},
 }
