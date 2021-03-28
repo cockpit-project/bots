@@ -1,1 +1,340 @@
-rhel.setup
+#!/bin/bash
+
+set -e
+IMAGE="$1"
+
+YUM_INSTALL="yum --setopt=skip_missing_names_on_install=False -y install"
+
+# HACK - virt-resize might not be able to resize our xfs rootfs,
+# depending on how it was compiled and which plugins are installed,
+# and will just silently not do it.  So we do it here.
+#
+df --output=source,fstype / | tail -n1 | while read source fstype; do
+    case $fstype in
+    ext*)
+	    resize2fs $source
+	    ;;
+    xfs*)
+	    xfs_growfs /
+	    ;;
+    esac
+done
+
+df -Th /
+
+# If the file /root/.skip_repos is present on the machine,
+# all actions regarding the repositories will be skipped:
+# subscriptions, adding repos, deleting existing entries
+SKIP_REPO_FLAG="/root/.skip_repos"
+
+# Only start logging here.  Otherwise the subscription credentials
+# appear in the output above.
+#
+set -x
+
+if [ ! -f "$SKIP_REPO_FLAG" ]; then
+    # Configure repositories.
+
+    if [ -n "$SERVER_REPO_URL" -a -n "$EXTRAS_REPO_URL" ]; then
+    # disable all default repos
+    rm -f --verbose /etc/yum.repos.d/*.repo
+cat <<EOF > /etc/yum.repos.d/rel-eng.repo
+[RHEL-7]
+name=rhel7-server
+baseurl=$SERVER_REPO_URL
+enabled=1
+gpgcheck=0
+
+[EXTRAS-7]
+name=rhel7-extras
+baseurl=$EXTRAS_REPO_URL
+enabled=1
+gpgcheck=0
+EOF
+        $YUM_INSTALL yum-utils
+
+    elif [ "$IMAGE" = "rhel-7-9" ]; then
+        # disable all default repos
+        rm -f --verbose /etc/yum.repos.d/*.repo
+cat <<EOF > /etc/yum.repos.d/nightly.repo
+[RHEL-7.9]
+name=base-rhel
+baseurl=http://download.devel.redhat.com/rhel-7/nightly/updates/RHEL-7/latest-RHEL-7.9/compose/Server/x86_64/os
+enabled=1
+gpgcheck=0
+
+[EXTRAS-7.9]
+name=rhel-extras-compose
+baseurl=http://download.devel.redhat.com/rhel-7/nightly/EXTRAS-7/latest-EXTRAS-7.9-RHEL-7/compose/Server/x86_64/os
+enabled=1
+gpgcheck=0
+
+[RHEL-7.9-DEBUG]
+name=base-rhel-debug
+baseurl=http://download.devel.redhat.com/rhel-7/nightly/updates/RHEL-7/latest-RHEL-7.9/compose/Server/x86_64/debug/tree
+enabled=0
+gpgcheck=0
+
+[EXTRAS-7.9-DEBUG]
+name=rhel-extras-compose-debug
+baseurl=http://download.devel.redhat.com/rhel-7/nightly/EXTRAS-7/latest-EXTRAS-7.9-RHEL-7/compose/Server/x86_64/debug/tree
+enabled=0
+gpgcheck=0
+EOF
+        $YUM_INSTALL yum-utils
+
+        # the following don't necessarily need to work
+        yum-config-manager --disable rhel-sjis-for-rhel-7-server-rpms || true
+        yum-config-manager --disable rhel-7-server-htb-rpms || true
+        yum-config-manager --disable rhel-7-server-rt-beta-rpms || true
+    fi
+fi
+
+yum --nogpgcheck -y update
+
+echo foobar | passwd --stdin root
+
+# We install all dependencies of the cockpit packages since we want
+# them to not spontaneously change from one test run to the next when
+# the distribution repository is updated.
+COCKPIT_DEPS="\
+atomic \
+device-mapper-multipath \
+docker \
+firewalld \
+glib-networking \
+json-glib \
+kexec-tools \
+kubernetes-client \
+libssh \
+libvirt-dbus \
+libvirt-client \
+libvirt-daemon-kvm \
+NetworkManager-team \
+openssl \
+PackageKit \
+pcp-libs \
+pcp \
+realmd \
+redhat-logos \
+selinux-policy-targeted \
+setroubleshoot-server \
+subscription-manager \
+sos \
+tuned \
+udisks2 \
+udisks2-lvm2 \
+udisks2-iscsi \
+"
+
+# We also install the packages necessary to join a FreeIPA domain so
+# that we don't have to go to the network during a test run.
+# on epel/rhel we have ipa-client instead of freeipa-client
+IPA_CLIENT_PACKAGES="\
+ipa-client \
+oddjob \
+oddjob-mkhomedir \
+sssd \
+sssd-dbus \
+"
+
+TEST_PACKAGES="\
+valgrind \
+gdb \
+strace \
+ltrace \
+nmap-ncat \
+targetcli \
+yum-utils \
+virt-install \
+libvirt-daemon-config-network \
+cryptsetup \
+qemu-kvm \
+socat \
+vdo \
+kmod-kvdo \
+dracut-fips \
+clevis-luks \
+tang \
+lvm2-python-boom \
+insights-client \
+gcc-c++ \
+lorax-composer \
+"
+
+if [ "$IMAGE" = "centos-7" ]; then
+    COCKPIT_DEPS="${COCKPIT_DEPS/redhat-logos/}"
+    TEST_PACKAGES="${TEST_PACKAGES/insights-client/}"
+fi
+
+$YUM_INSTALL $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
+
+# we only need cloud-init for the initial boot, afterwards it just slows down booting
+if rpm -q cloud-init; then
+    yum remove -y cloud-init
+fi
+
+# If the insights-client is installed, update the insights-client
+# "egg" and make sure that only the newest one is used.
+#
+# Running "insights-client --status" will download the newest egg to
+# /var/lib/insights (and then output some status that we are not
+# really interested in).
+#
+# Normally, newest.egg is then copied automatically to last_stable.egg
+# once it has successfully been used once.
+#
+# But the idea is here that we only want to ever run newest.egg and if
+# it is broken, we want to know about that, instead of having the
+# insights-client fall back to an older egg. Thus, we promote
+# newest.egg to last_stable.egg unconditionally and immediately.
+# Removing rpm.egg takes that fallback out of the equation, too.
+#
+# Also, "insights-client --version" only looks at last_stable.egg or
+# rpm.egg, never at newest.egg. So copying newest.egg to
+# last_stable.egg makes that work as expected, too.
+
+if [ -x /usr/bin/insights-client ]; then
+    insights-client --status --verbose || true
+    if [ -f /var/lib/insights/newest.egg ]; then
+        cp /var/lib/insights/newest.egg /var/lib/insights/last_stable.egg
+        cp /var/lib/insights/newest.egg.asc /var/lib/insights/last_stable.egg.asc
+        rm -f /etc/insights-client/rpm.egg /etc/insights-client/rpm.egg.asc
+    fi
+    insights-client --version
+fi
+
+# Pre-install cockpit packages from base, to check for API breakages
+# and more convenient interactive debugging
+$YUM_INSTALL cockpit cockpit-dashboard
+
+# For debugging udisks/storaged crashes
+debuginfo-install -y udisks2
+
+# Prepare for building
+
+# only install mock and build if DO_BUILD is 1
+if [ "$DO_BUILD" -eq 1 ]; then
+    # enable epel for mock
+    if [ ! -f "$SKIP_REPO_FLAG" ]; then
+        mkdir /tmp/dep
+        cd /tmp/dep
+        $YUM_INSTALL wget
+        wget -T 15 -t 4 http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        yum -y remove wget
+        rpm -Uvh epel-release-*.rpm
+        cd
+        rm -rf /tmp/dep
+    fi
+
+    $YUM_INSTALL rpm-build mock
+
+    # disable epel again
+    yum-config-manager --disable 'epel*'
+
+    useradd -c Builder -G mock builder
+    opsys=$(cut -d '-' -f 1 <<< "$IMAGE")
+    version=$(cut -d '-' -f 2 <<< "$IMAGE")
+    su builder -c "/usr/bin/mock --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
+    su builder -c "/usr/bin/mock --install --verbose rpmlint"
+fi
+
+yum clean all || true
+
+# For the D-Bus test server
+if type "firewall-cmd" >/dev/null 2>&1; then
+    FIREWALL_STATE=$(firewall-cmd --state || true)
+    if [ "$FIREWALL_STATE" == "running" ]; then
+        firewall-cmd --permanent --add-port 8765/tcp
+    fi
+fi
+
+echo 'NETWORKING=yes' > /etc/sysconfig/network
+
+if ! getent passwd admin >/dev/null; then
+    useradd -c Administrator -G wheel admin
+    echo foobar | passwd --stdin admin
+fi
+
+# To enable persistent logging
+mkdir -p /var/log/journal
+
+# HACK: docker falls over regularly, print its log if it does
+systemctl start docker || journalctl -u docker
+
+# docker images that we need for integration testing
+/var/lib/testvm/docker-images.setup
+
+/var/lib/testvm/zero-disk.setup --keep-mock-cache
+
+# HACK - kdump.service interferes with our storage tests, by loading
+# the system for some time after boot and thereby causing a race
+# between parted and udevd to turn out for the worse.  Disabling
+# kdump.service helps somewhat, but the race is still there, and
+# parted still fails occasionally.
+#
+# https://bugzilla.redhat.com/show_bug.cgi?id=1245144
+# Fixed in parted-3.1-23.el7
+#
+systemctl disable kdump.service
+
+# Install node for external Composer tests, they use our rhel-* images
+if [ "${IMAGE#rhel-7}" != "$IMAGE" ]; then
+    NODE_VERSION="8.12.0"
+    # key 7E37093B: public key "Christopher Dickinson <christopher.s.dickinson@gmail.com>" imported
+    # key DBE9B9C5: public key "Colin Ihrig <cjihrig@gmail.com>" imported
+    # key D2306D93: public key "keybase.io/octetcloud <octetcloud@keybase.io>" imported
+    # key 4EB7990E: public key "Jeremiah Senkpiel <fishrock123@rocketmail.com>" imported
+    # key 7EDE3FC1: public key "keybase.io/jasnell <jasnell@keybase.io>" imported
+    # key 7D83545D: public key "Rod Vagg <rod@vagg.org>" imported
+    # key 4C206CA9: public key "Evan Lucas <evanlucas@me.com>" imported
+    # key CC11F4C8: public key "Myles Borins <myles.borins@gmail.com>" imported
+
+    for key in \
+        9554F04D7259F04124DE6B476D5A82AC7E37093B \
+        94AE36675C464D64BAFA68DD7434390BDBE9B9C5 \
+        0034A06D9D9B0064CE8ADF6BF1747F4AD2306D93 \
+        FD3A5288F042B6850C66B31F09FE44734EB7990E \
+        71DCFD284A79C3B38668286BC97EC7A07EDE3FC1 \
+        DD8F2338BAE7501E3DD5AC78C273792F7D83545D \
+        B9AE9905FFD7803F25714661B63B535A4C206CA9 \
+        C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8 \
+    ; do
+        # this is very flaky from our internal network; retry a few times
+        retry=0
+        until gpg --keyserver pool.sks-keyservers.net --recv-keys "$key"; do
+            retry=$((retry + 1))
+            if [ $retry -eq 10 ]; then
+                echo "Repeatedly failed to retrieve key, giving up." >&2
+                exit 1
+            fi
+            sleep 5
+        done
+    done
+
+    curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz"
+    curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc"
+    gpg --batch --decrypt --output SHASUMS256.txt SHASUMS256.txt.asc
+    grep " node-v$NODE_VERSION-linux-x64.tar.xz\$" SHASUMS256.txt | sha256sum -c -
+    tar -xJf "node-v$NODE_VERSION-linux-x64.tar.xz" -C /usr/local --strip-components=1
+    rm "node-v$NODE_VERSION-linux-x64.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt
+fi
+
+# Final tweaks
+
+rm -rf /var/log/journal/*
+# RHEL 7 does not enable systemd-coredump by default, later versions do
+if ! grep -qr core_pattern /usr/lib/sysctl.d/; then
+    echo "kernel.core_pattern=|/usr/lib/systemd/systemd-coredump %p %u %g %s %t %e" > /etc/sysctl.d/50-coredump.conf
+fi
+
+# Prevent SSH from hanging for a long time when no external network access
+echo 'UseDNS no' >> /etc/ssh/sshd_config
+
+# Audit events to the journal
+if [ ! -f /root/.keep-audit ]; then
+    rm -f '/etc/systemd/system/multi-user.target.wants/auditd.service'
+    rm -rf /var/log/audit/
+else
+    echo "Keeping audit enabled as /root/.keep-audit exists"
+fi
