@@ -1,0 +1,4 @@
+> log: Failed to join domain: cockpit.lan: Enabling SSSD in nsswitch.conf and PAM failed.*
+Traceback (most recent call last):*
+  File "test/verify/check-system-realms", line *, in testQualifiedUsers
+    b.wait_popdown("realms-op")

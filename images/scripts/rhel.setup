@@ -55,6 +55,7 @@ EOF
             rhel-8-3) REPO="rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.3.1" ;;
             rhel-8-4) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.4" ;;
             rhel-8-5) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.5" ;;
+            rhel-9-0) REPO="rhel-9/nightly/RHEL-9/latest-RHEL-9.0" ;;
             *) echo "Unknown image $IMAGE"; exit 1
         esac
 cat <<EOF > /etc/yum.repos.d/nightly.repo
@@ -82,7 +83,10 @@ baseurl=http://download.devel.redhat.com/$REPO/compose/AppStream/x86_64/debug/tr
 enabled=0
 gpgcheck=0
 EOF
-        # make ipa-client available
+    fi
+
+    # make ipa-client available on RHEL-8
+    if [ "${IMAGE#rhel-8*}" != "$IMAGE" ] || [ "${IMAGE#centos-8}" != "$IMAGE" ]; then
         dnf module enable -y idm:client
     fi
 fi
@@ -165,6 +169,13 @@ if [ "${IMAGE#rhel*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} subscription-manager-cockpit insights-client"
 fi
 
+# not yet available in 9
+if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES/kmod-kvdo /}"
+    TEST_PACKAGES="${TEST_PACKAGES/vdo /}"
+    TEST_PACKAGES="${TEST_PACKAGES/ insights-client/}"
+fi
+
 dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
 
 # we only need cloud-init for the initial boot, afterwards it just slows down booting
@@ -213,16 +224,35 @@ debuginfo-install -y udisks2
 
 # only install mock and build if DO_BUILD is 1
 if [ "$DO_BUILD" -eq 1 ]; then
-    if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
-        # install mock from EPEL
-        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-        dnf install -y rpm-build mock
-        dnf config-manager --set-disabled epel
+    if [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
+        dnf install -y rpm-build
+
+        # in RHEL 8, install mock from EPEL
+        if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
+            dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+            dnf install -y mock
+            dnf config-manager --set-disabled epel
+        elif [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
+            # RHEL 9 has no EPEL yet, install from Fedora 34
+            cat <<EOF > /etc/yum.repos.d/fedora.repo
+[fedora]
+name=Fedora
+baseurl=http://download.fedoraproject.org/pub/fedora/linux/development/34/Everything/\$basearch/os/
+enabled=1
+gpgcheck=0
+EOF
+            dnf install -y --setopt=install_weak_deps=False mock
+            rm  /etc/yum.repos.d/fedora.repo
+        else
+            echo "Unknown RHEL version $IMAGE for building mock" >&2
+            exit 1
+        fi
 
         case "$IMAGE" in
             rhel-8-3) REPO="rhel-8.3.1-build" ;;
             rhel-8-4) REPO="rhel-8.4.0-build" ;;
             rhel-8-5) REPO="rhel-8.5.0-build" ;;
+            rhel-9-0) REPO="rhel-9.0.0-alpha-build" ;;
             *) echo "Unknown image $IMAGE"; exit 1
         esac
 
