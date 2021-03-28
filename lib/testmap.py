@@ -51,6 +51,8 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-testing/dnf-copr',
+            'rhel-9-0',
+            'rhel-9-0-distropkg',
         ],
     },
     'cockpit-project/starter-kit': {
