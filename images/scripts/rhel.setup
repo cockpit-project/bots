@@ -3,8 +3,6 @@
 set -e
 IMAGE="$1"
 
-YUM_INSTALL="yum --setopt=skip_missing_names_on_install=False -y install"
-
 # HACK - virt-resize might not be able to resize our xfs rootfs,
 # depending on how it was compiled and which plugins are installed,
 # and will just silently not do it.  So we do it here.
@@ -35,25 +33,7 @@ set -x
 if [ ! -f "$SKIP_REPO_FLAG" ]; then
     # Configure repositories.
 
-    if [ -n "$SERVER_REPO_URL" -a -n "$EXTRAS_REPO_URL" ]; then
-    # disable all default repos
-    rm -f --verbose /etc/yum.repos.d/*.repo
-cat <<EOF > /etc/yum.repos.d/rel-eng.repo
-[RHEL-7]
-name=rhel7-server
-baseurl=$SERVER_REPO_URL
-enabled=1
-gpgcheck=0
-
-[EXTRAS-7]
-name=rhel7-extras
-baseurl=$EXTRAS_REPO_URL
-enabled=1
-gpgcheck=0
-EOF
-        $YUM_INSTALL yum-utils
-
-    elif [ -n "$BASEOS_REPO_URL" -a -n "$APPSTREAM_REPO_URL" ]; then
+    if [ -n "$BASEOS_REPO_URL" -a -n "$APPSTREAM_REPO_URL" ]; then
     # disable all default repos
     rm -f --verbose /etc/yum.repos.d/*.repo
 cat <<EOF > /etc/yum.repos.d/rel-eng.repo
@@ -69,37 +49,6 @@ baseurl=$APPSTREAM_REPO_URL
 enabled=1
 gpgcheck=0
 EOF
-        $YUM_INSTALL yum-utils
-
-    elif [ "$IMAGE" = "rhel-7-9" ]; then
-        # disable all default repos
-        rm -f --verbose /etc/yum.repos.d/*.repo
-cat <<EOF > /etc/yum.repos.d/nightly.repo
-[RHEL-7.9]
-name=base-rhel
-baseurl=http://download.devel.redhat.com/rhel-7/nightly/updates/RHEL-7/latest-RHEL-7.9/compose/Server/x86_64/os
-enabled=1
-gpgcheck=0
-
-[EXTRAS-7.9]
-name=rhel-extras-compose
-baseurl=http://download.devel.redhat.com/rhel-7/nightly/EXTRAS-7/latest-EXTRAS-7.9-RHEL-7/compose/Server/x86_64/os
-enabled=1
-gpgcheck=0
-
-[RHEL-7.9-DEBUG]
-name=base-rhel-debug
-baseurl=http://download.devel.redhat.com/rhel-7/nightly/updates/RHEL-7/latest-RHEL-7.9/compose/Server/x86_64/debug/tree
-enabled=0
-gpgcheck=0
-
-[EXTRAS-7.9-DEBUG]
-name=rhel-extras-compose-debug
-baseurl=http://download.devel.redhat.com/rhel-7/nightly/EXTRAS-7/latest-EXTRAS-7.9-RHEL-7/compose/Server/x86_64/debug/tree
-enabled=0
-gpgcheck=0
-EOF
-        $YUM_INSTALL yum-utils
 
     elif [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
         case "$IMAGE" in
@@ -136,21 +85,11 @@ EOF
         # make ipa-client available
         dnf module enable -y idm:client
     fi
-
-    if [ "${IMAGE#rhel-7*}" != "$IMAGE" ]; then
-        # the following don't necessarily need to work
-        yum-config-manager --disable rhel-sjis-for-rhel-7-server-rpms || true
-        yum-config-manager --disable rhel-7-server-htb-rpms || true
-        yum-config-manager --disable rhel-7-server-rt-beta-rpms || true
-    fi
 fi
 
-yum --nogpgcheck -y update
+dnf --nogpgcheck -y update
 
-# make libpwquality less aggressive, so that our "foobar" password works
-if expr "$IMAGE" '>=' "rhel-8-2"; then
-    printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
-fi
+printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
 
 echo foobar | passwd --stdin root
 
@@ -158,9 +97,7 @@ echo foobar | passwd --stdin root
 # them to not spontaneously change from one test run to the next when
 # the distribution repository is updated.
 COCKPIT_DEPS="\
-atomic \
 device-mapper-multipath \
-docker \
 firewalld \
 glib-networking \
 json-glib \
@@ -174,6 +111,7 @@ openssl \
 PackageKit \
 pcp-libs \
 pcp \
+podman \
 realmd \
 redhat-logos \
 selinux-policy-targeted \
@@ -198,78 +136,41 @@ sssd-dbus \
 "
 
 TEST_PACKAGES="\
-valgrind \
+boom-boot \
+clevis-luks \
+cryptsetup \
+dnf-automatic \
+dnf-utils \
+dracut-fips \
 gdb \
-strace \
+glibc-all-langpacks \
+kmod-kvdo \
+kpatch \
+kpatch-dnf \
+libvirt-daemon-config-network \
 ltrace \
 nmap-ncat \
-targetcli \
-yum-utils \
-virt-install \
-libvirt-daemon-config-network \
-cryptsetup \
+nodejs \
+python3-tracer \
 qemu-kvm \
 socat \
-vdo \
-kmod-kvdo \
-dracut-fips \
-clevis-luks \
+strace \
 tang \
-boom-boot \
-glibc-all-langpacks \
+targetcli \
+valgrind \
+vdo \
+virt-install \
 "
 
-if [ "$IMAGE" = "centos-7" ]; then
-    COCKPIT_DEPS="${COCKPIT_DEPS/redhat-logos/}"
-    # does not exist yet, necessary locales for testing are already installed
-    TEST_PACKAGES="${TEST_PACKAGES/glibc-all-langpacks /}"
-fi
-if [ "${IMAGE#rhel-7}" != "$IMAGE" ] || [ "$IMAGE" == "centos-7" ]; then
-    COCKPIT_DEPS="$COCKPIT_DEPS kubernetes-client"
-fi
-if [ "$IMAGE" = "rhel-7-9" ]; then
-    TEST_PACKAGES="${TEST_PACKAGES} insights-client"
-fi
-if [ "${IMAGE#rhel-7}" != "$IMAGE" ]; then
-    # needed for composer testing
-    TEST_PACKAGES="${TEST_PACKAGES} gcc-c++ lorax-composer"
-    # does not exist yet, necessary locales for testing are already installed
-    TEST_PACKAGES="${TEST_PACKAGES/glibc-all-langpacks /}"
+if [ "${IMAGE#rhel*}" != "$IMAGE" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES} subscription-manager-cockpit insights-client"
 fi
 
-if [ "${IMAGE#rhel-8*}" != "$IMAGE" ] || [ "${IMAGE#centos-8-stream}" != "$IMAGE" ]; then
-    TEST_PACKAGES="${TEST_PACKAGES/yum-utils/dnf-utils}"
-    TEST_PACKAGES="${TEST_PACKAGES} dnf-automatic"
-    # Atomic/docker are not on RHEL 8
-    COCKPIT_DEPS="${COCKPIT_DEPS/atomic /}"
-    COCKPIT_DEPS="${COCKPIT_DEPS/docker /}"
-    COCKPIT_DEPS="${COCKPIT_DEPS} podman"
-    TEST_PACKAGES="${TEST_PACKAGES} libvirt-daemon-config-network"
-    # Install node for external Composer tests, they use our rhel-* images
-    TEST_PACKAGES="${TEST_PACKAGES} nodejs"
-fi
-
-if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
-    TEST_PACKAGES="${TEST_PACKAGES} subscription-manager-cockpit"
-    # Install insights-client for external subscription-manager tests
-    TEST_PACKAGES="${TEST_PACKAGES} insights-client"
-    # 8.4+ has tracer and kpatch support
-    if [ "$IMAGE" != "rhel-8-3" ]; then
-        TEST_PACKAGES="${TEST_PACKAGES} python3-tracer kpatch kpatch-dnf"
-    fi
-fi
-
-# in RHEL/CentOS 7, boom is shipped in a different package
-if [ "${IMAGE#rhel-7}" != "$IMAGE" ] || [ "${IMAGE#centos-7}" != "$IMAGE" ] ; then
-    TEST_PACKAGES="${TEST_PACKAGES/boom-boot/lvm2-python-boom}"
-fi
-
-pkgs="$TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES"
-$YUM_INSTALL $pkgs
+dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
 
 # we only need cloud-init for the initial boot, afterwards it just slows down booting
 if rpm -q cloud-init; then
-    yum remove -y cloud-init
+    dnf remove -y cloud-init
 fi
 
 # If the insights-client is installed, update the insights-client
@@ -304,12 +205,7 @@ fi
 
 # Pre-install cockpit packages from base, to check for API breakages
 # and more convenient interactive debugging
-if [ "${IMAGE#rhel-7}" != "$IMAGE" ] || [ "${IMAGE#centos-7}" != "$IMAGE" ] ; then
-    $YUM_INSTALL cockpit cockpit-dashboard
-else
-    # >= 8 supports weak dependencies
-    dnf --setopt=install_weak_deps=False install -y cockpit
-fi
+dnf --setopt=install_weak_deps=False install -y cockpit
 
 # For debugging udisks/storaged crashes
 debuginfo-install -y udisks2
@@ -352,23 +248,6 @@ EOF
 
         # build mock for CentOS 8 stream repo
         ln -sf centos-stream-8-x86_64.cfg /etc/mock/default.cfg
-    else  # rhel-7-9, centos-7
-        # enable epel for mock
-        if [ ! -f "$SKIP_REPO_FLAG" ]; then
-            mkdir /tmp/dep
-            cd /tmp/dep
-            $YUM_INSTALL wget
-            wget -T 15 -t 4 http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-            yum -y remove wget
-            rpm -Uvh epel-release-*.rpm
-            cd
-            rm -rf /tmp/dep
-        fi
-
-        $YUM_INSTALL rpm-build mock
-
-        # disable epel again
-        yum-config-manager --disable 'epel*'
     fi
 
     useradd -c Builder -G mock builder
@@ -378,7 +257,7 @@ EOF
     su builder -c "/usr/bin/mock --install --verbose rpmlint"
 fi
 
-yum clean all || true
+dnf clean all || true
 
 # For the D-Bus test server
 if type "firewall-cmd" >/dev/null 2>&1; then
@@ -390,13 +269,11 @@ fi
 
 echo 'NETWORKING=yes' > /etc/sysconfig/network
 
-# These build from a cloud image, set up network-scripts for eth1 to avoid long boot hang on
+# built from a cloud image, set up network-scripts for eth1 to avoid long boot hang on
 # NetworkManager-wait-online.service
-if [ "$IMAGE" = "centos-8-stream" ] || [ "${IMAGE#rhel-8}" != "$IMAGE" ]; then
-    printf 'BOOTPROTO=none\nDEVICE=eth1\nONBOOT=no\n' > /etc/sysconfig/network-scripts/ifcfg-eth1
-    # our cloud-init.iso does not set up the host name
-    echo "127.0.1.1 $(hostname)" >> /etc/hosts
-fi
+printf 'BOOTPROTO=none\nDEVICE=eth1\nONBOOT=no\n' > /etc/sysconfig/network-scripts/ifcfg-eth1
+# our cloud-init.iso does not set up the host name
+echo "127.0.1.1 $(hostname)" >> /etc/hosts
 
 if ! getent passwd admin >/dev/null; then
     useradd -c Administrator -G wheel admin
@@ -405,14 +282,6 @@ fi
 
 # To enable persistent logging
 mkdir -p /var/log/journal
-
-if type "docker" >/dev/null 2>&1; then
-    # HACK: docker falls over regularly, print its log if it does
-    systemctl start docker || journalctl -u docker
-
-    # docker images that we need for integration testing
-    /var/lib/testvm/docker-images.setup
-fi
 
 /var/lib/testvm/zero-disk.setup --keep-mock-cache
 
@@ -426,48 +295,6 @@ fi
 # Fixed in parted-3.1-23.el7
 #
 systemctl disable kdump.service
-
-# Install node for external Composer tests, they use our rhel-* images
-if [ "${IMAGE#rhel-7}" != "$IMAGE" ]; then
-    NODE_VERSION="8.12.0"
-    # key 7E37093B: public key "Christopher Dickinson <christopher.s.dickinson@gmail.com>" imported
-    # key DBE9B9C5: public key "Colin Ihrig <cjihrig@gmail.com>" imported
-    # key D2306D93: public key "keybase.io/octetcloud <octetcloud@keybase.io>" imported
-    # key 4EB7990E: public key "Jeremiah Senkpiel <fishrock123@rocketmail.com>" imported
-    # key 7EDE3FC1: public key "keybase.io/jasnell <jasnell@keybase.io>" imported
-    # key 7D83545D: public key "Rod Vagg <rod@vagg.org>" imported
-    # key 4C206CA9: public key "Evan Lucas <evanlucas@me.com>" imported
-    # key CC11F4C8: public key "Myles Borins <myles.borins@gmail.com>" imported
-
-    for key in \
-        9554F04D7259F04124DE6B476D5A82AC7E37093B \
-        94AE36675C464D64BAFA68DD7434390BDBE9B9C5 \
-        0034A06D9D9B0064CE8ADF6BF1747F4AD2306D93 \
-        FD3A5288F042B6850C66B31F09FE44734EB7990E \
-        71DCFD284A79C3B38668286BC97EC7A07EDE3FC1 \
-        DD8F2338BAE7501E3DD5AC78C273792F7D83545D \
-        B9AE9905FFD7803F25714661B63B535A4C206CA9 \
-        C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8 \
-    ; do
-        # this is very flaky from our internal network; retry a few times
-        retry=0
-        until gpg --keyserver pool.sks-keyservers.net --recv-keys "$key"; do
-            retry=$((retry + 1))
-            if [ $retry -eq 10 ]; then
-                echo "Repeatedly failed to retrieve key, giving up." >&2
-                exit 1
-            fi
-            sleep 5
-        done
-    done
-
-    curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz"
-    curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc"
-    gpg --batch --decrypt --output SHASUMS256.txt SHASUMS256.txt.asc
-    grep " node-v$NODE_VERSION-linux-x64.tar.xz\$" SHASUMS256.txt | sha256sum -c -
-    tar -xJf "node-v$NODE_VERSION-linux-x64.tar.xz" -C /usr/local --strip-components=1
-    rm "node-v$NODE_VERSION-linux-x64.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt
-fi
 
 # Final tweaks
 
