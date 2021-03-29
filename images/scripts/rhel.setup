@@ -150,7 +150,6 @@ kpatch-dnf \
 libvirt-daemon-config-network \
 ltrace \
 nmap-ncat \
-nodejs \
 python3-tracer \
 qemu-kvm \
 socat \
