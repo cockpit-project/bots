@@ -1,0 +1,3 @@
+Job for pmlogger.service failed because the service did not take the steps required by its unit configuration.*
+Traceback (most recent call last):*
+  File "test/verify/check-metrics", line *, in testBasic
