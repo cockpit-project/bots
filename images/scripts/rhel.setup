@@ -37,20 +37,20 @@ if [ ! -f "$SKIP_REPO_FLAG" ]; then
     # disable all default repos
     rm -f --verbose /etc/yum.repos.d/*.repo
 cat <<EOF > /etc/yum.repos.d/rel-eng.repo
-[RHEL-8-BaseOS]
-name=rhel8-baseos
+[RHEL-BaseOS]
+name=rhel-baseos
 baseurl=$BASEOS_REPO_URL
 enabled=1
 gpgcheck=0
 
-[RHEL-8-AppStream]
-name=rhel8-appstream
+[RHEL-AppStream]
+name=rhel-appstream
 baseurl=$APPSTREAM_REPO_URL
 enabled=1
 gpgcheck=0
 EOF
 
-    elif [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
+    elif [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
         case "$IMAGE" in
             rhel-8-3) REPO="rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.3.1" ;;
             rhel-8-4) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.4" ;;
@@ -58,25 +58,25 @@ EOF
             *) echo "Unknown image $IMAGE"; exit 1
         esac
 cat <<EOF > /etc/yum.repos.d/nightly.repo
-[RHEL-8-NIGHTLY-BaseOS]
+[RHEL-NIGHTLY-BaseOS]
 name=baseos
 baseurl=http://download.devel.redhat.com/$REPO/compose/BaseOS/x86_64/os/
 enabled=1
 gpgcheck=0
 
-[RHEL-8-NIGHTLY-AppStream]
+[RHEL-NIGHTLY-AppStream]
 name=appstream
 baseurl=http://download.devel.redhat.com/$REPO/compose/AppStream/x86_64/os/
 enabled=1
 gpgcheck=0
 
-[RHEL-8-NIGHTLY-BaseOS-Debug]
+[RHEL-NIGHTLY-BaseOS-Debug]
 name=baseos-debug
 baseurl=http://download.devel.redhat.com/$REPO/compose/BaseOS/x86_64/debug/tree/
 enabled=0
 gpgcheck=0
 
-[RHEL-8-NIGHTLY-AppStream-Debug]
+[RHEL-NIGHTLY-AppStream-Debug]
 name=appstream-debug
 baseurl=http://download.devel.redhat.com/$REPO/compose/AppStream/x86_64/debug/tree/
 enabled=0
@@ -235,7 +235,7 @@ config_opts['rpmbuild_timeout'] = 86400
 config_opts['yum.conf'] = '[main]\\ncachedir=/var/cache/yum\\ndebuglevel=1\\nlogfile=/var/log/yum.log\\nreposdir=/dev/null\\nretries=20\\nobsoletes=1\\ngpgcheck=0\\nassumeyes=1\\nkeepcache=1\\ninstall_weak_deps=0\\nstrict=1\\n\\n# repos\\n\\n[build]\\nname=build\\nbaseurl=http://download.devel.redhat.com/brewroot/repos/$REPO/latest/x86_64/\\n'
 config_opts['chroot_setup_cmd'] = 'groupinstall build'
 config_opts['target_arch'] = 'x86_64'
-config_opts['root'] = u'rhel-8-candidate-x86_64'
+config_opts['root'] = u'rhel-candidate-x86_64'
 
 config_opts['macros']['%_topdir'] = '/builddir/build'
 config_opts['macros']['%_rpmfilename'] = '%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm'
