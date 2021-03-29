@@ -143,6 +143,7 @@ TEST_PACKAGES="\
 boom-boot \
 clevis-luks \
 cryptsetup \
+dhcp-client \
 dnf-automatic \
 dnf-utils \
 dracut-fips \
