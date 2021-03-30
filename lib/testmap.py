@@ -97,13 +97,12 @@ REPO_BRANCH_CONTEXT = {
             'fedora-33',
             'fedora-34',
             'fedora-33/firefox',
-            'rhel-8-4',
+            'rhel-8-5',
+            'rhel-9-0',
             'centos-8-stream',
         ],
         '_manual': [
             'fedora-testing',
-            'rhel-8-5',
-            'rhel-9-0',
         ],
     },
     'weldr/lorax': {
