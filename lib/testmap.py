@@ -84,6 +84,8 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'rhel-8-5',
+            'rhel-9-0',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -100,7 +102,8 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-testing',
-            'rhel-8-4-distropkg',
+            'rhel-8-5',
+            'rhel-9-0',
         ],
     },
     'weldr/lorax': {
@@ -114,6 +117,8 @@ REPO_BRANCH_CONTEXT = {
             'fedora-34/lorax',
             'fedora-34/osbuild-composer',
             'rhel-8-4/lorax',
+            'rhel-8-5/osbuild-composer',
+            'rhel-9-0/osbuild-composer',
             'rhel-7-9',
             'rhel-7-9/azure',
             'rhel-7-9/live-iso',
@@ -139,6 +144,10 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-34',
+            'rhel-8-5',
+            'rhel-8-5/firefox',
+            'rhel-9-0',
+            'rhel-9-0/firefox',
         ],
     },
     'candlepin/subscription-manager': {
@@ -147,6 +156,8 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-4',
         ],
         '_manual': [
+            'rhel-8-5',
+            'rhel-9-0',
         ],
     },
     'skobyda/cockpit-certificates': {
@@ -156,6 +167,8 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-34',
             'rhel-8-4',
+            'rhel-8-5',
+            'rhel-9-0',
             'centos-8-stream',
         ]
     },
