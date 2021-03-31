@@ -76,6 +76,7 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-podman': {
         'master': [
             'rhel-8-4',
+            'rhel-8-5',
             'fedora-33',
             'fedora-34',
             'fedora-34/rawhide',
@@ -84,7 +85,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
-            'rhel-8-5',
             'rhel-9-0',
         ],
     },
