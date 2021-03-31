@@ -50,16 +50,10 @@
                 {{#tests}} {{{html}}} {{/tests}}
             </div>
         </script>
-        <script id="ScreenshotLink" type="text/template">
-            <a href="./{{screenshot}}" title="{{screenshot}}">
-                <span class="bi bi-camera-fill" aria-hidden="true"></span>
-                screenshot
-            </a>
-        </script>
-        <script id="JournalLink" type="text/template">
-            <a href="./{{journal}}" title="{{journal}}">
-                <span class="bi bi-card-text" aria-hidden="true"></span>
-                journal
+        <script id="Link" type="text/template">
+            <a href="./{{url}}" title="{{title}}">
+                <span class="{{icon}}" aria-hidden="true"></span>
+                {{label}}
             </a>
         </script>
         <script id="TestEntry" type="text/template">
@@ -80,12 +74,9 @@
                       {{title}}
                     </span>
                     {{#reason}}<span>-- skipped: {{reason}}</span>{{/reason}}
-                    {{#screenshots}}
-                        {{{screenshot_html}}}
-                    {{/screenshots}}
-                    {{#journals}}
-                        {{{journal_html}}}
-                    {{/journals}}
+                    {{#links}}
+                        {{{link_html}}}
+                    {{/links}}
                 </div>
                 <div id="collapse{{id}}" class="collapse {{^collapsed}}show{{/collapsed}}" data-parent="#accordion">
                     <pre class="card-body">{{text}}</pre>
@@ -128,12 +119,9 @@
                         <a href="#{{entry.id}}">
                         {{entry.title}}
                         </a>
-                        {{#entry.screenshots}}
-                            {{{screenshot_html}}}
-                        {{/entry.screenshots}}
-                        {{#entry.journals}}
-                            {{{journal_html}}}
-                        {{/entry.journals}}
+                        {{#entry.links}}
+                            {{{link_html}}}
+                        {{/entry.links}}
                         {{#entry.reason}}<span>-- skipped: {{entry.reason}}</span>{{/entry.reason}}
                         </li>
                     {{/entry.interesting}}
@@ -146,8 +134,6 @@
 var tap_range = /^([0-9]+)\.\.([0-9]+)$/m;
 var tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # SKIP .*)?$$/gm;
 var tap_skipped = /^ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # SKIP (.*$)/gm;
-var image_file = /([A-Za-z0-9\-\.]+\.png)$/gm;
-var journal_file = /Journal extracted to ([A-Za-z0-9\-\.]+\.log(?:\.[gx]z)?)$/gm;
 var test_header_start = "# ----------------------------------------------------------------------"
 
 var entry_template = $("#TestEntry").html();
@@ -160,10 +146,32 @@ var progress_template = $("#TestProgress").html();
 Mustache.parse(progress_template);
 var overview_template = $("#TestingOverview").html();
 Mustache.parse(overview_template);
-var screenshot_template = $("#ScreenshotLink").html();
-Mustache.parse(screenshot_template);
-var journal_template = $("#JournalLink").html();
-Mustache.parse(journal_template);
+var link_template = $("#Link").html();
+Mustache.parse(link_template);
+
+/* Patterns for text that should be turned into links.
+
+   These can be overridden with a file called "link-patterns.json" in
+   the same directory as the log.html file itself.
+
+   Such a link-patterns.json file will completely replace the defaults
+   here.
+*/
+
+var link_patterns = [
+    {
+        label: "screenshot",
+        pattern: "Wrote screenshot to ([A-Za-z0-9\\-\\.]+\\.png$)",
+        url: "$1",
+        icon: "bi bi-camera-fill"
+    },
+    {
+        label: "journal",
+        pattern: "Journal extracted to ([A-Za-z0-9\\-\\.]+\\.log(?:\\.[gx]z)?)$",
+        url: "$1",
+        icon: "bi bi-card-text"
+    }
+];
 
 function extract(text) {
     var m, s;
@@ -194,14 +202,11 @@ function extract(text) {
             tap_range.lastIndex = 0;
             tap_result.lastIndex = 0;
             tap_skipped.lastIndex = 0;
-            image_file.lastIndex = 0;
-            journal_file.lastIndex = 0;
             var entry = { passed: true,
                           skipped: false,
                           retried: false,
                           interesting: false,
-                          screenshots: [],
-                          journals: [],
+                          links: [],
                           text: segment};
             if (m = tap_range.exec(segment)) {
                 entry.idx = 0;
@@ -263,15 +268,28 @@ function extract(text) {
                     entry.passed = true;
                   }
             }
-            while (m = image_file.exec(segment)) {
-                // we have an image link
-                entry.screenshots.push({screenshot_html: Mustache.render(screenshot_template, { screenshot: m[1] })
-                                       });
+
+            function fmt(tmpl, match) {
+                return tmpl.replace(/\$([0-9]+)/g, function (m, x) { return match[Number(x)]; });
             }
-            while (m = journal_file.exec(segment)) {
-                entry.journals.push({journal_html: Mustache.render(journal_template, { journal: m[1] })
-                                    });
+
+            for (var i = 0; i < link_patterns.length; i++) {
+                var p = link_patterns[i];
+                if (!p.pattern)
+                    continue
+                var r = new RegExp(p.pattern, 'gm');
+                while (m = r.exec(segment)) {
+                    entry.links.push({link_html: Mustache.render(link_template,
+                                                                 {
+                                                                     url: fmt(p.url || "$0", m),
+                                                                     title: fmt(p.title || p.url || "$0", m),
+                                                                     icon: p.icon || "bi bi-box-arrow-up-right",
+                                                                     label: fmt(p.label || "file")
+                                                                 })
+                                     });
+                }
             }
+
             entry.failed = !entry.passed && !entry.skipped;
             entry.collapsed = !entry.failed;
             entries.push({ idx: entry.idx, entry: entry, html: Mustache.render(entry_template, entry) });
@@ -322,17 +340,30 @@ function extract(text) {
 
 var interval_id;
 
-function poll() {
+function poll_log() {
     $.ajax({
-        mimeType: 'text/plain; charset=x-user-defined',
-        url:      'log',
+        mimeType: 'application/json; charset=x-user-defined',
+        url:      'link-patterns.json',
         type:      'GET',
-        dataType:  'text',
-        cache:     false,
-    }).done(function (text) {
-        var amended_text = extract(text);
-        $('#log').html(amended_text);
+        dataType:  'json'
+    }).done(function (lp) {
+        link_patterns = lp;
+    }).always(function () {
+        $.ajax({
+            mimeType: 'text/plain; charset=x-user-defined',
+            url:      'log',
+            type:      'GET',
+            dataType:  'text',
+            cache:     false,
+        }).done(function (text) {
+            var amended_text = extract(text);
+            $('#log').html(amended_text);
+        });
     });
+}
+
+function poll() {
+    poll_log();
 
     $.ajax({
         mimeType: 'application/json; charset=x-user-defined',
@@ -356,6 +387,9 @@ function poll() {
         }
         $('#status').show();
         clearInterval(interval_id);
+
+        // One last pass to make sure we haven't missed a new link-patterns.json
+        poll_log();
     });
 }
 
