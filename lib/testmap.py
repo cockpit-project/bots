@@ -266,6 +266,15 @@ def projects():
     return REPO_BRANCH_CONTEXT.keys()
 
 
+def get_default_branch(repo):
+    branches = REPO_BRANCH_CONTEXT[repo]
+    if 'main' in branches:
+        return 'main'
+    if 'master' in branches:
+        return 'master'
+    raise ValueError(f"repo {repo} does not contain main or master branch")
+
+
 def tests_for_project(project):
     """Return branch -> contexts map."""
     res = REPO_BRANCH_CONTEXT.get(project, {})
@@ -288,7 +297,7 @@ def tests_for_image(image):
             for context in contexts:
                 if context.split('/')[0].replace('-distropkg', '') == image:
                     c = context + '@' + repo
-                    if branch != "master":
+                    if branch != get_default_branch(repo):
                         c += "/" + branch
                     tests.add(c)
 
@@ -304,7 +313,7 @@ def tests_for_image(image):
 def tests_for_po_refresh(project):
     if project == "cockpit-project/cockpit":
         return [TEST_OS_DEFAULT]
-    return REPO_BRANCH_CONTEXT.get(project, {}).get("master", [])
+    return REPO_BRANCH_CONTEXT.get(project, {}).get(get_default_branch(project), [])
 
 
 def known_context(context):
