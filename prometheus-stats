@@ -101,6 +101,29 @@ queue_time_wait_seconds_count {test_runs}
         if fail_pct > 10:
             output += f'top_failures_pct{{project="{project}",test="{test}"}} {fail_pct}\n'
 
+    # PR retries in the last 24 hours
+    pr_retries = cursor.execute("""
+            SELECT project, revision, MAX(retry)
+            FROM TestRuns
+            WHERE time > strftime('%s', 'now', '-24 hours')
+            GROUP BY project, revision""").fetchall()
+    retry_buckets = {}
+    for (project, revision, retries) in pr_retries:
+        retry_buckets[retries] = retry_buckets.setdefault(retries, 0) + 1
+    acc = 0
+
+    output += """
+# HELP pr_retries histogram of how many retries it took to get PRs from last 24h to green
+# TYPE pr_retries histogram
+"""
+    for retry_count in sorted(retry_buckets):
+        acc += retry_buckets[retry_count]
+        output += f'pr_retries_bucket{{le="{retry_count}"}} {acc}\n'
+    output += f'''pr_retries_bucket{{le="+Inf"}} {acc}
+pr_retries_sum {acc}
+pr_retries_count {acc}
+'''
+
     print(output)
 
     db_conn.close()
