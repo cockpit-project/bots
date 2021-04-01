@@ -1,5 +1,5 @@
 Traceback (most recent call last):
-  File "test/verify/check-storage-resize", line 136, in testResizeLuks
+  File "test/verify/check-storage-resize", line *, in testResizeLuks
     self.checkResize("ext4", True,
-*
-testlib.Error: timeout
+  File "test/verify/check-storage-resize", line *, in checkResize
+    b.wait_in_text("#dialog", "Proceeding will unmount all filesystems on it.")
