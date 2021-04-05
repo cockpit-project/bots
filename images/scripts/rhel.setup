@@ -177,6 +177,17 @@ if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/ insights-client/}"
 fi
 
+# kpatch not available on centos or rhel < 8.4
+if [ "$IMAGE" = "rhel-8-3" ] || [ "$IMAGE" = "centos-8-stream" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES/kpatch /}"
+    TEST_PACKAGES="${TEST_PACKAGES/kpatch-dnf /}"
+fi
+
+# tracer not available on rhel < 8.4
+if [ "$IMAGE" = "rhel-8-3" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES/python3-tracer /}"
+fi
+
 dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
 
 # we only need cloud-init for the initial boot, afterwards it just slows down booting
