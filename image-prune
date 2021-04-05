@@ -47,7 +47,7 @@ def get_refs(open_pull_requests=True, offline=False):
     # get all remote heads and filter empty lines
     # output of ls-remote has the format
     #
-    # d864d3792db442e3de3d1811fa4bc371793a8f4f	refs/heads/master
+    # d864d3792db442e3de3d1811fa4bc371793a8f4f	refs/heads/main
     # ad50328990e44c22501bd5e454746d4b5e561b7c	refs/heads/rhel-7.4
 
     refs = {}
