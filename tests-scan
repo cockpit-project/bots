@@ -339,7 +339,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
             repo_branch = repo_branch.split("/")
             if len(repo_branch) == 2:
                 project = "/".join(repo_branch)
-                branch = "master"
+                branch = testmap.get_default_branch(project)
             elif len(repo_branch) == 3:
                 project = "/".join(repo_branch[:2])
                 branch = repo_branch[2]
@@ -362,7 +362,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
             if not update or update_status(api, revision, context, status, changes):
                 checkout_ref = ref
                 if project != repo:
-                    checkout_ref = "master"
+                    checkout_ref = testmap.get_default_branch(project)
                 if base != branch:
                     checkout_ref = branch
 
