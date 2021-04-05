@@ -116,7 +116,7 @@ def main():
             parts = context.split("@")
             context = parts[0]
             if not parts[1].startswith("bots"):
-                # Can contain branch, as it diffs between master and branches (e.g `cockpit-project/cockpit/rhel-7.9`)
+                # Can contain branch (e.g `cockpit-project/cockpit/rhel-7.9`); if not given, defaults to primary branch
                 repo = parts[1]
 
         for retry, status in enumerate(statuses):
