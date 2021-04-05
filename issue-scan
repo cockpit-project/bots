@@ -43,6 +43,7 @@ sys.dont_write_bytecode = True
 logging.basicConfig(level=logging.INFO)
 
 from lib.stores import redhat_network
+from lib import testmap
 from task import github, distributed_queue, labels_of_pull
 
 no_amqp = False
@@ -167,7 +168,7 @@ def output_task(command, issue, repo, verbose):
     if "pull_request" in issue or "commits" in issue:
         checkout += "./make-checkout --verbose --repo {repo} pull/{issue}/head && "
     else:
-        checkout += "./make-checkout --verbose --repo {repo} master && "
+        checkout += "./make-checkout --verbose --repo {repo} {repo_default_branch} && "
 
     if verbose:
         return "issue-{issue} {name} {context}    {priority}".format(
@@ -185,6 +186,7 @@ def output_task(command, issue, repo, verbose):
             name=name,
             context=context,
             repo=repo,
+            repo_default_branch=testmap.get_default_branch(repo),
         )
 
 
