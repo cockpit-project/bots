@@ -1,0 +1,1 @@
+*b.wait_visible(".updates-success-table")
