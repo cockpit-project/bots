@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+*
+  File "test/check-application", line *, in _testCheckpointRestore
+    b.wait(lambda: b.text('#containers-containers tr:contains(swamped-crate) td:nth-of-type(6)') in NOT_RUNNING)
+*
+testlib.Error: timed out waiting for predicate to become true
