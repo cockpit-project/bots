@@ -11,7 +11,7 @@ rpm-ostree install cockpit-bridge-*.rpm \
 podman run --name build-cockpit -i \
     -v /var/tmp/build-results:/run/build-results:Z \
     -v /var/tmp/containers:/run/containers:Z \
-    cockpit/ws sh -exc '
+    quay.io/cockpit/ws sh -exc '
 rpm --freshen --verbose /run/build-results/cockpit-ws-*.rpm /run/build-results/cockpit-bridge-*.rpm
 cp /run/containers/ws/atomic-* /container/
 '
@@ -19,8 +19,8 @@ podman commit build-cockpit cockpit/ws
 podman rm -f build-cockpit
 
 # move original docker image away, to make sure that our tests use the updated one
-podman tag docker.io/cockpit/ws:latest docker.io/cockpit/ws:released
-podman rmi docker.io/cockpit/ws
+podman tag quay.io/cockpit/ws:latest quay.io/cockpit/ws:released
+podman rmi quay.io/cockpit/ws:latest
 
 # run cockpit/ws once to generate certificate; avoids slow down on every start
 podman container runlabel INSTALL cockpit/ws
