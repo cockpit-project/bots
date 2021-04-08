@@ -43,7 +43,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         'rhel-7.9': [
             'rhel-7-9',
-            'rhel-atomic',
             'centos-7',
         ],
         'rhel-8.4': [
@@ -71,7 +70,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-ostree': {
         'master': [
-            'rhel-atomic',
             'fedora-coreos',
         ],
         '_manual': [
@@ -181,7 +179,6 @@ REPO_BRANCH_CONTEXT = {
 # their non-Atomic siblings.
 OSTREE_BUILD_IMAGE = {
     "fedora-coreos": "fedora-33",
-    "rhel-atomic": "rhel-7-9",
 }
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
@@ -208,8 +205,8 @@ IMAGE_REFRESH_TRIGGERS = {
 
 
 # The OSTree variants can't build their own packages, so we build in
-# their classic siblings.  For example, rhel-atomic is built
-# in rhel-7-X
+# their classic siblings.  For example, fedora-coreos is built
+# in fedora-X
 def get_build_image(image):
     (test_os, unused) = os.path.splitext(os.path.basename(image))
     return OSTREE_BUILD_IMAGE.get(image, image)

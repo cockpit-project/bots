@@ -18,8 +18,7 @@
 import os
 
 # Images which are OSTree based
-ATOMIC_IMAGES = ["rhel-atomic"]
-OSTREE_IMAGES = ATOMIC_IMAGES + ["fedora-coreos"]
+OSTREE_IMAGES = ["fedora-coreos"]
 
 LIB_DIR = os.path.dirname(__file__)
 BOTS_DIR = os.path.dirname(LIB_DIR)
