@@ -4,7 +4,7 @@ set -eux
 # disable automatic updates
 systemctl disable --now zincati.service
 
-podman pull docker.io/cockpit/ws
+podman pull quay.io/cockpit/ws
 
 # Prevent SSH from hanging for a long time when no external network access
 echo 'UseDNS no' >> /etc/ssh/sshd_config.d/10-no-usedns.conf
