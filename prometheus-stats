@@ -17,11 +17,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import time
-import sqlite3
 import argparse
 import logging
+import sqlite3
+import sys
+import time
+import urllib.parse
+
+from lib import stores, s3
+
 
 # Seconds in an hour
 HOUR = 3600
@@ -123,6 +127,21 @@ queue_time_wait_seconds_count {test_runs}
 pr_retries_sum {acc}
 pr_retries_count {acc}
 '''
+
+    # S3 space usage
+    space_usage = {}
+    for uri in stores.HYBRID_STORES:
+        url = urllib.parse.urlparse(uri)
+
+        if s3.is_key_present(url):
+            space_usage[uri] = sum(int(size) for size, in s3.parse_list(s3.list_bucket(url), "Size"))
+    if space_usage:
+        output += """
+# HELP s3_usage_bytes gauge of how much disk space an S3 store is using
+# TYPE s3_usage_bytes gauge
+"""
+        for uri, size in space_usage.items():
+            output += f's3_usage_bytes{{store="{uri}"}} = {size}\n'
 
     print(output)
 
