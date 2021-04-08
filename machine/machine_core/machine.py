@@ -20,7 +20,7 @@ import errno
 import subprocess
 import re
 
-from lib.constants import DEFAULT_IDENTITY_FILE, ATOMIC_IMAGES, OSTREE_IMAGES, TEST_DIR, BOTS_DIR
+from lib.constants import DEFAULT_IDENTITY_FILE, OSTREE_IMAGES, TEST_DIR, BOTS_DIR
 from . import ssh_connection
 from . import timeout
 
@@ -73,7 +73,6 @@ class Machine(ssh_connection.SSHConnection):
 
         self.arch = arch
         self.image = image
-        self.atomic_image = self.image in ATOMIC_IMAGES
         self.ostree_image = self.image in OSTREE_IMAGES
         if ":" in browser:
             (self.web_address, unused, self.web_port) = browser.rpartition(":")
@@ -218,21 +217,7 @@ class Machine(ssh_connection.SSHConnection):
         allow you to make modifications before it starts.
         """
 
-        if self.atomic_image:
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1228776
-            # we want to run:
-            # self.execute("atomic run cockpit/ws --no-tls")
-            # but atomic doesn't forward the parameter, so we use the resulting command
-            # also we need to wait for cockpit to be up and running
-            cmd = """#!/bin/sh -e
-            systemctl start docker
-            docker run -d --privileged --pid=host -v /:/host cockpit/ws /container/atomic-run --local-ssh"""
-            if not tls:
-                cmd += " --no-tls\n"
-            with timeout.Timeout(seconds=90, error_message="Timeout while waiting for cockpit/ws to start"):
-                self.execute(script=cmd)
-            self.wait_for_cockpit_running(atomic_wait_for_host or "localhost")
-        elif self.image in ["fedora-coreos"]:
+        if self.ostree_image:
             self.stop_cockpit()
             cmd = "podman container runlabel RUN cockpit/ws"
             if not tls:
@@ -265,11 +250,7 @@ class Machine(ssh_connection.SSHConnection):
     def restart_cockpit(self):
         """Restart Cockpit.
         """
-        if self.atomic_image:
-            with timeout.Timeout(seconds=90, error_message="Timeout while waiting for cockpit/ws to restart"):
-                self.execute("docker restart `docker ps | grep cockpit/ws | awk '{print $1;}'`")
-            self.wait_for_cockpit_running()
-        elif self.image in ["fedora-coreos"]:
+        if self.ostree_image:
             # HACK: podman restart is broken (https://bugzilla.redhat.com/show_bug.cgi?id=1780161)
             # self.execute("podman restart `podman ps --quiet --filter ancestor=cockpit/ws`")
             tls = "--no-tls" not in self.execute("podman inspect `podman ps --quiet --filter ancestor=cockpit/ws`")
@@ -282,10 +263,7 @@ class Machine(ssh_connection.SSHConnection):
     def stop_cockpit(self):
         """Stop Cockpit.
         """
-        if self.atomic_image:
-            with timeout.Timeout(seconds=60, error_message="Timeout while waiting for cockpit/ws to stop"):
-                self.execute("docker kill `docker ps | grep cockpit/ws | awk '{print $1;}'`")
-        elif self.image in ["fedora-coreos"]:
+        if self.ostree_image:
             self.execute("podman ps --quiet --all --filter ancestor=cockpit/ws | xargs --no-run-if-empty podman rm -f")
         else:
             self.execute("systemctl stop cockpit.socket cockpit.service")
