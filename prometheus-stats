@@ -137,11 +137,11 @@ pr_retries_count {acc}
             space_usage[uri] = sum(int(size) for size, in s3.parse_list(s3.list_bucket(url), "Size"))
     if space_usage:
         output += """
-# HELP s3_usage_bytes gauge of how much disk space an S3 store is using
+# HELP s3_usage_bytes How much disk space an S3 store is using
 # TYPE s3_usage_bytes gauge
 """
         for uri, size in space_usage.items():
-            output += f's3_usage_bytes{{store="{uri}"}} = {size}\n'
+            output += f's3_usage_bytes{{store="{uri}"}} {size}\n'
 
     print(output)
 
