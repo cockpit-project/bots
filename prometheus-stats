@@ -21,7 +21,6 @@ import argparse
 import logging
 import sqlite3
 import sys
-import time
 import urllib.parse
 
 from lib import stores, s3
@@ -34,8 +33,6 @@ HOUR = 3600
 def main():
     parser = argparse.ArgumentParser(description='Generate infrastructure and test statistics')
     parser.add_argument("--db", default="test-results.db", help="Database name")
-    parser.add_argument("--hours", default=12, type=int,
-                        help="Number of hours to take statistics from. Default is %(default)s.")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     opts = parser.parse_args()
 
@@ -45,17 +42,15 @@ def main():
     db_conn = sqlite3.connect(opts.db)
     cursor = db_conn.cursor()
 
-    since = time.time() - opts.hours * HOUR
-
     # Output in prometheus format, see:
     # https://prometheus.io/docs/instrumenting/exposition_formats/
     output = ""
 
-    # Get total number of runs and wait time sum in last N hours
+    # Get total number of runs and wait time sum in last 24 hours
     (test_runs, test_runs_queue_wait_sum) = cursor.execute("""\
             SELECT COUNT(*), SUM(wait_seconds)
             FROM TestRuns
-            WHERE time > ? ;""", (since, )).fetchone()
+            WHERE time > strftime('%s', 'now', '-24 hours')""").fetchone()
     if test_runs_queue_wait_sum is None:
         test_runs_queue_wait_sum = 0
 
@@ -63,15 +58,15 @@ def main():
     test_runs_wait_5m = cursor.execute("""\
             SELECT COUNT(*)
             FROM TestRuns
-            WHERE time > ? AND wait_seconds <= 300; """, (since, )).fetchone()[0]
+            WHERE time > strftime('%s', 'now', '-24 hours') AND wait_seconds <= 300""").fetchone()[0]
 
     # Get how many test runs waited for at most 1 hour
     test_runs_wait_1h = cursor.execute("""\
             SELECT COUNT(*)
             FROM TestRuns
-            WHERE time > ? AND wait_seconds <= 3600; """, (since, )).fetchone()[0]
+            WHERE time > strftime('%s', 'now', '-24 hours') AND wait_seconds <= 3600""").fetchone()[0]
 
-    output += f"""# HELP queue_time_wait_seconds histogram of queue wait times in the last {opts.hours} hours
+    output += f"""# HELP queue_time_wait_seconds histogram of queue wait times in the last 24 hours
 # TYPE queue_time_wait_seconds histogram
 queue_time_wait_seconds_bucket{{le="300"}} {test_runs_wait_5m}
 queue_time_wait_seconds_bucket{{le="3600"}} {test_runs_wait_1h}
