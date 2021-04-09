@@ -34,7 +34,7 @@ def ssl_context_for(log_url):
         return logs_ssl_cockpit
 
     # other cockpit sinks and test providers (Semaphore, Travis, etc.) have an official certificate
-        return None
+    return None
 
 
 def print_summary(by_state, state):

@@ -55,6 +55,8 @@ def main():
         print('statistics queue:')
         print_queue('statistics')
 
+    return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -318,7 +318,6 @@ class VirtMachine(Machine):
             except:
                 # wait a bit
                 time.sleep(1)
-                pass
             tries_left -= 1
         if not connection:
             # try again, but if an error occurs, don't catch it

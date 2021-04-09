@@ -65,7 +65,6 @@ class Machine(ssh_connection.SSHConnection):
             (ssh_address, unused, ssh_port) = address.rpartition(":")
         else:
             ssh_address = address
-            ssh_port = ssh_port
         if not browser:
             browser = address
 
