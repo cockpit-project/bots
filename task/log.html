@@ -190,8 +190,8 @@ function extract(text) {
         passed = 0;
         failed = 0;
         skipped = 0;
-        retries = 0;
-        affected_retries = 0;
+        var retries = 0;
+        var affected_retries = 0;
 
         var segments = text.split(test_header_start);
         $('#test-info').text(text.slice(0, text.indexOf('\n')));
@@ -218,7 +218,7 @@ function extract(text) {
             } else if (m = tap_result.exec(segment)) {
                 entry.idx = m[2];
                 entry.id = m[2];
-                r = 0;
+                var r = 0;
                 while (ids[entry.id]) {
                     r += 1;
                     entry.id = m[2] + "-" + r;

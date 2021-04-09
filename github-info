@@ -66,10 +66,11 @@ def main():
                     readable = datetime.datetime.utcfromtimestamp(float(entries[0][1])).isoformat()
                 except:
                     readable = "parse error"
-                    pass
                 sys.stdout.write("{0}: {1} ({2})\n".format(entry, entries[0][1], readable))
             else:
                 sys.stdout.write("{0}: {1}\n".format(entry, entries[0][1]))
+
+    return 0
 
 
 if __name__ == '__main__':

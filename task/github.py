@@ -389,8 +389,7 @@ class GitHub(object):
         for team in self.get("/orgs/cockpit-project/teams") or []:
             if team.get("name") == name:
                 return team["id"]
-        else:
-            raise KeyError("Team {0} not found".format(name))
+        raise KeyError("Team {0} not found".format(name))
 
     def is_user_allowed(self, user):
         # Firstly check if user has push access

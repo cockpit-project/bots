@@ -147,6 +147,8 @@ pr_retries_count {acc}
 
     db_conn.close()
 
+    return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

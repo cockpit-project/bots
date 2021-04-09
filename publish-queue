@@ -43,6 +43,8 @@ def main():
         q.channel.basic_publish('', opts.queue, body='{"command": "%s"}' % command,
                                 properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
 
+    return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())
