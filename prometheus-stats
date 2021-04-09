@@ -32,7 +32,7 @@ HOUR = 3600
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate statistics about failed tests')
+    parser = argparse.ArgumentParser(description='Generate infrastructure and test statistics')
     parser.add_argument("--db", default="test-results.db", help="Database name")
     parser.add_argument("--hours", default=12, type=int,
                         help="Number of hours to take statistics from. Default is %(default)s.")
