@@ -73,7 +73,36 @@ queue_time_wait_seconds_bucket{{le="3600"}} {test_runs_wait_1h}
 queue_time_wait_seconds_bucket{{le="+Inf"}} {test_runs}
 queue_time_wait_seconds_sum {test_runs_queue_wait_sum}
 queue_time_wait_seconds_count {test_runs}
+"""
 
+    # Get total number of test runtime in the last 24 hours
+    test_run_seconds_sum = cursor.execute("""\
+            SELECT SUM(run_seconds)
+            FROM TestRuns
+            WHERE time > strftime('%s', 'now', '-24 hours')""").fetchone()[0]
+    if test_run_seconds_sum is None:
+        test_run_seconds_sum = 0
+
+    # How many tests ran for < 1 hour
+    test_run_seconds_1h = cursor.execute("""\
+            SELECT COUNT(*)
+            FROM TestRuns
+            WHERE time > strftime('%s', 'now', '-24 hours') AND run_seconds <= 3600""").fetchone()[0]
+
+    # How many tests ran for < 2 hour
+    test_run_seconds_2h = cursor.execute("""\
+            SELECT COUNT(*)
+            FROM TestRuns
+            WHERE time > strftime('%s', 'now', '-24 hours') AND run_seconds <= 7200""").fetchone()[0]
+
+    output += f"""
+# HELP test_run_seconds histogram of test execution time in the last 24 hours
+# TYPE test_run_seconds histogram
+test_run_seconds_bucket{{le="3600"}} {test_run_seconds_1h}
+test_run_seconds_bucket{{le="7200"}} {test_run_seconds_2h}
+test_run_seconds_bucket{{le="+Inf"}} {test_runs}
+test_run_seconds_sum {test_run_seconds_sum}
+test_run_seconds_count {test_runs}
 """
 
     # failures
@@ -93,7 +122,8 @@ queue_time_wait_seconds_count {test_runs}
             ORDER BY percent DESC
             LIMIT 50""").fetchall()
 
-    output += """# HELP top_failures_pct Most unstable tests in the last 7 days (more than 10% failure rate)
+    output += """
+# HELP top_failures_pct Most unstable tests in the last 7 days (more than 10% failure rate)
 # TYPE top_failures_pct gauge
 """
     for (project, test, fail_pct) in top_failures:
