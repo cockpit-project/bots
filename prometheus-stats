@@ -102,13 +102,16 @@ queue_time_wait_seconds_count {test_runs}
 
     # PR retries in the last 24 hours
     pr_retries = cursor.execute("""
-            SELECT project, revision, MAX(retry)
+            SELECT project, revision, state, MAX(retry)
             FROM TestRuns
             WHERE time > strftime('%s', 'now', '-24 hours')
             GROUP BY project, revision""").fetchall()
     retry_buckets = {}
-    for (project, revision, retries) in pr_retries:
+    merged_failures = 0
+    for (project, revision, state, retries) in pr_retries:
         retry_buckets[retries] = retry_buckets.setdefault(retries, 0) + 1
+        if state != 'success':
+            merged_failures += 1
     acc = 0
 
     output += """
@@ -122,6 +125,12 @@ queue_time_wait_seconds_count {test_runs}
 pr_retries_sum {acc}
 pr_retries_count {acc}
 '''
+
+    output += f"""
+# HELP merged_failures How many PRs were merged with non-successful tests in the last 24h
+# TYPE merged_failures gauge
+merged_failures {merged_failures}
+"""
 
     # S3 space usage
     space_usage = {}
