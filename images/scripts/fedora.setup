@@ -131,6 +131,8 @@ dnf --setopt=install_weak_deps=False install -y cockpit
 dnf remove --oldinstallonly -y || true
 # also removes gcc and some -devel packages
 dnf remove -y kernel-headers
+# we only need cloud-init for the initial boot, afterwards it just slows down booting
+dnf remove -y cloud-init
 
 dnf $DNF_OPTS -y install mock dnf-plugins-core rpm-build
 useradd -c Builder -G mock builder
