@@ -4,8 +4,5 @@ set -e
 
 /var/lib/testvm/debian.install "$@"
 
-# HACK: broken virt-builder image; locale defaults to en_US (which is ISO-8859-1)
-update-locale LANG=C.UTF-8
-
 # HACK: nftables backend does not currently work with libvirt: https://launchpad.net/bugs/1799095
 sed -i 's/FirewallBackend=nftables/FirewallBackend=iptables/' /etc/firewalld/firewalld.conf
