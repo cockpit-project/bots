@@ -1,9 +1,0 @@
-#! /bin/bash
-
-set -e
-
-/var/lib/testvm/fedora.install --rhel "$@"
-
-# Enable subscription-manager (disabled by default on cloud images)
-# TODO: Move that into the cockpit test
-sed -i '/enabled/ s/0/1/' /etc/yum/pluginconf.d/subscription-manager.conf

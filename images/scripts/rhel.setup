@@ -52,7 +52,6 @@ EOF
 
     elif [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
         case "$IMAGE" in
-            rhel-8-3) REPO="rhel-8/nightly/updates/RHEL-8/latest-RHEL-8.3.1" ;;
             rhel-8-4) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.4" ;;
             rhel-8-5) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.5" ;;
             rhel-9-0) REPO="rhel-9/nightly/RHEL-9/latest-RHEL-9.0" ;;
@@ -177,15 +176,10 @@ if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/ insights-client/}"
 fi
 
-# kpatch not available on centos or rhel < 8.4
-if [ "$IMAGE" = "rhel-8-3" ] || [ "$IMAGE" = "centos-8-stream" ]; then
+# kpatch not available on centos
+if [ "$IMAGE" = "centos-8-stream" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/kpatch /}"
     TEST_PACKAGES="${TEST_PACKAGES/kpatch-dnf /}"
-fi
-
-# tracer not available on rhel < 8.4
-if [ "$IMAGE" = "rhel-8-3" ]; then
-    TEST_PACKAGES="${TEST_PACKAGES/python3-tracer /}"
 fi
 
 dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
@@ -261,7 +255,6 @@ EOF
         fi
 
         case "$IMAGE" in
-            rhel-8-3) REPO="rhel-8.3.1-build" ;;
             rhel-8-4) REPO="rhel-8.4.0-build" ;;
             rhel-8-5) REPO="rhel-8.5.0-build" ;;
             rhel-9-0) REPO="rhel-9.0.0-alpha-build" ;;
