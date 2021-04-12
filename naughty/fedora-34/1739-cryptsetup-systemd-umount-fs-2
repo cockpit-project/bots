@@ -1,5 +1,6 @@
 Traceback (most recent call last):
   File "test/verify/check-storage-resize", line *, in testResizeLuks
     self.checkResize("ext4", True,
-  File "test/verify/check-storage-resize", line *, in checkResize
-    b.wait_in_text("#dialog", "Proceeding will unmount all filesystems on it.")
+*
+  File "test/verify/storagelib.py", line *, in wait_mounted
+    self.content_tab_wait_in_info(row, col, "Mount point",
