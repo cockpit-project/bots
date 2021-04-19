@@ -6,7 +6,6 @@ set -o pipefail
 
 # most images use cockpit.spec from  master branch
 branch="master"
-stable_branch_deps=""
 
 case "$1" in
     rhel*7|centos*7) branch=rhel-7.9 ;;
@@ -20,4 +19,7 @@ curl -s https://raw.githubusercontent.com/cockpit-project/cockpit/$branch/tools/
     sed 's/.*/"&"/' |
     tr '\n' ' '
 
-echo "$stable_branch_deps"
+# HACK: Install selinux-policy manually as it will be pulled in through dependencies only once https://github.com/cockpit-project/cockpit/pull/15707 lands
+if [ "${1#fedora*}" != "$1" ] || [ "${1#rhel*9}" != "$1" ]; then
+    echo '"selinux-policy" "selinux-policy-devel"'
+fi
