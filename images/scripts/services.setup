@@ -171,6 +171,9 @@ podman start candlepin
 EOF
 chmod 755 /root/run-candlepin
 
+# disable automatic updates
+systemctl disable --now zincati.service
+
 #############################
 #
 # Final tweaks
