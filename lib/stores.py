@@ -20,7 +20,6 @@
 
 import os
 import socket
-import urllib
 
 from lib.constants import IMAGES_DIR, LIB_DIR
 
@@ -42,21 +41,16 @@ HYBRID_STORES = [url for scope, url in ALL_STORES if scope == 'hybrid']
 def redhat_network():
     '''Check if we can access the Red Hat network
 
-    This checks if the image server can be accessed. The result gets cached,
-    so this can be called several times.
+    The result gets cached, so this can be called several times.
     '''
     if redhat_network.result is None:
-        redhat_network.result = False
-        for url in REDHAT_STORES:
-            store = urllib.parse.urlparse(url)
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.settimeout(10)
-                s.connect((store.hostname, store.port))
-                redhat_network.result = True
-                break
-            except OSError:
-                pass
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(10)
+            s.connect(("download.devel.redhat.com", 443))
+            redhat_network.result = True
+        except OSError:
+            redhat_network.result = False
 
     return redhat_network.result
 
