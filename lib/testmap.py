@@ -202,6 +202,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "debian-stable@cockpit-project/cockpit",
         "rhel-8-4@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
+        "rhel-8-4@candlepin/subscription-manager",
     ]
 }
 
