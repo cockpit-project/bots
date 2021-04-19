@@ -27,7 +27,6 @@ import logging
 sys.dont_write_bytecode = True
 logging.basicConfig(level=logging.INFO)
 
-from lib.stores import redhat_network
 from task import github, labels_of_pull, distributed_queue
 from lib import testmap
 
@@ -131,9 +130,6 @@ def is_internal_context(context):
 # Prepare a test invocation command
 def tests_invoke(priority, name, number, revision, ref, context, base,
                  repo, bots_ref, github_context, options):
-    if not options.amqp and not redhat_network() and is_internal_context(context):
-        return ''
-
     try:
         priority = int(priority)
     except (ValueError, TypeError):
