@@ -1,0 +1,9 @@
+Error synchronizing after formatting with type `vfat': Timed out waiting for object*
+Traceback (most recent call last):
+*
+  File "test/verify/check-storage-format", line *, in testFormatTypes
+    check_type("vfat", 11)
+  File "test/verify/check-storage-format", line 74, in check_type
+    self.dialog_wait_close()
+*
+testlib.Error: timeout
