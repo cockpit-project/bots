@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-URL=http://download.devel.redhat.com/rhel-9/nightly/RHEL-9/latest-RHEL-9.0/compose/BaseOS/x86_64/images/
+URL=http://download.devel.redhat.com/rhel-9/nightly/RHEL-9-Beta/latest-RHEL-9.0/compose/BaseOS/x86_64/images/
 IMAGE=$(curl -L -s "$URL" | sed -n '/<a href=.*rhel-guest-image.*qcow2"/ { s/^.*href="//; s_".*$__; p }')
 [ -n "$IMAGE" ]
 
