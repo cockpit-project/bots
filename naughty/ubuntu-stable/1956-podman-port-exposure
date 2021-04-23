@@ -1,0 +1,5 @@
+  File "test/check-application", line *, in testDownloadImage
+*
+    self.execute(True, "podman tag quay.io/libpod/busybox localhost:5000/my-busybox && podman push localhost:5000/my-busybox")
+*
+RuntimeError: Timed out
