@@ -184,6 +184,12 @@ fi
 
 dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
 
+# We are going to install the newest selinux-policy into mock and we need at least that version
+# Always update to prevent case where image has older version than mock
+if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
+    dnf update -y selinux-policy
+fi
+
 # we only need cloud-init for the initial boot, afterwards it just slows down booting
 if rpm -q cloud-init; then
     dnf remove -y cloud-init
