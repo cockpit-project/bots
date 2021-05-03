@@ -1,0 +1,4 @@
+umount: /dev/mapper/luks-*: not mounted.
+*
+  File "*test/verify/check-storage-resize", line *, in testGrowShrinkEncryptedHelp
+    self.shrink_extfs(fs_dev, *)
