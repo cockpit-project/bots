@@ -66,7 +66,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-34/firefox',
-            'pixeldiffs',
         ],
     },
     'cockpit-project/cockpit-ostree': {
