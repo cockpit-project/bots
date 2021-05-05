@@ -171,14 +171,43 @@ podman start candlepin
 EOF
 chmod 755 /root/run-candlepin
 
-# disable automatic updates
-systemctl disable --now zincati.service
+#############################
+#
+# grafana setup
+#
+#############################
+
+# determine latest release of PCP plugin
+url_base=https://github.com/performancecopilot/grafana-pcp/releases
+latest_ver=$(basename $(curl -Ls -o /dev/null -w '%{url_effective}' ${url_base}/latest))
+
+podman run -d --rm --name grafana -p 3000:3000 \
+    -v grafana-data-plugins:/opt/bitnami/grafana/data/plugins \
+    -e GF_SECURITY_ADMIN_PASSWORD=foobar \
+    -e GF_INSTALL_PLUGINS="redis-datasource,performancecopilot-pcp-app=https://github.com/performancecopilot/grafana-pcp/releases/download/${latest_ver}/performancecopilot-pcp-app-${latest_ver#v}.zip" \
+    quay.io/bitnami/grafana
+
+# wait until set up completed
+until curl http://localhost:3000; do sleep 1; done
+podman stop grafana
+
+cat <<EOF > /root/run-grafana
+#!/bin/sh
+podman run -d --rm --name grafana -p 3000:3000 \
+    -v grafana-data-plugins:/opt/bitnami/grafana/data/plugins \
+    -e GF_SECURITY_ADMIN_PASSWORD=foobar \
+    quay.io/bitnami/grafana
+EOF
+chmod 755 /root/run-grafana
 
 #############################
 #
 # Final tweaks
 #
 #############################
+
+# disable automatic updates
+systemctl disable --now zincati.service
 
 rm -rf /var/log/journal/*
 
