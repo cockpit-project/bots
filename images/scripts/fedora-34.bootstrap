@@ -19,7 +19,7 @@
 
 set -ex
 
-URL=https://download.fedoraproject.org/pub/fedora/linux//development/34/Cloud/x86_64/images/
+URL=https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/
 IMAGE=$(curl -L -s "$URL" | sed -n '/<a href=.*Fedora-Cloud-Base-34.*qcow2"/ { s/^.*href="//; s_".*$__; p }')
 [ -n "$IMAGE" ]
 
