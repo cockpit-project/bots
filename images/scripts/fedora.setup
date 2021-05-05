@@ -80,6 +80,7 @@ libvirt-daemon-config-network \
 tlog \
 nginx \
 tcsh \
+redis \
 "
 
 ABRT_PACKAGES="\
