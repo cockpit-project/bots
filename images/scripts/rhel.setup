@@ -249,7 +249,7 @@ if [ "$DO_BUILD" -eq 1 ]; then
             cat <<EOF > /etc/yum.repos.d/fedora.repo
 [fedora]
 name=Fedora
-baseurl=http://download.fedoraproject.org/pub/fedora/linux/development/34/Everything/\$basearch/os/
+baseurl=http://download.fedoraproject.org/pub/fedora/linux/releases/34/Everything/\$basearch/os/
 enabled=1
 gpgcheck=0
 EOF
