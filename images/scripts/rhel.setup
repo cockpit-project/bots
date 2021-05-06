@@ -156,6 +156,7 @@ ltrace \
 nmap-ncat \
 python3-tracer \
 qemu-kvm \
+redis \
 socat \
 strace \
 tang \
