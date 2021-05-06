@@ -188,7 +188,7 @@ rm -rf /tmp/out
 virsh net-autostart default
 
 # Disable services which we don't want running by default
-systemctl disable --now redis-server
+systemctl disable --now redis-server tuned
 
 # Disable expensive maintenance jobs
 systemctl disable apt-daily.timer apt-daily-upgrade.timer fstrim.timer man-db.timer || true
