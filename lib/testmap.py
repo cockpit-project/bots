@@ -165,10 +165,9 @@ REPO_BRANCH_CONTEXT = {
     },
     'skobyda/cockpit-certificates': {
         'master': [
-            'fedora-33',
+            'fedora-34',
         ],
         '_manual': [
-            'fedora-34',
             'rhel-8-4',
             'rhel-8-5',
             'rhel-9-0',
