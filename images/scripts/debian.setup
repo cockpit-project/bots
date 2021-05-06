@@ -61,6 +61,7 @@ mdadm \
 nfs-server \
 podman \
 qemu-kvm \
+redis \
 socat \
 systemd-coredump \
 systemd-timesyncd \
@@ -185,6 +186,9 @@ rm -rf /tmp/out
 
 # Debian does not automatically start the default libvirt network
 virsh net-autostart default
+
+# Disable services which we don't want running by default
+systemctl disable --now redis-server
 
 # Disable expensive maintenance jobs
 systemctl disable apt-daily.timer apt-daily-upgrade.timer fstrim.timer man-db.timer || true
