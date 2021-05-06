@@ -133,8 +133,8 @@ REPO_BRANCH_CONTEXT = {
     },
     'osbuild/cockpit-composer': {
         'master': [
-            'fedora-33',
-            'fedora-33/firefox',
+            'fedora-34',
+            'fedora-34/firefox',
             'rhel-8-4',
             'rhel-8-4/firefox',
         ],
@@ -144,7 +144,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-34',
             'rhel-8-5',
             'rhel-8-5/firefox',
             'rhel-9-0',
