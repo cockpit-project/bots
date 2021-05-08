@@ -1,8 +1,0 @@
-  File "tests/test/check-machines-nics", line *, in testNICAdd
-    self.NICAddDialog(
-  File "tests/test/check-machines-nics", line *, in execute
-    self.create()
-  File "tests/test/check-machines-nics", line *, in create
-    self.browser.wait_not_present("#vm-subVmTest1-add-iface-dialog")
-*
-testlib.Error: timeout
