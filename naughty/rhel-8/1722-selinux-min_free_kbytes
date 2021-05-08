@@ -1,1 +1,0 @@
-* type=1400 audit(*): avc:  denied  { read } for * comm="ps" name="min_free_kbytes" dev="proc" * scontext=system_u:system_r:ksmtuned_t:s0
