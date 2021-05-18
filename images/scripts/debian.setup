@@ -71,6 +71,8 @@ sosreport \
 open-iscsi \
 targetcli-fb \
 tcsh \
+clevis-luks \
+tang \
 "
 
 DEBUG_PACKAGES=''
