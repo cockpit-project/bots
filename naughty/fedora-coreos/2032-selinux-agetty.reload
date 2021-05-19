@@ -1,0 +1,1 @@
+* type=1400 * avc:  denied  { watch } for * comm="agetty" path="/run/agetty.reload"
