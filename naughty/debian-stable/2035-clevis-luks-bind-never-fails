@@ -1,0 +1,2 @@
+  File "check-storage-luks", line *, in testClevisTang
+    b.wait_in_text("#dialog", "No key available with this passphrase.")
