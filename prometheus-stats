@@ -46,11 +46,10 @@ def main():
     # https://prometheus.io/docs/instrumenting/exposition_formats/
     output = ""
 
-    # Get total number of runs and wait time sum in last 24 hours
+    # Get total number of runs and wait time sum
     (test_runs, test_runs_queue_wait_sum) = cursor.execute("""\
             SELECT COUNT(*), SUM(wait_seconds)
-            FROM TestRuns
-            WHERE time > strftime('%s', 'now', '-24 hours')""").fetchone()
+            FROM TestRuns""").fetchone()
     if test_runs_queue_wait_sum is None:
         test_runs_queue_wait_sum = 0
 
@@ -58,15 +57,15 @@ def main():
     test_runs_wait_5m = cursor.execute("""\
             SELECT COUNT(*)
             FROM TestRuns
-            WHERE time > strftime('%s', 'now', '-24 hours') AND wait_seconds <= 300""").fetchone()[0]
+            WHERE wait_seconds <= 300""").fetchone()[0]
 
     # Get how many test runs waited for at most 1 hour
     test_runs_wait_1h = cursor.execute("""\
             SELECT COUNT(*)
             FROM TestRuns
-            WHERE time > strftime('%s', 'now', '-24 hours') AND wait_seconds <= 3600""").fetchone()[0]
+            WHERE wait_seconds <= 3600""").fetchone()[0]
 
-    output += f"""# HELP queue_time_wait_seconds histogram of queue wait times in the last 24 hours
+    output += f"""# HELP queue_time_wait_seconds histogram of queue wait times
 # TYPE queue_time_wait_seconds histogram
 queue_time_wait_seconds_bucket{{le="300"}} {test_runs_wait_5m}
 queue_time_wait_seconds_bucket{{le="3600"}} {test_runs_wait_1h}
@@ -75,11 +74,10 @@ queue_time_wait_seconds_sum {test_runs_queue_wait_sum}
 queue_time_wait_seconds_count {test_runs}
 """
 
-    # Get total number of test runtime in the last 24 hours
+    # Get total number of test runtime
     test_run_seconds_sum = cursor.execute("""\
             SELECT SUM(run_seconds)
-            FROM TestRuns
-            WHERE time > strftime('%s', 'now', '-24 hours')""").fetchone()[0]
+            FROM TestRuns""").fetchone()[0]
     if test_run_seconds_sum is None:
         test_run_seconds_sum = 0
 
@@ -87,16 +85,16 @@ queue_time_wait_seconds_count {test_runs}
     test_run_seconds_1h = cursor.execute("""\
             SELECT COUNT(*)
             FROM TestRuns
-            WHERE time > strftime('%s', 'now', '-24 hours') AND run_seconds <= 3600""").fetchone()[0]
+            WHERE run_seconds <= 3600""").fetchone()[0]
 
     # How many tests ran for < 2 hour
     test_run_seconds_2h = cursor.execute("""\
             SELECT COUNT(*)
             FROM TestRuns
-            WHERE time > strftime('%s', 'now', '-24 hours') AND run_seconds <= 7200""").fetchone()[0]
+            WHERE run_seconds <= 7200""").fetchone()[0]
 
     output += f"""
-# HELP test_run_seconds histogram of test execution time in the last 24 hours
+# HELP test_run_seconds histogram of test execution time
 # TYPE test_run_seconds histogram
 test_run_seconds_bucket{{le="3600"}} {test_run_seconds_1h}
 test_run_seconds_bucket{{le="7200"}} {test_run_seconds_2h}
@@ -105,7 +103,7 @@ test_run_seconds_sum {test_run_seconds_sum}
 test_run_seconds_count {test_runs}
 """
 
-    # failures
+    # top failures of last 7 days
     top_failures = cursor.execute("""
             SELECT TestRuns.project, t1.testname, (t2.failed * 100.0) / COUNT(run) AS percent
             FROM Tests AS t1
@@ -130,11 +128,10 @@ test_run_seconds_count {test_runs}
         if fail_pct > 10:
             output += f'top_failures_pct{{project="{project}",test="{test}"}} {fail_pct}\n'
 
-    # PR retries in the last 24 hours
+    # PR retries
     pr_retries = cursor.execute("""
             SELECT project, revision, state, MAX(retry)
             FROM TestRuns
-            WHERE time > strftime('%s', 'now', '-24 hours')
             GROUP BY project, revision""").fetchall()
     retry_buckets = {}
     merged_failures = 0
@@ -145,7 +142,7 @@ test_run_seconds_count {test_runs}
     acc = 0
 
     output += """
-# HELP pr_retries histogram of how many retries it took to get PRs from last 24h to green
+# HELP pr_retries histogram of how many retries it took to get PRs to green
 # TYPE pr_retries histogram
 """
     for retry_count in sorted(retry_buckets):
@@ -157,8 +154,8 @@ pr_retries_count {acc}
 '''
 
     output += f"""
-# HELP merged_failures How many PRs were merged with non-successful tests in the last 24h
-# TYPE merged_failures gauge
+# HELP merged_failures How many PRs were merged with non-successful tests
+# TYPE merged_failures counter
 merged_failures {merged_failures}
 """
 
