@@ -30,7 +30,6 @@ REFRESH = {
     "fedora-coreos": {},
     "ubuntu-2004": {},
     "ubuntu-stable": {},
-    "openshift": {"refresh-days": 30},
     "rhel-7-9": {},
     "rhel-8-4": {},
     "rhel-8-5": {},
