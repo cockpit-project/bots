@@ -153,6 +153,12 @@ echo "config_opts['use_bootstrap'] = False" >>/etc/mock/site-defaults.cfg
 su builder -c "/usr/bin/mock --no-bootstrap-chroot --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
 su builder -c "/usr/bin/mock --install --verbose rpmlint"
 
+# we need to ensure that mock's selinux-policy is the same as the host
+archive_repo="https://fedoraproject-updates-archive.fedoraproject.org/fedora/$version/x86_64/"
+our_selinux_policy_version="$(rpm -q --qf '%{EVR}' selinux-policy)"
+selinux_mock_packages="selinux-policy{,-devel,-targeted}-${our_selinux_policy_version}"
+su builder -c "/usr/bin/mock --addrepo='$archive_repo' --install ${selinux_mock_packages}"
+
 /var/lib/testvm/podman-images.setup "$version"
 
 ln -sf ../selinux/config /etc/sysconfig/selinux
