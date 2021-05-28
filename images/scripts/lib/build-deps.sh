@@ -18,8 +18,3 @@ curl -s https://raw.githubusercontent.com/cockpit-project/cockpit/$branch/tools/
     rpmspec -D "$1" --buildrequires --query /dev/stdin |
     sed 's/.*/"&"/' |
     tr '\n' ' '
-
-# HACK: Install selinux-policy manually as it will be pulled in through dependencies only once https://github.com/cockpit-project/cockpit/pull/15707 lands
-if [ "${1#fedora*}" != "$1" ] || [ "${1#rhel*9}" != "$1" ]; then
-    echo '"selinux-policy" "selinux-policy-devel"'
-fi
