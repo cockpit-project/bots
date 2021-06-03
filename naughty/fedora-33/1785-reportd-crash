@@ -1,0 +1,4 @@
+  File "check-system-journal", line *, in testAbrtReport
+    b.wait_visible("#abrt-reporting .pf-l-split:contains('Report to Cockpit') a[href='https://bugzilla.example.com/show_bug.cgi?id=123456']")
+*
+testlib.Error: timeout
