@@ -20,7 +20,7 @@
 set -eux
 
 URL='https://download.fedoraproject.org/pub/fedora/linux/releases/33/Cloud/x86_64/images/'
-IMAGE="$(curl -L -s "$URL" | grep -o '"Fedora-Cloud-Base-[^"]*.qcow2"' | tr -d '"')"
+IMAGE="$(curl -L -s "$URL" | grep -o '"Fedora-Cloud-Base-[^"]*.qcow2"' | tr -d '"' | head -n1)"
 [ -n "$IMAGE" ]
 
 exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL/$IMAGE"
