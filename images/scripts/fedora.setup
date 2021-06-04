@@ -75,7 +75,7 @@ firewalld \
 socat \
 tang \
 podman \
-ntp \
+ntpsec \
 libvirt-daemon-config-network \
 tlog \
 nginx \
@@ -91,10 +91,10 @@ libreport-plugin-bugzilla \
 libreport-fedora
 "
 
-if [ "$IMAGE" = "fedora-34" ]; then
-    # ntp was replaced with ntpsec
-    TEST_PACKAGES="${TEST_PACKAGES/ntp /}"
-    TEST_PACKAGES="${TEST_PACKAGES} ntpsec"
+if [ "$IMAGE" = "fedora-33" ]; then
+    # ntpsec was ntp back then
+    TEST_PACKAGES="${TEST_PACKAGES/ntpsec /}"
+    TEST_PACKAGES="${TEST_PACKAGES} ntp"
 fi
 
 rm -rf /etc/sysconfig/iptables
