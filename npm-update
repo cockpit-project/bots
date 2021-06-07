@@ -168,13 +168,15 @@ def run(specified_package, verbose=False, **kwargs):
         title = "package.json: Update " + ', '.join(updated_packages)
         branch = task.branch(updated_packages[0], title, pathspec="package.json", **kwargs)
 
-        # List of files that probably touch this package
-        lines = output("git", "grep", "-Ew", '|'.join(updated_packages))
-        comment = "Please manually check features related to these files:\n\n```\n{0}```".format(lines)
-
         kwargs["title"] = title
         pull = task.pull(branch, **kwargs)
 
+        # Request `/npm install`
+        task.comment(pull, "/npm install")
+
+        # List of files that probably touch this package
+        lines = output("git", "grep", "-Ew", '|'.join(updated_packages))
+        comment = "Please manually check features related to these files:\n\n```\n{0}```".format(lines)
         task.comment(pull, comment)
 
         # Undo our changes
