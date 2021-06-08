@@ -232,6 +232,10 @@ class Machine(ssh_connection.SSHConnection):
             # but we have to ignore that general header line
             allowed.append('^Stack trace of.*')
 
+        if self.image in ['rhel-8-5', 'rhel-8-5-distropkg']:
+            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1967125
+            allowed.append('audit:.*denied.*{ getattr }.*dev="proc".*')
+
         return allowed
 
     def get_admin_group(self):
