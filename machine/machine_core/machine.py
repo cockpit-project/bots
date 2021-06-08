@@ -203,6 +203,35 @@ class Machine(ssh_connection.SSHConnection):
             messages = []
         return messages
 
+    def allowed_messages(self):
+        allowed = []
+        if self.image.startswith('debian') or self.image == 'fedora-coreos':
+            # These images don't have any non-C locales (mostly deliberate, to test this scenario somewhere)
+            allowed.append("invalid or unusable locale: .*")
+
+        if self.image.startswith('fedora') or self.image.startswith('rhel-9'):
+            # Fedora and RHEL 9 have switched to dbus-broker
+            allowed.append("dbus-daemon didn't send us a dbus address; not installed?.*")
+
+        if self.image in ['fedora-34', 'fedora-testing', 'rhel-9-0']:
+            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1929259
+            allowed.append('audit:.*denied.*comm="pmdakvm" lockdown_reason="debugfs access".*')
+            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1965743
+            allowed.append('audit:.*denied.*name="dma_heap".*')
+
+        if self.image in ['debian-testing', 'ubuntu-stable']:
+            # HACK: https://bugs.debian.org/951477
+            allowed.append(r'Process .* \(ip6?tables\) of user 0 dumped core.*')
+            allowed.append(r'Process .* \(iptables-restor\) of user 0 dumped core.*')
+            allowed.append(r'Process .* \(ip6tables-resto\) of user 0 dumped core.*')
+            allowed.append(r'Process .* \(ebtables\) of user 0 dumped core.*')
+            # don't ignore all stack traces
+            allowed.append('^#[0-9]+ .*(nftnl|xtables-nft|__libc_start_main).*')
+            # but we have to ignore that general header line
+            allowed.append('^Stack trace of.*')
+
+        return allowed
+
     def get_admin_group(self):
         if "debian" in self.image or "ubuntu" in self.image:
             return "sudo"
