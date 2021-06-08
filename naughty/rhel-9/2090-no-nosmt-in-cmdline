@@ -1,0 +1,5 @@
+grep -q 'linux.*/vmlinuz-42.0.0.*nosmt' /boot/grub*/grub.cfg ||
+  grep -q '^options.*\bnosmt\b' /boot/loader/entries/*42.0.0*.conf ||
+  ( grub2-editenv list | grep -q kernelopts.*nosmt &&
+    grep -q '^options.*$kernelopts' /boot/loader/entries/*42.0.0*.conf )
+' returned non-zero exit status 1.
