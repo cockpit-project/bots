@@ -392,6 +392,15 @@ class GitHub(object):
         raise KeyError("Team {0} not found".format(name))
 
     def is_user_allowed(self, user):
+        # First, check the local userlist, if it exists:
+
+        try:
+            with open(xdg_config_home('cockpit-dev', 'allowed-users'), "r") as f:
+                if user in f.read().split():
+                    return True
+        except FileNotFoundError:
+            pass
+
         # Firstly check if user has push access
         data = self.get("/repos/{0}/collaborators/{1}/permission".format(self.repo, user)) or {}
         if data.get("permission") in ["admin", "write"]:
