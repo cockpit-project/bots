@@ -43,7 +43,10 @@ BASELINE_PRIORITY = 5
 MAX_PRIORITY = 9
 # see https://github.com/cockpit-project/cockpituous/blob/master/tasks/cockpit-tasks-webhook.yaml
 DEFAULT_SECRETS_DIR = '/run/secrets/webhook'
-DEFAULT_AMQP_SERVER = 'amqp-frontdoor.apps.ocp.ci.centos.org:443'
+# main deployment on CentOS CI
+# DEFAULT_AMQP_SERVER = 'amqp-frontdoor.apps.ocp.ci.centos.org:443'
+# fallback deployment on AWS
+DEFAULT_AMQP_SERVER = 'ec2-54-210-157-13.compute-1.amazonaws.com:5671'
 
 arguments = {
     'rhel': {
