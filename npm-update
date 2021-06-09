@@ -94,6 +94,9 @@ def run(specified_package, verbose=False, **kwargs):
                     if task.verbose:
                         sys.stderr.write("Ignoring '{0}' as there is pending PR #{1}\n".format(pkg, issue["number"]))
 
+    # The only time git will checkout an empty subdir is if it's a gitlink
+    is_gitlink = not subprocess.call(['rmdir', 'node_modules'])
+
     # Force all current dependencies in place
     execute("npm", "install")
 
@@ -171,8 +174,9 @@ def run(specified_package, verbose=False, **kwargs):
         kwargs["title"] = title
         pull = task.pull(branch, **kwargs)
 
-        # Request `/npm install`
-        task.comment(pull, "/npm install")
+        # If node_modules/ is a gitlink, request `/npm install`
+        if is_gitlink:
+            task.comment(pull, "/npm install")
 
         # List of files that probably touch this package
         lines = output("git", "grep", "-Ew", '|'.join(updated_packages))
