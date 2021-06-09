@@ -46,7 +46,7 @@ DEFAULT_SECRETS_DIR = '/run/secrets/webhook'
 # main deployment on CentOS CI
 # DEFAULT_AMQP_SERVER = 'amqp-frontdoor.apps.ocp.ci.centos.org:443'
 # fallback deployment on AWS
-DEFAULT_AMQP_SERVER = 'ec2-54-210-157-13.compute-1.amazonaws.com:5671'
+DEFAULT_AMQP_SERVER = 'ec2-3-228-126-27.compute-1.amazonaws.com:5671'
 
 arguments = {
     'rhel': {
