@@ -88,10 +88,16 @@ class GitHubError(RuntimeError):
         self.reason = response.get('reason')
 
     def __str__(self):
-        return ('Error accessing {0}\n'
-                '  Status: {1}\n'
-                '  Reason: {2}\n'
-                '  Response: {3}'.format(self.url, self.status, self.reason, self.data))
+        result = (f'Error accessing {self.url}\n'
+                  f'  Status: {self.status}\n'
+                  f'  Reason: {self.reason}\n'
+                  f'  Response: {self.data}')
+
+        if self.status == 401:
+            result += ('\n\nPlease ensure that your github-token is configured '
+                       'with the appropriate permissions.  See bots/README.md')
+
+        return result
 
 
 def get_repo():
@@ -392,12 +398,6 @@ class GitHub(object):
         raise KeyError("Team {0} not found".format(name))
 
     def is_user_allowed(self, user):
-        # Firstly check if user has push access
-        data = self.get("/repos/{0}/collaborators/{1}/permission".format(self.repo, user)) or {}
-        if data.get("permission") in ["admin", "write"]:
-            return True
-
-        # User does not have push access, lets check if in `Contributors` group
         return user in self.allowlist()
 
 
