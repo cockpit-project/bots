@@ -336,7 +336,13 @@ class SSHConnection(object):
                             rset.remove(stderr_fd)
                             proc.stderr.close()
                         elif not quiet or self.verbose:
-                            os.write(sys.__stderr__.fileno(), data)
+                            while data:
+                                try:
+                                    os.write(sys.__stderr__.fileno(), data)
+                                    break
+                                except BlockingIOError as e:
+                                    data = data[e.characters_written:]
+                                    time.sleep(0.1)
                 for fd in ret[1]:
                     if fd == stdin_fd:
                         if input:
