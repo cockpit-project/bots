@@ -28,10 +28,10 @@ jobs:
           git config user.email github-actions@github.com
           git rebase origin/master
 
-      - name: Check whether anything besides images/ or naughty/ changed
+      - name: Check whether anything besides images/, machine_core/, or naughty/ changed
         id: changes
         run: |
-          changes=$(git diff --name-only origin/master..HEAD | grep -Ev '^(images|naughty)/' || true)
+          changes=$(git diff --name-only origin/master..HEAD | grep -Ev '^(images|naughty|machine/machine_core)/' || true)
           # print for debugging
           echo "changes:"
           echo "$changes"
