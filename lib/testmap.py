@@ -56,6 +56,8 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
+            'fedora-34/devel',
+            'fedora-34/devel+firefox',
         ],
     },
     'cockpit-project/starter-kit': {
