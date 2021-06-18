@@ -1,0 +1,3 @@
+Error relocating /lib/ld-musl-x86_64.so.1: RELRO protection failed: Permission denied
+Error relocating /bin/sh: RELRO protection failed: Permission denied
+Error: error building at STEP "RUN ls": error while running runtime: exit status 127
