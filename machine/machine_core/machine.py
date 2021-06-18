@@ -213,7 +213,7 @@ class Machine(ssh_connection.SSHConnection):
             # Fedora and RHEL 9 have switched to dbus-broker
             allowed.append("dbus-daemon didn't send us a dbus address; not installed?.*")
 
-        if self.image in ['fedora-34', 'fedora-testing', 'rhel-9-0']:
+        if self.image in ['fedora-33', 'fedora-34', 'fedora-testing', 'rhel-9-0']:
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1929259
             allowed.append('audit:.*denied.*comm="pmdakvm" lockdown_reason="debugfs access".*')
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1965743
