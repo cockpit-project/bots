@@ -244,6 +244,9 @@ class Machine(ssh_connection.SSHConnection):
         else:
             return "wheel"
 
+    def get_cockpit_container(self):
+        return self.execute("podman ps --quiet --all --filter name=ws").strip()
+
     def start_cockpit(self, atomic_wait_for_host=None, tls=False):
         """Start Cockpit.
 
@@ -287,7 +290,8 @@ class Machine(ssh_connection.SSHConnection):
         if self.ostree_image:
             # HACK: podman restart is broken (https://bugzilla.redhat.com/show_bug.cgi?id=1780161)
             # self.execute("podman restart `podman ps --quiet --filter ancestor=cockpit/ws`")
-            tls = "--no-tls" not in self.execute("podman inspect `podman ps --quiet --filter ancestor=cockpit/ws`")
+            inspect_res = self.execute("podman inspect {0}".format(self.get_cockpit_container()))
+            tls = "--no-tls" not in inspect_res
             self.stop_cockpit()
             self.start_cockpit(tls=tls)
             self.wait_for_cockpit_running()
@@ -298,7 +302,7 @@ class Machine(ssh_connection.SSHConnection):
         """Stop Cockpit.
         """
         if self.ostree_image:
-            self.execute("podman ps --quiet --all --filter ancestor=cockpit/ws | xargs --no-run-if-empty podman rm -f")
+            self.execute("echo {0} | xargs --no-run-if-empty podman rm -f".format(self.get_cockpit_container()))
         else:
             self.execute("systemctl stop cockpit.socket cockpit.service")
 
