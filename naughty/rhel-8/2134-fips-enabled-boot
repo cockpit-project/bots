@@ -1,0 +1,4 @@
+  File "test/verify/check-shell-multi-machine", line *, in testFIPS
+    self.machine.wait_reboot()
+*
+machine_core.exceptions.Failure: Timeout waiting for system to reboot properly
