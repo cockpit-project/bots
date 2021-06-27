@@ -26,7 +26,7 @@ REPO_BRANCH_CONTEXT = {
         'master': [],
     },
     'cockpit-project/cockpit': {
-        'master': [
+        'main': [
             'fedora-33/container-bastion',
             'debian-stable',
             'debian-testing',
