@@ -100,7 +100,7 @@ REPO_BRANCH_CONTEXT = {
             'ubuntu-stable',
             'fedora-33',
             'fedora-34',
-            'fedora-33/firefox',
+            'fedora-34/firefox',
             'rhel-8-5',
             'rhel-9-0',
             'centos-8-stream',
