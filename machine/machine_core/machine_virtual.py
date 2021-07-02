@@ -96,7 +96,7 @@ TEST_DOMAIN_XML = """
     {ethernet}
     <qemu:arg value='-netdev'/>
     <qemu:arg value='user,id=base0,restrict={restrict},net=172.27.0.0/24,""" \
-"""dnssearch=loopback,hostname={name},{forwards}'/>
+"""dnssearch=loopback,hostname={hostname},{forwards}'/>
     <qemu:arg value='-device'/>
     <qemu:arg value='virtio-net-pci,netdev=base0,bus=pci.0,addr=0x0e'/>
   </qemu:commandline>
@@ -346,7 +346,7 @@ class VirtMachine(Machine):
             sys.stderr.write("WARNING: Machine will run about 10-20 times slower\n")
 
         keys.update(self.networking)
-        keys["name"] = "{image}-{control}".format(**keys)
+        keys["hostname"] = keys["image"] + '-' + keys["control"].replace(':', '-').replace('.', '-')
         test_domain_desc = TEST_DOMAIN_XML.format(**keys)
 
         # add the virtual machine
