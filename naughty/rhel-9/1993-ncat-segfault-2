@@ -1,4 +1,0 @@
-# testHttpsInstanceDoS (__main__.TestConnection)
-Traceback (most recent call last):
-*
-AssertionError: 1 not greater than 45
