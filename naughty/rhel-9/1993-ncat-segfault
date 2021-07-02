@@ -1,2 +1,0 @@
-# testUnitLifecycle (__main__.TestConnection)
-bash: line 1:  * Segmentation fault      (core dumped) nc -U /run/cockpit/wsinstance/http.sock 2>&1
