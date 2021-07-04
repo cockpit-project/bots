@@ -95,7 +95,8 @@ TEST_DOMAIN_XML = """
   <qemu:commandline>
     {ethernet}
     <qemu:arg value='-netdev'/>
-    <qemu:arg value='user,id=base0,restrict={restrict},net=172.27.0.0/24,hostname={name},{forwards}'/>
+    <qemu:arg value='user,id=base0,restrict={restrict},net=172.27.0.0/24,""" \
+"""dnssearch=loopback,hostname={name},{forwards}'/>
     <qemu:arg value='-device'/>
     <qemu:arg value='virtio-net-pci,netdev=base0,bus=pci.0,addr=0x0e'/>
   </qemu:commandline>
