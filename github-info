@@ -56,7 +56,7 @@ def main():
 
     api = github.GitHub()
     headers = {'If-Modified-Since': httpdate(future_timestamp)}
-    response = api.request("GET", "git/refs/heads/master", "", headers)
+    response = api.request("GET", "git/refs/heads/main", "", headers)
     sys.stdout.write("Rate limits:\n")
     for entry in ["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"]:
         entries = [t for t in response['headers'].items() if t[0].lower() == entry.lower()]

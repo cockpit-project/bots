@@ -128,7 +128,7 @@ class PullTask():
         }
 
         status["link"] = "log.html"
-        status["extras"] = ["https://raw.githubusercontent.com/cockpit-project/bots/master/task/log.html"]
+        status["extras"] = ["https://raw.githubusercontent.com/cockpit-project/bots/main/task/log.html"]
 
         self.sink = sink.Sink(opts.publish, identifier, status)
 

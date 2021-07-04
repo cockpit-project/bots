@@ -129,7 +129,7 @@ where items have the following meaning:
 - scenario: Name of a specific test. This is specific for each separate project and
   is passed verbatim to 'test/run' in `$TEST_SCENARIO`.
 - bots_pr: Number of pull request that exists in bots repository. When specified,
-  bots from this PR would be used instead of master.
+  bots from this PR would be used instead of main.
 - owner/project: Name of github project (e.g. 'cockpit-project/cockpit'). This part can
   be omitted when testing in the same project and no 'ref' is needed.
 - ref: Reference in the project (usually branch) (e.g. 'rhel-8.2'). Default is
