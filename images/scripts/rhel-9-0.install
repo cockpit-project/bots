@@ -2,7 +2,7 @@
 
 set -e
 
-# remove cockpit distro packages, testing with upstream master
+# remove cockpit distro packages, testing with upstream main
 # subscription-manager-cockpit needs these, thus --nodeps
 rpm --erase --nodeps --verbose cockpit cockpit-ws cockpit-bridge cockpit-system
 

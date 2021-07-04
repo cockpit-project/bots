@@ -2,7 +2,7 @@
 
 set -e
 
-# remove cockpit distro packages, testing with upstream master
+# remove cockpit distro packages, testing with upstream main
 rpm --erase --verbose cockpit cockpit-ws cockpit-bridge cockpit-system
 
 /var/lib/testvm/fedora.install "$@"

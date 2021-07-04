@@ -4,8 +4,8 @@ set -eu
 # Guard against GitHub outages, redirects etc., and let this script fail on rpmspec failures
 set -o pipefail
 
-# most images use cockpit.spec from  master branch
-branch="master"
+# most images use cockpit.spec from main branch
+branch="main"
 
 case "$1" in
     rhel*7|centos*7) branch=rhel-7.9 ;;
