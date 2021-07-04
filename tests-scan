@@ -149,7 +149,7 @@ def tests_invoke(priority, name, number, revision, ref, context, base,
         checkout += " --rebase={base}"
 
     if bots_ref:
-        # we are checking the external repo on a cockpit PR, so stay on the project's master
+        # we are checking the external repo on a cockpit PR, so stay on the project's main branch
         checkout += " {ref}"
         test_env += " COCKPIT_BOTS_REF={bots_ref}"
     else:
