@@ -41,7 +41,7 @@ __all__ = (
 
 BASELINE_PRIORITY = 5
 MAX_PRIORITY = 9
-# see https://github.com/cockpit-project/cockpituous/blob/master/tasks/cockpit-tasks-webhook.yaml
+# see https://github.com/cockpit-project/cockpituous/blob/main/tasks/cockpit-tasks-webhook.yaml
 DEFAULT_SECRETS_DIR = '/run/secrets/webhook'
 # main deployment on CentOS CI
 DEFAULT_AMQP_SERVER = 'amqp-frontdoor.apps.ocp.ci.centos.org:443'
