@@ -372,7 +372,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                         bots_api = github.GitHub(repo="cockpit-project/bots")
                         bots_ref = bots_api.getHead(bots_pr) or "xxx"  # Make sure we fail when cannot get the head
                     else:
-                        bots_ref = "master"
+                        bots_ref = "main"
 
                 results.append((priority,
                                 "pull-%d" % number,

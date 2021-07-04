@@ -23,7 +23,7 @@ from lib.constants import TEST_OS_DEFAULT
 REPO_BRANCH_CONTEXT = {
     'cockpit-project/bots': {
         # currently no tests outside of GitHub actions, but declares primary branch
-        'master': [],
+        'main': [],
     },
     'cockpit-project/cockpit': {
         'main': [

@@ -93,7 +93,7 @@ def stale(days, pathspec, ref="HEAD", verbose=False):
 
 
 def scan(api, force, verbose):
-    subprocess.check_call(["git", "fetch", "origin", "master"])
+    subprocess.check_call(["git", "fetch", "origin", "main"])
     for (image, options) in REFRESH.items():
         perform = False
 
@@ -101,7 +101,7 @@ def scan(api, force, verbose):
             perform = image == force
         else:
             days = options.get("refresh-days", DAYS)
-            perform = stale(days, os.path.join("images", image), "origin/master", verbose)
+            perform = stale(days, os.path.join("images", image), "origin/main", verbose)
 
         if perform:
             text = "Image refresh for {0}".format(image)
