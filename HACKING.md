@@ -34,7 +34,7 @@ example of one.
 
 ## Bots printing output
 
-The bot output is posted using the cockpitous [sink](https://github.com/cockpit-project/cockpituous/tree/master/sink) code. See that link for how it works.
+The bot output is posted using the cockpitous [sink](https://github.com/cockpit-project/cockpituous/tree/main/sink) code. See that link for how it works.
 
 ## Contributing to bots
 
