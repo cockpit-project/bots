@@ -61,7 +61,7 @@ REPO_BRANCH_CONTEXT = {
         ],
     },
     'cockpit-project/starter-kit': {
-        'master': [
+        'main': [
             'fedora-33',
             'fedora-34',
             'centos-8-stream',
@@ -71,14 +71,14 @@ REPO_BRANCH_CONTEXT = {
         ],
     },
     'cockpit-project/cockpit-ostree': {
-        'master': [
+        'main': [
             'fedora-coreos',
         ],
         '_manual': [
         ],
     },
     'cockpit-project/cockpit-podman': {
-        'master': [
+        'main': [
             'rhel-8-4',
             'rhel-8-5',
             'rhel-9-0',
