@@ -19,51 +19,11 @@
 import argparse
 import errno
 import os
-import re
 import subprocess
 import sys
 
 from machine import testvm
 from lib.constants import BOTS_DIR
-
-NETWORK_SCRIPT = b"""
-    set -ex
-    virsh net-destroy cockpit1 || true
-    virsh net-undefine cockpit1 || true
-    virsh net-define /dev/stdin <<EOF
-
-<network ipv6='yes'>
-  <name>cockpit1</name>
-  <uuid>f3605fa4-0763-41ea-8143-49da3bf73263</uuid>
-  <forward mode='nat'>
-    <nat>
-      <port start='1024' end='65535'/>
-    </nat>
-  </forward>
-  <bridge name='cockpit1' stp='on' delay='0' />
-  <domain name='cockpit.lan'/>
-  <ip address='10.111.112.1' netmask='255.255.240.0'>
-    <dhcp xmlns:cockpit="urn:cockpit-project.org:cockpit">
-      <range start="10.111.112.2" end="10.111.127.254" />
-    </dhcp>
-  </ip>
-  <ip family="ipv6" address="fd00:111:112::1" prefix="64"/>
-</network>
-EOF
-
-    if [ ! -u /usr/libexec/qemu-bridge-helper ]; then
-        chmod -v u+s /usr/libexec/qemu-bridge-helper
-    fi
-
-    for qemu_config in /etc/qemu-kvm/bridge.conf /etc/qemu/bridge.conf; do
-       if [ -e "$qemu_config" ] && ! grep -qF cockpit1 "$qemu_config"; then
-          echo "allow cockpit1" >> "$qemu_config"
-       fi
-    done
-
-    virsh net-autostart cockpit1
-    virsh net-start cockpit1
-"""
 
 parser = argparse.ArgumentParser(description='Run a test machine')
 parser.add_argument('-v', '--verbose', action='store_true', help='Display verbose details')
@@ -78,7 +38,6 @@ parser.add_argument('-e', '--execute', metavar='COMMAND', action='append',
 parser.add_argument('-s', '--systemd-start', metavar='UNIT', action='append', dest='execute',
                     type=(lambda s: "systemctl enable --now {}".format(str(s))),
                     help='Start this systemd unit (implies -q)')
-parser.add_argument('--network', action='store_true', help='Setup a bridged network for running machines')
 parser.add_argument('--no-network', action='store_true', help='Do not connect the machine to the Internet')
 
 parser.add_argument('image', help='The image to run')
@@ -88,19 +47,7 @@ if args.execute:
     args.quiet = True
 
 try:
-    if args.network:
-        proc = subprocess.Popen(["sudo", "/bin/sh"], stdin=subprocess.PIPE)
-        proc.communicate(NETWORK_SCRIPT)
-        if proc.returncode != 0:
-            sys.stderr.write("vm-run: failed to create cockpit1 network\n")
-            sys.exit(1)
-
-    bridge = None
-    with open(os.devnull, 'w') as fp:
-        if subprocess.call(["ip", "address", "show", "dev", "cockpit1"], stdout=fp, stderr=fp) == 0:
-            bridge = "cockpit1"
-
-    network = testvm.VirtNetwork(0, bridge=bridge, image=args.image)
+    network = testvm.VirtNetwork(0, image=args.image)
 
     machine = testvm.VirtMachine(verbose=args.verbose, image=args.image, maintain=args.maintain,
                                  networking=network.host(restrict=args.no_network),
@@ -132,14 +79,6 @@ try:
     if args.storage:
         machine.add_disk(path=args.storage, type='qcow2')
 
-    # for a bridged network, up its interface with DHCP and show it in the console message
-    message = ""
-    if args.network and bridge:
-        machine.execute("nmcli connection modify 'System eth1' ipv4.method auto && nmcli connection up 'System eth1'")
-        output = machine.execute("ip -4 a show dev eth1")
-        ip = re.search("inet ([^/]+)", output).group(1)
-        message = "\nBRIDGE IP FROM HOST\n  %s\n" % ip
-
     # we need this to execute any commands, but we also want to wait here
     # before we display the "Press ^C" message
     if args.quiet:
@@ -157,7 +96,7 @@ try:
 
     # else, if -q not specified, text console
     elif not args.quiet:
-        machine.qemu_console(message)
+        machine.qemu_console()
 
     # else, just wait for a signal
     else:
