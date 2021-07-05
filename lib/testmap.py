@@ -134,7 +134,7 @@ REPO_BRANCH_CONTEXT = {
         ],
     },
     'osbuild/cockpit-composer': {
-        'master': [
+        'main': [
             'fedora-33',
             'fedora-33/firefox',
             'rhel-8-4',
