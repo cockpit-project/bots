@@ -235,6 +235,8 @@ class Machine(ssh_connection.SSHConnection):
         if self.image in ['rhel-8-5', 'rhel-8-5-distropkg', 'centos-8-stream']:
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1967125
             allowed.append('audit:.*denied.*{ getattr }.*dev="proc".*')
+            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1979182
+            allowed.append('audit.*denied.*{ getattr }.*comm="systemctl" name="/".*cockpit_ws_t.*')
 
         return allowed
 
