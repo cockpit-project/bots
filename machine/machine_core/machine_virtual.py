@@ -91,7 +91,6 @@ TEST_DOMAIN_XML = """
     <rng model='virtio'>
       <backend model='random'>/dev/urandom</backend>
     </rng>
-    {bridgedev}
   </devices>
   <qemu:commandline>
     {ethernet}
@@ -133,19 +132,10 @@ TEST_USERNET_XML = """
     <qemu:arg value='virtio-net-pci,netdev=user0,mac={mac},bus=pci.0,addr=0x0f'/>
 """
 
-TEST_BRIDGE_XML = """
-    <interface type="bridge">
-      <source bridge="{bridge}"/>
-      <mac address="{mac}"/>
-      <model type="virtio-net-pci"/>
-    </interface>
-"""
-
 
 class VirtNetwork:
-    def __init__(self, network=None, bridge=None, image="generic"):
+    def __init__(self, network=None, image="generic"):
         self.locked = []
-        self.bridge = bridge
         self.image = image
 
         if network is None:
@@ -232,20 +222,10 @@ class VirtNetwork:
                 result["browser"] = result["forward"][remote]
 
         if isolate == 'user':
-            result["bridge"] = ""
-            result["bridgedev"] = ""
             result["ethernet"] = TEST_USERNET_XML.format(**result)
         elif isolate:
-            result["bridge"] = ""
-            result["bridgedev"] = ""
-            result["ethernet"] = ""
-        elif self.bridge:
-            result["bridge"] = self.bridge
-            result["bridgedev"] = TEST_BRIDGE_XML.format(**result)
             result["ethernet"] = ""
         else:
-            result["bridge"] = ""
-            result["bridgedev"] = ""
             result["ethernet"] = TEST_MCAST_XML.format(**result)
         result["forwards"] = ",".join(forwards)
         return result
@@ -424,9 +404,6 @@ class VirtMachine(Machine):
             message = "\nWARNING: Uncontrolled shutdown can lead to a corrupted image\n"
         else:
             message = "\nWARNING: All changes are discarded, the image file won't be changed\n"
-        if "bridge" in self.networking:
-            message += "\nIn the machine a web browser can access Cockpit on parent host:\n\n"
-            message += "    https://10.111.112.1:9090\n"
         message = message.replace("\n", "\r\n")
 
         try:
