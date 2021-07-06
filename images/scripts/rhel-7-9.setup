@@ -237,6 +237,8 @@ if [ "$DO_BUILD" -eq 1 ]; then
     version=$(cut -d '-' -f 2 <<< "$IMAGE")
     su builder -c "/usr/bin/mock --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
     su builder -c "/usr/bin/mock --install --verbose rpmlint"
+    # HACK: mock 2.11-1 in EPEL 7 broke --shell with nspawn: https://bugzilla.redhat.com/show_bug.cgi?id=1976702
+    echo "config_opts['use_nspawn'] = False" >> /etc/mock/default.cfg
 fi
 
 yum clean all || true
