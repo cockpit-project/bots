@@ -10,11 +10,6 @@ nmcli con add con-name "static-mcast1" ifname ens15 type ethernet ip4 "$SERVER_I
 nmcli con up "static-mcast1"
 hostnamectl set-hostname services.cockpit.lan
 
-function docker_pull() {
-    # we get images from our mirror on quay to work around dockerhub rate limits, see sync-quay
-    podman pull "quay.io/cockpit/$1-$2" && podman tag "quay.io/cockpit/$1-$2" "docker.io/$1/$2"
-}
-
 #############
 #
 # FreeIPA setup
@@ -71,8 +66,13 @@ poweroff
 #
 #############
 
-# See https://hub.docker.com/r/nowsci/samba-domain
-docker_pull nowsci samba-domain
+# See https://github.com/Fmstrat/samba-domain
+# image on dockerhub is too old, and not published on quay or anywhere else
+git clone --depth=1 https://github.com/Fmstrat/samba-domain /tmp/samba-domain
+# avoid pulling ubuntu base image from dockerhub
+sed -i '/^FROM/ s|ubuntu|ghcr.io/linuxserver/baseimage-ubuntu|' /tmp/samba-domain/Dockerfile
+podman build -t samba-domain /tmp/samba-domain
+
 mkdir -p /var/lib/samba-data/config /var/lib/samba-data/data
 
 # "foobarfoo" password is not accepted:
@@ -103,7 +103,7 @@ podman run -d -it --rm --name samba \
     -v /var/lib/samba-data/config:/etc/samba/external:z \
     --add-host services.cockpit.lan:$SERVER_IP \
     -h f0.cockpit.lan \
-    nowsci/samba-domain
+    localhost/samba-domain
 EOF
 chmod 755 /root/run-samba-domain
 
