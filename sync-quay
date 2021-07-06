@@ -1,9 +1,0 @@
-#! /bin/bash
-
-set -xe
-
-function sync() {
-    skopeo copy "docker://docker.io/$1/$2" "docker://quay.io/cockpit/$1-$2"
-}
-
-sync nowsci samba-domain
