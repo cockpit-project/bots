@@ -1,5 +1,5 @@
 name: test
-on: [push, pull_request]
+on: [pull_request]
 jobs:
   bots:
     runs-on: ubuntu-20.04
