@@ -3,6 +3,8 @@ on: [pull_request]
 jobs:
   bots:
     runs-on: ubuntu-20.04
+    permissions:
+      pull-requests: none
     steps:
       - name: Clone repository
         uses: actions/checkout@v2
@@ -15,6 +17,10 @@ jobs:
 
   cockpituous:
     runs-on: ubuntu-20.04
+    permissions:
+      # enough permissions for tests-scan to work
+      pull-requests: read
+      statuses: write
     steps:
       - name: Clone repository
         uses: actions/checkout@v2
@@ -49,13 +55,8 @@ jobs:
         run: |
           set -ex
           if [ -n '${{ github.event.pull_request.number }}' ]; then
-              # pull_request
-              #
-              # default workflow token is too weak for tests-scan; only PRs from origin repo have the cockpituous token
-              if [ -n '${{ secrets.COCKPITUOUS_TOKEN }}' ]; then
-                  echo '${{ secrets.COCKPITUOUS_TOKEN }}' > /tmp/github-token
-                  pr_args='-r ${{ github.event.pull_request.base.user.login }}/bots -p ${{ github.event.pull_request.number }} -t /tmp/github-token'
-              fi
+              echo '${{ secrets.GITHUB_TOKEN }}' > /tmp/github-token
+              pr_args='-r ${{ github.event.pull_request.base.user.login }}/bots -p ${{ github.event.pull_request.number }} -t /tmp/github-token'
               repo='${{ github.event.pull_request.head.repo.clone_url }}'
               branch='${{ github.event.pull_request.head.ref }}'
           else
