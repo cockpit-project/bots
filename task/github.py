@@ -290,7 +290,10 @@ class GitHub(object):
         if (status < 200 or status >= 300) and status not in accept:
             raise GitHubError(self.qualify(resource), response)
         self.cache.mark()
-        return json.loads(response['data'])
+        if response['data']:
+            return json.loads(response['data'])
+        else:
+            return None
 
     def patch(self, resource, data, accept=[]):
         response = self.request("PATCH", resource, json.dumps(data), {"Content-Type": "application/json"})
