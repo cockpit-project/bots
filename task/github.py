@@ -22,6 +22,7 @@ import errno
 import http.client
 from http import HTTPStatus
 import json
+import logging
 import os
 import re
 import socket
@@ -382,10 +383,18 @@ class GitHub(object):
         users = {"github-actions[bot]", "candlepin", "cockpit-project", "osbuild"}
 
         # individual persons from https://github.com/orgs/cockpit-project/teams/contributors/members
+        # this requires a token with read:org permissions
         page = 1
         count = 100
         while count == 100:
-            data = self.get(f"/orgs/cockpit-project/teams/contributors/members?page={page}&per_page={count}") or []
+            try:
+                data = self.get(f"/orgs/cockpit-project/teams/contributors/members?page={page}&per_page={count}") or []
+            except GitHubError as e:
+                if e.status == 403:
+                    logging.warning("Insufficient token permissions to list team members: %s" % e)
+                    break
+                else:
+                    raise
             users.update(user.get("login") for user in data)
             count = len(data)
             page += 1
