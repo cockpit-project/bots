@@ -86,12 +86,7 @@ def mockServer():
                     self.replyData("", status=304)
                 else:
                     self.replyJson({"user": "blah"}, headers={"Last-Modified": "Thu, 05 Jul 2012 15:31:30 GMT"})
-            elif parsed.path == "/orgs/cockpit-project/teams":
-                self.replyJson([
-                    {"name": github.TEAM_CONTRIBUTORS, "id": 1},
-                    {"name": "Other team", "id": 2}
-                ])
-            elif parsed.path == "/teams/1/members":
+            elif parsed.path == "/orgs/cockpit-project/teams/contributors/members":
                 self.replyJson([
                     {"login": "one"},
                     {"login": "two"},
@@ -185,11 +180,6 @@ class TestGitHub(unittest.TestCase):
                                          "cockpit-project", "osbuild"]))
         self.assertNotIn("four", allowlist)
         self.assertNotIn("", allowlist)
-
-    def testTeamIdFromName(self):
-        self.assertEqual(self.api.teamIdFromName(github.TEAM_CONTRIBUTORS), 1)
-        self.assertEqual(self.api.teamIdFromName("Other team"), 2)
-        self.assertRaises(KeyError, self.api.teamIdFromName, "team that doesn't exist")
 
     def testLastIssueDelete(self):
         self.assertEqual(len(self.api.issues()), 2)

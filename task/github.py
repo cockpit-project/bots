@@ -57,8 +57,6 @@ NOT_TESTED_DIRECT = "Not yet tested (direct trigger)"
 
 ISSUE_TITLE_IMAGE_REFRESH = "Image refresh for {0}"
 
-TEAM_CONTRIBUTORS = "Contributors"
-
 
 class Logger(object):
     def __init__(self, directory):
@@ -381,21 +379,14 @@ class GitHub(object):
         users = {"github-actions[bot]", "candlepin", "cockpit-project", "osbuild"}
 
         # individual persons from https://github.com/orgs/cockpit-project/teams/contributors/members
-        teamId = self.teamIdFromName(TEAM_CONTRIBUTORS)
         page = 1
         count = 100
         while count == 100:
-            data = self.get("/teams/{0}/members?page={1}&per_page={2}".format(teamId, page, count)) or []
+            data = self.get(f"/orgs/cockpit-project/teams/contributors/members?page={page}&per_page={count}") or []
             users.update(user.get("login") for user in data)
             count = len(data)
             page += 1
         return users
-
-    def teamIdFromName(self, name):
-        for team in self.get("/orgs/cockpit-project/teams") or []:
-            if team.get("name") == name:
-                return team["id"]
-        raise KeyError("Team {0} not found".format(name))
 
     def is_user_allowed(self, user):
         return user in self.allowlist()
