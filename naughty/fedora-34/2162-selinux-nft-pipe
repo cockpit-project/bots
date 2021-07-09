@@ -1,1 +1,1 @@
-avc:  denied  { open } for .* comm="nft" .* dev="pipefs" .* scontext=system_u:system_r:iptables_t:s0 tcontext=system_u:system_r:NetworkManager_t:s0
+avc:  denied  { open } for * comm="nft" * dev="pipefs" * scontext=system_u:system_r:iptables_t:s0 tcontext=system_u:system_r:NetworkManager_t:s0
