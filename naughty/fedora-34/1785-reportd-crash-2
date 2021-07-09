@@ -1,4 +1,0 @@
-  File "check-system-journal", line *, in testAbrtReportCancel
-    b.wait_visible("#abrt-reporting .pf-l-split:contains('Report to Cockpit') .pf-l-split__item:contains('Reporting was canceled')")
-*
-testlib.Error: timeout
