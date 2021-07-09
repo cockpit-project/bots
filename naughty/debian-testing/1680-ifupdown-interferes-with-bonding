@@ -1,3 +1,0 @@
-Traceback (most recent call last):
-  File "check-networkmanager-bond", line *, in testActive
-    b.wait_in_text("#network-interface .pf-c-card:contains('tbond')", ip)
