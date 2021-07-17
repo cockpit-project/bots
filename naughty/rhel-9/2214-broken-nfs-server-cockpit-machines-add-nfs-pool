@@ -1,0 +1,7 @@
+  File "test/check-machines-storage-pools", line *, in testStoragePoolsCreate
+    StoragePoolCreateDialog(
+  File "test/check-machines-storage-pools", line *, in execute
+    self.verify_overview()
+*
+testlib.Error: timeout
+wait_js_cond(ph_is_present("#my_dir_pool_two-system-create-volume-button:enabled"))
