@@ -1,0 +1,6 @@
+Process * (systemd) of user 0 dumped core.
+*
+* sleep_between (libsystemd-shared*
+*
+testlib.Error: FAIL: Test completed, but found unexpected journal messages:
+Due to PID 1 having crashed coredump collection will now be turned off.
