@@ -1,2 +1,0 @@
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
-audit*avc:  denied  { write } for * comm="systemd-hostnam" name="systemd" dev="tmpfs" *
