@@ -1,0 +1,6 @@
+Stack trace of thread 651:
+#0  * n/a (systemd-resolved + *)
+* sd_event_dispatch (libsystemd-shared-*.so + *)
+*
+testlib.Error: FAIL: Test completed, but found unexpected journal messages:
+Process * (systemd-resolve) of user * dumped core.
