@@ -237,8 +237,6 @@ if [ "$DO_BUILD" -eq 1 ]; then
     version=$(cut -d '-' -f 2 <<< "$IMAGE")
     su builder -c "/usr/bin/mock --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
     su builder -c "/usr/bin/mock --install --verbose rpmlint"
-    # HACK: mock 2.11-1 in EPEL 7 broke --shell with nspawn: https://bugzilla.redhat.com/show_bug.cgi?id=1976702
-    echo "config_opts['use_nspawn'] = False" >> /etc/mock/default.cfg
 fi
 
 yum clean all || true
@@ -268,17 +266,6 @@ systemctl start docker || journalctl -u docker
 /var/lib/testvm/docker-images.setup
 
 /var/lib/testvm/zero-disk.setup --keep-mock-cache
-
-# HACK - kdump.service interferes with our storage tests, by loading
-# the system for some time after boot and thereby causing a race
-# between parted and udevd to turn out for the worse.  Disabling
-# kdump.service helps somewhat, but the race is still there, and
-# parted still fails occasionally.
-#
-# https://bugzilla.redhat.com/show_bug.cgi?id=1245144
-# Fixed in parted-3.1-23.el7
-#
-systemctl disable kdump.service
 
 # Final tweaks
 
