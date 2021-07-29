@@ -213,13 +213,9 @@ class Machine(ssh_connection.SSHConnection):
             # Fedora and RHEL 9 have switched to dbus-broker
             allowed.append("dbus-daemon didn't send us a dbus address; not installed?.*")
 
-        if self.image in ['fedora-33', 'fedora-34', 'fedora-testing', 'rhel-9-0']:
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1929259
-            allowed.append('audit:.*denied.*comm="pmdakvm" lockdown_reason="debugfs access".*')
+        if self.image in ['fedora-33']:
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1965743
             allowed.append('audit:.*denied.*name="dma_heap".*')
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1970744
-            allowed.append('audit:.*denied.*path=".*dma_heap".*')
 
         if self.image in ['debian-testing', 'ubuntu-stable']:
             # HACK: https://bugs.debian.org/951477
@@ -233,8 +229,6 @@ class Machine(ssh_connection.SSHConnection):
             allowed.append('^Stack trace of.*')
 
         if self.image in ['rhel-8-5', 'rhel-8-5-distropkg', 'centos-8-stream']:
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1967125
-            allowed.append('audit:.*denied.*{ getattr }.*dev="proc".*')
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1979182
             allowed.append('audit.*denied.*{ getattr }.*comm="systemctl" name="/".*cockpit_ws_t.*')
 
