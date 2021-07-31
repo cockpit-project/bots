@@ -121,7 +121,8 @@ def tests_human(priority, name, number, revision, ref, context, base, repo, bots
 
 
 def is_internal_context(context):
-    for pattern in ["rhel", "edge", "vmware", "openstack"]:
+    # HACK: CentOS CI doesn't like firefox, browser fails to start way too often
+    for pattern in ["rhel", "edge", "vmware", "openstack", "/firefox"]:
         if pattern in context:
             return True
     return False
