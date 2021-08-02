@@ -216,6 +216,8 @@ class Machine(ssh_connection.SSHConnection):
         if self.image in ['fedora-33']:
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1965743
             allowed.append('audit:.*denied.*name="dma_heap".*')
+            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1970744
+            allowed.append('audit:.*denied.*path=".*dma_heap".*')
 
         if self.image in ['debian-testing', 'ubuntu-stable']:
             # HACK: https://bugs.debian.org/951477
