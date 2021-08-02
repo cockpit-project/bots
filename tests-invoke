@@ -40,7 +40,13 @@ def main():
     def detect_collisions(opts):
         api = github.GitHub(repo=opts.repo)
 
-        pull = api.get("pulls/{0}".format(opts.pull_number))
+        try:
+            pull = api.get("pulls/{0}".format(opts.pull_number))
+        except TimeoutError as e:
+            sys.stderr.write('Warning: collision detection failed, skipping: %s' % e)
+            # GitHub API is sometimes flaky, don't break test just because it sometimes does not respond
+            return None
+
         if pull:
             if pull["head"]["sha"] != opts.revision:
                 return "Newer revision available on GitHub for this pull request"
