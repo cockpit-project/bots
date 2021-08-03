@@ -81,6 +81,8 @@ tlog \
 nginx \
 tcsh \
 redis \
+stratis-cli \
+stratisd \
 "
 
 ABRT_PACKAGES="\
