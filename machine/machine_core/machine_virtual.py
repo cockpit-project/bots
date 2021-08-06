@@ -571,6 +571,7 @@ class VirtMachine(Machine):
             if self._domain:
                 if self._domain.detachDeviceFlags(disk_desc, libvirt.VIR_DOMAIN_AFFECT_LIVE) != 0:
                     raise Failure("Unable to remove disk from vm")
+        os.unlink(disk['filename'])
 
     def _qemu_monitor(self, command):
         self.message("& " + command)
