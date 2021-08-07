@@ -201,7 +201,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "fedora-33@cockpit-project/cockpit",
         "ubuntu-2004@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
-        "rhel-8-4@cockpit-project/cockpit",
+        "rhel-9-0@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
         "rhel-8-4@candlepin/subscription-manager",
     ]
