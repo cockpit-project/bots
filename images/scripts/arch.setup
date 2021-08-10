@@ -1,0 +1,77 @@
+#!/bin/bash
+
+set -ex
+IMAGE="$1"
+
+# avoid failures when running image builds in a non-English locale (ssh transfers the host environment)
+unset LANGUAGE
+unset LANG
+export LC_ALL=C
+
+# binutils for strip (required for fetching sources in devtools)
+COCKPIT_DEPS="\
+binutils \
+json-glib \
+krb5 \
+libssh \
+accountsservice \
+docbook-xsl \
+openssh \
+networkmanager \
+pcp \
+networkmanager \
+xmlto \
+packagekit \
+libvirt \
+libvirt-python \
+tracer
+virt-install \
+udisks2 \
+devtools \
+"
+
+TEST_PACKAGES="\
+ansible \
+criu \
+gdb \
+strace \
+ltrace \
+cryptsetup \
+socat \
+sudo \
+firewalld \
+openssh \
+podman \
+nginx \
+redis \
+"
+
+# Ignore a linux kernel update as it removes kernel modules which are required
+# for starting firewalld and podman, as last step the kernel is upgraded.
+pacman -Syu --noconfirm $COCKPIT_DEPS $TEST_PACKAGES cockpit --ignore linux
+
+echo "127.0.1.1 $(hostname)" >> /etc/hosts
+
+systemctl enable --now firewalld
+
+# Open firewall for cockpit
+firewall-cmd --permanent --zone=public --add-port 9090/tcp
+
+# Setup sudoers for admin user
+echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/90-cockpit-wheel
+
+useradd -c Builder builder
+echo "builder ALL = NOPASSWD: /usr/sbin/makechrootpkg, /usr/sbin/mkarchroot, /usr/bin/*-x86_64-build" > /etc/sudoers.d/90-archbuild
+
+# Setup rootless podman
+touch /etc/subuid /etc/subgid
+usermod --add-subuids 100000-165535 --add-subgids 100000-165535 admin
+# Setup some test registries, as none are specified by default.
+echo 'unqualified-search-registries = ["docker.io", "quay.io"]' > /etc/containers/registries.conf
+podman system migrate
+
+# Update the kernel as last step.
+pacman -Syu --noconfirm
+
+# Reduce image size, clear package cache (/var/cache/pacman/pkg)
+pacman -Scc --noconfirm
