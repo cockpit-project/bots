@@ -1,0 +1,59 @@
+#!/bin/bash
+
+set -ex
+
+
+do_build=
+do_install=
+args=$(getopt -o "vqs:" -l "verbose,quick,skip:,build,install" -- "$@")
+eval set -- "$args"
+while [ $# -gt 0 ]; do
+	case $1 in
+	    -v|--verbose)
+                shift
+		;;
+	    -q|--quick)
+                shift
+		;;
+            -s|--skip)
+                skip="$skip
+$2"
+                shift
+                ;;
+            --build)
+                do_build=t
+                ;;
+            --install)
+                do_install=t
+                ;;
+	    --)
+		shift
+		break
+		;;
+	esac
+	shift
+done
+tar=$1
+
+# Build
+
+if [ -n "$do_build" ]; then
+    rm -rf build-results
+    mkdir build-results
+    resultdir=$PWD/build-results
+    dist_tar="$(ls cockpit-*.tar.?z)"
+    cp arch/PKGBUILD .
+    sed -i 's/SOURCE/$dist_tar/' PKGBUILD
+    extra-x86_64-build
+fi
+
+if [ -n "$do_install" ]; then
+    packages=$(find build-results -name "*.pkg.tar.zst")
+    pacman -U --noconfirm $packages
+
+    # Make sure we clean out the journal
+    journalctl --flush
+    journalctl --sync || killall systemd-journald
+    rm -rf /var/log/journal/*
+    rm -rf /var/lib/NetworkManager/dhclient-*.lease
+fi

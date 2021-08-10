@@ -59,6 +59,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'arch',
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
@@ -94,6 +95,7 @@ REPO_BRANCH_CONTEXT = {
             'ubuntu-stable',
         ],
         '_manual': [
+            'arch',
             'centos-8-stream',
         ],
     },
@@ -113,6 +115,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
         '_manual': [
+            'arch',
             'fedora-testing',
         ],
     },

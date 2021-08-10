@@ -20,6 +20,7 @@
 DAYS = 7
 
 REFRESH = {
+    "arch": {},
     "centos-7": {},
     "centos-8-stream": {},
     "debian-testing": {},
