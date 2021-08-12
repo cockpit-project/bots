@@ -1,0 +1,1 @@
+avc:  denied  { add_name } for  * comm="systemd-hostnam" name="*" scontext=system_u:system_r:systemd_hostnamed_t:s0 tcontext=system_u:object_r:init_var_run_t:s0 tclass=dir permissive=0
