@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+*
+  File "test/check-application", line *, in testDownloadImage
+    dialog*.openDialog() \
+  File "test/check-application", line *, in expectDownloadSuccess
+    checkImage(b, "localhost:5000/{0}:{1}".format(self.imageName, self.imageTag or "latest"), "system" if self.user == "system" else "admin")
