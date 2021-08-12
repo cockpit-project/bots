@@ -80,6 +80,14 @@ TEST_DOMAIN_XML = """
       <serial>ROOT</serial>
     </disk>
     <controller type='scsi' model='virtio-scsi' index='0' id='hot'/>
+    <video>
+      <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
+      <alias name='video0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+    </video>
+    <graphics type='vnc' autoport='yes' listen='127.0.0.1'>
+      <listen type='address' address='127.0.0.1'/>
+    </graphics>
     <console type='pty'>
       <target type='serial' port='0'/>
     </console>
