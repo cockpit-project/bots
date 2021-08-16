@@ -92,6 +92,11 @@ fi
 
 dnf --nogpgcheck -y update
 
+# unbreak rhel-9-0's default choice of 999999999 rounds
+if [ "${IMAGE}" = "rhel-9-0" ]; then
+    sed -ie 's/#SHA_CRYPT_MAX_ROUNDS 5000/SHA_CRYPT_MAX_ROUNDS 5000/' /etc/login.defs
+fi
+
 printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
 
 echo foobar | passwd --stdin root
