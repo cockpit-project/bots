@@ -254,7 +254,7 @@ def main():
             sys.exit("S3 args must be https")
 
         if not s3.is_key_present(args.s3):
-            sys.exit("No key found for {args.s3.hostname}")
+            sys.exit(f"No key found for {args.s3.hostname}")
 
         collection = S3ImageStore(args.s3)
 
