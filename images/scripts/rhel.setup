@@ -117,7 +117,6 @@ pcp \
 podman \
 realmd \
 redhat-logos \
-selinux-policy-targeted \
 setroubleshoot-server \
 subscription-manager \
 sos \
@@ -184,12 +183,6 @@ if [ "$IMAGE" = "centos-8-stream" ]; then
 fi
 
 dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
-
-# We are going to install the newest selinux-policy into mock and we need at least that version
-# Always update to prevent case where image has older version than mock
-if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
-    dnf update -y selinux-policy
-fi
 
 # we only need cloud-init for the initial boot, afterwards it just slows down booting
 if rpm -q cloud-init; then
@@ -296,6 +289,14 @@ EOF
     version=$(cut -d '-' -f 2 <<< "$IMAGE")
     su builder -c "/usr/bin/mock --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
     su builder -c "/usr/bin/mock --install --verbose rpmlint"
+
+    # We need to make sure mock has the same selinux-policy as we do
+    if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
+        mkdir /tmp/selinux-policy-rpms
+        dnf download --downloaddir /tmp/selinux-policy-rpms selinux-policy{,-devel,-targeted}
+        dnf install -y /tmp/selinux-policy-rpms/*.rpm
+        su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
+    fi
 fi
 
 dnf clean all || true
