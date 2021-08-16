@@ -25,8 +25,8 @@ meta_data="$init_dir/meta-data"
 user_data="$init_dir/user-data"
 iso_image="cloud-init.iso"
 
-vm_user="root"
-vm_pass="foobar"
+# $ openssl passwd -5 -salt cockpit-cloud-init foobar
+vm_pass='$5$cockpit-cloud-in$Kqx/aIk9KoFvXStxerrVfNaDMnLsCWS4Wb4uLktzgu8'
 key_pub=`cat identity.pub`
 host_key=`sed  's/^/    /' host_key`
 host_key_pub=`cat host_key.pub`
@@ -43,21 +43,20 @@ cat >$user_data <<EOF
 #cloud-config
 users:
   - default
-  - name: ${vm_user}
+  - name: root
+    lock_passwd: false
+    passwd: ${vm_pass}
     groups: users,wheel
     ssh_authorized_keys:
       - ${key_pub}
   - name: admin
+    lock_passwd: false
+    passwd: ${vm_pass}
     gecos: Administrator
     groups: users,wheel
     ssh_authorized_keys:
       - ${key_pub}
 ssh_pwauth: True
-chpasswd:
-  list: |
-    ${vm_user}:${vm_pass}
-    admin:${vm_pass}
-  expire: False
 ssh_keys:
   rsa_private: |
 ${host_key}
