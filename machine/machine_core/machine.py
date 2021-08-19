@@ -219,6 +219,13 @@ class Machine(ssh_connection.SSHConnection):
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1970744
             allowed.append('audit:.*denied.*path=".*dma_heap".*')
 
+        if self.image in ['fedora-35']:
+            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1995072
+            allowed.append('audit:.*denied.*comm="systemd-gpt-aut".*')
+            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1985494
+            allowed.append('audit:.*denied.*{ setpcap }.*comm="firewalld".*')
+            allowed.append('audit:.*denied.*{ setcap }.*comm="firewalld".*')
+
         if self.image in ['debian-testing', 'ubuntu-stable']:
             # HACK: https://bugs.debian.org/951477
             allowed.append(r'Process .* \(ip6?tables\) of user 0 dumped core.*')
