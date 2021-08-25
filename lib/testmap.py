@@ -138,8 +138,8 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             'fedora-33',
             'fedora-33/firefox',
-            'rhel-8-4',
-            'rhel-8-4/firefox',
+            'rhel-8-5',
+            'rhel-9-0'
         ],
         'rhel-8': [
             'rhel-8-4',
@@ -148,10 +148,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-34',
-            'rhel-8-5',
-            'rhel-8-5/firefox',
-            'rhel-9-0',
-            'rhel-9-0/firefox',
         ],
     },
     'candlepin/subscription-manager': {
