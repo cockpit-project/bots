@@ -327,6 +327,14 @@ if ! getent passwd admin >/dev/null; then
     echo foobar | passwd --stdin admin
 fi
 
+# HACK - something creates ~admin/.ssh with bogus permissions and
+# ownership, maybe cloud-init.  Undo that.
+
+if [ -d ~admin/.ssh ]; then
+    chmod 0700 ~admin/.ssh
+    chown admin:admin ~admin/.ssh
+fi
+
 # To enable persistent logging
 mkdir -p /var/log/journal
 
