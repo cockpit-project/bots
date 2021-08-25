@@ -241,6 +241,11 @@ class Machine(ssh_connection.SSHConnection):
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1979182
             allowed.append('audit.*denied.*{ getattr }.*comm="systemctl" name="/".*cockpit_ws_t.*')
 
+        if self.image in ['rhel-9-0']:
+            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1989641
+            allowed.append('audit:.*denied.*{ setpcap }.*comm="firewalld".*')
+            allowed.append('audit:.*denied.*{ setcap }.*comm="firewalld".*')
+
         return allowed
 
     def get_admin_group(self):
