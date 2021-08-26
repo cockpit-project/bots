@@ -51,6 +51,7 @@ sssd-dbus \
 
 TEST_PACKAGES="\
 acl \
+bind9-dnsutils \
 curl \
 firewalld \
 gdb \
@@ -83,12 +84,6 @@ until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 RELEASE=$(grep -m1 ^deb /etc/apt/sources.list | awk '{print $3}')
 
 case "$RELEASE" in
-    buster)
-        # timesyncd got split out in Ubuntu 20.04 and Debian 11
-        TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
-        # no podman package yet
-        TEST_PACKAGES="${TEST_PACKAGES/podman /}"
-        ;;
     bullseye)
         # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
         IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
@@ -145,11 +140,6 @@ APT='eatmydata apt-get -y -o Dpkg::Options::=--force-confold'
 
 # remove packages that we don't need
 for p in lxd snapd landscape-common accountsservice open-vm-tools ufw cloud-init; do $APT purge --auto-remove $p || true; done
-
-# HACK: debian-stable image got /usr/bin/qemu-img removed, even though qemu-utils package is installed
-if [ "$1" = "debian-stable" ]; then
-    $APT install --reinstall -y qemu-utils
-fi
 
 # python3-rtslib-fb postinst starts rtslib-fb-targetctl.service , but that may fail due to kernel being upgraded
 mkdir -p /run/systemd/system
