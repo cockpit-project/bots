@@ -1,0 +1,5 @@
+# testBasicWheelUserUnprivileged (__main__.TestMachinesLifecycle)
+*
+#0 * n/a (libvirt_driver_qemu.so + *)
+#1 * virStateShutdownPrepare (libvirt.so.0 + *)
+#2 * virNetDaemonRun (libvirt.so.0 + *)
