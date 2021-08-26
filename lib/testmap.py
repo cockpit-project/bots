@@ -85,13 +85,13 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-0',
             'fedora-33',
             'fedora-34',
-            'fedora-34/rawhide',
+            'fedora-35',
+            'fedora-35/rawhide',
             'debian-testing',
             'ubuntu-stable',
         ],
         '_manual': [
             'centos-8-stream',
-            'fedora-35',
         ],
     },
     'cockpit-project/cockpit-machines': {
