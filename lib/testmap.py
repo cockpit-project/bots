@@ -92,6 +92,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream',
             'fedora-35',
+            'fedora-35/rawhide',
         ],
     },
     'cockpit-project/cockpit-machines': {
