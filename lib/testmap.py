@@ -36,6 +36,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-34',
             'fedora-34/devel',
             'fedora-34/firefox',
+            'fedora-35',
             'fedora-coreos',
             'rhel-8-5',
             'rhel-8-5-distropkg',
@@ -58,7 +59,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
             'fedora-34/firefox-devel',
-            'fedora-35',
         ],
     },
     'cockpit-project/starter-kit': {
