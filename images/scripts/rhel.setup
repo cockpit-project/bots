@@ -125,6 +125,8 @@ redhat-logos \
 setroubleshoot-server \
 subscription-manager \
 sos \
+stratis-cli \
+stratisd \
 tuned \
 udisks2 \
 udisks2-lvm2 \
