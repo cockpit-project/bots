@@ -47,9 +47,9 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-9',
             'centos-7',
         ],
-        'rhel-8.4': [
-            'rhel-8-4',
-            'rhel-8-4-distropkg',
+        'rhel-8.5': [
+            'rhel-8-5',
+            'rhel-8-5-distropkg',
             'centos-8-stream',
             'fedora-33/container-bastion',
         ],
