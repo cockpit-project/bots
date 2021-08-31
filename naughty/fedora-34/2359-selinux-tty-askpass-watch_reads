@@ -1,0 +1,1 @@
+avc:  denied  { watch watch_reads } for * comm="systemd-tty-ask" path="/dev/tty1"
