@@ -85,6 +85,11 @@ class Machine(ssh_connection.SSHConnection):
         else:
             self.label = "{}@{}:{}".format(self.ssh_user, self.ssh_address, self.ssh_port)
 
+        if "debian" in self.image or "ubuntu" in self.image:
+            self.libexecdir = "/usr/lib/cockpit"
+        else:
+            self.libexecdir = "/usr/libexec"
+
         # The Linux kernel boot_id
         self.boot_id = None
 
