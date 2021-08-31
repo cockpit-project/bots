@@ -65,10 +65,10 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             'fedora-33',
             'fedora-34',
+            'fedora-35',
             'centos-8-stream',
         ],
         '_manual': [
-            'fedora-35',
             'fedora-34/firefox',
         ],
     },
@@ -139,12 +139,16 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             'fedora-33',
             'fedora-33/firefox',
+            'fedora-34',
             'rhel-8-5',
             'rhel-9-0'
         ],
+        'rhel-8-5': [
+            'rhel-8-5',
+            'rhel-8-5/firefox',
+        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-34',
             'fedora-35',
         ],
     },
@@ -163,12 +167,12 @@ REPO_BRANCH_CONTEXT = {
     'skobyda/cockpit-certificates': {
         'master': [
             'fedora-34',
+            'fedora-35',
         ],
         '_manual': [
             'rhel-8-5',
             'rhel-9-0',
             'centos-8-stream',
-            'fedora-35',
         ]
     },
 }
