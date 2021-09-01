@@ -58,6 +58,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
             'fedora-34/firefox-devel',
+            'fedora-34/container-bastion',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -146,6 +147,7 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-35',
+            'fedora-34/firefox',
         ],
     },
     'candlepin/subscription-manager': {
