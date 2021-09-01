@@ -176,7 +176,7 @@ REPO_BRANCH_CONTEXT = {
 # The OSTree variants can't build their own packages, so we build in
 # their non-Atomic siblings.
 OSTREE_BUILD_IMAGE = {
-    "fedora-coreos": "fedora-33",
+    "fedora-coreos": "fedora-34",
 }
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
