@@ -27,7 +27,7 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit': {
         'main': [
-            'fedora-33/container-bastion',
+            'fedora-34/container-bastion',
             'debian-stable',
             'debian-testing',
             'ubuntu-2004',
@@ -50,7 +50,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-5',
             'rhel-8-5-distropkg',
             'centos-8-stream',
-            'fedora-33/container-bastion',
+            'fedora-34/container-bastion',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
@@ -59,7 +59,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
             'fedora-34/firefox-devel',
-            'fedora-34/container-bastion',
         ],
     },
     'cockpit-project/starter-kit': {
