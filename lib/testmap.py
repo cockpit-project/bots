@@ -120,23 +120,10 @@ REPO_BRANCH_CONTEXT = {
         'master': [
         ],
         'rhel8-branch': [
-            'rhel-8-4/osbuild-composer',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-34/lorax',
-            'fedora-34/osbuild-composer',
             'rhel-8-5/osbuild-composer',
-            'rhel-9-0/osbuild-composer',
-            'rhel-7-9',
-            'rhel-7-9/azure',
-            'rhel-7-9/live-iso',
-            'rhel-7-9/qcow2',
-            'rhel-7-9/aws',
-            'rhel-7-9/openstack',
-            'rhel-7-9/vmware',
-            'rhel-7-9/tar',
-            'centos-8-stream',
         ],
     },
     'osbuild/cockpit-composer': {
