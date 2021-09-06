@@ -35,6 +35,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-34',
             'fedora-34/devel',
             'fedora-34/firefox',
+            'fedora-34/mobile',
             'fedora-35',
             'fedora-coreos',
             'rhel-8-5',
@@ -54,7 +55,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-34/mobile',
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
