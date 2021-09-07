@@ -373,9 +373,13 @@ def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=Tru
     if "pull" in kwargs:
         return kwargs["pull"]
 
+    # $GITHUB_REF is set when running from workflows
+    if not base:
+        base = os.path.basename(os.getenv("GITHUB_REF", default_branch()))
+
     data = {
         "head": branch,
-        "base": default_branch() if base is None else base,
+        "base": base,
         "maintainer_can_modify": True
     }
     if issue:
