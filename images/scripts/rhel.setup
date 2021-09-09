@@ -107,6 +107,7 @@ echo foobar | passwd --stdin root
 COCKPIT_DEPS="\
 device-mapper-multipath \
 firewalld \
+gcc \
 glib-networking \
 json-glib \
 kexec-tools \
