@@ -1,3 +1,0 @@
-# testFIPS (__main__.TestMultiMachine)
-*
-machine_core.exceptions.Failure: Timeout waiting for system to reboot properly
