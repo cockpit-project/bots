@@ -1,0 +1,8 @@
+#! /bin/bash
+
+set -e
+
+/var/lib/testvm/fedora.install --rhel "$@"
+
+# HACK: missing /etc/crypttab file upsets udisks: https://github.com/storaged-project/udisks/pull/835
+touch /etc/crypttab
