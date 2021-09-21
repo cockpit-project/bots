@@ -62,6 +62,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
             'fedora-34/firefox-devel',
+            'rhel-8-6',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -93,6 +94,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'rhel-8-6',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -111,6 +113,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-35',
+            'rhel-8-6',
         ],
     },
     'weldr/lorax': {
