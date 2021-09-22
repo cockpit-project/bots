@@ -85,6 +85,7 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-podman': {
         'main': [
             'rhel-8-5',
+            'rhel-8-6',
             'rhel-9-0',
             'fedora-34',
             'fedora-35',
@@ -94,7 +95,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
-            'rhel-8-6',
         ],
     },
     'cockpit-project/cockpit-machines': {
