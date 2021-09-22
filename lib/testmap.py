@@ -108,12 +108,12 @@ REPO_BRANCH_CONTEXT = {
             'fedora-34/mobile',
             'fedora-35',
             'rhel-8-5',
+            'rhel-8-6',
             'rhel-9-0',
             'centos-8-stream',
         ],
         '_manual': [
             'fedora-testing',
-            'rhel-8-6',
         ],
     },
     'weldr/lorax': {
