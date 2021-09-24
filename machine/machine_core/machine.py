@@ -226,7 +226,7 @@ class Machine(ssh_connection.SSHConnection):
             allowed.append('audit:.*denied.*{ setpcap }.*comm="firewalld".*')
             allowed.append('audit:.*denied.*{ setcap }.*comm="firewalld".*')
 
-        if self.image in ['debian-testing', 'ubuntu-stable']:
+        if self.image in ['debian-testing', 'ubuntu-stable', 'ubuntu-2004']:
             # HACK: https://bugs.debian.org/951477
             allowed.append(r'Process .* \(ip6?tables\) of user 0 dumped core.*')
             allowed.append(r'Process .* \(iptables-restor\) of user 0 dumped core.*')
