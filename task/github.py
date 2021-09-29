@@ -117,7 +117,8 @@ def get_origin_repo():
 
 
 class GitHub(object):
-    def __init__(self, base=None, cacher=None, repo=None):
+    def __init__(self, base=None, cacher=None, repo=None, remote=None):
+        self._remote = remote
         self._repo = repo
         self._base = base
         self._url = None
@@ -151,6 +152,18 @@ class GitHub(object):
         # Create a log for debugging our GitHub access
         self.log = Logger(self.cache.directory)
         self.log.write("")
+
+    @property
+    def remote(self):
+        if not self._remote:
+            repo = os.environ.get("GITHUB_BASE", None) or get_repo()
+
+            if repo:
+                self._remote = f'https://github.com/{repo}'
+            else:
+                self._remote = 'origin'
+
+        return self._remote
 
     @property
     def repo(self):
