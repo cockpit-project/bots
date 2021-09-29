@@ -326,8 +326,7 @@ def execute(*args):
 
 
 def push_branch(branch, force=False):
-    url = "https://github.com/{0}".format(api.repo)
-    cmd = ["git", "push", url, "+HEAD:refs/heads/{0}".format(branch)]
+    cmd = ["git", "push", api.remote, "+HEAD:refs/heads/{0}".format(branch)]
     if force:
         cmd.insert(2, "-f")
     execute(*cmd)
