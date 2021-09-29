@@ -49,15 +49,18 @@ def run(context, verbose=False, **kwargs):
             sys.stderr.write("+ " + " ".join(args) + "\n")
         subprocess.check_call(args, cwd=cwd)
 
-    # Make a tree with source and run "update-po" in it... outputs working directory
-    line = output("bots/make-source", "update-po")
-    work = os.path.abspath(line.strip())
+    # If PO_REFRESH_NO_SYNC is set then the synchronise steps were done from
+    # outside.  Otherwise, ask the build system to do the work for us.
+    if not os.getenv("PO_REFRESH_NO_SYNC"):
+        # Make a tree with source and run "update-po" in it... outputs working directory
+        line = output("bots/make-source", "update-po")
+        work = os.path.abspath(line.strip())
 
-    # Do the various updates
-    cmd = ["make", "upload-pot", "clean-po", "download-po"]
-    if verbose:
-        sys.stderr.write("+ " + " ".join(cmd) + "\n")
-    subprocess.check_call(cmd, cwd=work)
+        # Do the various updates
+        cmd = ["make", "upload-pot", "clean-po", "download-po"]
+        if verbose:
+            sys.stderr.write("+ " + " ".join(cmd) + "\n")
+        subprocess.check_call(cmd, cwd=work)
 
     local_branch = None
     current_manifest = None
