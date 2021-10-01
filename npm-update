@@ -35,9 +35,9 @@ GROUP = [
 import collections
 import json
 import os
-import random
-import sys
 import subprocess
+import sys
+import tempfile
 
 sys.dont_write_bytecode = True
 
@@ -45,30 +45,23 @@ import task
 from lib.constants import BASE_DIR
 
 
-def package_json(data=None, package=None, version=None):
-    package_path = os.path.join(BASE_DIR, "package.json")
-    if data is None:
-        with open(package_path, "r") as f:
-            return json.load(f, object_pairs_hook=collections.OrderedDict)
-    else:
-        if package:
-            data = dict(data, dependencies=dict(data["dependencies"], **{package: version}))
-        with open(package_path, "w") as f:
-            json.dump(data, f, indent=2, separators=(',', ': '))
-            f.write("\n")
+def read_package_json(package_json_path):
+    with open(package_json_path, "r") as f:
+        return json.load(f, object_pairs_hook=collections.OrderedDict)
 
 
-def map_dict(dependencies, function):
-    items = []
-    for (name, value) in dependencies.items():
-        items.append((name, function(name, value)))
-    return collections.OrderedDict(items)
+def write_package_json(package_json_path, data):
+    with open(package_json_path, "w") as f:
+        json.dump(data, f, indent=2, separators=(',', ': '))
+        f.write("\n")
 
 
-def execute(*args):
-    if task.verbose:
-        sys.stderr.write("+ " + " ".join(args) + "\n")
-    subprocess.check_call(args, cwd=BASE_DIR)
+def prefix(name, version):
+    if not version[0].isdigit():
+        return version
+    if name not in FRAGILE:
+        return "^" + version
+    return "~" + version
 
 
 def output(*args):
@@ -77,9 +70,8 @@ def output(*args):
     return subprocess.check_output(args, cwd=BASE_DIR, universal_newlines=True)
 
 
-def run(specified_package, verbose=False, **kwargs):
+def run(context, verbose=False, **kwargs):
     pending_updates = []
-    updated_packages = []
 
     if not kwargs["dry"]:
         api = task.github.GitHub()
@@ -97,28 +89,28 @@ def run(specified_package, verbose=False, **kwargs):
     # The only time git will checkout an empty subdir is if it's a gitlink
     is_gitlink = not subprocess.call(['rmdir', 'node_modules'])
 
-    # Force all current dependencies in place
-    execute("npm", "install")
+    package_json_path = os.path.join(BASE_DIR, "package.json")
+    old = read_package_json(package_json_path)
+    old_deps = old['dependencies']
 
-    orig_package_json = package_json()
+    # write out a temporary package.json with fuzzy versions and run npm outdated
+    with tempfile.TemporaryDirectory() as tmpdir:
+        prefixed = {name: prefix(name, version) for name, version in old_deps.items()}
+        write_package_json(f'{tmpdir}/package.json', {**old, 'dependencies': prefixed})
 
-    if specified_package:
-        packages = [specified_package]
-    else:
-        packages = list(orig_package_json["dependencies"].keys())
-        random.shuffle(packages)
+        if task.verbose:
+            sys.stderr.write("+ npm outdated --json")
+        result = subprocess.run(['npm', 'outdated', '--json'], cwd=tmpdir, stdout=subprocess.PIPE)
 
-    def prefix(name, version):
-        if not version[0].isdigit():
-            return version
-        if name == specified_package or name not in FRAGILE:
-            return "^" + version
-        return "~" + version
-
+    # Check which upgrades we could do
     group = None
-
-    for package in packages:
-        if package in pending_updates:
+    updates = {}
+    for package, versions in json.loads(result.stdout).items():
+        # In some circumstances, possibly due to a bug, `npm outdated` also
+        # returns development dependencies.  In any case, it seems like the
+        # behaviour may change at some future point, so make sure the returned
+        # results are among those we expect.
+        if package in pending_updates or package not in old_deps:
             continue
 
         # once we updated the first member of a group, only consider other group members
@@ -128,24 +120,11 @@ def run(specified_package, verbose=False, **kwargs):
                                  .format(package, group))
             continue
 
-        orig_version = orig_package_json["dependencies"][package]
-        upgradeable_version = prefix(package, orig_version)
+        # Check if we got an upgrade
+        wanted = versions['wanted']
 
-        if orig_version == upgradeable_version:
-            continue
-
-        # Run npm upgrade for our package
-        #
-        package_json(orig_package_json, package, upgradeable_version)
-        execute("npm", "upgrade", "--save", package)
-
-        # Check if that did an upgrade
-        new_version = package_json()["dependencies"][package].lstrip("^~")
-
-        if new_version != orig_version:
-            # Write out the original package.json with the updated version
-            package_json(orig_package_json, package, new_version)
-            updated_packages.append(package)
+        if wanted != old_deps[package] and 'git' not in wanted:
+            updates[package] = wanted
 
             # part of a group?
             if not group:
@@ -156,15 +135,12 @@ def run(specified_package, verbose=False, **kwargs):
                             sys.stderr.write("Updated package '{0}' is in group {1}\n".format(package, group))
                         break
 
-            if group:
-                # run the next iteration to the updated package.json
-                orig_package_json = package_json()
-            else:
+            if not group:
                 # only update one dep, so that updates can be tested one by one
                 break
-        else:
-            # if the version was not updated revert package.json changes
-            package_json(orig_package_json, package, orig_version)
+
+    write_package_json(package_json_path, {**old, 'dependencies': {**old_deps, **updates}})
+    updated_packages = sorted(updates)
 
     if updated_packages and not kwargs["dry"]:
         # Create a pull request from these changes
@@ -182,9 +158,6 @@ def run(specified_package, verbose=False, **kwargs):
         lines = output("git", "grep", "-Ew", '|'.join(updated_packages))
         comment = "Please manually check features related to these files:\n\n```\n{0}```".format(lines)
         task.comment(pull, comment)
-
-        # Undo our changes
-        package_json(orig_package_json)
 
 
 if __name__ == '__main__':
