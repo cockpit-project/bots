@@ -49,7 +49,7 @@ def main():
 
         if pull:
             if pull["head"]["sha"] != opts.revision:
-                return "Newer revision available on GitHub for this pull request"
+                return f"Newer revision {pull['head']['sha']} available on GitHub for this pull request"
             if pull["state"] != "open":
                 return "Pull request isn't open"
 
