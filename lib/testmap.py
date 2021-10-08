@@ -85,6 +85,7 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-podman': {
         'main': [
+            'arch',
             'rhel-8-5',
             'rhel-8-6',
             'rhel-9-0',
@@ -95,7 +96,6 @@ REPO_BRANCH_CONTEXT = {
             'ubuntu-stable',
         ],
         '_manual': [
-            'arch',
             'centos-8-stream',
         ],
     },
