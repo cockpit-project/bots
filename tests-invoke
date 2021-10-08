@@ -37,7 +37,12 @@ def main():
     parser.add_argument('--revision', help="Revision of the PR head", required=True)
     opts = parser.parse_args()
 
+    # keep track of the most recent pull.updated_at attribute
+    last_updated_at = "0"
+
     def detect_collisions(opts):
+        nonlocal last_updated_at
+
         api = github.GitHub(repo=opts.repo)
 
         try:
@@ -49,8 +54,16 @@ def main():
 
         if pull:
             if pull["head"]["sha"] != opts.revision:
-                return (f"Newer revision {pull['head']['sha']} available on GitHub for this pull request;"
-                        f"node_id {pull['node_id']}, updated_at {pull['updated_at']}")
+                # Ignore GitHub API servers with outdated information
+                if pull["updated_at"] < last_updated_at:
+                    sys.stderr.write(f"tests-invoke: Ignoring pull_request response for updated_at {pull['updated_at']}"
+                                     f"; it is older than the previous {last_updated_at}\n")
+                    return None
+
+                return f"Newer revision {pull['head']['sha']} available on GitHub for this pull request"
+
+            last_updated_at = pull["updated_at"]
+
             if pull["state"] != "open":
                 return "Pull request isn't open"
 
