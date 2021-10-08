@@ -24,6 +24,7 @@ xmlto \
 packagekit \
 libvirt \
 libvirt-python \
+libvirt-dbus \
 tracer
 virt-install \
 udisks2 \
@@ -37,14 +38,21 @@ gdb \
 strace \
 ltrace \
 cryptsetup \
+dnsmasq \
+iptables-nft \
 socat \
 sudo \
 firewalld \
 openssh \
 podman \
+qemu \
 nginx \
 redis \
 "
+
+# iptables-nft (which provides ebtables) is required for libvirt NAT networking
+# but provides iptables and therefore conflicts. First remove it before installing iptables-nft.
+pacman -Rdd --noconfirm iptables
 
 # Ignore a linux kernel update as it removes kernel modules which are required
 # for starting firewalld and podman, as last step the kernel is upgraded.
