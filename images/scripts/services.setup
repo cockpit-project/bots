@@ -148,7 +148,6 @@ cat > playbookdir/playbook.yml <<- EOP
        candlepin_deploy_args: "-g -a -f -t"
 EOP
 
-# the playbook fails, but comes far enough to start candlepin/tomcat
 ansible-playbook -v --skip-tags 'system_update' playbookdir/playbook.yml
 
 sudo yum clean all
