@@ -32,6 +32,7 @@ python3-dbus \
 qemu-block-extra \
 realmd \
 selinux-basics \
+sscg \
 thin-provisioning-tools \
 unattended-upgrades \
 tuned \
@@ -94,6 +95,8 @@ case "$RELEASE" in
     bullseye)
         # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
         IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
+        # no sscg yet
+        COCKPIT_DEPS="${COCKPIT_DEPS/sscg /}"
         ;;
     testing)
         # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
@@ -102,6 +105,12 @@ case "$RELEASE" in
     focal)
         # no podman package yet
         TEST_PACKAGES="${TEST_PACKAGES/podman /}"
+        # no sscg yet
+        COCKPIT_DEPS="${COCKPIT_DEPS/sscg /}"
+        ;;
+    hirsute)
+        # no sscg yet
+        COCKPIT_DEPS="${COCKPIT_DEPS/sscg /}"
         ;;
 esac
 
