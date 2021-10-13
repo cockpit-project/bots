@@ -1,4 +1,0 @@
-# testBasicWheelUserUnprivileged (__main__.TestMachinesLifecycle)
-*
-  File "test/check-machines-lifecycle", line *, in _testBasic
-    b.wait_in_text("#virtual-machines-listing .pf-c-empty-state", "No VM is running")
