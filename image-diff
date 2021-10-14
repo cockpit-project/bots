@@ -23,14 +23,16 @@ from machine import testvm
 
 
 def get_packages(machine):
-    # List all packages, irrespective of package manager (rpm or dpkg).
+    # List all packages, irrespective of package manager (rpm or dpkg or pacman).
     # If both are missing, then the command will fail.
     #
     # We'd ideally like to get source packages everywhere, but it's a
     # bit more difficult on RPM. (TODO)
     pkgcmd = """if type dpkg-query > /dev/null 2>&1; then
                     dpkg-query -W -f='${source:Package}\t${version}\n' 2>/dev/null;
-                else rpm -qa --qf '%{NAME}\t%{EVR}\n' 2>/dev/null; fi"""
+                elif type rpm > /dev/null 2>&1; then
+                    rpm -qa --qf '%{NAME}\t%{EVR}\n' 2>/dev/null;
+                else pacman -Q | sed 's/ /\t/' 2>/dev/null; fi"""
 
     output = machine.execute(pkgcmd).strip()
     return dict(line.split('\t') for line in output.splitlines())
