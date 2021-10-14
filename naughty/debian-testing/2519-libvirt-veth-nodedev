@@ -1,0 +1,4 @@
+  File "test/check-machines-create", line *, in fill
+    b.select_from_dropdown("#network-select", self.location)
+*
+wait_js_cond(ph_is_present("#network-select option[value='type=direct,source=eth42']")): Uncaught (in promise) Error: condition did not become true
