@@ -153,6 +153,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'rhel-8-5',
+            'rhel-8-6',
             'rhel-9-0',
         ],
     },
