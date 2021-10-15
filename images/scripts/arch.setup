@@ -11,6 +11,7 @@ export LC_ALL=C
 # binutils for strip (required for fetching sources in devtools)
 COCKPIT_DEPS="\
 binutils \
+edk2-ovmf \
 json-glib \
 krb5 \
 libssh \
@@ -64,6 +65,9 @@ systemctl enable --now firewalld
 
 # Open firewall for cockpit
 firewall-cmd --permanent --zone=public --add-port 9090/tcp
+
+# Enable networkmanager, as no services are started by default
+systemctl enable NetworkManager
 
 # Setup sudoers for admin user
 echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/90-cockpit-wheel
