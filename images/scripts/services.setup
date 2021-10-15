@@ -124,6 +124,8 @@ podman run --name=candlepin --uts=host --publish=8443:8443 --privileged --detach
 podman exec -i candlepin sh -eux <<EOF
 # wait until booted
 systemctl start multi-user.target
+# ensure latest ca-certificates
+yum update -y
 YUM_INSTALL="yum --setopt=skip_missing_names_on_install=False -y install"
 # We deploy candlepin via ansible
 \$YUM_INSTALL epel-release
