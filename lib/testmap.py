@@ -54,9 +54,6 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
             'fedora-34/container-bastion',
         ],
-        'rhel-9.0': [
-            'rhel-9-0',
-        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'arch',
