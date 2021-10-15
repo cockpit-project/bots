@@ -16,6 +16,8 @@ json-glib \
 krb5 \
 libssh \
 accountsservice \
+cpio \
+cdrtools \
 docbook-xsl \
 openssh \
 networkmanager \
