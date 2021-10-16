@@ -1,3 +1,0 @@
-  File "check-metrics", line *, in testPmProxySettings
-    checkEnable(True)
-*Command 'systemctl is-active pmproxy' returned non-zero exit status 3.
