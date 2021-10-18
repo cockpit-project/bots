@@ -162,6 +162,9 @@ curl --insecure --head https://localhost:8443/candlepin/
 # copy the certificate to where the tests expect them
 mkdir -p /home/admin/candlepin
 podman cp candlepin:/home/candlepin/candlepin/generated_certs /home/admin/candlepin/
+mkdir -p /home/admin/candlepin/certs
+podman cp candlepin:/etc/candlepin/certs/candlepin-ca.crt /home/admin/candlepin/certs/
+podman cp candlepin:/etc/candlepin/certs/candlepin-ca-pub.key /home/admin/candlepin/certs/
 chown -R admin:admin /home/admin/candlepin/
 
 podman exec candlepin poweroff
