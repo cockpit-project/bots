@@ -18,8 +18,8 @@ hostnamectl set-hostname services.cockpit.lan
 
 # see https://quay.io/repository/freeipa/freeipa-server
 # and https://github.com/freeipa/freeipa-container/issues/346
-# there is no :latest so we go with :fedora-rawhide
-podman pull quay.io/freeipa/freeipa-server:fedora-rawhide
+# ideally we'd use the :fedora-rawhide stream, but version 4.9.7 breaks compatibility with client-side packages
+# (https://bugzilla.redhat.com/show_bug.cgi?id=2015102), so use more stable centos-8-stream for the time being
 setsebool -P container_manage_cgroup 1
 mkdir /var/lib/ipa-data
 
@@ -29,7 +29,7 @@ podman run -d --rm --name freeipa -ti -h f0.cockpit.lan \
     -p 53:53/udp -p 53:53 -p 80:80 -p 443:443 -p 389:389 -p 636:636 -p 88:88 -p 464:464 -p 88:88/udp -p 464:464/udp -p 123:123/udp \
     -v /var/lib/ipa-data:/data:Z \
     -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-    quay.io/freeipa/freeipa-server:fedora-rawhide \
+    quay.io/freeipa/freeipa-server:centos-8-stream \
     -U -p foobarfoo -a foobarfoo -n cockpit.lan -r COCKPIT.LAN --setup-dns --no-forwarders --no-ntp
 EOF
 chmod 755 /root/run-freeipa
