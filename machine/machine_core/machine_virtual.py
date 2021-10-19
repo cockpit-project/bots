@@ -532,7 +532,7 @@ class VirtMachine(Machine):
         if path:
             (unused, image) = tempfile.mkstemp(suffix='.qcow2', prefix=os.path.basename(path), dir=self.run_dir)
             subprocess.check_call(["qemu-img", "create", "-q", "-f", "qcow2",
-                                   "-o", "backing_file=" + os.path.realpath(path), image])
+                                   "-o", f"backing_file={os.path.realpath(path)},backing_fmt=qcow2", image])
 
         else:
             assert size is not None
