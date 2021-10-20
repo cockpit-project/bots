@@ -108,7 +108,7 @@ case "$RELEASE" in
         # no sscg yet
         COCKPIT_DEPS="${COCKPIT_DEPS/sscg /}"
         ;;
-    hirsute)
+    impish)
         # no sscg yet
         COCKPIT_DEPS="${COCKPIT_DEPS/sscg /}"
         ;;
