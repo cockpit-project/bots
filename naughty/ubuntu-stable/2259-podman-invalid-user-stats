@@ -1,0 +1,6 @@
+  File "test/check-application", line *, in testLifecycleOperationsUser
+    self._testLifecycleOperations(False)
+  File "test/check-application", line *, in _testLifecycleOperations
+    self.assertEqual(cpu, "n/a")
+*
+AssertionError: '0.00%' != 'n/a'
