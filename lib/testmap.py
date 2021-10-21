@@ -223,8 +223,7 @@ def get_test_image(image):
 
 
 def split_context(context):
-    os_scenario = ""
-    bots_pr = ""
+    bots_pr = None
     repo_branch = ""
 
     context_parts = context.split("@")
