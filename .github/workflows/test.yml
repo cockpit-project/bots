@@ -37,7 +37,7 @@ jobs:
       - name: Check whether there are changes that might affect the deployment
         id: changes
         run: |
-          changes=$(git diff --name-only origin/main..HEAD | grep -Ev '^(images|naughty|machine/machine_core|lib/testmap)/' || true)
+          changes=$(git diff --name-only origin/main..HEAD | grep -Ev '^(images|naughty|machine/machine_core|lib/testmap.py)/' || true)
           # print for debugging
           echo "changes:"
           echo "$changes"
