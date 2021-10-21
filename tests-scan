@@ -59,7 +59,7 @@ def main():
     parser = argparse.ArgumentParser(description='Bot: scan and update status of pull requests on GitHub')
     parser.add_argument('-v', '--human-readable', action="store_true", default=False,
                         help='Display human readable output rather than tasks')
-    parser.add_argument('-d', '--dry', action="store_true", default=False,
+    parser.add_argument('-n', '--dry', action="store_true", default=False,
                         help='Don''t actually change anything on GitHub')
     parser.add_argument('--repo', default=None,
                         help='Repository to scan and checkout.')
