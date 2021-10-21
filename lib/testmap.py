@@ -238,16 +238,15 @@ def split_context(context):
 
     if len(context_parts) > 2:
         repo_branch = context_parts[2]
-    return (os_scenario, bots_pr, repo_branch)
+
+    repo_branch = repo_branch.split('/', 2)
+    return (os_scenario, bots_pr, '/'.join(repo_branch[:2]), ''.join(repo_branch[2:]))
 
 
 def is_valid_context(context, repo):
-    os_scenario, _, repo_branch = split_context(context)
-    if repo_branch:
-        # if the context specifies a repo, use that one instead
-        repo = "/".join(repo_branch.split("/")[:2])
-
-    branch_contexts = tests_for_project(repo).values()
+    os_scenario, _bots_pr, context_repo, _branch = split_context(context)
+    # if the context specifies a repo, use that one instead
+    branch_contexts = tests_for_project(context_repo or repo).values()
     repo_contexts = set(itertools.chain(*branch_contexts))
 
     # Valid contexts are the ones that exist in the given/current repo

@@ -24,17 +24,17 @@ import testmap
 
 class TestTestMap(unittest.TestCase):
     def test_split_context(self):
-        self.assertEqual(testmap.split_context("myos"), ("myos", None, ""))
-        self.assertEqual(testmap.split_context("myos/scen"), ("myos/scen", None, ""))
-        self.assertEqual(testmap.split_context("myos@owner/repo"), ("myos", None, "owner/repo"))
-        self.assertEqual(testmap.split_context("myos/scen@owner/repo"), ("myos/scen", None, "owner/repo"))
-        self.assertEqual(testmap.split_context("myos@owner/repo/branch"), ("myos", None, "owner/repo/branch"))
-        self.assertEqual(testmap.split_context("myos@bots#1234"), ("myos", 1234, ""))
-        self.assertEqual(testmap.split_context("myos/scen@bots#1234"), ("myos/scen", 1234, ""))
+        self.assertEqual(testmap.split_context("myos"), ("myos", None, "", ""))
+        self.assertEqual(testmap.split_context("myos/scen"), ("myos/scen", None, "", ""))
+        self.assertEqual(testmap.split_context("myos@owner/repo"), ("myos", None, "owner/repo", ""))
+        self.assertEqual(testmap.split_context("myos/scen@owner/repo"), ("myos/scen", None, "owner/repo", ""))
+        self.assertEqual(testmap.split_context("myos@owner/repo/branch"), ("myos", None, "owner/repo", "branch"))
+        self.assertEqual(testmap.split_context("myos@bots#1234"), ("myos", 1234, "", ""))
+        self.assertEqual(testmap.split_context("myos/scen@bots#1234"), ("myos/scen", 1234, "", ""))
         self.assertEqual(testmap.split_context("myos/scen@bots#1234@owner/repo"),
-                         ("myos/scen", 1234, "owner/repo"))
+                         ("myos/scen", 1234, "owner/repo", ""))
         self.assertEqual(testmap.split_context("myos/scen@bots#1234@owner/repo/branch"),
-                         ("myos/scen", 1234, "owner/repo/branch"))
+                         ("myos/scen", 1234, "owner/repo", "branch"))
 
     def test_is_valid_context(self):
         # this makes some assumptions about the concrete test map, only use scenarios which don't change often
