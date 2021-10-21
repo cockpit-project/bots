@@ -316,7 +316,9 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
         # Create list of statuses to process
         todos = {}
         for status in statuses:  # Firstly add all valid contexts that already exist in github
-            if testmap.is_valid_context(status, repo, contexts):
+            if contexts and status not in contexts:
+                continue
+            if testmap.is_valid_context(status, repo):
                 todos[status] = statuses[status]
         if not statuses:  # If none defined in github add basic set of contexts
             for context in build_policy(repo, contexts).get(base, []):
