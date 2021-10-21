@@ -333,15 +333,10 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
             # Get correct project and branch. Ones from test name have priority
             project = repo
             branch = base
-            os_scenario, bots_pr, repo_branch = testmap.split_context(context)
-
-            repo_branch = repo_branch.split("/")
-            if len(repo_branch) == 2:
-                project = "/".join(repo_branch)
-                branch = testmap.get_default_branch(project)
-            elif len(repo_branch) == 3:
-                project = "/".join(repo_branch[:2])
-                branch = repo_branch[2]
+            os_scenario, bots_pr, context_project, context_branch = testmap.split_context(context)
+            if context_project:
+                project = context_project
+                branch = context_branch or testmap.get_default_branch(project)
 
             # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
             ref = revision
