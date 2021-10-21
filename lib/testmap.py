@@ -306,12 +306,3 @@ def tests_for_po_refresh(project):
     if project == "cockpit-project/cockpit":
         return [TEST_OS_DEFAULT]
     return REPO_BRANCH_CONTEXT.get(project, {}).get(get_default_branch(project), [])
-
-
-def known_context(context):
-    context = context.split("@")[0]
-    for project in projects():
-        for branch_tests in tests_for_project(project).values():
-            if context in branch_tests:
-                return True
-    return False

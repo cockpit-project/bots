@@ -30,7 +30,7 @@ def trigger_pull(api, opts):
         for cntx in opts.context:
             if cntx.startswith("image:"):
                 contexts.update(testmap.tests_for_image(cntx.split(':', 1)[1]))
-            elif github.known_context(cntx):
+            elif github.is_valid_context(cntx, api.repo):
                 if opts.bots_pr:
                     cntx += "@bots#" + opts.bots_pr
                 contexts.add(cntx)

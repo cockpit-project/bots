@@ -30,7 +30,7 @@ import subprocess
 import time
 import urllib.parse
 
-from lib.testmap import known_context
+from lib.testmap import is_valid_context
 from lib.directories import xdg_config_home, xdg_cache_home
 from . import cache
 
@@ -325,7 +325,7 @@ class GitHub(object):
             page += 1
             if "statuses" in data:
                 for status in data["statuses"]:
-                    if known_context(status["context"]) and status["context"] not in result:
+                    if is_valid_context(status["context"], self.repo) and status["context"] not in result:
                         result[status["context"]] = status
                 count = len(data["statuses"])
         return result
