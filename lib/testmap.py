@@ -242,19 +242,11 @@ def split_context(context):
     return (os_scenario, bots_pr, repo_branch)
 
 
-def is_valid_context(context, repo, contexts=[]):
+def is_valid_context(context, repo):
     branch_contexts = tests_for_project(repo).values()
     repo_contexts = set(itertools.chain(*branch_contexts))
 
     os_scenario, bots_pr, repo_branch = split_context(context)
-
-    # If contexts were specified, only those are valid
-    if contexts:
-        for c in contexts:
-            c = c.split("@")[0]
-            if c == os_scenario:
-                return True
-        return False
 
     # If repo in context, consider only contexts from the given repo
     if repo_branch:
