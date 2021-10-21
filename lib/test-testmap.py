@@ -36,6 +36,42 @@ class TestTestMap(unittest.TestCase):
         self.assertEqual(testmap.split_context("myos/scen@bots#1234@owner/repo/branch"),
                          ("myos/scen", 1234, "owner/repo/branch"))
 
+    def test_is_valid_context(self):
+        # this makes some assumptions about the concrete test map, only use scenarios which don't change often
+
+        def good(context, repo):
+            self.assertTrue(testmap.is_valid_context(context, repo))
+
+        def bad(context, repo):
+            self.assertFalse(testmap.is_valid_context(context, repo))
+
+        good("debian-testing", "cockpit-project/cockpit")
+        # context from _manual pseudo-branch
+        good("fedora-testing", "cockpit-project/cockpit")
+        # not known in this branch
+        bad("debian-testing", "cockpit-project/cockpit/rhel-8.5")
+
+        # unknown scenarios/projects/branches
+        bad("wrongos", "cockpit-project/cockpit")
+        bad("debian-testing/wrongscen", "cockpit-project/cockpit")
+        bad("debian-testing", "cockpit-project/wrongproject")
+        bad("debian-testing", "cockpit-project/cockpit/wrongbranch")
+
+        # bots has no integration tests for itself
+        bad("debian-testing", "cockpit-project/bots")
+        # but can refer to foreign projects
+        good("debian-testing@cockpit-project/cockpit", "cockpit-project/bots")
+        good("debian-testing@cockpit-project/cockpit/main", "cockpit-project/bots")
+        # can refer to _manual contexts of foreign projects
+        good("fedora-testing@cockpit-project/cockpit", "cockpit-project/bots")
+        good("fedora-testing@cockpit-project/cockpit/main", "cockpit-project/bots")
+
+        # unknown scenarios/project/branches with foreign project
+        bad("wrongos@cockpit-project/cockpit", "cockpit-project/bots")
+        bad("debian-testing@cockpit-project/wrongproject", "cockpit-project/bots")
+        # FIXME: this is currently valid
+        # bad("debian-testing@cockpit-project/cockpit/wrongbranch", "cockpit-project/bots")
+
 
 if __name__ == '__main__':
     unittest.main()
