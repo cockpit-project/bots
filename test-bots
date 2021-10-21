@@ -33,7 +33,8 @@ sys.path.append(BOTS_DIR)
 def main():
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
-    for filename in glob.glob(os.path.join(BOTS_DIR, "task", "test-*")):
+    for filename in (glob.glob(os.path.join(BOTS_DIR, "task", "test-*")) +
+                     glob.glob(os.path.join(BOTS_DIR, "lib", "test-*"))):
         name = os.path.basename(filename)
         sys.path[0] = os.path.dirname(filename)
         module = SourceFileLoader(name.replace("-", "_"), filename).load_module()
