@@ -57,6 +57,9 @@ def trigger_pull(api, opts):
                     ret = 1
                 continue
         sys.stderr.write("{0}: triggering on pull request {1}\n".format(context, opts.pull))
+        if opts.dry_run:
+            continue
+
         changes = {"state": "pending", "description": github.NOT_TESTED_DIRECT, "context": context}
 
         # Keep the old link for reference, until testing starts again
@@ -79,6 +82,8 @@ def main():
                         help='Re-queue pending test requests (workaround for occasionally ignored webhook events)')
     parser.add_argument('--repo', help="The repository to trigger the robots in", default=None)
     parser.add_argument('--bots-pr', help="Use the bots code from this PR instead of main")
+    parser.add_argument('-n', '--dry-run', action="store_true",
+                        help="Only show which contexts would be triggered")
     parser.add_argument('pull', help='The pull request to trigger')
     parser.add_argument('context', nargs='*', help='The github task context(s) to trigger; can also be '
                                                    '"image:<imagename>" to trigger all tests related to that image')
