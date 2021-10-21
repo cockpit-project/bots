@@ -69,8 +69,7 @@ class TestTestMap(unittest.TestCase):
         # unknown scenarios/project/branches with foreign project
         bad("wrongos@cockpit-project/cockpit", "cockpit-project/bots")
         bad("debian-testing@cockpit-project/wrongproject", "cockpit-project/bots")
-        # FIXME: this is currently valid
-        # bad("debian-testing@cockpit-project/cockpit/wrongbranch", "cockpit-project/bots")
+        bad("debian-testing@cockpit-project/cockpit/wrongbranch", "cockpit-project/bots")
 
 
 if __name__ == '__main__':
