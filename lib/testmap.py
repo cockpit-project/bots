@@ -244,10 +244,22 @@ def split_context(context):
 
 
 def is_valid_context(context, repo):
-    os_scenario, _bots_pr, context_repo, _branch = split_context(context)
+    os_scenario, _bots_pr, context_repo, branch = split_context(context)
     # if the context specifies a repo, use that one instead
-    branch_contexts = tests_for_project(context_repo or repo).values()
-    repo_contexts = set(itertools.chain(*branch_contexts))
+    branch_contexts = tests_for_project(context_repo or repo)
+    if context_repo:
+        # if the context specifies a repo, only look at that particular branch
+        try:
+            repo_contexts = branch_contexts[branch or get_default_branch(context_repo)]
+        except KeyError:
+            # unknown project
+            return False
+        # also allow _manual tests
+        repo_contexts.extend(branch_contexts.get('_manual', []))
+    else:
+        # FIXME: if context is just a simple OS/scenario, we don't know which branch
+        # is meant by the caller; accept known contexts from all branches for now
+        repo_contexts = set(itertools.chain(*branch_contexts.values()))
 
     # Valid contexts are the ones that exist in the given/current repo
     return os_scenario in repo_contexts
