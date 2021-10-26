@@ -1,1 +1,1 @@
-wait_js_cond(!ph_is_present("#pcp-settings-modal")): Uncaught (in promise) Error: condition did not become true
+wait_js_cond(!ph_is_present("#pcp-settings-modal"))
