@@ -19,6 +19,7 @@ accountsservice \
 cpio \
 cdrtools \
 docbook-xsl \
+dmidecode \
 openssh \
 networkmanager \
 pcp \
