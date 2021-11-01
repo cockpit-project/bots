@@ -2,7 +2,6 @@
 
 set -ex
 
-
 do_build=
 do_install=
 args=$(getopt -o "vqs:" -l "verbose,quick,skip:,build,install" -- "$@")
@@ -10,10 +9,8 @@ eval set -- "$args"
 while [ $# -gt 0 ]; do
 	case $1 in
 	    -v|--verbose)
-                shift
 		;;
 	    -q|--quick)
-                shift
 		;;
             -s|--skip)
                 skip="$skip
@@ -42,9 +39,20 @@ if [ -n "$do_build" ]; then
     mkdir build-results
     resultdir=$PWD/build-results
     dist_tar="$(ls cockpit-*.tar.?z)"
-    cp arch/PKGBUILD .
-    sed -i 's/SOURCE/$dist_tar/' PKGBUILD
-    extra-x86_64-build
+    upstream_ver=$(echo "$dist_tar" | sed 's/^.*-//; s/.tar\..z//' | head -n1)
+
+    rm -rf cockpit-*/
+    tar -xf $dist_tar
+    ( cd $resultdir/
+      cp ../cockpit-*/tools/arch/* .
+      sed -i "s/SOURCE/$dist_tar/" PKGBUILD
+      sed -i "s/VERSION/$upstream_ver/" PKGBUILD
+      # Source needs to be next to the PKGBUILD
+      mv ../$dist_tar .
+      # Builder needs to write to the current dir
+      chown -R builder:builder .
+      su builder -c "extra-x86_64-build"
+    )
 fi
 
 if [ -n "$do_install" ]; then
