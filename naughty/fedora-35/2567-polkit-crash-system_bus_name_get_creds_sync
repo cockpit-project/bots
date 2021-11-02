@@ -1,0 +1,3 @@
+Process * (polkitd) of user * dumped core.*
+#* polkit_system_bus_name_get_creds_sync*
+testlib.Error: FAIL: Test completed, but found unexpected journal messages
