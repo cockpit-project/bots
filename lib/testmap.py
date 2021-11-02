@@ -163,6 +163,9 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-5',
             'rhel-8-6',
             'rhel-9-0',
+            'fedora-34',
+            'fedora-35',
+            'fedora-35/rawhide',
         ],
     },
     'skobyda/cockpit-certificates': {
