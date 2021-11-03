@@ -98,6 +98,7 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-machines': {
         'main': [
+            'arch',
             'debian-stable',
             'debian-testing',
             'ubuntu-2004',
@@ -112,7 +113,6 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
         '_manual': [
-            'arch',
             'fedora-testing',
         ],
     },
