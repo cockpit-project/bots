@@ -253,7 +253,7 @@ def is_valid_context(context, repo):
     if context_repo:
         # if the context specifies a repo, only look at that particular branch
         try:
-            repo_contexts = branch_contexts[branch or get_default_branch(context_repo)]
+            repo_contexts = branch_contexts[branch or get_default_branch(context_repo)].copy()
         except KeyError:
             # unknown project
             return False
@@ -284,7 +284,7 @@ def get_default_branch(repo):
 
 def tests_for_project(project):
     """Return branch -> contexts map."""
-    res = REPO_BRANCH_CONTEXT.get(project, {})
+    res = REPO_BRANCH_CONTEXT.get(project, {}).copy()
     # allow bots/cockpituous integration tests to inject a new context
     inject = os.getenv("COCKPIT_TESTMAP_INJECT")
     if inject:
