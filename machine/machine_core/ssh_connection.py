@@ -39,7 +39,7 @@ def write_all(fd, data):
 
 class SSHConnection(object):
     ssh_default_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null",
-                        "-o", "IdentitiesOnly=yes", "-o", "BatchMode=yes"]
+                        "-o", "IdentitiesOnly=yes", "-o", "BatchMode=yes", "-o", "PKCS11Provider=none"]
 
     def __init__(self, user, address, ssh_port, identity_file, verbose=False):
         self.verbose = verbose
