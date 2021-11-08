@@ -213,12 +213,6 @@ class Machine(ssh_connection.SSHConnection):
             # Fedora and RHEL 9 have switched to dbus-broker
             allowed.append("dbus-daemon didn't send us a dbus address; not installed?.*")
 
-        if self.image in ['fedora-33']:
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1965743
-            allowed.append('audit:.*denied.*name="dma_heap".*')
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1970744
-            allowed.append('audit:.*denied.*path=".*dma_heap".*')
-
         if self.image in ['fedora-35']:
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1995072
             allowed.append('audit:.*denied.*comm="systemd-gpt-aut".*')
