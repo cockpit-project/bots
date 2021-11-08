@@ -301,12 +301,10 @@ EOF
     su builder -c "/usr/bin/mock --install --verbose rpmlint"
 
     # We need to make sure mock has the same selinux-policy as we do
-    if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
-        mkdir /tmp/selinux-policy-rpms
-        dnf download --downloaddir /tmp/selinux-policy-rpms selinux-policy{,-devel,-targeted}
-        dnf install -y /tmp/selinux-policy-rpms/*.rpm
-        su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
-    fi
+    mkdir /tmp/selinux-policy-rpms
+    dnf download --downloaddir /tmp/selinux-policy-rpms selinux-policy{,-devel,-targeted}
+    dnf install -y /tmp/selinux-policy-rpms/*.rpm
+    su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
 fi
 
 dnf clean all || true
