@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import subprocess
 import sys
 
 sys.dont_write_bytecode = True
@@ -9,21 +10,31 @@ from lib import testmap
 from task import github
 
 
+def git(*args):
+    return subprocess.check_output(('git',) + args, encoding='utf-8').strip()
+
+
 def trigger_pull(api, opts):
-    pull = api.get("pulls/" + opts.pull)
+    if opts.target != '-':
+        pull = api.get("pulls/" + opts.target)
 
-    if not pull:
-        sys.stderr.write("{0} is not a pull request.\n".format(opts.pull))
-        return 1
+        if not pull:
+            sys.stderr.write("{0} is not a pull request.\n".format(opts.target))
+            return 1
 
-    # triggering is manual, so don't prevent triggering a user that does not have push access
-    # nor isn't in the 'Contributors' group, but issue a warning in case of an oversight
-    login = pull["head"]["user"]["login"]
-    if not opts.allow and not api.is_user_allowed(login):
-        sys.stderr.write("Pull request author '{0}' isn't allowed. Override with --allow.\n".format(login))
-        return 1
+        # triggering is manual, so don't prevent triggering a user that does not have push access
+        # nor isn't in the 'Contributors' group, but issue a warning in case of an oversight
+        login = pull["head"]["user"]["login"]
+        if not opts.allow and not api.is_user_allowed(login):
+            sys.stderr.write("Pull request author '{0}' isn't allowed. Override with --allow.\n".format(login))
+            return 1
 
-    revision = pull['head']['sha']
+        revision = pull['head']['sha']
+        target = f'pull request {opts.target}'
+    else:
+        revision = git('rev-parse', '@{upstream}')
+        target = git('rev-parse', '--abbrev-ref', '@{upstream}')
+
     statuses = api.statuses(revision)
     if opts.context:
         contexts = set()
@@ -56,7 +67,7 @@ def trigger_pull(api, opts):
                     sys.stderr.write("{0}: isn't in triggerable state (is: {1})\n".format(context, status["state"]))
                     ret = 1
                 continue
-        sys.stderr.write("{0}: triggering on pull request {1}\n".format(context, opts.pull))
+        sys.stderr.write(f"{context}: triggering on {target}\n")
         if opts.dry_run:
             continue
 
@@ -84,7 +95,8 @@ def main():
     parser.add_argument('--bots-pr', help="Use the bots code from this PR instead of main")
     parser.add_argument('-n', '--dry-run', action="store_true",
                         help="Only show which contexts would be triggered")
-    parser.add_argument('pull', help='The pull request to trigger')
+    parser.add_argument('target', help='The pull request number to trigger, '
+                                       'or - for the upstream of the current branch')
     parser.add_argument('context', nargs='*', help='The github task context(s) to trigger; can also be '
                                                    '"image:<imagename>" to trigger all tests related to that image')
     opts = parser.parse_args()
