@@ -128,8 +128,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'osbuild/cockpit-composer': {
         'main': [
-            'fedora-33',
-            'fedora-33/firefox',
             'fedora-34',
             'rhel-8-5',
             'rhel-9-0'
