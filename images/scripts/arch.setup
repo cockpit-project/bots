@@ -29,6 +29,7 @@ packagekit \
 libvirt \
 libvirt-python \
 libvirt-dbus \
+libpwquality \
 tracer
 virt-install \
 udisks2 \
@@ -39,19 +40,27 @@ TEST_PACKAGES="\
 ansible \
 criu \
 gdb \
+fakeroot \
 strace \
 ltrace \
 cryptsetup \
+dhclient \
 dnsmasq \
 iptables-nft \
 socat \
 sudo \
+vim \
 firewalld \
 openssh \
 podman \
 qemu \
 nginx \
 redis \
+openbsd-netcat \
+nfs-utils \
+sssd \
+tang \
+ntfs-3g \
 "
 
 # iptables-nft (which provides ebtables) is required for libvirt NAT networking
