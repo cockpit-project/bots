@@ -177,13 +177,6 @@ if [ "${IMAGE#rhel*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} subscription-manager-cockpit insights-client"
 fi
 
-# not yet available in 9
-if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
-    TEST_PACKAGES="${TEST_PACKAGES/kmod-kvdo /}"
-    TEST_PACKAGES="${TEST_PACKAGES/vdo /}"
-    TEST_PACKAGES="${TEST_PACKAGES/ insights-client/}"
-fi
-
 # kpatch not available on centos
 if [ "$IMAGE" = "centos-8-stream" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/kpatch /}"
