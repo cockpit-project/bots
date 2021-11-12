@@ -303,7 +303,6 @@ EOF
     # We need to make sure mock has the same selinux-policy as we do
     mkdir /tmp/selinux-policy-rpms
     dnf download --downloaddir /tmp/selinux-policy-rpms selinux-policy{,-devel,-targeted}
-    dnf install -y /tmp/selinux-policy-rpms/*.rpm
     su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
 fi
 
