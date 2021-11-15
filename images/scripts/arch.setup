@@ -114,3 +114,6 @@ pacman -Scc --noconfirm
 
 # Reduce image size, remove cloud-init, reflector
 pacman -Rscn --noconfirm cloud-init reflector
+
+# Reduce image size, clear package cache
+pacman -Scc
