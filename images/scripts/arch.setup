@@ -78,8 +78,20 @@ systemctl enable --now firewalld
 # Open firewall for cockpit
 firewall-cmd --permanent --zone=public --add-port 9090/tcp
 
-# Enable networkmanager, as no services are started by default
+# Use networkd for eth0
+cat > /etc/systemd/network/20-wired.network << EOL
+[Match]
+Name=eth0
+
+[Network]
+DHCP=yes
+EOL
+
+# Enable networkmanager as no services are started by default
 systemctl enable NetworkManager
+
+# Don't let NetworkManager manage eth0/1
+printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
 
 # Setup sudoers for admin user
 echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/90-cockpit-wheel
