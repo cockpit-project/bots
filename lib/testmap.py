@@ -171,7 +171,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-35/rawhide',
         ],
     },
-    'skobyda/cockpit-certificates': {
+    'cockpit-project/cockpit-certificates': {
         'master': [
             'fedora-34',
             'fedora-35',
