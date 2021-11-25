@@ -1,5 +1,0 @@
-Process * (dnsmasq) of user * dumped core.
-*
-#* lookup_domain*
-#* check_dns_listeners*
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
