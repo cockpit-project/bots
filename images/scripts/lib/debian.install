@@ -76,6 +76,9 @@ fi
 # Install
 
 if [ -n "$do_install" ]; then
+    # remove cockpit distro packages, testing with upstream main
+    dpkg --purge cockpit cockpit-ws cockpit-bridge cockpit-system
+
     packages=$(find build-results -name "*.deb")
     dpkg --install $packages
 

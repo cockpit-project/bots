@@ -175,6 +175,9 @@ systemctl restart systemd-networkd.service || true
 # install our dependencies
 $APT install $TEST_PACKAGES $COCKPIT_DEPS $DEBUG_PACKAGES $IPA_CLIENT_PACKAGES
 
+# Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
+$APT --no-install-recommends install cockpit
+
 # Prepare for building
 #
 
