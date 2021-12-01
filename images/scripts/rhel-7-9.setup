@@ -242,14 +242,6 @@ fi
 
 yum clean all || true
 
-# For the D-Bus test server
-if type "firewall-cmd" >/dev/null 2>&1; then
-    FIREWALL_STATE=$(firewall-cmd --state || true)
-    if [ "$FIREWALL_STATE" == "running" ]; then
-        firewall-cmd --permanent --add-port 8765/tcp
-    fi
-fi
-
 echo 'NETWORKING=yes' > /etc/sysconfig/network
 
 if ! getent passwd admin >/dev/null; then
