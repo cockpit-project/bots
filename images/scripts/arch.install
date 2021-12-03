@@ -59,6 +59,8 @@ if [ -n "$do_install" ]; then
     packages=$(find build-results -name "*.pkg.tar.zst")
     pacman -U --noconfirm $packages
 
+    firewall-cmd --add-service=cockpit --permanent
+
     # Make sure we clean out the journal
     journalctl --flush
     journalctl --sync || killall systemd-journald
