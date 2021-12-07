@@ -235,6 +235,10 @@ class Machine(ssh_connection.SSHConnection):
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1979182
             allowed.append('audit.*denied.*{ getattr }.*comm="systemctl" name="/".*cockpit_ws_t.*')
 
+        if self.image in ['rhel-8-6', 'centos-8-stream']:
+            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=2029873
+            allowed.append('audit.*denied.*{ write }.*comm="rhsm-service" name="memfd:libffi".*')
+
         if self.image in ['rhel-9-0']:
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1989641
             allowed.append('audit:.*denied.*{ setpcap }.*comm="firewalld".*')
