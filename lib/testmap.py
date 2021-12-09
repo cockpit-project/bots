@@ -117,6 +117,8 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-testing',
+            'fedora-35/firefox',
+            'fedora-35/mobile',
         ],
     },
     'weldr/lorax': {
