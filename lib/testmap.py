@@ -27,6 +27,7 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit': {
         'main': [
+            'arch',
             'fedora-34/container-bastion',
             'debian-stable',
             'debian-testing',
@@ -56,7 +57,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'arch',
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
