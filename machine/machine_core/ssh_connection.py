@@ -103,7 +103,11 @@ class SSHConnection(object):
         while (tries_left > 0):
             try:
                 with timeoutlib.Timeout(seconds=30):
+                    allow_nologin = os.getenv("TEST_ALLOW_NOLOGIN", False)
+                    if allow_nologin:
+                        return self.execute("cat /proc/sys/kernel/random/boot_id", direct=True)
                     return self.execute("! test -f /run/nologin && cat /proc/sys/kernel/random/boot_id", direct=True)
+
             except subprocess.CalledProcessError:
                 pass
             except RuntimeError:
