@@ -31,6 +31,7 @@ parser.add_argument('-m', '--maintain', action='store_true', help='Changes are p
 parser.add_argument('-M', '--memory', default=None, type=int, help='Memory (in MiB) of the target machine')
 parser.add_argument('-G', '--graphics', action='store_true', help='Display a graphics console')
 parser.add_argument('-q', '--quiet', action='store_true', help="Don't connect text console")
+parser.add_argument('-c', '--client', action='store_true', help="Open Cockpit Client (implies -q)")
 parser.add_argument('-C', '--cpus', default=None, type=int, help='Number of cpus in the target machine')
 parser.add_argument('-S', '--storage', default=None, type=str, help='Add a second qcow2 disk at this path')
 parser.add_argument('-e', '--execute', metavar='COMMAND', action='append',
@@ -43,7 +44,7 @@ parser.add_argument('--no-network', action='store_true', help='Do not connect th
 parser.add_argument('image', help='The image to run')
 args = parser.parse_args()
 
-if args.execute:
+if args.execute or args.client:
     args.quiet = True
 
 try:
@@ -100,6 +101,10 @@ try:
 
     # else, just wait for a signal
     else:
+        if args.client:
+            subprocess.run(["gapplication", "action", "org.cockpit_project.CockpitClient",
+                            "open-path", f"'={machine.ssh_user}@{machine.ssh_address}:{machine.ssh_port}'"])
+
         print(machine.diagnose(tty=False))
         print('[ ^C to terminate ]')
         machine.wait_for_exit()
