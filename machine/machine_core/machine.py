@@ -238,6 +238,8 @@ class Machine(ssh_connection.SSHConnection):
         if self.image in ['rhel-8-6', 'centos-8-stream']:
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=2029873
             allowed.append('audit.*denied.*{ write }.*comm="rhsm-service" name="memfd:libffi".*')
+            # same issue also fails later on with map/read/execute in permissive mode
+            allowed.append('audit.*denied.*comm="rhsm-service" .* dev="tmpfs".*permissive=1.*')
 
         if self.image in ['rhel-9-0']:
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1989641
