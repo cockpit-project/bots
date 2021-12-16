@@ -168,6 +168,8 @@ socat \
 strace \
 tang \
 targetcli \
+tcsh \
+tlog \
 valgrind \
 vdo \
 virt-install \
