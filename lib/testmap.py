@@ -52,7 +52,6 @@ REPO_BRANCH_CONTEXT = {
         'rhel-8.5': [
             'rhel-8-5',
             'rhel-8-5-distropkg',
-            'centos-8-stream',
             f'{TEST_OS_DEFAULT}/container-bastion',
         ],
         # These can be triggered manually with bots/tests-trigger
