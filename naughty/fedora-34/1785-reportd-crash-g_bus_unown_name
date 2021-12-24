@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-system-journal", line *, in testAbrtReport
-    b.wait_visible(".pf-c-modal-box__body input[type='%s']" % (purpose))
-*
-testlib.Error: timeout
