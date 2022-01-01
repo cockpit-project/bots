@@ -1,5 +1,0 @@
-  File "tests/test/verify/check-system-tuned", line *, in testBasic
-    b.wait_text('#tuned-status-button', recommended_profile)
-*
-testlib.Error: timeout
-wait_js_cond(ph_text_is("#tuned-status-button","atomic-guest")): timeout
