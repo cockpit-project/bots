@@ -75,6 +75,7 @@ targetcli-fb \
 tcsh \
 clevis-luks \
 tang \
+libnss-myhostname \
 "
 
 DEBUG_PACKAGES=''
@@ -124,9 +125,6 @@ libglib2.0-0-dbgsym \
 deb http://debug.mirrors.debian.org/debian-debug/ ${RELEASE}-debug main
 EOF
 fi
-
-# our cloud-init.iso does not set up the host name
-echo "127.0.1.1 $(hostname)" >> /etc/hosts
 
 if grep -q 'ID=ubuntu' /etc/os-release; then
     PBUILDER_OPTS='COMPONENTS="main universe"'
