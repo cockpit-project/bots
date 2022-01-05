@@ -182,6 +182,11 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ]
     },
+    'M4rtinK/anaconda': {
+        '_manual': [
+            'fedora-35/rawhide',
+        ]
+    },
 }
 
 # The OSTree variants can't build their own packages, so we build in
