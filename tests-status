@@ -21,6 +21,7 @@ import argparse
 import ssl
 import subprocess
 import sys
+import time
 import urllib.request
 
 from lib.stores import CA_PEM
@@ -80,6 +81,7 @@ def sort_statuses(statuses):
 
 def main():
     parser = argparse.ArgumentParser(description='Summarize test status of a PR')
+    parser.add_argument('--wait', action='store_true', help="Wait for all green, or one red", default=None)
     parser.add_argument('--repo', help="The repository of the PR", default=None)
     parser.add_argument('-v', '--verbose', action="store_true", default=False,
                         help="Print verbose information")
@@ -97,7 +99,15 @@ def main():
     else:
         revision = git('rev-parse', '@{upstream}')
 
-    by_state = sort_statuses(api.statuses(revision))
+    while True:
+        by_state = sort_statuses(api.statuses(revision))
+
+        if 'pending' not in by_state or 'failure' in by_state or not opts.wait:
+            break
+
+        print_summary(by_state, 'pending')
+        print('waiting...\n')
+        time.sleep(30)
 
     for state in by_state.keys():
         if state != "failure":
