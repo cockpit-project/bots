@@ -16,11 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
 import argparse
+import ssl
 import sys
 import urllib.request
-import ssl
-import json
 
 from lib.stores import CA_PEM
 import task
@@ -66,21 +66,20 @@ def main():
     opts = parser.parse_args()
 
     api = task.github.GitHub(repo=opts.repo)
-    try:
-        statuses_url = api.get("pulls/" + str(opts.pr))["statuses_url"]
-    except TypeError:
-        sys.stderr.write("%s is not a pull request\n" % opts.pr)
-        return 1
 
-    with urllib.request.urlopen(statuses_url) as f:
-        statuses = json.load(f)
+    pull = api.get(f"pulls/{opts.pr}")
+    if not pull:
+        sys.exit(f"{opts.pr} is not a pull request.")
+    revision = pull['head']['sha']
+
+    statuses = api.statuses(revision)
 
     by_context = {}  # context → (state, url)
-    for status in statuses:
+    for context, status in statuses.items():
         # latest status wins
-        if status["context"] in by_context:
+        if context in by_context:
             continue
-        by_context[status["context"]] = (status["state"], status.get("target_url", ""))
+        by_context[context] = (status["state"], status.get("target_url", ""))
 
     by_state = {}  # state → [(context, url), ..]
     for context, (state, url) in by_context.items():
@@ -99,4 +98,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
