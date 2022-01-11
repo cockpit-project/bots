@@ -19,6 +19,7 @@
 
 import argparse
 import ssl
+import subprocess
 import sys
 import urllib.request
 
@@ -57,20 +58,28 @@ def print_failure(context, url):
     print()
 
 
+def git(*args):
+    return subprocess.check_output(('git',) + args, encoding='utf-8').strip()
+
+
 def main():
     parser = argparse.ArgumentParser(description='Summarize test status of a PR')
     parser.add_argument('--repo', help="The repository of the PR", default=None)
     parser.add_argument('-v', '--verbose', action="store_true", default=False,
                         help="Print verbose information")
-    parser.add_argument("pr", type=int)
+    parser.add_argument("target", help='The pull request number to inspect, '
+                                       'or - for the upstream of the current branch')
     opts = parser.parse_args()
 
     api = task.github.GitHub(repo=opts.repo)
 
-    pull = api.get(f"pulls/{opts.pr}")
-    if not pull:
-        sys.exit(f"{opts.pr} is not a pull request.")
-    revision = pull['head']['sha']
+    if opts.target != '-':
+        pull = api.get(f"pulls/{opts.target}")
+        if not pull:
+            sys.exit(f"{opts.target} is not a pull request.")
+        revision = pull['head']['sha']
+    else:
+        revision = git('rev-parse', '@{upstream}')
 
     statuses = api.statuses(revision)
 
