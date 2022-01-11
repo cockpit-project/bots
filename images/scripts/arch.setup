@@ -112,5 +112,11 @@ pacman -Scc --noconfirm
 # Reduce image size, remove cloud-init, reflector
 pacman -Rscn --noconfirm cloud-init reflector
 
+# Remove the no longer required systemd units as they are not required and seem
+# to cause an issue delaying sshd to be started after network online target
+# timeout. As reflector-init is reverse dependency on sshd which needs network-online.target
+rm /etc/systemd/system/reflector-init.service
+rm /etc/systemd/system/pacman-init.service
+
 # Reduce image size, clear package cache
 pacman -Scc
