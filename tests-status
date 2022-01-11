@@ -62,6 +62,22 @@ def git(*args):
     return subprocess.check_output(('git',) + args, encoding='utf-8').strip()
 
 
+# returns a dict of state->[(context, url)]
+def sort_statuses(statuses):
+    by_context = {}  # context → (state, url)
+    for context, status in statuses.items():
+        # latest status wins
+        if context in by_context:
+            continue
+        by_context[context] = (status["state"], status.get("target_url", ""))
+
+    by_state = {}  # state → [(context, url), ..]
+    for context, (state, url) in by_context.items():
+        by_state.setdefault(state, []).append((context, url))
+
+    return by_state
+
+
 def main():
     parser = argparse.ArgumentParser(description='Summarize test status of a PR')
     parser.add_argument('--repo', help="The repository of the PR", default=None)
@@ -81,18 +97,7 @@ def main():
     else:
         revision = git('rev-parse', '@{upstream}')
 
-    statuses = api.statuses(revision)
-
-    by_context = {}  # context → (state, url)
-    for context, status in statuses.items():
-        # latest status wins
-        if context in by_context:
-            continue
-        by_context[context] = (status["state"], status.get("target_url", ""))
-
-    by_state = {}  # state → [(context, url), ..]
-    for context, (state, url) in by_context.items():
-        by_state.setdefault(state, []).append((context, url))
+    by_state = sort_statuses(api.statuses(revision))
 
     for state in by_state.keys():
         if state != "failure":
