@@ -60,6 +60,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
             f'{TEST_OS_DEFAULT}/firefox-devel',
+            f'{TEST_OS_DEFAULT}/pixels',
         ],
     },
     'cockpit-project/starter-kit': {
