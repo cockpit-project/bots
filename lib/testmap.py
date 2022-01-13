@@ -184,6 +184,8 @@ REPO_BRANCH_CONTEXT = {
         ]
     },
     'M4rtinK/anaconda': {
+        'master': [
+        ],
         'master-cockpit_web_ui_prototype': [
             'fedora-35/rawhide',
         ]
