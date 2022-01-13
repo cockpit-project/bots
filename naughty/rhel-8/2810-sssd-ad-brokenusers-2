@@ -1,0 +1,5 @@
+# testQualifiedUsers (__main__.TestAD)
+*
+chown: invalid user: 'Administrator@cockpit.lan'
+*
+subprocess.CalledProcessError: Command 'chown -R Administrator@cockpit.lan /home/admin' returned non-zero exit status 1.
