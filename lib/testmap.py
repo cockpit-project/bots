@@ -183,10 +183,10 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ]
     },
-    'M4rtinK/anaconda': {
+    'rhinstaller/anaconda': {
         'master': [
         ],
-        'master-cockpit_web_ui_prototype': [
+        '_manual': [
             'fedora-35/rawhide',
         ]
     },
