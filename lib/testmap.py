@@ -39,8 +39,6 @@ REPO_BRANCH_CONTEXT = {
             f'{TEST_OS_DEFAULT}/mobile',
             f'{TEST_OS_DEFAULT}/container-bastion',
             'fedora-coreos',
-            'rhel-8-5',
-            'rhel-8-5-distropkg',
             'rhel-8-6',
             'rhel-8-6-distropkg',
             'centos-8-stream',
@@ -85,7 +83,6 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-podman': {
         'main': [
             'arch',
-            'rhel-8-5',
             'rhel-8-6',
             'rhel-9-0',
             'fedora-34',
@@ -109,7 +106,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-35',
             f'{TEST_OS_DEFAULT}/firefox',
             f'{TEST_OS_DEFAULT}/mobile',
-            'rhel-8-5',
             'rhel-8-6',
             'rhel-9-0',
             'centos-8-stream',
@@ -127,7 +123,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'rhel-8-5/osbuild-composer',
+            'rhel-8-6/osbuild-composer',
         ],
     },
     'osbuild/cockpit-composer': {
@@ -165,13 +161,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-5',
         ],
         '_manual': [
-            'rhel-8-4',
-            'rhel-8-5',
-            'rhel-8-6',
-            'rhel-9-0',
-            'fedora-34',
-            'fedora-35',
-            'fedora-35/rawhide',
         ],
     },
     'cockpit-project/cockpit-certificates': {
@@ -180,7 +169,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-35',
         ],
         '_manual': [
-            'rhel-8-5',
+            'rhel-8-6',
             'rhel-9-0',
             'centos-8-stream',
         ]
