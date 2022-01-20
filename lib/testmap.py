@@ -58,6 +58,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-testing/dnf-copr',
+            'rhel-8-6-distropkg',
             'rhel-9-0-distropkg',
             f'{TEST_OS_DEFAULT}/firefox-devel',
             f'{TEST_OS_DEFAULT}/pixels',
