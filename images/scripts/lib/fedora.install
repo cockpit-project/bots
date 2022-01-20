@@ -72,8 +72,8 @@ if [ -n "$do_build" ]; then
     sed -i.bak '/self.builddep_command =/ s_self.command_"/bin/true"_' /usr/lib/python*/*-packages/mockbuild/package_manager.py
 
     rm -rf build-results
-    srpm=$(/var/lib/testvm/make-srpm "$tar")
-    LC_ALL=C.UTF-8 su builder -c "/usr/bin/mock --offline --no-clean --no-cleanup-after --resultdir build-results $mock_opts --rebuild $srpm"
+    srpm=($(/var/lib/testvm/make-srpm "$tar"))
+    LC_ALL=C.UTF-8 su builder -c "/usr/bin/mock --offline --no-clean --no-cleanup-after --resultdir build-results $mock_opts --rebuild ${srpm[*]}"
 
     cat <<EOF >/tmp/rpmlint
 #! /bin/bash
