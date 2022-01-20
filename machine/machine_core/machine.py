@@ -235,7 +235,7 @@ class Machine(ssh_connection.SSHConnection):
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1979182
             allowed.append('audit.*denied.*{ getattr }.*comm="systemctl" name="/".*cockpit_ws_t.*')
 
-        if self.image in ['rhel-8-6', 'centos-8-stream']:
+        if self.image in ['rhel-8-6', 'rhel-8-6-distropkg', 'centos-8-stream']:
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=2029873
             allowed.append('audit.*denied.*{ write }.*comm="rhsm-service" name="memfd:libffi".*')
             # same issue also fails later on with map/read/execute in permissive mode
