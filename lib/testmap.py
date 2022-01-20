@@ -42,6 +42,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-5',
             'rhel-8-5-distropkg',
             'rhel-8-6',
+            'rhel-8-6-distropkg',
             'centos-8-stream',
             'rhel-9-0',
         ],
