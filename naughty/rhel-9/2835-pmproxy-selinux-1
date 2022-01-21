@@ -1,0 +1,3 @@
+*testPmProxySettings
+*
+*Command 'systemctl is-active pmproxy' returned non-zero exit status 3
