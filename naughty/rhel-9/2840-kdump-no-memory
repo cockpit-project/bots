@@ -1,0 +1,4 @@
+testBasic (__main__.TestKdump)
+Job for kdump.service failed because the control process exited with error code.
+*
+*b.wait_in_text("#app", "Service is running")
