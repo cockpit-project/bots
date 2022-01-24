@@ -84,9 +84,6 @@ Name=eth0
 DHCP=yes
 EOL
 
-# Enable networkmanager as no services are started by default
-systemctl enable NetworkManager
-
 # Don't let NetworkManager manage eth0/1
 printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
 
