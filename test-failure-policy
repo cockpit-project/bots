@@ -128,6 +128,10 @@ def check_known_issue(api, trace, image):
         return None
 
     trace = normalize_traceback(trace)
+
+    if "Differences in pixel test" in trace:
+        return None
+
     number = None
     for naughty in os.listdir(image_naughty):
         (prefix, unused, name) = naughty.partition("-")
