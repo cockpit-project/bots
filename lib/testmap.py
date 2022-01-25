@@ -36,7 +36,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-35',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
-            f'{TEST_OS_DEFAULT}/mobile',
             f'{TEST_OS_DEFAULT}/container-bastion',
             'fedora-coreos',
             'rhel-8-5',
@@ -60,7 +59,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
             f'{TEST_OS_DEFAULT}/firefox-devel',
-            f'{TEST_OS_DEFAULT}/pixels',
         ],
     },
     'cockpit-project/starter-kit': {
