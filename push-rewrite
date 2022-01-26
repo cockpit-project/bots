@@ -17,7 +17,7 @@ import argparse
 import sys
 import time
 
-from task import github, label, labels_of_pull
+from task import github, labels_of_pull
 
 
 def execute(*args):
@@ -62,9 +62,10 @@ def main():
     pull = find_pr_with_sha(api, remote)
     labels = labels_of_pull(pull)
     tests_disabled = "no-test" in labels or "[no-test]" in pull["title"]
-    # add no-test label to prevent tests bring triggered
+    # needs no-test label to prevent tests bring triggered
+    # we cannot set the label for ourselves without `repo` permission
     if not tests_disabled:
-        label(pull, {"labels": labels + ["no-test"]})
+        sys.exit("Please set the 'no-test' label on the PR before trying this")
 
     git("push", "--force-with-lease")
 
