@@ -56,12 +56,10 @@ def main():
     remote = git("rev-parse", opts.remote + "/" + opts.branch)
 
     if local == remote:
-        sys.stderr.write("Nothing to push.\n")
-        return 0
+        sys.exit('Nothing to push')
 
     if git("diff", "--stat", local, remote) != "":
-        sys.stderr.write("You have local changes, aborting.\n")
-        return 1
+        sys.exit('You have local changes, aborting.')
 
     api = github.GitHub(repo=opts.repo)
     old_statuses = api.statuses(remote)
@@ -96,4 +94,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
