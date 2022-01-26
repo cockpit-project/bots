@@ -45,15 +45,10 @@ def find_pr_with_sha(api, sha):
 def main():
     parser = argparse.ArgumentParser(description='Force push after a rewrite')
     parser.add_argument('--repo', help="The GitHub repository to work with", default=None)
-    parser.add_argument('remote', help='The remote to push to')
-    parser.add_argument('branch', nargs='?', help='The branch to push')
     opts = parser.parse_args()
 
-    if not opts.branch:
-        opts.branch = git("rev-parse", "--abbrev-ref", "HEAD")
-
-    local = git("rev-parse", opts.branch)
-    remote = git("rev-parse", opts.remote + "/" + opts.branch)
+    local = git('rev-parse', 'HEAD')
+    remote = git('rev-parse', 'HEAD@{push}')
 
     if local == remote:
         sys.exit('Nothing to push')
@@ -71,7 +66,7 @@ def main():
     if not tests_disabled:
         label(pull, {"labels": labels + ["no-test"]})
 
-    git("push", "--force-with-lease=" + opts.branch + ":" + remote, opts.remote, opts.branch + ":" + opts.branch)
+    git("push", "--force-with-lease")
 
     for n in range(100, 0, -1):
         try:
