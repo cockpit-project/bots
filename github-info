@@ -62,10 +62,7 @@ def main():
         entries = [t for t in response['headers'].items() if t[0].lower() == entry.lower()]
         if entries:
             if entry == "X-RateLimit-Reset":
-                try:
-                    readable = datetime.datetime.utcfromtimestamp(float(entries[0][1])).isoformat()
-                except:
-                    readable = "parse error"
+                readable = datetime.datetime.utcfromtimestamp(float(entries[0][1])).isoformat()
                 sys.stdout.write("{0}: {1} ({2})\n".format(entry, entries[0][1], readable))
             else:
                 sys.stdout.write("{0}: {1}\n".format(entry, entries[0][1]))
