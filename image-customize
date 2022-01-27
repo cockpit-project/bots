@@ -18,7 +18,6 @@
 
 import argparse
 import os
-import re
 import sys
 import subprocess
 
@@ -52,23 +51,53 @@ def prepare_install_image(base_image, install_image, resize):
     return install_image
 
 
-def run_command(machine_instance, commandlist):
-    """Run command inside image"""
-    for foo in commandlist:
+class ActionBase(argparse.Action):
+    '''Keep an ordered list of actions'''
+
+    def __call__(self, parser, namespace, value, option_string=None):
+        getattr(namespace, self.dest).append((self.execute, value))
+
+
+class InstallAction(ActionBase):
+    '''Install local rpm or distro package'''
+    @staticmethod
+    def execute(machine_instance, package):
+        # this will fail if neither is available -- exception is clear enough, this is a developer tool
+        out = machine_instance.execute("which dnf || which yum || which apt-get")
+        if 'dnf' in out:
+            install_command = "dnf install -y"
+        elif 'yum' in out:
+            install_command = "yum --setopt=skip_missing_names_on_install=False -y install"
+        else:
+            install_command = "apt-get install -y"
+
+        if os.path.isfile(package):
+            pname = os.path.basename(package)
+            dest = "/var/tmp/" + pname
+            machine_instance.upload([package], dest)
+            package = dest
+        elif '/' in package:
+            sys.stderr.write("Bad package name or path: %s\n" % package)
+
+        machine_instance.execute(f"{install_command} {package}", timeout=1800)
+
+
+class RunCommandAction(ActionBase):
+    @staticmethod
+    def execute(machine_instance, command):
         try:
-            machine_instance.execute(foo, timeout=1800)
+            machine_instance.execute(command, timeout=1800)
         except subprocess.CalledProcessError as e:
             sys.stderr.write("%s\n" % e)
             sys.exit(e.returncode)
 
 
-def run_script(machine_instance, scriptlist):
-    """Run script inside image"""
-    for foo in scriptlist:
-        if os.path.isfile(foo):
-            pname = os.path.basename(foo)
-            uploadpath = "/var/tmp/" + pname
-            machine_instance.upload([os.path.abspath(foo)], uploadpath)
+class ScriptAction(ActionBase):
+    @staticmethod
+    def execute(machine_instance, script):
+        if os.path.isfile(script):
+            uploadpath = "/var/tmp/" + os.path.basename(script)
+            machine_instance.upload([os.path.abspath(script)], uploadpath)
             machine_instance.execute("chmod a+x %s" % uploadpath)
             try:
                 machine_instance.execute(uploadpath, timeout=1800)
@@ -76,67 +105,40 @@ def run_script(machine_instance, scriptlist):
                 sys.stderr.write("%s\n" % e)
                 sys.exit(e.returncode)
         else:
-            sys.stderr.write("Bad path to script: %s\n" % foo)
+            sys.stderr.write("Bad path to script: %s\n" % script)
 
 
-def upload_files(machine_instance, uploadfiles):
-    """Upload files/directories inside image"""
-    for foo in uploadfiles:
-        srcfile, dest = foo.split(":")
-        src_absolute = os.path.join(os.getcwd(), srcfile)
-        machine_instance.upload([src_absolute], dest)
-
-
-def install_packages(machine_instance, packagelist):
-    """Install packages into a test image
-    It could be done via local rpms or normal package installation
-    """
-
-    # this will fail if neither is available -- exception is clear enough, this is a developer tool
-    out = machine_instance.execute("which dnf || which yum || which apt-get")
-    if 'dnf' in out:
-        install_command = "dnf install -y"
-    elif 'yum' in out:
-        install_command = "yum --setopt=skip_missing_names_on_install=False -y install"
-    else:
-        install_command = "apt-get install -y"
-
-    allpackages = []
-    for foo in packagelist:
-        if os.path.isfile(foo):
-            pname = os.path.basename(foo)
-            machine_instance.upload([foo], "/var/tmp/" + pname)
-            allpackages.append("/var/tmp/" + pname)
-        elif not re.search("/", foo):
-            allpackages.append(foo)
-        else:
-            sys.stderr.write("Bad package name or path: %s\n" % foo)
-    if allpackages:
-        machine_instance.execute(install_command + " " + ' '.join(allpackages), timeout=1800)
+class UploadAction(ActionBase):
+    @staticmethod
+    def execute(machine_instance, srcdest):
+        src, dest = srcdest.split(":")
+        machine_instance.upload([os.path.abspath(src)], dest)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Run command inside or install packages into a Cockpit virtual machine',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='Display verbose progress details')
-    parser.add_argument('-i', '--install', action='append', default=[],
-                        help='Install packages')
-    parser.add_argument('-r', '--run-command', action='append', default=[],
+        description=('Run command inside or install packages into a Cockpit virtual machine. '
+                     'All actions can be specified multiple times and run in the given order.'))
+    # actions (at least one must be given, executed in order)
+    parser.add_argument('-i', '--install', action=InstallAction, metavar="PACKAGE", dest='actions', default=[],
+                        help='Install package')
+    parser.add_argument('-r', '--run-command', action=RunCommandAction, dest='actions',
                         help='Run command inside virtual machine')
-    parser.add_argument('-s', '--script', action='append', default=[],
+    parser.add_argument('-s', '--script', action=ScriptAction, dest='actions',
                         help='Run selected script inside virtual machine')
-    parser.add_argument('-u', '--upload', action='append', default=[],
+    parser.add_argument('-u', '--upload', action=UploadAction, metavar="SRC:DEST", dest='actions',
                         help='Upload file/dir to destination file/dir separated by ":" example: -u file.txt:/var/lib')
+    # options
     parser.add_argument('--base-image',
                         help='Base image name, if "image" does not match a standard Cockpit VM image name')
     parser.add_argument('--resize', help="Resize the image. Size in bytes with using K, M, or G suffix.")
     parser.add_argument('-n', '--no-network', action='store_true', help='Do not connect the machine to the Internet')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Display verbose progress details')
     parser.add_argument('image', help='The image to use (destination name when using --base-image)')
     args = parser.parse_args()
 
-    if not (args.run_command or args.install or args.script or args.upload or args.resize):
+    if not args.actions and not args.resize:
         parser.error("Must specify at least one operation")
 
     if not args.base_image:
@@ -154,14 +156,8 @@ def main():
     machine.start()
     machine.wait_boot()
     try:
-        if args.upload:
-            upload_files(machine, args.upload)
-        if args.run_command:
-            run_command(machine, args.run_command)
-        if args.install:
-            install_packages(machine, args.install)
-        if args.script:
-            run_script(machine, args.script)
+        for (handler, arg) in args.actions:
+            handler(machine, arg)
     finally:
         machine.stop()
 
