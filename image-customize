@@ -87,20 +87,19 @@ def upload_files(machine_instance, uploadfiles):
         machine_instance.upload([src_absolute], dest)
 
 
-def install_packages(machine_instance, packagelist, install_command):
+def install_packages(machine_instance, packagelist):
     """Install packages into a test image
     It could be done via local rpms or normal package installation
     """
 
-    if not install_command:
-        # this will fail if neither is available -- exception is clear enough, this is a developer tool
-        out = machine_instance.execute("which dnf || which yum || which apt-get")
-        if 'dnf' in out:
-            install_command = "dnf install -y"
-        elif 'yum' in out:
-            install_command = "yum --setopt=skip_missing_names_on_install=False -y install"
-        else:
-            install_command = "apt-get install -y"
+    # this will fail if neither is available -- exception is clear enough, this is a developer tool
+    out = machine_instance.execute("which dnf || which yum || which apt-get")
+    if 'dnf' in out:
+        install_command = "dnf install -y"
+    elif 'yum' in out:
+        install_command = "yum --setopt=skip_missing_names_on_install=False -y install"
+    else:
+        install_command = "apt-get install -y"
 
     allpackages = []
     for foo in packagelist:
@@ -126,8 +125,6 @@ def main():
                         help='Display verbose progress details')
     parser.add_argument('-i', '--install', action='append', default=[],
                         help='Install packages')
-    parser.add_argument('-I', '--install-command',
-                        help="Command used to install packages in machine (default: auto-detect dnf/yum/apt)")
     parser.add_argument('-r', '--run-command', action='append', default=[],
                         help='Run command inside virtual machine')
     parser.add_argument('-s', '--script', action='append', default=[],
@@ -164,7 +161,7 @@ def main():
         if args.run_command:
             run_command(machine, args.run_command)
         if args.install:
-            install_packages(machine, args.install, args.install_command)
+            install_packages(machine, args.install)
         if args.script:
             run_script(machine, args.script)
     finally:
