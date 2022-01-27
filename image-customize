@@ -141,32 +141,34 @@ def main():
     parser.add_argument('image', help='The image to use (destination name when using --base-image)')
     args = parser.parse_args()
 
+    if not (args.run_command or args.install or args.script or args.upload or args.resize):
+        parser.error("Must specify at least one operation")
+
     if not args.base_image:
         args.base_image = os.path.basename(args.image)
 
     args.base_image = testvm.get_test_image(args.base_image)
 
-    if args.run_command or args.install or args.script or args.upload or args.resize:
-        if '/' not in args.base_image:
-            subprocess.check_call(["image-download", args.base_image])
-        network = testvm.VirtNetwork(0, image=args.base_image)
-        machine = testvm.VirtMachine(maintain=True,
-                                     verbose=args.verbose,
-                                     networking=network.host(restrict=args.no_network),
-                                     image=prepare_install_image(args.base_image, args.image, args.resize))
-        machine.start()
-        machine.wait_boot()
-        try:
-            if args.upload:
-                upload_files(machine, args.upload)
-            if args.run_command:
-                run_command(machine, args.run_command)
-            if args.install:
-                install_packages(machine, args.install, args.install_command)
-            if args.script:
-                run_script(machine, args.script)
-        finally:
-            machine.stop()
+    if '/' not in args.base_image:
+        subprocess.check_call(["image-download", args.base_image])
+    network = testvm.VirtNetwork(0, image=args.base_image)
+    machine = testvm.VirtMachine(maintain=True,
+                                 verbose=args.verbose,
+                                 networking=network.host(restrict=args.no_network),
+                                 image=prepare_install_image(args.base_image, args.image, args.resize))
+    machine.start()
+    machine.wait_boot()
+    try:
+        if args.upload:
+            upload_files(machine, args.upload)
+        if args.run_command:
+            run_command(machine, args.run_command)
+        if args.install:
+            install_packages(machine, args.install, args.install_command)
+        if args.script:
+            run_script(machine, args.script)
+    finally:
+        machine.stop()
 
 
 if __name__ == '__main__':
