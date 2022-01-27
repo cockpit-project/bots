@@ -448,7 +448,7 @@ class SSHConnection(object):
             target = os.path.join(dest, os.path.basename(source))
             if os.path.exists(target):
                 subprocess.check_call(["find", target, "-type", "f", "-exec", "chmod", "0644", "{}", ";"])
-        except:
+        except subprocess.CalledProcessError:
             self.message("Error while downloading directory '{0}'".format(source))
 
     def write(self, dest, content, append=False, owner=None, perm=None):

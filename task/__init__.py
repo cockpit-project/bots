@@ -269,7 +269,7 @@ def run(context, function, **kwargs):
         ret = str(ex)
     except (AssertionError, KeyboardInterrupt):
         raise
-    except:
+    except Exception:
         traceback.print_exc()
     finally:
         finish(publishing, ret, name, context, issue)

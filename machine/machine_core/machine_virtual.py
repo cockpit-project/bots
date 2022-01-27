@@ -304,7 +304,7 @@ class VirtMachine(Machine):
         while not connection and (tries_left > 0):
             try:
                 connection = open_function(hypervisor)
-            except:
+            except libvirt.libvirtError:
                 # wait a bit
                 time.sleep(1)
             tries_left -= 1
@@ -447,7 +447,7 @@ class VirtMachine(Machine):
                     continue
                 else:
                     raise
-            except:
+            except Failure:
                 self.kill()
                 raise
 
@@ -469,9 +469,8 @@ class VirtMachine(Machine):
             self._domain = None
             if hasattr(self, '_transient_image') and self._transient_image and os.path.exists(self._transient_image):
                 os.unlink(self._transient_image)
-        except:
-            (type, value, traceback) = sys.exc_info()
-            sys.stderr.write("WARNING: Cleanup failed:%s\n" % value)
+        except Exception as e:
+            sys.stderr.write("WARNING: Cleanup failed: %s\n" % e)
 
     def kill(self):
         # stop system immediately, with potential data loss
@@ -485,7 +484,7 @@ class VirtMachine(Machine):
                 # not graceful
                 with stdchannel_redirected(sys.stderr, os.devnull):
                     self._domain.destroyFlags(libvirt.VIR_DOMAIN_DESTROY_DEFAULT)
-            except:
+            except libvirt.libvirtError:
                 pass
         self._cleanup(quick=True)
 
