@@ -143,7 +143,7 @@ class MachineBuilder:
                 self.boot_system()
                 successfully_booted = True
                 break
-            except:
+            except testvm.Failure:
                 # we might need to wait for the image to become available again
                 # accessing it in maintain=True mode successively can trigger qemu errors
                 time.sleep(3)
