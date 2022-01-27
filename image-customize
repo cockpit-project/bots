@@ -116,8 +116,6 @@ def install_packages(machine_instance, packagelist):
 
 
 def main():
-    os.environ["PATH"] = "{0}:{1}".format(os.environ.get("PATH"), BOTS_DIR)
-
     parser = argparse.ArgumentParser(
         description='Run command inside or install packages into a Cockpit virtual machine',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -147,7 +145,7 @@ def main():
     args.base_image = testvm.get_test_image(args.base_image)
 
     if '/' not in args.base_image:
-        subprocess.check_call(["image-download", args.base_image])
+        subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), args.base_image])
     network = testvm.VirtNetwork(0, image=args.base_image)
     machine = testvm.VirtMachine(maintain=True,
                                  verbose=args.verbose,
