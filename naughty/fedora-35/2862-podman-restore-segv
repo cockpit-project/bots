@@ -1,2 +1,2 @@
-testCheckpointRestoreCGroupsV2
+testCheckpointRestoreCGroupsV*
 *b.wait(lambda: self.getContainerAttr("swamped-crate", "State") in 'Running')
