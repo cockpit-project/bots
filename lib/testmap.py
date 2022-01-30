@@ -129,7 +129,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-34',
             'fedora-34/firefox',
             'rhel-8-6',
-            'rhel-9-0'
         ],
         'rhel-8-5': [
             'rhel-8-5',
@@ -139,6 +138,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-35',
             'fedora-35/firefox',
+            'rhel-9-0',
         ],
     },
     'candlepin/subscription-manager': {
