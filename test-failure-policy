@@ -129,7 +129,8 @@ def check_known_issue(api, trace, image):
 
     trace = normalize_traceback(trace)
 
-    if "Differences in pixel test" in trace:
+    pixel_patterns = ["Differences in pixel test", "New pixel test reference", "Unused reference image"]
+    if [pattern for pattern in pixel_patterns if pattern in trace]:
         return None
 
     number = None
