@@ -18,11 +18,16 @@
 
 import argparse
 import os
+import re
 import sys
 import subprocess
 
 from lib.constants import BOTS_DIR, TEST_DIR
 from machine import testvm
+
+
+opt_quick = False
+opt_verbose = False
 
 
 def prepare_install_image(base_image, install_image, resize):
@@ -82,6 +87,103 @@ class InstallAction(ActionBase):
         machine_instance.execute(f"{install_command} {package}", timeout=1800)
 
 
+class BuildAction(ActionBase):
+    '''Build and install distribution package(s) from dist tarball'''
+
+    @staticmethod
+    def execute(machine_instance, source):
+        # upload the tarball or srpm
+        sourcename = os.path.basename(source)
+        vm_source = os.path.join("/var/tmp", sourcename)
+        # looks like cockpit-foo-123.10.gdbde381.tar.xz
+        m = re.fullmatch(r'.+-([^-]+)\.tar(\..*)?', sourcename)
+        if not m:
+            raise ValueError(f"cannot parse version number from {sourcename}")
+        version = m.group(1)
+        machine_instance.upload([source], vm_source, relative_dir=".")
+
+        machine_instance.execute("rm -rf /var/tmp/build; mkdir -p /var/tmp/build")
+
+        # this will fail if neither is available -- exception is clear enough, this is a developer tool
+        out = machine_instance.execute("(which pbuilder || which mock || which pacman) 2>/dev/null")
+        if 'pbuilder' in out:
+            BuildAction.build_deb(machine_instance, vm_source, version)
+        elif 'mock' in out:
+            BuildAction.build_rpm(machine_instance, vm_source, version)
+        elif 'pacman' in out:
+            BuildAction.build_arch(machine_instance, vm_source, version)
+        else:
+            raise NotImplementedError(f"unknown build platform: {out}")
+
+    def build_deb(machine, vm_source, version):
+        build_opts = 'nocheck' if opt_quick else ''
+
+        # build source packge
+        machine.execute(f"""
+            set -eu
+            tar -C /var/tmp/build -xf '{vm_source}'
+            cd "$(ls -d /var/tmp/build/*)"
+            # find and copy debian packaging directory
+            cp -r "$(dirname $(find -path '*/debian/control'))" .
+            # create orig.tar link for building dsc
+            source=$(awk '/^Source: / {{ print $2 }}' debian/control)
+            ln -s '{vm_source}' ../${{source}}_{version}.orig.tar.xz
+            # fill in the version number
+            sed -i '1 s/([^)-]*/({version}/' debian/changelog
+
+            DEB_BUILD_OPTIONS='{build_opts}' dpkg-buildpackage -S -us -uc -nc""")
+
+        # build binary packages
+        machine.execute("cd /var/tmp/build; pbuilder build --buildresult . *.dsc", timeout=1800)
+
+        # install packages
+        machine.execute("dpkg -i /var/tmp/build/*.deb")
+
+    def build_rpm(machine, vm_source, version):
+        mock_opts = ''
+        if opt_verbose:
+            mock_opts += ' --verbose'
+        if opt_quick:
+            mock_opts += ' --nocheck'
+
+        # build source package
+        machine.execute(f'rpmbuild --define "_srcrpmdir /var/tmp/build" -ts "{vm_source}"')
+
+        # build binary RPMs from srpm; disable all repositorys as mock insists on
+        # calling `dnf builddep`, which insists on a cache; our test VMs don't have a cache,
+        # as the mock is offline and pre-installed
+        machine.execute('chown -R builder:builder /var/tmp/build')
+        machine.execute("su builder -c 'cd /var/tmp/build; mock --no-clean --no-cleanup-after --disablerepo=* "
+                        f"--offline --resultdir . {mock_opts} --rebuild *.src.rpm'",
+                        timeout=1800)
+
+        # install RPMs
+        machine.execute('packages=$(find /var/tmp/build -name "*.rpm" -not -name "*.src.rpm"); '
+                        f'rpm -U --force --verbose {"--nodigest --nosignature" if opt_quick else ""} $packages')
+
+    def build_arch(machine, vm_source, version):
+        # unpack source tree's arch packaging directory (PKGBUILD refers to some files)
+        # and set PKGBUILD variables
+        machine.execute(f"""
+            set -eu
+            tar -C /var/tmp/build -xf '{vm_source}'
+            cd /var/tmp/build/
+            unpackdir="$(ls)"
+            archdir=$(dirname $(find -path '*/arch/PKGBUILD'))
+            cp "$archdir"/* .
+            sed -i 's/VERSION/{version}/; s/SOURCE/{os.path.basename(vm_source)}/' PKGBUILD
+            # tarball must be in same directory as PKGBUILD
+            cp '{vm_source}' /var/tmp/build/
+            """)
+
+        # build binaries
+        machine.execute("chown -R builder:builder /var/tmp/build")
+        machine.execute("cd /var/tmp/build; su builder -c extra-x86_64-build", timeout=1800)
+
+        # install packages
+        machine.execute("pacman -U --noconfirm /var/tmp/build/*.pkg.tar.zst")
+
+
 class RunCommandAction(ActionBase):
     @staticmethod
     def execute(machine_instance, command):
@@ -122,6 +224,8 @@ def main():
     # actions (at least one must be given, executed in order)
     parser.add_argument('-i', '--install', action=InstallAction, metavar="PACKAGE", dest='actions', default=[],
                         help='Install package')
+    parser.add_argument('-b', '--build', action=BuildAction, metavar="DIST-TAR", dest='actions', default=[],
+                        help='Build and install distribution package(s) from dist tarball')
     parser.add_argument('-r', '--run-command', action=RunCommandAction, dest='actions',
                         help='Run command inside virtual machine')
     parser.add_argument('-s', '--script', action=ScriptAction, dest='actions',
@@ -135,6 +239,8 @@ def main():
     parser.add_argument('-n', '--no-network', action='store_true', help='Do not connect the machine to the Internet')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Display verbose progress details')
+    parser.add_argument('-q', '--quick', action='store_true',
+                        help='Disable tests during package build with --build')
     parser.add_argument('image', help='The image to use (destination name when using --base-image)')
     args = parser.parse_args()
 
@@ -145,6 +251,10 @@ def main():
         args.base_image = os.path.basename(args.image)
 
     args.base_image = testvm.get_test_image(args.base_image)
+
+    global opt_quick, opt_verbose
+    opt_quick = args.quick
+    opt_verbose = args.verbose
 
     if '/' not in args.base_image:
         subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), args.base_image])
