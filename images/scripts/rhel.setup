@@ -337,6 +337,9 @@ if ! grep -qr core_pattern /usr/lib/sysctl.d/; then
     echo "kernel.core_pattern=|/usr/lib/systemd/systemd-coredump %p %u %g %s %t %e" > /etc/sysctl.d/50-coredump.conf
 fi
 
+# Enable coredumps so we have better journal messages for reports and naughties
+sed -i s/DefaultLimitCORE=.*/DefaultLimitCORE=infinity:infinity/ /etc/systemd/system.conf
+
 # Prevent SSH from hanging for a long time when no external network access
 echo 'UseDNS no' >> /etc/ssh/sshd_config
 
