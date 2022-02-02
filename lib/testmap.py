@@ -319,5 +319,5 @@ def tests_for_image(image):
 
 def tests_for_po_refresh(project):
     if project == "cockpit-project/cockpit":
-        return [TEST_OS_DEFAULT]
+        return ["fedora-coreos"]
     return REPO_BRANCH_CONTEXT.get(project, {}).get(get_default_branch(project), [])
