@@ -87,12 +87,13 @@ class InstallAction(ActionBase):
 
 
 class BuildAction(ActionBase):
-    '''Build and install distribution package(s) from dist tarball'''
+    '''Build and install distribution package(s) from dist tarball or source RPM'''
 
     @staticmethod
     def execute(machine_instance, source):
         # upload the tarball or srpm
         sourcename = os.path.basename(source)
+
         vm_source = os.path.join("/var/tmp", sourcename)
         machine_instance.upload([source], vm_source, relative_dir=".")
 
@@ -140,14 +141,18 @@ class BuildAction(ActionBase):
         if opt_quick:
             mock_opts += ' --nocheck'
 
-        # build source package
-        machine.execute(f'''su builder -c 'rpmbuild --define "_topdir /var/tmp/build" -ts "{vm_source}"' ''')
+        # build source package, unless this is running against an srpm already
+        if vm_source.endswith(".src.rpm"):
+            srpm = vm_source
+        else:
+            machine.execute(f'''su builder -c 'rpmbuild --define "_topdir /var/tmp/build" -ts "{vm_source}"' ''')
+            srpm = "/var/tmp/build/SRPMS/*.src.rpm"
 
         # build binary RPMs from srpm; disable all repositorys as mock insists on
         # calling `dnf builddep`, which insists on a cache; our test VMs don't have a cache,
         # as the mock is offline and pre-installed
         machine.execute("su builder -c 'mock --no-clean --no-cleanup-after --disablerepo=* "
-                        f"--offline --resultdir /var/tmp/build {mock_opts} --rebuild /var/tmp/build/SRPMS/*.src.rpm'",
+                        f"--offline --resultdir /var/tmp/build {mock_opts} --rebuild {srpm}'",
                         timeout=1800)
 
         # install RPMs
@@ -218,8 +223,8 @@ def main():
     # actions (at least one must be given, executed in order)
     parser.add_argument('-i', '--install', action=InstallAction, metavar="PACKAGE", dest='actions', default=[],
                         help='Install package')
-    parser.add_argument('-b', '--build', action=BuildAction, metavar="DIST-TAR", dest='actions', default=[],
-                        help='Build and install distribution package(s) from dist tarball')
+    parser.add_argument('-b', '--build', action=BuildAction, metavar="TAR-OR-SRPM", dest='actions', default=[],
+                        help='Build and install distribution package(s) from dist tarball or source RPM')
     parser.add_argument('-r', '--run-command', action=RunCommandAction, dest='actions',
                         help='Run command inside virtual machine')
     parser.add_argument('-s', '--script', action=ScriptAction, dest='actions',
