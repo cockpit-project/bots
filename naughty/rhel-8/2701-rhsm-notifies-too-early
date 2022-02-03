@@ -1,2 +1,0 @@
-  File "check-packagekit", line *, in testNoUpdates
-    b.wait_visible("#status .pf-c-card__header button")

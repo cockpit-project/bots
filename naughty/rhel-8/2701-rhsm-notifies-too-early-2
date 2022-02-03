@@ -1,2 +1,0 @@
-  File "check-packagekit", line *, in testAvailableUpdates
-    b.wait_not_present(".pf-c-empty-state")
