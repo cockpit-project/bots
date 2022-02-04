@@ -103,7 +103,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-34',
             'fedora-35',
             f'{TEST_OS_DEFAULT}/firefox',
-            f'{TEST_OS_DEFAULT}/mobile',
             'rhel-8-6',
             'rhel-9-0',
             'centos-8-stream',
