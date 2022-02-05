@@ -18,7 +18,6 @@
 
 import argparse
 import os
-import re
 import sys
 import subprocess
 
@@ -95,11 +94,6 @@ class BuildAction(ActionBase):
         # upload the tarball or srpm
         sourcename = os.path.basename(source)
         vm_source = os.path.join("/var/tmp", sourcename)
-        # looks like cockpit-foo-123.10.gdbde381.tar.xz
-        m = re.fullmatch(r'.+-([^-]+)\.tar(\..*)?', sourcename)
-        if not m:
-            raise ValueError(f"cannot parse version number from {sourcename}")
-        version = m.group(1)
         machine_instance.upload([source], vm_source, relative_dir=".")
 
         machine_instance.execute("rm -rf /var/tmp/build; mkdir -p /var/tmp/build")
@@ -107,15 +101,15 @@ class BuildAction(ActionBase):
         # this will fail if neither is available -- exception is clear enough, this is a developer tool
         out = machine_instance.execute("(which pbuilder || which mock || which pacman) 2>/dev/null")
         if 'pbuilder' in out:
-            BuildAction.build_deb(machine_instance, vm_source, version)
+            BuildAction.build_deb(machine_instance, vm_source)
         elif 'mock' in out:
-            BuildAction.build_rpm(machine_instance, vm_source, version)
+            BuildAction.build_rpm(machine_instance, vm_source)
         elif 'pacman' in out:
-            BuildAction.build_arch(machine_instance, vm_source, version)
+            BuildAction.build_arch(machine_instance, vm_source)
         else:
             raise NotImplementedError(f"unknown build platform: {out}")
 
-    def build_deb(machine, vm_source, version):
+    def build_deb(machine, vm_source):
         build_opts = 'nocheck' if opt_quick else ''
 
         # build source packge
@@ -127,9 +121,9 @@ class BuildAction(ActionBase):
             cp -r "$(dirname $(find -path '*/debian/control'))" .
             # create orig.tar link for building dsc
             source=$(awk '/^Source: / {{ print $2 }}' debian/control)
-            ln -s '{vm_source}' ../${{source}}_{version}.orig.tar.xz
-            # fill in the version number
-            sed -i '1 s/([^)-]*/({version}/' debian/changelog
+            version=$(dpkg-parsechangelog -SVersion)
+            # cut off Debian revision
+            ln -s '{vm_source}' ../${{source}}_${{version%-*}}.orig.tar.xz
 
             DEB_BUILD_OPTIONS='{build_opts}' dpkg-buildpackage -S -us -uc -nc""")
 
@@ -139,7 +133,7 @@ class BuildAction(ActionBase):
         # install packages
         machine.execute("dpkg -i /var/tmp/build/*.deb")
 
-    def build_rpm(machine, vm_source, version):
+    def build_rpm(machine, vm_source):
         mock_opts = ''
         if opt_verbose:
             mock_opts += ' --verbose'
@@ -161,7 +155,7 @@ class BuildAction(ActionBase):
         machine.execute('packages=$(find /var/tmp/build -name "*.rpm" -not -name "*.src.rpm"); '
                         f'rpm -U --force --verbose {"--nodigest --nosignature" if opt_quick else ""} $packages')
 
-    def build_arch(machine, vm_source, version):
+    def build_arch(machine, vm_source):
         # unpack source tree's arch packaging directory (PKGBUILD refers to some files)
         # and set PKGBUILD variables
         machine.execute(f"""
@@ -171,7 +165,6 @@ class BuildAction(ActionBase):
             unpackdir="$(ls)"
             archdir=$(dirname $(find -path '*/arch/PKGBUILD'))
             cp "$archdir"/* .
-            sed -i 's/VERSION/{version}/; s/SOURCE/{os.path.basename(vm_source)}/' PKGBUILD
             # tarball must be in same directory as PKGBUILD
             cp '{vm_source}' /var/tmp/build/
             """)
