@@ -96,8 +96,6 @@ class BuildAction(ActionBase):
         vm_source = os.path.join("/var/tmp", sourcename)
         machine_instance.upload([source], vm_source, relative_dir=".")
 
-        machine_instance.execute("rm -rf /var/tmp/build; mkdir -p /var/tmp/build")
-
         # this will fail if neither is available -- exception is clear enough, this is a developer tool
         out = machine_instance.execute("(which pbuilder || which mock || which pacman) 2>/dev/null")
         if 'pbuilder' in out:
@@ -115,6 +113,8 @@ class BuildAction(ActionBase):
         # build source packge
         machine.execute(f"""
             set -eu
+            rm -rf /var/tmp/build
+            mkdir -p /var/tmp/build
             tar -C /var/tmp/build -xf '{vm_source}'
             cd "$(ls -d /var/tmp/build/*)"
             # find and copy debian packaging directory
@@ -141,14 +141,13 @@ class BuildAction(ActionBase):
             mock_opts += ' --nocheck'
 
         # build source package
-        machine.execute(f'rpmbuild --define "_srcrpmdir /var/tmp/build" -ts "{vm_source}"')
+        machine.execute(f'''su builder -c 'rpmbuild --define "_topdir /var/tmp/build" -ts "{vm_source}"' ''')
 
         # build binary RPMs from srpm; disable all repositorys as mock insists on
         # calling `dnf builddep`, which insists on a cache; our test VMs don't have a cache,
         # as the mock is offline and pre-installed
-        machine.execute('chown -R builder:builder /var/tmp/build')
-        machine.execute("su builder -c 'cd /var/tmp/build; mock --no-clean --no-cleanup-after --disablerepo=* "
-                        f"--offline --resultdir . {mock_opts} --rebuild *.src.rpm'",
+        machine.execute("su builder -c 'mock --no-clean --no-cleanup-after --disablerepo=* "
+                        f"--offline --resultdir /var/tmp/build {mock_opts} --rebuild /var/tmp/build/SRPMS/*.src.rpm'",
                         timeout=1800)
 
         # install RPMs
@@ -158,8 +157,10 @@ class BuildAction(ActionBase):
     def build_arch(machine, vm_source):
         # unpack source tree's arch packaging directory (PKGBUILD refers to some files)
         # and set PKGBUILD variables
-        machine.execute(f"""
+        machine.write("/var/tmp/mkbuild.sh", f"""#!/bin/sh
             set -eu
+            rm -rf /var/tmp/build
+            mkdir -p /var/tmp/build
             tar -C /var/tmp/build -xf '{vm_source}'
             cd /var/tmp/build/
             unpackdir="$(ls)"
@@ -167,10 +168,10 @@ class BuildAction(ActionBase):
             cp "$archdir"/* .
             # tarball must be in same directory as PKGBUILD
             cp '{vm_source}' /var/tmp/build/
-            """)
+            """, perm="755")
+        machine.execute("su builder /var/tmp/mkbuild.sh")
 
         # build binaries
-        machine.execute("chown -R builder:builder /var/tmp/build")
         machine.execute("cd /var/tmp/build; su builder -c extra-x86_64-build", timeout=1800)
 
         # install packages
