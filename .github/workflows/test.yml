@@ -28,16 +28,14 @@ jobs:
           # need this to get origin/main for git diff
           fetch-depth: 0
 
-      - name: Rebase to current main
+      - name: Rebase to target branch
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git rebase origin/main
+          EMAIL='<>' git rebase origin/${{ github.event.pull_request.base.ref }}
 
       - name: Check whether there are changes that might affect the deployment
         id: changes
         run: |
-          changes=$(git diff --name-only origin/main..HEAD | grep -Ev '^(images/|naughty/|machine/machine_core/|lib/testmap.py)' || true)
+          changes=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}..HEAD | grep -Ev '^(images/|naughty/|machine/machine_core/|lib/testmap.py)' || true)
           # print for debugging
           echo "changes:"
           echo "$changes"
