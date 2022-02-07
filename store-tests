@@ -44,6 +44,7 @@ from task import github
 # not ok 78 testNodeNavigation (check_openshift.TestOpenshift) # duration: 172s
 re_run = re.compile(r"(not )?ok \d+ (\S+) (\S+)")
 re_retry = re.compile(r"# RETRY .* \(([^)]+)\)")
+re_duration = re.compile(r"# \d TEST (FAILED|PASSED) \[(\d+)s")
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
@@ -151,8 +152,8 @@ def main():
 
                 with urllib.request.urlopen(raw_log,
                                             context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
-                    for (testname, failed, retry_reason) in find_tests(fp):
-                        insert_test(cursor, run_id, testname, failed, retry_reason)
+                    for (testname, failed, retry_reason, seconds) in find_tests(fp):
+                        insert_test(cursor, run_id, testname, failed, retry_reason, seconds)
 
     db_conn.commit()
     db_conn.close()
@@ -178,6 +179,7 @@ def init_db(cursor):
                      retry_reason TEXT,
                      failed INTEGER,
                      run INTEGER NOT NULL,
+                     seconds INTEGER NOT NULL,
                      FOREIGN KEY (run) REFERENCES TestRuns(id))
                    """)
 
@@ -187,12 +189,14 @@ def insert_run(cursor, project, revision, context, url, time, retry, waited, too
                           (project, revision, context, url, time, retry, waited, took, state, desc)).lastrowid
 
 
-def insert_test(cursor, run_id, testname, failed, retry_reason):
-    cursor.execute("INSERT INTO Tests VALUES (?, ?, ?, ?)", (testname, retry_reason, int(failed), run_id))
+def insert_test(cursor, run_id, testname, failed, retry_reason, seconds):
+    cursor.execute("INSERT INTO Tests VALUES (?, ?, ?, ?, ?)",
+                   (testname, retry_reason, int(failed), run_id, int(seconds)))
 
 
 def find_tests(fp):
     last_msg = ""
+    prev_msg = ""
     save_message = False
     for line in fp:
         line = line.decode('utf-8')
@@ -213,13 +217,17 @@ def find_tests(fp):
         m = re_run.search(line)
         if (m):
             # sometimes line breaks are missing:
-            # not ok 117 test/verify/check-metrics TestMetrics.testPcp# ------
+            # not ok 117 test/verify/check-metrics TestMetrics.testPcp
             testname = "{0} {1}".format(m.group(2), m.group(3)).rstrip("#")
             if "make-checkout-workdir" in testname:
                 testname = testname.split("make-checkout-workdir")[1]
             r = re_retry.search(line)
-            yield (testname, bool(m.group(1)), last_msg or (r and r.group(1) or None))
+            t = re_duration.search(prev_msg)
+            yield (testname, bool(m.group(1)), last_msg or (r and r.group(1) or None), t and t.group(2) or 0)
+
             last_msg = ""
+
+        prev_msg = line.strip()
 
 
 if __name__ == '__main__':
