@@ -293,7 +293,6 @@ EOF
     opsys=$(cut -d '-' -f 1 <<< "$IMAGE")
     version=$(cut -d '-' -f 2 <<< "$IMAGE")
     su builder -c "/usr/bin/mock --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
-    su builder -c "/usr/bin/mock --install --verbose libappstream-glib rpmlint"
 
     # We need to make sure mock has the same selinux-policy as we do
     mkdir /tmp/selinux-policy-rpms

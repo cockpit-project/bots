@@ -24,3 +24,17 @@ case "$OS_VER" in
 esac
 
 echo "$spec" | rpmspec -D "$OS_VER" --buildrequires --query /dev/stdin | sed 's/.*/"&"/' | tr '\n' ' '
+
+# some extra build dependencies:
+# - libappstream-glib for validating appstream metadata in starter-kit and derivatives
+# - rpmlint for validating built RPMs
+EXTRA_DEPS="libappstream-glib rpmlint"
+
+# nodejs for starter-kit and other projects which rebuild webpack during RPM build; but it can't be installed on RHEL 8
+# mocks due to missing modularity package indexes
+case "$OS_VER" in
+    rhel*8) ;;
+    *) EXTRA_DEPS="$EXTRA_DEPS nodejs" ;;
+esac
+
+echo "$EXTRA_DEPS"

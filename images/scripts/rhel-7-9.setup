@@ -237,7 +237,6 @@ if [ "$DO_BUILD" -eq 1 ]; then
     opsys=$(cut -d '-' -f 1 <<< "$IMAGE")
     version=$(cut -d '-' -f 2 <<< "$IMAGE")
     su builder -c "/usr/bin/mock --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
-    su builder -c "/usr/bin/mock --install --verbose rpmlint"
 fi
 
 yum clean all || true
