@@ -36,6 +36,7 @@ jobs:
         id: changes
         run: |
           git log --exit-code --stat HEAD --not origin/${{ github.event.pull_request.base.ref }} -- \
+              ':!.github' \
               ':!images' \
               ':!naughty' \
               ':!machine/machine_core' \
