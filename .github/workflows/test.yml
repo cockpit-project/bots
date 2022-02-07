@@ -35,11 +35,12 @@ jobs:
       - name: Check whether there are changes that might affect the deployment
         id: changes
         run: |
-          changes=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}..HEAD | grep -Ev '^(images/|naughty/|machine/machine_core/|lib/testmap.py)' || true)
-          # print for debugging
-          echo "changes:"
-          echo "$changes"
-          [ -z "$changes" ] || echo "::set-output name=changed::true"
+          git log --exit-code --stat HEAD --not origin/${{ github.event.pull_request.base.ref }} -- \
+              ':!images' \
+              ':!naughty' \
+              ':!machine/machine_core' \
+              ':!lib/testmap.py' \
+          >&2 || echo "::set-output name=changed::true"
 
       - name: Clone cockpituous repository
         if: steps.changes.outputs.changed
