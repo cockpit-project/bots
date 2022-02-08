@@ -126,10 +126,11 @@ class BuildAction(ActionBase):
             # cut off Debian revision
             ln -s '{vm_source}' ../${{source}}_${{version%-*}}.orig.tar.xz
 
-            DEB_BUILD_OPTIONS='{build_opts}' dpkg-buildpackage -S -us -uc -nc""")
+            dpkg-buildpackage -S -us -uc -nc""")
 
         # build binary packages
-        machine.execute("cd /var/tmp/build; pbuilder build --buildresult . *.dsc", timeout=1800)
+        machine.execute(f"cd /var/tmp/build; DEB_BUILD_OPTIONS='{build_opts}' pbuilder build --buildresult . *.dsc",
+                        timeout=1800)
 
         # install packages
         machine.execute("dpkg -i /var/tmp/build/*.deb")
