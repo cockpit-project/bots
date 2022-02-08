@@ -196,17 +196,14 @@ class RunCommandAction(ActionBase):
 class ScriptAction(ActionBase):
     @staticmethod
     def execute(machine_instance, script):
-        if os.path.isfile(script):
-            uploadpath = "/var/tmp/" + os.path.basename(script)
-            machine_instance.upload([os.path.abspath(script)], uploadpath)
-            machine_instance.execute("chmod a+x %s" % uploadpath)
-            try:
-                machine_instance.execute(uploadpath, timeout=1800)
-            except subprocess.CalledProcessError as e:
-                sys.stderr.write("%s\n" % e)
-                sys.exit(e.returncode)
-        else:
-            sys.stderr.write("Bad path to script: %s\n" % script)
+        uploadpath = "/var/tmp/" + os.path.basename(script)
+        machine_instance.upload([os.path.abspath(script)], uploadpath)
+        machine_instance.execute("chmod a+x %s" % uploadpath)
+        try:
+            machine_instance.execute(uploadpath, timeout=1800)
+        except subprocess.CalledProcessError as e:
+            sys.stderr.write("%s\n" % e)
+            sys.exit(e.returncode)
 
 
 class UploadAction(ActionBase):
