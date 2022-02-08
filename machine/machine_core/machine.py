@@ -356,3 +356,10 @@ class Machine(ssh_connection.SSHConnection):
         """ % (tls and "https" or "http", address, port)
         with timeout.Timeout(seconds=seconds, error_message="Timeout while waiting for cockpit to start"):
             self.execute(script=WAIT_COCKPIT_RUNNING)
+
+    def curl(self, *args, headers=None):
+        header_args = []
+        if headers is not None:
+            for key, value in headers.items():
+                header_args.extend(['--header', f'{key}: {value}'])
+        return self.execute(['curl', '--no-progress-meter'] + header_args + list(args))
