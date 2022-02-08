@@ -482,3 +482,40 @@ class SSHConnection(object):
             The pid of the /bin/sh process that executes the command.
         """
         return int(self.execute("{ (%s) >/var/log/%s 2>&1 & }; echo $!" % (shell_cmd, log_id)))
+
+    def write_conf(self, *args, file='/etc/cockpit/cockpit.conf'):
+        '''Writes the keyfile /etc/cockpit/cockpit.conf, or another file
+
+        The fully general form takes a single dictionary and looks like:
+
+            m.write_conf({
+                'WebService': {
+                    'LoginTitle': 'Hello World'
+                }
+            })
+
+        But there are two "simplified" forms when only setting values in a
+        single section, or only setting a single value.  The following two
+        examples are equivalent to the above, and easier to read:
+
+            m.write_conf('WebService', {'LoginTitle': 'Hello World'})
+
+            m.write_conf('WebService', 'LoginTitle', 'Hello World')
+
+        Values can be any value that will expand in an f-string.  No quoting is
+        performed.
+
+        The file= kwarg can be provided to write to a different file.
+        /etc/cockpit/cockpit.conf is the default.
+        '''
+        while len(args) > 1:
+            args = args[:-2] + ({args[-2]: args[-1]},)
+        config, = args
+
+        lines = []
+        for section, content in config:
+            lines.append(f'[{section}]')
+            for key, value in content:
+                lines.append(f'{key} = {value}')
+            lines.append('')
+        self.write(file, '\n'.join(lines))
