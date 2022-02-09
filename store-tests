@@ -39,11 +39,11 @@ from task import github
 # not ok 117 test/verify/check-metrics TestMetrics.testPcp
 # not ok 305 test/verify/check-networking-bond TestBonding.testActive [ND@1]
 # not ok 24 test/verify/check-foobar TestExample.testBasic [ND] # RETRY 2 (be robust against unstable tests)
-
-# older logs look like this instead:
-# not ok 78 testNodeNavigation (check_openshift.TestOpenshift) # duration: 172s
 re_run = re.compile(r"(not )?ok \d+ (\S+) (\S+)")
 re_retry = re.compile(r"# RETRY .* \(([^)]+)\)")
+
+# duration appears in the line right above the ok/not okTAP result:
+# 1 TEST PASSED [26s on centosci-tasks-6w5w6]
 re_duration = re.compile(r"# \d TEST (FAILED|PASSED) \[(\d+)s")
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
