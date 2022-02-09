@@ -18,6 +18,7 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import collections
 import logging
 import sqlite3
 import sys
@@ -158,6 +159,29 @@ pr_retries_count {acc}
 # TYPE merged_failures counter
 merged_failures {merged_failures}
 """
+
+    # Slowest tests
+    output += """
+# HELP top_slowest_tests The slowest tests in the last 7 days
+# TYPE top_slowest_tests gauge
+"""
+    slowest_tests = """
+        SELECT project, testname, max(seconds) FROM Tests AS t1
+        JOIN TestRuns ON t1.run = TestRuns.id
+        WHERE TestRuns.time > strftime('%s', 'now', '-7 days') AND seconds > 0
+        GROUP BY project, testname
+        ORDER BY seconds DESC
+        LIMIT 200
+    """
+    slowest_tests_map = collections.defaultdict(int)
+    # Number of slowest tests per project to output
+    slowest_tests_limit = 10
+    for (project, test, seconds) in cursor.execute(slowest_tests).fetchall():
+        if slowest_tests_map[project] > slowest_tests_limit:
+            continue
+
+        output += f'top_slowest_tests{{project="{project}",test="{test}"}} {seconds}\n'
+        slowest_tests_map[project] += 1
 
     # S3 space usage
     space_usage = {}
