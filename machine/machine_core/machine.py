@@ -358,8 +358,8 @@ class Machine(ssh_connection.SSHConnection):
             self.execute(script=WAIT_COCKPIT_RUNNING)
 
     def curl(self, *args, headers=None):
-        header_args = []
+        cmd = ['curl', '--silent', '--show-error']
         if headers is not None:
             for key, value in headers.items():
-                header_args.extend(['--header', f'{key}: {value}'])
-        return self.execute(['curl', '--no-progress-meter'] + header_args + list(args))
+                cmd.extend(['--header', f'{key}: {value}'])
+        return self.execute(cmd + list(args))
