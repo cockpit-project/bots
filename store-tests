@@ -54,11 +54,17 @@ def main():
     parser.add_argument("--db", default="test-results.db", help="Database name")
     parser.add_argument("--repo", help="Repository from which to process failures")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
+    parser.add_argument("--test-parser", metavar="LOGFILE",
+                        help="Scan given log file for tests and print results; for testing the parser")
     parser.add_argument("revision", help="SHA for which failures should be stored")
     opts = parser.parse_args()
 
     if opts.verbose:
         logging.basicConfig(level=logging.DEBUG)
+
+    if opts.test_parser:
+        test_parser(opts.test_parser)
+        return 0
 
     ctx = ssl.create_default_context()
     ctx.load_verify_locations(cafile=CA_PEM)
@@ -228,6 +234,13 @@ def find_tests(fp):
             last_msg = ""
 
         prev_msg = line.strip()
+
+
+def test_parser(logfile):
+    with open(logfile, 'rb') as f:
+        for (testname, failed, retry_reason, seconds) in find_tests(f):
+            print(f"{'FAIL' if failed else 'PASS'} {testname} "
+                  f"{('RETRY:' + retry_reason) if retry_reason else ''} time {seconds}s")
 
 
 if __name__ == '__main__':
