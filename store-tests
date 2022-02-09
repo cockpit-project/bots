@@ -39,8 +39,7 @@ from task import github
 # not ok 117 test/verify/check-metrics TestMetrics.testPcp
 # not ok 305 test/verify/check-networking-bond TestBonding.testActive [ND@1]
 # not ok 24 test/verify/check-foobar TestExample.testBasic [ND] # RETRY 2 (be robust against unstable tests)
-re_run = re.compile(r"(not )?ok \d+ (\S+) (\S+)")
-re_retry = re.compile(r"# RETRY .* \(([^)]+)\)")
+re_run = re.compile(r"(not )?ok \d+ (\S+) (\S+)[^#]*(?:# RETRY \d+ \(([^)]+))?")
 
 # duration appears in the line right above the ok/not okTAP result:
 # 1 TEST PASSED [26s on centosci-tasks-6w5w6]
@@ -219,16 +218,15 @@ def find_tests(fp):
         if "FAIL: Test completed, but found unexpected" in line and "raise" not in line:
             save_message = True
 
-        m = re_run.search(line)
-        if (m):
+        m = re_run.match(line)
+        if m:
             # sometimes line breaks are missing:
             # not ok 117 test/verify/check-metrics TestMetrics.testPcp
             testname = "{0} {1}".format(m.group(2), m.group(3)).rstrip("#")
             if "make-checkout-workdir" in testname:
                 testname = testname.split("make-checkout-workdir")[1]
-            r = re_retry.search(line)
-            t = re_duration.search(prev_msg)
-            yield (testname, bool(m.group(1)), last_msg or (r and r.group(1) or None), t and t.group(2) or 0)
+            t = re_duration.match(prev_msg)
+            yield (testname, bool(m.group(1)), last_msg or (m.group(4) or None), t and t.group(2) or 0)
 
             last_msg = ""
 
