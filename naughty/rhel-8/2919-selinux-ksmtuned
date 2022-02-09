@@ -1,0 +1,1 @@
+avc:  denied  { module_request } for .* comm="ksmtuned" .* scontext=system_u:system_r:ksmtuned_t:s0 tcontext=system_u:system_r:kernel_t:s0
