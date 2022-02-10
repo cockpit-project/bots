@@ -284,7 +284,7 @@ class VirtMachine(Machine):
 
         Machine.__init__(self, image=image, **args)
 
-        self.run_dir = overlay_dir or os.getenv("TEST_OVERLAY_DIR", "tmp/run")
+        self.run_dir = overlay_dir or os.getenv("TEST_OVERLAY_DIR", "/var/tmp")
 
         self.virt_connection = self._libvirt_connection(hypervisor="qemu:///session")
 
@@ -316,15 +316,13 @@ class VirtMachine(Machine):
     def _start_qemu(self):
         self._cleanup()
 
-        os.makedirs(self.run_dir, 0o750, exist_ok=True)
-
         def execute(*args):
             self.message(*args)
             return subprocess.check_call(args)
 
         image_to_use = self.image_file
         if not self.maintain:
-            (unused, self._transient_image) = tempfile.mkstemp(suffix='.qcow2', prefix="", dir=self.run_dir)
+            (unused, self._transient_image) = tempfile.mkstemp(suffix='.qcow2', prefix='cockpit-', dir=self.run_dir)
             options = ""
             # check if it is qcow2 (libvirt complains otherwise)
             with open(self.image_file, "rb") as f:
@@ -525,8 +523,6 @@ class VirtMachine(Machine):
 
     def add_disk(self, size=None, serial=None, path=None, type='raw'):
         index = len(self._disks)
-
-        os.makedirs(self.run_dir, 0o750, exist_ok=True)
 
         if path:
             (unused, image) = tempfile.mkstemp(suffix='.qcow2', prefix=os.path.basename(path), dir=self.run_dir)
