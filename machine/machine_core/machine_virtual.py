@@ -20,6 +20,7 @@ import fcntl
 import libvirt
 import libvirt_qemu
 import os
+import shlex
 import string
 import socket
 import subprocess
@@ -290,6 +291,7 @@ class VirtMachine(Machine):
 
         self._disks = []
         self._domain = None
+        self._transient_image = None
 
         # init variables needed for running a vm
         self._cleanup()
@@ -316,21 +318,19 @@ class VirtMachine(Machine):
     def _start_qemu(self):
         self._cleanup()
 
-        def execute(*args):
-            self.message(*args)
-            return subprocess.check_call(args)
-
-        image_to_use = self.image_file
         if not self.maintain:
-            (unused, self._transient_image) = tempfile.mkstemp(suffix='.qcow2', prefix='cockpit-', dir=self.run_dir)
-            options = ""
+            self._transient_image = tempfile.NamedTemporaryFile(suffix='.qcow2', prefix='cockpit-', dir=self.run_dir)
+            cmd = ['qemu-img', 'create', '-q', '-f', 'qcow2', '-b', self.image_file]
             # check if it is qcow2 (libvirt complains otherwise)
             with open(self.image_file, "rb") as f:
                 if f.read(3) == b"QFI":
-                    options += ",backing_fmt=qcow2"
-            execute("qemu-img", "create", "-q", "-f", "qcow2",
-                    "-o", "backing_file=%s%s" % (self.image_file, options), self._transient_image)
-            image_to_use = self._transient_image
+                    cmd.extend(['-F', 'qcow2'])
+            image_to_use = self._transient_image.name
+            cmd.append(image_to_use)
+            self.message(shlex.join(cmd))
+            subprocess.check_call(cmd)
+        else:
+            image_to_use = self.image_file
 
         keys = {
             "label": self.label,
@@ -464,9 +464,11 @@ class VirtMachine(Machine):
             for disk in self._disks:
                 self.rem_disk(disk, quick)
 
+            if self._transient_image is not None:
+                self._transient_image.close()
+                self._transient_image = None
+
             self._domain = None
-            if hasattr(self, '_transient_image') and self._transient_image and os.path.exists(self._transient_image):
-                os.unlink(self._transient_image)
         except Exception as e:
             sys.stderr.write("WARNING: Cleanup failed: %s\n" % e)
 
