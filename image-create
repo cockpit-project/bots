@@ -56,10 +56,12 @@ if args.image in ["fedora-coreos", "services", "selenium", "openshift"]:
 class MachineBuilder:
     def __init__(self, machine):
         self.machine = machine
+        self.iso = self.machine.image.endswith("boot")
+        self.suffix = ".iso" if self.iso else ".qcow2"
 
         # Use /var/tmp/ as this is going to be a huge file; /tmp/ is commonly tmpfs
         self.target_file = self.machine.image_file
-        fp, self.machine.image_file = tempfile.mkstemp(dir="/var/tmp/", prefix=self.machine.image, suffix=".qcow2")
+        fp, self.machine.image_file = tempfile.mkstemp(dir="/var/tmp/", prefix=self.machine.image, suffix=self.suffix)
         os.close(fp)
 
     def bootstrap_system(self):
@@ -159,22 +161,26 @@ class MachineBuilder:
         if not os.path.exists(self.machine.image_file):
             raise testvm.Failure("Nothing to save.")
 
-        partial = os.path.join(data_dir, self.machine.image + ".partial")
+        if not self.iso:
+            rebuild = os.path.join(data_dir, self.machine.image + ".rebuild")
 
-        # Copy image via convert, to make it sparse again
-        subprocess.check_call(["qemu-img", "convert", "-c", "-O", "qcow2", self.machine.image_file, partial])
+            # Copy image via convert, to make it sparse again
+            subprocess.check_call(["qemu-img", "convert", "-c", "-O", "qcow2", self.machine.image_file, rebuild])
 
         # Hash the image here
-        (sha, x1, x2) = subprocess.check_output(["sha256sum", partial], universal_newlines=True).partition(" ")
+        (sha, x1, x2) = subprocess.check_output(
+            ["sha256sum", self.machine.image_file if self.iso else rebuild], universal_newlines=True
+        ).partition(" ")
         if not sha:
             raise testvm.Failure("sha256sum returned invalid output")
 
-        name = self.machine.image + "-" + sha + ".qcow2"
+        name = self.machine.image + "-" + sha + self.suffix
         data_file = os.path.join(data_dir, name)
-        shutil.move(partial, data_file)
+        shutil.move(self.machine.image_file if self.iso else rebuild, data_file)
 
-        # Remove temp image file
-        os.unlink(self.machine.image_file)
+        if not self.iso:
+            # Remove temp image file
+            os.unlink(self.machine.image_file)
 
         # Update the images symlink
         if os.path.islink(self.target_file):

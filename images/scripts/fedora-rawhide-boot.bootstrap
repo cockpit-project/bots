@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eux
+
+OUTPUT="$1"
+
+URL='https://download.fedoraproject.org/pub/fedora/linux/development/rawhide/Server/x86_64/os/images/boot.iso'
+
+curl -L "$URL" -o "$OUTPUT"
