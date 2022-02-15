@@ -41,6 +41,11 @@ if [ -n "$do_build" ]; then
     dist_tar="$(ls cockpit-*.tar.?z)"
     upstream_ver=$(echo "$dist_tar" | sed 's/^.*-//; s/.tar\..z//' | head -n1)
 
+    # HACK: freeze the repository so we don't pull a newer GLIBC
+    cat << EOF > /etc/pacman.d/mirrorlist
+Server = https://america.archive.pkgbuild.com/repos/2021/12/18/\$repo/os/\$arch
+EOF
+
     rm -rf cockpit-*/
     tar -xf $dist_tar
     ( cd $resultdir/
