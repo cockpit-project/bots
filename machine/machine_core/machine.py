@@ -240,6 +240,8 @@ class Machine(ssh_connection.SSHConnection):
             allowed.append('audit.*denied.*{ write }.*comm="rhsm-service" name="memfd:libffi".*')
             # same issue also fails later on with map/read/execute in permissive mode
             allowed.append('audit.*denied.*comm="rhsm-service" .* dev="tmpfs".*permissive=1.*')
+            # https://bugzilla.redhat.com/show_bug.cgi?id=2055199
+            allowed.append('audit.*denied  { execute } for .* comm="nm-dispatcher" name="04-iscsi".*')
 
         if self.image in ['rhel-9-0']:
             # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1989641
