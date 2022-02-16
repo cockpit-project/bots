@@ -1,6 +1,7 @@
 *~
 *.pyc
 *.qcow2
+*.iso
 *.partial
 *.xz
 /*.log
