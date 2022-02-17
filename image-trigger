@@ -27,6 +27,7 @@ REFRESH = {
     "debian-stable": {},
     "fedora-34": {},
     "fedora-35": {},
+    "fedora-36": {},
     "fedora-testing": {"refresh-days": 3},
     "fedora-coreos": {},
     "fedora-rawhide-boot": {},
