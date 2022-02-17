@@ -48,6 +48,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'fedora-36',
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'rhel-8-6-distropkg',
@@ -61,6 +62,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
         '_manual': [
+            'fedora-36',
             f'{TEST_OS_DEFAULT}/firefox',
         ],
     },
@@ -81,6 +83,7 @@ REPO_BRANCH_CONTEXT = {
             'ubuntu-stable',
         ],
         '_manual': [
+            'fedora-36',
             'centos-8-stream',
         ],
     },
@@ -98,6 +101,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
         '_manual': [
+            'fedora-36',
             'fedora-testing',
             'fedora-35/firefox',
             'fedora-35/mobile',
@@ -128,6 +132,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-35',
             'fedora-35/firefox',
+            'fedora-36',
         ],
     },
     'candlepin/subscription-manager': {
@@ -148,6 +153,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-5',
         ],
         '_manual': [
+            'fedora-36',
         ],
     },
     'cockpit-project/cockpit-certificates': {
@@ -158,6 +164,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-6',
             'rhel-9-0',
             'centos-8-stream',
+            'fedora-36',
         ]
     },
     'rhinstaller/anaconda': {
