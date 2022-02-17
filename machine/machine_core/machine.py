@@ -213,14 +213,7 @@ class Machine(ssh_connection.SSHConnection):
             # Fedora and RHEL 9 have switched to dbus-broker
             allowed.append("dbus-daemon didn't send us a dbus address; not installed?.*")
 
-        if self.image in ['fedora-35']:
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1995072
-            allowed.append('audit:.*denied.*comm="systemd-gpt-aut".*')
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1985494
-            allowed.append('audit:.*denied.*{ setpcap }.*comm="firewalld".*')
-            allowed.append('audit:.*denied.*{ setcap }.*comm="firewalld".*')
-
-        if self.image in ['debian-testing', 'ubuntu-stable', 'ubuntu-2004']:
+        if self.image in ['ubuntu-stable', 'ubuntu-2004']:
             # HACK: https://bugs.debian.org/951477
             allowed.append(r'Process .* \(ip6?tables\) of user 0 dumped core.*')
             allowed.append(r'Process .* \(iptables-restor\) of user 0 dumped core.*')
@@ -231,22 +224,9 @@ class Machine(ssh_connection.SSHConnection):
             # but we have to ignore that general header line
             allowed.append('^Stack trace of.*')
 
-        if self.image in ['rhel-8-5', 'rhel-8-5-distropkg', 'centos-8-stream']:
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1979182
-            allowed.append('audit.*denied.*{ getattr }.*comm="systemctl" name="/".*cockpit_ws_t.*')
-
         if self.image in ['rhel-8-6', 'rhel-8-6-distropkg', 'centos-8-stream']:
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=2029873
-            allowed.append('audit.*denied.*{ write }.*comm="rhsm-service" name="memfd:libffi".*')
-            # same issue also fails later on with map/read/execute in permissive mode
-            allowed.append('audit.*denied.*comm="rhsm-service" .* dev="tmpfs".*permissive=1.*')
             # https://bugzilla.redhat.com/show_bug.cgi?id=2055199
             allowed.append('audit.*denied  { execute } for .* comm="nm-dispatcher" name="04-iscsi".*')
-
-        if self.image in ['rhel-9-0']:
-            # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=1989641
-            allowed.append('audit:.*denied.*{ setpcap }.*comm="firewalld".*')
-            allowed.append('audit:.*denied.*{ setcap }.*comm="firewalld".*')
 
         if self.image == "arch":
             # Default PAM configuration logs motd for cockpit-session
