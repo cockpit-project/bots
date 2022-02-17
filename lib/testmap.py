@@ -48,6 +48,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'fedora-36',
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'rhel-8-6-distropkg',
