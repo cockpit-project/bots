@@ -32,7 +32,6 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'ubuntu-2004',
             'ubuntu-stable',
-            'fedora-34',
             'fedora-35',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
@@ -63,7 +62,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/starter-kit': {
         'main': [
-            'fedora-34',
             TEST_OS_DEFAULT,
             'centos-8-stream',
         ],
@@ -83,7 +81,6 @@ REPO_BRANCH_CONTEXT = {
             'arch',
             'rhel-8-6',
             'rhel-9-0',
-            'fedora-34',
             'fedora-35',
             'debian-testing',
             'ubuntu-stable',
@@ -99,7 +96,6 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'ubuntu-2004',
             'ubuntu-stable',
-            'fedora-34',
             'fedora-35',
             f'{TEST_OS_DEFAULT}/firefox',
             'rhel-8-6',
@@ -161,7 +157,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-certificates': {
         'master': [
-            'fedora-34',
             'fedora-35',
         ],
         '_manual': [
@@ -199,7 +194,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
     ],
     "services": [
-        "fedora-34@cockpit-project/cockpit",
+        f"{TEST_OS_DEFAULT}@cockpit-project/cockpit",
         "ubuntu-2004@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
         "rhel-9-0@cockpit-project/cockpit",
