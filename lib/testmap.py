@@ -47,11 +47,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-9',
             'centos-7',
         ],
-        'rhel-8.5': [
-            'rhel-8-5',
-            'rhel-8-5-distropkg',
-            f'{TEST_OS_DEFAULT}/container-bastion',
-        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
