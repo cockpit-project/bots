@@ -213,6 +213,10 @@ class Machine(ssh_connection.SSHConnection):
             # Fedora and RHEL 9 have switched to dbus-broker
             allowed.append("dbus-daemon didn't send us a dbus address; not installed?.*")
 
+        if self.image in ['fedora-34']:
+            # https://bugzilla.redhat.com/show_bug.cgi?id=2051577
+            allowed.append(r'audit.* denied  { map } for .* comm="qemu-img" path="anon_inode:.*io_uring.*')
+
         if self.image in ['ubuntu-stable', 'ubuntu-2004']:
             # HACK: https://bugs.debian.org/951477
             allowed.append(r'Process .* \(ip6?tables\) of user 0 dumped core.*')
