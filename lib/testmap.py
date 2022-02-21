@@ -169,7 +169,7 @@ REPO_BRANCH_CONTEXT = {
     },
     'rhinstaller/anaconda': {
         'master': [
-            'fedora-35/rawhide',
+            'fedora-rawhide-boot',
         ],
         '_manual': [
         ]
