@@ -39,9 +39,12 @@ jobs:
         run: |
           git log --exit-code --stat HEAD --not origin/${{ github.event.pull_request.base.ref }} -- \
               ':!images' \
+              ':!image-create' \
+              ':!image-customize' \
               ':!naughty' \
               ':!machine/machine_core' \
               ':!lib/testmap.py' \
+              ':!vm-run' \
           >&2 || echo "::set-output name=changed::true"
 
       - name: Ensure branch was proposed from origin
