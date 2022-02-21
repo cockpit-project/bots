@@ -27,6 +27,7 @@ from machine import testvm
 
 opt_quick = False
 opt_verbose = False
+opt_build_options = None
 
 
 def prepare_install_image(base_image, install_image, resize, fresh):
@@ -137,8 +138,8 @@ class BuildAction(ActionBase):
             dpkg-buildpackage -S -us -uc -nc""")
 
         # build binary packages
-        machine.execute(f"cd /var/tmp/build; DEB_BUILD_OPTIONS='{build_opts}' pbuilder build --buildresult . *.dsc",
-                        timeout=1800)
+        machine.execute(f"cd /var/tmp/build; DEB_BUILD_OPTIONS='{build_opts}' pbuilder build --buildresult . "
+                        f"{opt_build_options} *.dsc", timeout=1800)
 
         # install packages
         machine.execute("dpkg -i /var/tmp/build/*.deb")
@@ -149,6 +150,8 @@ class BuildAction(ActionBase):
             mock_opts += ' --verbose'
         if opt_quick:
             mock_opts += ' --nocheck'
+        if opt_build_options:
+            mock_opts += ' ' + opt_build_options
 
         # build source package, unless this is running against an srpm already
         if vm_source.endswith(".src.rpm"):
@@ -183,7 +186,7 @@ class BuildAction(ActionBase):
             # tarball must be in same directory as PKGBUILD
             cp '{vm_source}' /var/tmp/build/
             """, perm="755")
-        machine.execute("su builder /var/tmp/mkbuild.sh")
+        machine.execute(f"su builder {opt_build_options} /var/tmp/mkbuild.sh")
 
         # build binaries
         machine.execute("cd /var/tmp/build; su builder -c extra-x86_64-build", timeout=1800)
@@ -242,6 +245,8 @@ def main():
                         help='Base image name, if "image" does not match a standard Cockpit VM image name')
     parser.add_argument('--fresh', action='store_true',
                         help="Start fresh from the base image; by default, multiple image-customize calls are additive")
+    parser.add_argument('--build-options', default="",
+                        help="Additional options for mock/pbuilder/arch builder")
     parser.add_argument('--resize', help="Resize the image. Size in bytes with using K, M, or G suffix.")
     parser.add_argument('-n', '--no-network', action='store_true', help='Do not connect the machine to the Internet')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -259,9 +264,10 @@ def main():
 
     args.base_image = testvm.get_test_image(args.base_image)
 
-    global opt_quick, opt_verbose
+    global opt_quick, opt_verbose, opt_build_options
     opt_quick = args.quick
     opt_verbose = args.verbose
+    opt_build_options = args.build_options
 
     if '/' not in args.base_image:
         subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), args.base_image])
