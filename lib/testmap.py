@@ -60,9 +60,9 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             TEST_OS_DEFAULT,
             'centos-8-stream',
+            'fedora-36',
         ],
         '_manual': [
-            'fedora-36',
             f'{TEST_OS_DEFAULT}/firefox',
         ],
     },
@@ -79,11 +79,11 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-6',
             'rhel-9-0',
             'fedora-35',
+            'fedora-36',
             'debian-testing',
             'ubuntu-stable',
         ],
         '_manual': [
-            'fedora-36',
             'centos-8-stream',
         ],
     },
