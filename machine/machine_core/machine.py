@@ -217,6 +217,10 @@ class Machine(ssh_connection.SSHConnection):
             # https://bugzilla.redhat.com/show_bug.cgi?id=2051577
             allowed.append(r'audit.* denied  { map } for .* comm="qemu-img" path="anon_inode:.*io_uring.*')
 
+        if self.image in ['fedora-36']:
+            # https://bugzilla.redhat.com/show_bug.cgi?id=2056207
+            allowed.append(r'audit.* denied  { read } for  pid=[0-9]+ comm="systemd-sysctl" .*')
+
         if self.image in ['ubuntu-stable', 'ubuntu-2004']:
             # HACK: https://bugs.debian.org/951477
             allowed.append(r'Process .* \(ip6?tables\) of user 0 dumped core.*')
