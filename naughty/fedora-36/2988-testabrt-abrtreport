@@ -1,0 +1,1 @@
+wait_js_cond(ph_is_present("#abrt-reporting .pf-l-split:first-child a[href$='/reports/bthash/123deadbeef'")): Uncaught (in promise) Error: condition did not become true
