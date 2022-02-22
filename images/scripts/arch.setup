@@ -90,6 +90,10 @@ systemctl enable NetworkManager
 # Don't let NetworkManager manage eth0/1
 printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
 
+# Enable serial console, for debugging networking problems
+sed -i '/GRUB_CMDLINE_LINUX=/ s/"$/ console=ttyS0,115200"/' /etc/default/grub
+grub-mkconfig -o /boot/grub/grub.cfg
+
 # Setup sudoers for admin user
 echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/90-cockpit-wheel
 
