@@ -87,8 +87,14 @@ EOL
 # Enable networkmanager as no services are started by default
 systemctl enable NetworkManager
 
-# Don't let NetworkManager manage eth0/1
-printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
+# Don't let NetworkManager manage eth0 (networkd does), and don't autoconnect to eth1
+cat > /etc/NetworkManager/conf.d/noauto.conf <<EOL
+[main]
+no-auto-default=*
+
+[keyfile]
+unmanaged-devices=interface-name:eth0
+EOL
 
 # Enable serial console, for debugging networking problems
 sed -i '/GRUB_CMDLINE_LINUX=/ s/"$/ console=ttyS0,115200"/' /etc/default/grub
