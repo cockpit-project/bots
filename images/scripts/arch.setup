@@ -116,5 +116,8 @@ pacman -Scc --noconfirm
 # Reduce image size, remove cloud-init, reflector
 pacman -Rscn --noconfirm cloud-init reflector
 
+# this is evil (it forces sshd.service to run after network-online.service) and unnecessary
+systemctl disable reflector-init.service
+
 # Reduce image size, clear package cache
 pacman -Scc
