@@ -141,6 +141,11 @@ version=$(cut -d '-' -f 2 <<< "$IMAGE")
 # If version is not number (ie: testing) then use Fedora 35
 if ! [ "$version" -eq "$version" ] 2>/dev/null; then version=35; fi
 
+# Earlier Fedoras and RHEL 8 still shipped this in qemu-common
+if [ "$version" -eq "36" ]; then
+  dnf -y install qemu-virtiofsd
+fi
+
 # don't use a bootstrap chroot to save time and space; everything is offline, and we always just do exactly one build
 echo "config_opts['use_bootstrap'] = False" >>/etc/mock/site-defaults.cfg
 su builder -c "/usr/bin/mock --no-bootstrap-chroot --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
