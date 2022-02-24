@@ -1,0 +1,1 @@
+audit: type=1400 audit(*): avc:  denied  { sys_admin } for  pid=* comm="systemd-coredum" * scontext=system_u:system_r:systemd_coredump_t:s0 tcontext=system_u:system_r:systemd_coredump_t:s0 tclass=cap_userns permissive=0
