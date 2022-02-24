@@ -1,0 +1,1 @@
+audit: type=1400 audit(*): avc:  denied  { read } for  pid=* comm="systemd-sysctl" name="*" dev="proc" * scontext=system_u:system_r:systemd_sysctl_t:s0 tcontext=system_u:object_r:proc_security_t:s0 tclass=file permissive=0
