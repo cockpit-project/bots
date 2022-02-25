@@ -18,7 +18,6 @@ echo foobar | passwd --stdin root
 # the distribution repository is updated.
 #
 COCKPIT_DEPS="\
-acl \
 device-mapper-multipath \
 glibc-all-langpacks \
 glib-networking \
@@ -64,7 +63,8 @@ libsss_sudo \
 "
 
 TEST_PACKAGES="\
-ansible
+acl \
+ansible \
 gdb \
 strace \
 ltrace \
