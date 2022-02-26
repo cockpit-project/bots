@@ -1,5 +1,0 @@
-# testClientCertAuthentication (__main__.TestAD)
-*
-id: 'alice': no such user
-*
-RuntimeError: Timed out on 'while ! id alice; do sleep 5; systemctl restart sssd; done'

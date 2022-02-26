@@ -1,5 +1,0 @@
-# testUnqualifiedUsers (__main__.TestAD)
-*
-su: user Administrator does not exist
-*
-RuntimeError: Timed out on 'while ! su - -c "echo foobarFoo123 | sudo -S true" Administrator; do sleep 5; sss_cache -E || true; systemctl try-restart sssd; done'
