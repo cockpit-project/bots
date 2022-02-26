@@ -1,3 +1,0 @@
-TestGrafanaClient*
-*
-*bg.wait_in_text(".page-body", "Data source is working")
