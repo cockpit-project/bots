@@ -33,6 +33,7 @@ REPO_BRANCH_CONTEXT = {
             'ubuntu-2004',
             'ubuntu-stable',
             'fedora-35',
+            'fedora-36',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             f'{TEST_OS_DEFAULT}/container-bastion',
@@ -48,7 +49,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-36',
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'rhel-8-6-distropkg',
