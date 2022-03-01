@@ -142,6 +142,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-34',
             'fedora-35',
             'fedora-35/rawhide',
+            'fedora-36',
         ],
         'subscription-manager-1.28': [
             'rhel-8-4',
@@ -152,7 +153,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-5',
         ],
         '_manual': [
-            'fedora-36',
         ],
     },
     'cockpit-project/cockpit-certificates': {
