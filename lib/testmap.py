@@ -124,10 +124,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-6',
             'rhel-9-0'
         ],
-        'rhel-8-5': [
-            'rhel-8-5',
-            'rhel-8-5/firefox',
-        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-35',
