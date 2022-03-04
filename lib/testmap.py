@@ -152,6 +152,9 @@ REPO_BRANCH_CONTEXT = {
         'subscription-manager-1.28.21': [
             'rhel-8-5',
         ],
+        'subscription-manager-1.29.26': [
+            'rhel-9-0',
+        ],
         '_manual': [
         ],
     },
