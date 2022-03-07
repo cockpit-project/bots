@@ -146,6 +146,11 @@ class SSHConnection(object):
         else:
             raise exceptions.Failure("Timeout waiting for system to reboot properly")
 
+    def reboot(self, timeout_sec=180):
+        self.spawn("reboot", "reboot", check=False)
+        if timeout_sec:
+            self.wait_reboot(timeout_sec)
+
     def _start_ssh_master(self):
         self._kill_ssh_master()
 
@@ -253,7 +258,7 @@ class SSHConnection(object):
 
     def execute(self, command=None, script=None, input=None, environment={},
                 stdout=None, quiet=False, direct=False, timeout=120,
-                ssh_env=["env", "-u", "LANGUAGE", "LC_ALL=C"]):
+                ssh_env=["env", "-u", "LANGUAGE", "LC_ALL=C"], check=True):
         """Execute a shell command in the test machine and return its output.
 
         Either specify @command or @script
@@ -359,7 +364,7 @@ class SSHConnection(object):
                             proc.stdin.close()
             proc.wait()
 
-        if proc.returncode != 0:
+        if proc.returncode != 0 and check:
             raise subprocess.CalledProcessError(proc.returncode, command, output=output)
         return output
 
@@ -471,7 +476,7 @@ class SSHConnection(object):
             cmd += " && chmod '%s' '%s'" % (perm, dest)
         self.execute(command=cmd, input=content)
 
-    def spawn(self, shell_cmd, log_id):
+    def spawn(self, shell_cmd, log_id, check=True):
         """Spawn a process in the test machine.
 
         Arguments:
@@ -481,4 +486,8 @@ class SSHConnection(object):
         Returns:
             The pid of the /bin/sh process that executes the command.
         """
-        return int(self.execute("{ (%s) >/var/log/%s 2>&1 & }; echo $!" % (shell_cmd, log_id)))
+        res = self.execute(f"{{ ({shell_cmd}) >/var/log/{log_id} 2>&1 & }}; echo $!",
+                           check=check)
+        if not check:
+            return None
+        return int(res)
