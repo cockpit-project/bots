@@ -95,7 +95,6 @@ REPO_BRANCH_CONTEXT = {
             'arch',
             'debian-stable',
             'debian-testing',
-            'ubuntu-2004',
             'ubuntu-stable',
             'fedora-35',
             f'{TEST_OS_DEFAULT}/firefox',
