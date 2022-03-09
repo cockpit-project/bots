@@ -37,4 +37,12 @@ case "$OS_VER" in
     *) EXTRA_DEPS="$EXTRA_DEPS nodejs" ;;
 esac
 
+# libappstream-glib-devel is needed for merging translations in AppStream XML files in starter-kit and derivatives
+# on RHEL 8 only: gettext in RHEL 8 does not know about .metainfo.xml files, and libappstream-glib-devel
+# provides /usr/share/gettext/its/appdata.{its,loc} for them
+case "$OS_VER" in
+    rhel*8|centos*8) EXTRA_DEPS="$EXTRA_DEPS libappstream-glib-devel" ;;
+    *) ;;
+esac
+
 echo "$EXTRA_DEPS"
