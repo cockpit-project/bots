@@ -1,0 +1,1 @@
+avc:  denied  { write } for * comm="insights-client" name="insights-client.pid"
