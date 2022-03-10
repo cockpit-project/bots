@@ -318,12 +318,12 @@ function extract(text) {
                     return 1;
             });
         $('#testing').html(Mustache.render(overview_template, { tests: entries,
-                                                                passed: passed,
-                                                                failed: failed,
-                                                                skipped: skipped,
-                                                                retries: retries,
+                                                                passed,
+                                                                failed,
+                                                                skipped,
+                                                                retries,
                                                                 affected_retries: affected_retries,
-                                                                total: total,
+                                                                total,
                                                                 left: total - passed - failed - skipped,
                                                                 total_test_time,
                                                               })
