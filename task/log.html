@@ -126,23 +126,23 @@
         </script>
         <script>
 
-var tap_range = /^([0-9]+)\.\.([0-9]+)$/m;
-var tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # SKIP .*)?$$/gm;
-var tap_skipped = /^ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # SKIP (.*$)/gm;
-var tap_total_time = /^# (\d+ TESTS FAILED|TESTS PASSED) \[([0-9]+)s on .*\]$/m
-var test_header_start = "# ----------------------------------------------------------------------"
+const tap_range = /^([0-9]+)\.\.([0-9]+)$/m;
+const tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # SKIP .*)?$$/gm;
+const tap_skipped = /^ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # SKIP (.*$)/gm;
+const tap_total_time = /^# (\d+ TESTS FAILED|TESTS PASSED) \[([0-9]+)s on .*\]$/m
+const test_header_start = "# ----------------------------------------------------------------------"
 
-var entry_template = document.querySelector("#TestEntry").innerHTML;
+const entry_template = document.querySelector("#TestEntry").innerHTML;
 Mustache.parse(entry_template);
-var tests_template = document.querySelector("#Tests").innerHTML;
+const tests_template = document.querySelector("#Tests").innerHTML;
 Mustache.parse(tests_template);
-var text_only_template = document.querySelector("#TextOnly").innerHTML;
+const text_only_template = document.querySelector("#TextOnly").innerHTML;
 Mustache.parse(text_only_template);
-var progress_template = document.querySelector("#TestProgress").innerHTML;
+const progress_template = document.querySelector("#TestProgress").innerHTML;
 Mustache.parse(progress_template);
-var overview_template = document.querySelector("#TestingOverview").innerHTML;
+const overview_template = document.querySelector("#TestingOverview").innerHTML;
 Mustache.parse(overview_template);
-var link_template = document.querySelector("#Link").innerHTML;
+const link_template = document.querySelector("#Link").innerHTML;
 Mustache.parse(link_template);
 
 /* Patterns for text that should be turned into links.
@@ -154,7 +154,7 @@ Mustache.parse(link_template);
    here.
 */
 
-var link_patterns = [
+const link_patterns = [
     {
         label: "screenshot",
         pattern: "Wrote screenshot to ([A-Za-z0-9\\-\\.]+\\.png$)",
@@ -176,14 +176,14 @@ var link_patterns = [
 ];
 
 function extract(text) {
-    var m, s, t;
-    var first, last, total, passed, failed, skipped, total_test_time;
+    let m, s;
+    let first, last, total, passed, failed, skipped, total_test_time;
     /* default is to show the text we have, unless we find actual results */
-    var altered_text = Mustache.render(text_only_template, {
+    let altered_text = Mustache.render(text_only_template, {
                     text: text
                 });
-    var entries = [];
-    var indices = {};
+    const entries = [];
+    const indices = {};
     const testingElem = document.querySelector('#testing');
     const testingProgressElem = document.querySelector('#testing-progress');
 
@@ -191,7 +191,7 @@ function extract(text) {
         first = parseInt(m[1], 10);
         last = parseInt(m[2], 10);
         total = last-first+1;
-        t = tap_total_time.exec(text);
+        const t = tap_total_time.exec(text);
         if (t) {
             total_test_time = Math.floor(parseInt(t[2], 10) / 60);
         }
@@ -199,19 +199,19 @@ function extract(text) {
         passed = 0;
         failed = 0;
         skipped = 0;
-        var retries = 0;
-        var affected_retries = 0;
+        let retries = 0;
+        let affected_retries = 0;
 
-        var segments = text.split(test_header_start);
+        const segments = text.split(test_header_start);
         document.querySelector('#test-info').textContent = text.slice(0, text.indexOf('\n'));
 
-        var test_links = {};
-        var ids = { };
+        const test_links = {};
+        const ids = { };
         segments.forEach(function (segment, segmentIndex) {
             tap_range.lastIndex = 0;
             tap_result.lastIndex = 0;
             tap_skipped.lastIndex = 0;
-            var entry = { passed: true,
+            const entry = { passed: true,
                           skipped: false,
                           retried: false,
                           interesting: false,
@@ -227,7 +227,7 @@ function extract(text) {
             } else if (m = tap_result.exec(segment)) {
                 entry.idx = m[2];
                 entry.id = m[2];
-                var r = 0;
+                let r = 0;
                 while (ids[entry.id]) {
                     r += 1;
                     entry.id = m[2] + "-" + r;
@@ -282,11 +282,11 @@ function extract(text) {
                 return tmpl.replace(/\$([0-9]+)/g, function (m, x) { return match[Number(x)]; });
             }
 
-            for (var i = 0; i < link_patterns.length; i++) {
-                var p = link_patterns[i];
+            for (let i = 0; i < link_patterns.length; i++) {
+                let p = link_patterns[i];
                 if (!p.pattern)
                     continue
-                var r = new RegExp(p.pattern, 'gm');
+                let r = new RegExp(p.pattern, 'gm');
                 while (m = r.exec(segment)) {
                     entry.links.push({link_html: Mustache.render(link_template,
                                                                  {
@@ -311,8 +311,8 @@ function extract(text) {
         altered_text = Mustache.render(tests_template, { tests: entries });
         // for the overview list, put the failed entries first
         entries.sort(function(a, b) {
-                var a_idx = isNaN(parseInt(a.idx, 10)) ? a.idx : parseInt(a.idx, 10);
-                var b_idx = isNaN(parseInt(b.idx, 10)) ? b.idx : parseInt(b.idx, 10);
+                let a_idx = isNaN(parseInt(a.idx, 10)) ? a.idx : parseInt(a.idx, 10);
+                let b_idx = isNaN(parseInt(b.idx, 10)) ? b.idx : parseInt(b.idx, 10);
                 if (a.entry.skipped == b.entry.skipped)
                     return a_idx < b_idx ? -1 : (a_idx > b_idx ? 1 : 0);
                 else if (!a.entry.skipped)
@@ -348,7 +348,7 @@ function extract(text) {
     return altered_text;
 }
 
-var interval_id;
+let interval_id;
 
 function poll_log() {
     fetch('link-patterns.json', {
