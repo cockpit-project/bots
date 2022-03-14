@@ -1,0 +1,7 @@
+*internal error: *CURL: Error opening file:*--cdrom*https://archive.fedoraproject.org/pub/archive/fedora/linux/releases/28/Server/x86_64/os/images/boot.iso*
+*
+Traceback (most recent call last):
+  File "*test/check-machines-create", line *, in testCreateUrlSource
+    runner.createTest(TestMachinesCreate.VmDialog(self, sourceType='url',
+*
+testlib.Error: Condition did not become true.
