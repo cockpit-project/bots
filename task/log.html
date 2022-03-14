@@ -154,7 +154,7 @@ Mustache.parse(link_template);
    here.
 */
 
-const link_patterns = [
+let link_patterns = [
     {
         label: "screenshot",
         pattern: "Wrote screenshot to ([A-Za-z0-9\\-\\.]+\\.png$)",
@@ -380,8 +380,7 @@ function poll() {
     })
     .then(response => response.json())
     .then(status => {
-        const messageElem = document.querySelector('#message');
-        messageElem.text(status.message);
+        document.querySelector('#message').innerText = status.message;
         if ((status.message == "Install failed") ||
             (status.message == "Rebase failed")) {
             document.querySelector('#testing-progress').innerHTML = Mustache.render(progress_template,
@@ -393,7 +392,7 @@ function poll() {
                                                       num_failed: status.message
                                                     });
         }
-        messageElem.style.display = '';
+        document.querySelector('#status').style.display = '';
         clearInterval(interval_id);
 
         // One last pass to make sure we haven't missed a new link-patterns.json
