@@ -1,5 +1,0 @@
-Traceback (most recent call last):*
-  File "test/check-machines-nics", line *, in testNICDelete
-    b.wait_not_present("#vm-subVmTest1-network-1-mac")
-*
-testlib.Error: timeout
