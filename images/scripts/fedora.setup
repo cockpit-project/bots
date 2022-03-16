@@ -34,7 +34,7 @@ PackageKit \
 pcp \
 pcp-libs \
 python3-tracer \
-qemu-system-x86-core \
+qemu-kvm-core \
 realmd \
 selinux-policy-targeted \
 setroubleshoot-server \
