@@ -1,1 +1,0 @@
-wait_js_cond(ph_text_is(".container-logs .xterm-accessibility-tree > div:nth-child(1)","1")):
