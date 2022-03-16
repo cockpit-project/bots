@@ -1,7 +1,0 @@
-# test* (__main__.TestPinger)
-*
-Traceback (most recent call last):*
-  File "test/verify/check-examples", line *, in testBasic
-    b.wait_in_text("#result", "success")
-*
-testlib.Error: timeout
