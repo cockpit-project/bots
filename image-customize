@@ -189,7 +189,7 @@ class BuildAction(ActionBase):
         machine.execute(f"su builder {opt_build_options} /var/tmp/mkbuild.sh")
 
         # build binaries
-        machine.execute("cd /var/tmp/build; su builder -c extra-x86_64-build", timeout=1800)
+        machine.execute("cd /var/tmp/build; makechrootpkg -r /var/lib/archbuild/cockpit -U builder", timeout=1800)
 
         # install packages
         machine.execute("pacman -U --noconfirm /var/tmp/build/*.pkg.tar.zst")
