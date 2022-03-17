@@ -178,6 +178,18 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
         ]
     },
+    'ptoscano/subscription-manager-cockpit': {
+        'main': [
+        ],
+        '_manual': [
+            'rhel-8-5',
+            'rhel-8-6',
+            'rhel-8-6/subscription-manager-1.28.29',
+            'rhel-9-0',
+            'rhel-9-0/subscription-manager-1.29.26',
+            'fedora-36',
+        ],
+    },
 }
 
 # The OSTree variants can't build their own packages, so we build in
