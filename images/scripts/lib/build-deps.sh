@@ -23,7 +23,7 @@ case "$OS_VER" in
         ;;
 esac
 
-echo "$spec" | rpmspec -D "$OS_VER" --buildrequires --query /dev/stdin | sed 's/.*/"&"/' | tr '\n' ' '
+echo "$spec" | rpmspec -D "$OS_VER" -D 'version 0' --buildrequires --query /dev/stdin | sed 's/.*/"&"/' | tr '\n' ' '
 
 # some extra build dependencies:
 # - libappstream-glib for validating appstream metadata in starter-kit and derivatives
