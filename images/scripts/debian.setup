@@ -251,3 +251,6 @@ ln -snf /bin/true /etc/network/if-up.d/openssh-server
 # Stop showing 'To run a command as administrator (user "root"), use "sudo <command>". See "man
 # sudo_root" for details.` message in admins terminal.
 touch /home/admin/.sudo_as_admin_successful
+
+# Pull podman containers
+/var/lib/testvm/podman-images.setup
