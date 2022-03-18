@@ -158,7 +158,11 @@ su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
 # host system gets the versions with fedora-updates enabled
 dnf install -y $selinux_pkgs
 
-/var/lib/testvm/podman-images.setup "$version"
+# for containers.install and cockpit's container/* tests
+podman build --tag cockpit/base --build-arg VERSION=$version /var/tmp/cockpit-base
+
+# for c-podman tests
+/var/lib/testvm/podman-images.setup
 
 ln -sf ../selinux/config /etc/sysconfig/selinux
 printf "SELINUX=enforcing\nSELINUXTYPE=targeted\n" > /etc/selinux/config
