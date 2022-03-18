@@ -33,7 +33,7 @@ set -x
 if [ ! -f "$SKIP_REPO_FLAG" ]; then
     # Configure repositories.
 
-    if [ -n "$BASEOS_REPO_URL" -a -n "$APPSTREAM_REPO_URL" ]; then
+    if [ -n "$BASEOS_REPO_URL" -a -n "$APPSTREAM_REPO_URL" -a -n "$CRB_REPO_URL" ]; then
     # disable all default repos
     rm -f --verbose /etc/yum.repos.d/*.repo
 cat <<EOF > /etc/yum.repos.d/rel-eng.repo
@@ -46,6 +46,12 @@ gpgcheck=0
 [RHEL-AppStream]
 name=rhel-appstream
 baseurl=$APPSTREAM_REPO_URL
+enabled=1
+gpgcheck=0
+
+[RHEL-CRB]
+name=rhel-crb
+baseurl=$CRB_REPO_URL
 enabled=1
 gpgcheck=0
 EOF
@@ -71,6 +77,12 @@ baseurl=http://download.devel.redhat.com/$REPO/compose/AppStream/x86_64/os/
 enabled=1
 gpgcheck=0
 
+[RHEL-NIGHTLY-CRB]
+name=crb
+baseurl=http://download.devel.redhat.com/$REPO/compose/CRB/x86_64/os/
+enabled=1
+gpgcheck=0
+
 [RHEL-NIGHTLY-BaseOS-Debug]
 name=baseos-debug
 baseurl=http://download.devel.redhat.com/$REPO/compose/BaseOS/x86_64/debug/tree/
@@ -80,6 +92,12 @@ gpgcheck=0
 [RHEL-NIGHTLY-AppStream-Debug]
 name=appstream-debug
 baseurl=http://download.devel.redhat.com/$REPO/compose/AppStream/x86_64/debug/tree/
+enabled=0
+gpgcheck=0
+
+[RHEL-NIGHTLY-CRB-Debug]
+name=appstream-debug
+baseurl=http://download.devel.redhat.com/$REPO/compose/CRB/x86_64/debug/tree/
 enabled=0
 gpgcheck=0
 EOF

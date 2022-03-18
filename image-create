@@ -93,6 +93,7 @@ class MachineBuilder:
                 "EXTRAS_REPO_URL": os.environ.get("EXTRAS_REPO_URL", ""),
                 "BASEOS_REPO_URL": os.environ.get("BASEOS_REPO_URL", ""),
                 "APPSTREAM_REPO_URL": os.environ.get("APPSTREAM_REPO_URL", ""),
+                "CRB_REPO_URL": os.environ.get("CRB_REPO_URL", ""),
             }
             self.machine.message("run setup script on guest")
 

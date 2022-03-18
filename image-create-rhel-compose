@@ -25,6 +25,7 @@ if [[ "$COMPOSE" =~ RHEL-7 ]]; then
 else
     export BASEOS_REPO_URL="http://download.devel.redhat.com/rhel-8/rel-eng/RHEL-8/$COMPOSE/compose/BaseOS/x86_64/os"
     export APPSTREAM_REPO_URL="http://download.devel.redhat.com/rhel-8/rel-eng/RHEL-8/$COMPOSE/compose/AppStream/x86_64/os"
+    export CRB_REPO_URL="http://download.devel.redhat.com/rhel-8/rel-eng/RHEL-8/$COMPOSE/compose/CRB/x86_64/os"
     install_url=$BASEOS_REPO_URL
 fi
 
