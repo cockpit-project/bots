@@ -108,6 +108,8 @@ case "$RELEASE" in
         TEST_PACKAGES="${TEST_PACKAGES/podman /}"
         # no sscg yet
         COCKPIT_DEPS="${COCKPIT_DEPS/sscg /}"
+        # gettext version too old to ship metainfo.its
+        PBUILDER_EXTRA="${PBUILDER_EXTRA:-} appstream"
         ;;
     impish)
         # no sscg yet
