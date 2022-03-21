@@ -28,7 +28,9 @@ echo "$spec" | rpmspec -D "$OS_VER" -D 'version 0' --buildrequires --query /dev/
 # some extra build dependencies:
 # - libappstream-glib for validating appstream metadata in starter-kit and derivatives
 # - rpmlint for validating built RPMs
-EXTRA_DEPS="libappstream-glib rpmlint"
+# - gettext to build/merge GNU gettext translations
+# - desktop-file-utils for validating desktop files
+EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils"
 
 # nodejs for starter-kit and other projects which rebuild webpack during RPM build; but it can't be installed on RHEL 8
 # mocks due to missing modularity package indexes
