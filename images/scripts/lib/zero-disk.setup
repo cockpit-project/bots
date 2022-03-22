@@ -29,7 +29,7 @@ if [ -f /root/.skip-zero-disk ]; then
     exit 0
 fi
 
-keep="! -path /var/cache/pbuilder ! -path /var/cache/cracklib ! -path /var/cache/tomcat"
+keep="! -path /var/cache/pbuilder ! -path /var/cache/pacman ! -path /var/cache/cracklib ! -path /var/cache/tomcat"
 while [ $# -gt 0 ]; do
     case $1 in
 	--keep-mock-cache)
