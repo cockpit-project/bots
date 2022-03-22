@@ -203,7 +203,7 @@ function extract(text) {
         total = last-first+1;
         const t = tap_total_time.exec(text);
         if (t) {
-            total_test_time = Math.floor(parseInt(t[2], 10) / 60);
+            total_test_time = Math.ceil(parseInt(t[2], 10) / 60);
         }
 
         passed = 0;
