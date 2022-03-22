@@ -155,4 +155,5 @@ systemctl disable reflector-init.service
 # Reduce image size, clear package cache
 pacman -Scc
 
+/var/lib/testvm/podman-images.setup
 /var/lib/testvm/zero-disk.setup
