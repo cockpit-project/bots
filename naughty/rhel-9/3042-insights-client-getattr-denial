@@ -1,0 +1,1 @@
+avc:  denied  { getattr } for * comm="insights-client" path="/var/lib/insights/last_stable.egg"
