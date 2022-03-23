@@ -1,6 +1,0 @@
-Job for kdump.service failed because the control process exited with error code.
-*
-Traceback (most recent call last):*
-  File "test/verify/check-kdump", line *, in testBasic
-*
-    b.wait_in_text("#app", "Service is running")
