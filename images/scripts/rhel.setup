@@ -326,6 +326,7 @@ fi
 # To enable persistent logging
 mkdir -p /var/log/journal
 
+/var/lib/testvm/podman-images.setup
 /var/lib/testvm/zero-disk.setup --keep-mock-cache
 
 # Final tweaks
