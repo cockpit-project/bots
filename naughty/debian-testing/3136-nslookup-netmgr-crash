@@ -1,0 +1,2 @@
+netmgr/netmgr.c:*: REQUIRE((((handle) !=*
+Process * (nslookup) of user 0 dumped core.
