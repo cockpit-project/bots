@@ -32,6 +32,7 @@ REFRESH = {
     "fedora-coreos": {},
     "fedora-rawhide-boot": {},
     "ubuntu-2004": {},
+    "ubuntu-2204": {},
     "ubuntu-stable": {},
     "rhel-7-9": {},
     "rhel-8-4": {},
