@@ -15,4 +15,10 @@ fi
 # release name is the last part of the URL
 rel=${rel##*/}
 
+# Once 22.04 "jammy" releases, keep testing the previous stable "impish". We already have an ubuntu-2204 image (as it is LTS)
+# and don't want the same release again. Once 22.10 releases, go back to testing the latest stable release.
+if [ "$rel" = "jammy" ]; then
+    rel="impish"
+fi
+
 exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "https://cloud-images.ubuntu.com/daily/server/$rel/current/$rel-server-cloudimg-amd64.img"
