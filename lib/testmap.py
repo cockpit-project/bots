@@ -54,10 +54,8 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-testing/dnf-copr',
-            'rhel-8-6-distropkg',
             'rhel-9-0-distropkg',
             'ubuntu-2204',
-            f'{TEST_OS_DEFAULT}/firefox-devel',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -107,8 +105,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-testing',
-            'fedora-35/firefox',
-            'fedora-35/mobile',
             'ubuntu-2204',
         ],
     },
