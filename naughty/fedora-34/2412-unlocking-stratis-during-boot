@@ -1,4 +1,0 @@
-  File "check-storage-stratis", line *, in testEncrypted
-    m.*reboot()
-*
-machine_core.exceptions.Failure: Timeout waiting for system to reboot properly
