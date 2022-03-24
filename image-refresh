@@ -57,9 +57,11 @@ def run(image, verbose=False, **kwargs):
     if old_image and os.path.exists(os.path.join(SCRIPTS_DIR, image + '.setup')):
         subprocess.check_call([os.path.join(BOTS_DIR, "image-diff"), old_image, image])
 
-    # trigger tests
+    # create branch and push it
     branch = task.branch(image, "images: Update {0} image".format(image), pathspec="images", **kwargs)
-    if branch:
+
+    # trigger tests if it is not a pull request
+    if branch and "pull" not in kwargs:
         pull = task.pull(branch, labels=['bot', 'no-test'], run_tests=False, **kwargs)
 
         # Trigger this pull request
