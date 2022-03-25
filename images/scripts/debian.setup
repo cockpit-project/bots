@@ -130,6 +130,9 @@ if grep -q 'ID=ubuntu' /etc/os-release; then
     # our tests need scsi_debug, which the cloud kernel does not have; install full kernel
     TEST_PACKAGES="$TEST_PACKAGES linux-image-generic"
 
+    # we want to have some snaps installed
+    TEST_PACKAGES="$TEST_PACKAGES snapd"
+
     # We want to use/test NetworkManager instead of netplan/networkd for ethernets
     mkdir -p /etc/NetworkManager/conf.d
     touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
@@ -251,4 +254,10 @@ touch /home/admin/.sudo_as_admin_successful
 # Pull podman containers if we have podman
 if [ "$RELEASE" != "focal" ]; then
   /var/lib/testvm/podman-images.setup
+fi
+
+# Pull a small snap on Ubuntu so that we can test its effect on the
+# Storage page and elsewhere.
+if grep -q 'ID=ubuntu' /etc/os-release; then
+    snap install hello-world
 fi
