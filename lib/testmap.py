@@ -83,11 +83,11 @@ REPO_BRANCH_CONTEXT = {
             'fedora-35',
             'fedora-36',
             'debian-testing',
+            'ubuntu-2204',
             'ubuntu-stable',
         ],
         '_manual': [
             'centos-8-stream',
-            'ubuntu-2204',
         ],
     },
     'cockpit-project/cockpit-machines': {
