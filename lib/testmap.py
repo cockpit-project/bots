@@ -95,6 +95,7 @@ REPO_BRANCH_CONTEXT = {
             'arch',
             'debian-stable',
             'debian-testing',
+            'ubuntu-2204',
             'ubuntu-stable',
             'fedora-35',
             'fedora-36',
@@ -105,7 +106,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-testing',
-            'ubuntu-2204',
         ],
     },
     'weldr/lorax': {
