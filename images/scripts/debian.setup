@@ -248,5 +248,7 @@ ln -snf /bin/true /etc/network/if-up.d/openssh-server
 # sudo_root" for details.` message in admins terminal.
 touch /home/admin/.sudo_as_admin_successful
 
-# Pull podman containers
-/var/lib/testvm/podman-images.setup
+# Pull podman containers if we have podman
+if [ "$RELEASE" != "focal" ]; then
+  /var/lib/testvm/podman-images.setup
+fi
