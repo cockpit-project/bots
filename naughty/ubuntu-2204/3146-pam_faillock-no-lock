@@ -1,0 +1,7 @@
+  File "test/verify/check-static-login", line *, in testFaillock
+    expect_failed_login("admin", "foobar", n)
+  File "test/verify/check-static-login", line *, in expect_failed_login
+    b.wait_text_not("#login-error-message", "")
+*
+testlib.Error: timeout
+
