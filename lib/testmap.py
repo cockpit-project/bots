@@ -31,6 +31,7 @@ REPO_BRANCH_CONTEXT = {
             'debian-stable',
             'debian-testing',
             'ubuntu-2004',
+            'ubuntu-2204',
             'ubuntu-stable',
             'fedora-35',
             'fedora-36',
@@ -55,7 +56,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'rhel-9-0-distropkg',
-            'ubuntu-2204',
         ],
     },
     'cockpit-project/starter-kit': {
