@@ -115,44 +115,44 @@ chmod 755 /root/run-samba-domain
 # candlepin setup
 #
 #############################
+cat <<EOF > ./Dockerfile
+FROM quay.io/fedora/fedora:latest
+RUN dnf -y install systemd && dnf clean all
+EOF
 
-# unfortunately the setup only works on RHEL/CentOS 7: https://github.com/candlepin/ansible-role-candlepin/pull/12
-# so we have to run that in a CentOS 7 container
+podman build --tag fedora_systemd .
 
-podman run --name=candlepin --uts=host --publish=8443:8443 --privileged --detach quay.io/centos/centos:centos7 /sbin/init
+podman run --name=candlepin --uts=host --publish=8443:8443 --privileged --detach -t fedora_systemd /usr/sbin/init
 
 podman exec -i candlepin sh -eux <<EOF
 # wait until booted
 systemctl start multi-user.target
 # ensure latest ca-certificates
-yum update -y
-YUM_INSTALL="yum --setopt=skip_missing_names_on_install=False -y install"
-# We deploy candlepin via ansible
-\$YUM_INSTALL epel-release
+dnf update -y
 # Install dependencies
-\$YUM_INSTALL ansible git-core openssl java-11-openjdk-devel sudo initscripts gettext
+dnf -y install ansible libselinux-python3 python3-firewall git-core openssl sudo which hostname initscripts gettext selinux-policy
 
 useradd candlepin
 echo 'candlepin ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/candlepin
 EOF
 
 podman exec -i -u candlepin candlepin sh -eux <<EOF
+ansible-galaxy install rvm.ruby
+
 cd
 mkdir -p playbookdir/roles/
 git clone --depth=1 https://github.com/candlepin/ansible-role-candlepin.git playbookdir/roles/candlepin
 
 cat > playbookdir/playbook.yml <<- EOP
 - hosts: localhost
-  environment:
-    JAVA_HOME: /usr/lib/jvm/java-11/
   roles:
      - role: candlepin
-       candlepin_deploy_args: "-g -a -f -t"
+       cp_deploy_args: "-g -a -f -t"
 EOP
 
 ansible-playbook -v --skip-tags 'system_update' playbookdir/playbook.yml
 
-sudo yum clean all
+sudo dnf clean all
 sudo systemctl enable tomcat
 EOF
 
@@ -161,7 +161,7 @@ curl --insecure --head https://localhost:8443/candlepin/
 
 # copy the certificate to where the tests expect them
 mkdir -p /home/admin/candlepin
-podman cp candlepin:/home/candlepin/candlepin/generated_certs /home/admin/candlepin/
+podman cp candlepin:/home/candlepin/devel/candlepin/generated_certs /home/admin/candlepin/
 mkdir -p /home/admin/candlepin/certs
 podman cp candlepin:/etc/candlepin/certs/candlepin-ca.crt /home/admin/candlepin/certs/
 podman cp candlepin:/etc/candlepin/certs/candlepin-ca-pub.key /home/admin/candlepin/certs/
