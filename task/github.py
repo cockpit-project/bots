@@ -36,6 +36,7 @@ from . import cache
 
 __all__ = (
     'GitHub',
+    'GitHubError',
     'Checklist',
     'TESTING',
     'NO_TESTING',
