@@ -1,0 +1,3 @@
+[Errno 20] Not a directory: '/sys/kernel/config/target/iscsi/cpus_allowed_list'
+*
+subprocess.CalledProcessError: Command 'targetcli /backstores/ramdisk delete test *' returned non-zero exit status 1.

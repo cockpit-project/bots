@@ -1,0 +1,5 @@
+Storage object ramdisk/test exists
+*
+subprocess.CalledProcessError: Command '
+* targetcli /backstores/ramdisk create test 50M
+*' returned non-zero exit status 1.
