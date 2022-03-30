@@ -36,7 +36,7 @@ def upload(dest, source, public):
     url = urllib.parse.urlparse(dest)
 
     # Start building the command
-    cmd = ["curl", "--progress-bar", "--fail", "--upload-file", source]
+    cmd = ["curl", "--no-progress-meter", "--fail", "--upload-file", source]
 
     # Pass credentials, if present
     if s3.is_key_present(url):
@@ -58,15 +58,12 @@ def upload(dest, source, public):
         return 1
 
     print("Uploading to", dest, file=sys.stderr)
-    curl = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    cat = subprocess.Popen(["cat"], stdin=curl.stdout)
-    curl.stdout.close()
-    ret = curl.wait()
-    cat.wait()
-    if ret != 0:
+    try:
+        subprocess.check_call(cmd)
+        return 0
+    except subprocess.CalledProcessError:
         sys.stderr.write(f"image-upload: unable to upload image: {dest}\n")
-
-    return ret
+        return 1
 
 
 def main():
