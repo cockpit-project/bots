@@ -235,8 +235,6 @@ class Machine(ssh_connection.SSHConnection):
         if self.image == "arch":
             # Default PAM configuration logs motd for cockpit-session
             allowed.append(".*cockpit-session: pam: Web console: .*")
-            # Arch's glibc does not support C.UTF-8 yet https://sourceware.org/glibc/wiki/Proposals/C.UTF-8
-            allowed.append(r".*setlocale: LC_ALL: cannot change locale \(C.UTF-8\).*")
 
         return allowed
 
