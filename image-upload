@@ -22,6 +22,7 @@ import getpass
 import os
 import subprocess
 import sys
+import time
 import urllib.parse
 
 from lib.constants import IMAGES_DIR
@@ -58,10 +59,17 @@ def upload(dest, source, public):
         return 1
 
     print("Uploading to", dest, file=sys.stderr)
-    try:
-        subprocess.check_call(cmd)
-        return 0
-    except subprocess.CalledProcessError:
+
+    # Retry with exponential back-off, to defend against short-term networking errors
+    for retry in range(3):
+        try:
+            subprocess.check_call(cmd)
+            return 0
+        except subprocess.CalledProcessError:
+            delay = 10 * 4 ** retry
+            sys.stderr.write(f"image-upload: retrying upload to {dest} in {delay}s..\n")
+            time.sleep(delay)
+    else:
         sys.stderr.write(f"image-upload: unable to upload image: {dest}\n")
         return 1
 
