@@ -1,2 +1,0 @@
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
-Error importing insights.client for pre_update as /var/lib/insights/newest.egg: No module named 'insights'
