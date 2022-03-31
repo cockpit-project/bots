@@ -88,6 +88,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-35/devel',
         ],
     },
     'cockpit-project/cockpit-machines': {
