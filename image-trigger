@@ -23,6 +23,7 @@ REFRESH = {
     "arch": {},
     "centos-7": {},
     "centos-8-stream": {},
+    "centos-9-stream": {},
     "debian-testing": {},
     "debian-stable": {},
     "fedora-35": {},
