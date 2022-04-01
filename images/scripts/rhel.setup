@@ -271,7 +271,7 @@ config_opts['chroothome'] = '/builddir'
 config_opts['use_host_resolv'] = False
 config_opts['basedir'] = '/var/lib/mock'
 config_opts['rpmbuild_timeout'] = 86400
-config_opts['yum.conf'] = '[main]\\ncachedir=/var/cache/yum\\ndebuglevel=1\\nlogfile=/var/log/yum.log\\nreposdir=/dev/null\\nretries=20\\nobsoletes=1\\ngpgcheck=0\\nassumeyes=1\\nkeepcache=1\\ninstall_weak_deps=0\\nstrict=1\\n\\n# repos\\n\\n[build]\\nname=build\\nbaseurl=http://download.devel.redhat.com/brewroot/repos/$REPO/latest/x86_64/\\n'
+config_opts['yum.conf'] = '[main]\\ncachedir=/var/cache/yum\\ndebuglevel=1\\nlogfile=/var/log/yum.log\\nreposdir=/dev/null\\nretries=20\\nobsoletes=1\\ngpgcheck=0\\nassumeyes=1\\nkeepcache=1\\ninstall_weak_deps=0\\nstrict=1\\n\\n# repos\\n\\n[build]\\nname=build\\nbaseurl=http://download.devel.redhat.com/brewroot/repos/$REPO/latest/x86_64/\\nmodule_hotfixes=1\\n'
 config_opts['chroot_setup_cmd'] = 'groupinstall build'
 config_opts['target_arch'] = 'x86_64'
 config_opts['root'] = u'rhel-candidate-x86_64'
