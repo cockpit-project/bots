@@ -30,14 +30,8 @@ echo "$spec" | rpmspec -D "$OS_VER" -D 'version 0' --buildrequires --query /dev/
 # - rpmlint for validating built RPMs
 # - gettext to build/merge GNU gettext translations
 # - desktop-file-utils for validating desktop files
-EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils"
-
-# nodejs for starter-kit and other projects which rebuild webpack during RPM build; but it can't be installed on RHEL 8
-# mocks due to missing modularity package indexes
-case "$OS_VER" in
-    rhel*8) ;;
-    *) EXTRA_DEPS="$EXTRA_DEPS nodejs" ;;
-esac
+# - nodejs for starter-kit and other projects which rebuild webpack during RPM build
+EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs"
 
 # libappstream-glib-devel is needed for merging translations in AppStream XML files in starter-kit and derivatives
 # on RHEL 8 only: gettext in RHEL 8 does not know about .metainfo.xml files, and libappstream-glib-devel
