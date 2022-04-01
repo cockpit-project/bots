@@ -59,6 +59,8 @@ def write_package_json(package_json_path, data):
 def prefix(name, version):
     if not version[0].isdigit():
         return version
+    if name.startswith("@patternfly"):
+        return "prerelease"
     if name not in FRAGILE:
         return "^" + version
     return "~" + version
