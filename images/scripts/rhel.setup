@@ -279,14 +279,15 @@ config_opts['root'] = u'rhel-candidate-x86_64'
 config_opts['macros']['%_topdir'] = '/builddir/build'
 config_opts['macros']['%_rpmfilename'] = '%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm'
 EOF
-    elif [ "${IMAGE#centos-8*}" != "$IMAGE" ]; then
+    elif [ "${IMAGE#centos-*}" != "$IMAGE" ]; then
+        version=$(cut -d '-' -f 2 <<< "$IMAGE")
         # install mock from EPEL
-        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-${version}.noarch.rpm
         dnf install -y rpm-build mock
         dnf config-manager --set-disabled epel
 
-        # build mock for CentOS 8 stream repo
-        ln -sf centos-stream-8-x86_64.cfg /etc/mock/default.cfg
+        # build mock for CentOS stream repo
+        ln -sf centos-stream-${version}-x86_64.cfg /etc/mock/default.cfg
     fi
 
     useradd -c Builder -G mock builder
