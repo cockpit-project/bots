@@ -88,7 +88,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
-            'fedora-35/devel',
+            f'{TEST_OS_DEFAULT}/devel',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -107,6 +107,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-testing',
+            f'{TEST_OS_DEFAULT}/devel',
         ],
     },
     'weldr/lorax': {
