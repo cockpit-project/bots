@@ -160,14 +160,12 @@ REPO_BRANCH_CONTEXT = {
     },
     'candlepin/subscription-manager-cockpit': {
         'main': [
-            'rhel-8-6/subscription-manager-1.28',
             'rhel-9-0',
             'fedora-35',
             'fedora-36',
         ],
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
-            'centos-9-stream',
         ],
     },
     'cockpit-project/cockpit-certificates': {
