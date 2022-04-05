@@ -1,0 +1,4 @@
+> warning: Error waiting for logical volume object for 'lvol0': Timed out waiting for object
+*
+  File "check-storage-lvm2", line *, in testLvm
+    self.dialog(expect={"name": "lvol0"},
