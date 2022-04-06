@@ -20,6 +20,7 @@
 import argparse
 import getpass
 import os
+import re
 import subprocess
 import sys
 import time
@@ -43,9 +44,8 @@ def upload(dest, source, public):
     if s3.is_key_present(url):
         headers = {s3.ACL: s3.PUBLIC} if public else {}
 
-        # slightly magic: image filenames always end with -{sha256}.qcow2 or -{sha256}.iso
-        assert (source.endswith('.qcow2') or source.endswith('.iso'))
-        hash_value = source.rstrip(".qcow2").rstrip(".iso")[-64:]
+        # slightly magic: we already know the checksum: it's part of the filename
+        hash_value = re.search('[0-9a-f]{64}', source).group(0)
 
         cmd += s3.sign_curl(url, method='PUT', headers=headers, checksum=hash_value)
 
