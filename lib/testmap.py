@@ -185,6 +185,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-rawhide-boot',
         ],
         '_manual': [
+            'fedora-rawhide-boot/devel',
         ]
     },
 }
