@@ -1,0 +1,2 @@
+testlib.Error: FAIL: Test completed, but found unexpected journal messages:
+libgcrypt selftest: binary  (0): Invalid object
