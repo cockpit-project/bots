@@ -249,6 +249,10 @@ def main():
                         help="Additional options for mock/pbuilder/arch builder")
     parser.add_argument('--resize', help="Resize the image. Size in bytes with using K, M, or G suffix.")
     parser.add_argument('-n', '--no-network', action='store_true', help='Do not connect the machine to the Internet')
+    parser.add_argument('--cpus', type=int, default=None,
+                        help="Number of CPUs for the virtual machine")
+    parser.add_argument('--memory-mb', type=int, default=None,
+                        help="RAM size for the virtual machine")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Display verbose progress details')
     parser.add_argument('-q', '--quick', action='store_true',
@@ -275,7 +279,9 @@ def main():
     machine = testvm.VirtMachine(maintain=True,
                                  verbose=args.verbose,
                                  networking=network.host(restrict=args.no_network),
-                                 image=prepare_install_image(args.base_image, args.image, args.resize, args.fresh))
+                                 image=prepare_install_image(args.base_image, args.image, args.resize, args.fresh),
+                                 cpus=args.cpus,
+                                 memory_mb=args.memory_mb)
     machine.start()
     machine.wait_boot()
     try:
