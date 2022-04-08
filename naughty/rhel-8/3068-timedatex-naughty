@@ -1,3 +1,0 @@
-audit: * avc:  denied  { create } for * comm="timedatex" scontext=system_u:system_r:timedatex_t:s0 tcontext=system_u:system_r:timedatex_t:s0 tclass=unix_dgram_socket*
-*
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
