@@ -1,1 +1,0 @@
-* type=1400 audit(*): avc:  denied  { read } for * comm="coredumpctl" * scontext=system_u:system_r:abrt_t:s0-s0:c0.c1023 *
