@@ -1,1 +1,0 @@
-wait_js_cond(ph_is_present("#abrt-details .pf-c-accordion__toggle:contains('core_backtrace'):not([disabled]):not([aria-disabled=true])")): Uncaught (in promise) Error: condition did not become true
