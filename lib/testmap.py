@@ -216,6 +216,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "rhel-9-0@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
         "rhel-8-5@candlepin/subscription-manager",
+        "rhel-9-0@candlepin/subscription-manager-cockpit",
     ]
 }
 
