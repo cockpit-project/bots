@@ -25,7 +25,13 @@ grubby \
 json-glib \
 kexec-tools \
 libssh \
-libvirt-daemon-kvm \
+libvirt-daemon-config-network \
+libvirt-daemon-driver-qemu \
+libvirt-daemon-driver-network \
+libvirt-daemon-driver-nodedev \
+libvirt-daemon-driver-storage-core \
+libvirt-daemon-driver-interface \
+libvirt-daemon-driver-storage-disk \
 libvirt-client \
 libvirt-dbus \
 NetworkManager-team \
@@ -34,6 +40,10 @@ PackageKit \
 pcp \
 pcp-libs \
 python3-tracer \
+qemu-block-curl \
+qemu-char-spice \
+qemu-device-usb-host \
+qemu-device-usb-redirect \
 qemu-kvm-core \
 realmd \
 selinux-policy-targeted \
@@ -77,7 +87,9 @@ socat \
 tang \
 podman \
 ntpsec \
-libvirt-daemon-config-network \
+libvirt-daemon-driver-storage-iscsi \
+libvirt-daemon-driver-storage-iscsi-direct \
+libvirt-daemon-driver-storage-logical \
 tlog \
 nginx \
 tcsh \
