@@ -69,7 +69,7 @@ def run(context, verbose=False, **kwargs):
     # LINGUAS file in use and therefore needs updating
     linguas_exists = os.path.isfile("po/LINGUAS")
     # Manifest file is use - and for its updating we also need language map
-    manifest_exists = os.path.isfile("pkg/shell/manifest.json.in") and os.path.isfile("po/language_map.txt")
+    manifest_exists = os.path.isfile("pkg/shell/manifest.json") and os.path.isfile("po/language_map.txt")
 
     # Get locale from language-map file. Fail with keyError when not found
     def get_locale(file_name):
@@ -85,10 +85,10 @@ def run(context, verbose=False, **kwargs):
                 print("\n".join(current_linguas), file=lngs)
             git_cmd.append("po/LINGUAS")
         if manifest_exists:
-            with open("pkg/shell/manifest.json.in", "w", encoding='utf-8') as mnfst:
+            with open("pkg/shell/manifest.json", "w", encoding='utf-8') as mnfst:
                 text = json.dumps(current_manifest, ensure_ascii=False, indent=4)
                 print(text, file=mnfst)
-            git_cmd.append("pkg/shell/manifest.json.in")
+            git_cmd.append("pkg/shell/manifest.json")
         execute(*git_cmd, name)
         return task.branch(context, "po: {0} '{1}' language".format(action, language),
                            pathspec=None, branch=local_branch, push=False, **kwargs)
@@ -104,7 +104,7 @@ def run(context, verbose=False, **kwargs):
                 language_map[items[0]] = items
 
         # Read manifest
-        with open("pkg/shell/manifest.json.in", "r", encoding='utf-8') as mnfst:
+        with open("pkg/shell/manifest.json", "r", encoding='utf-8') as mnfst:
             current_manifest = json.load(mnfst)
 
     # Read linguas
