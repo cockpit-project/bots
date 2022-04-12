@@ -22,11 +22,6 @@
 #  * [ ] npm-update patternfly
 #
 
-# Dependencies where minor updates break, only bump microversion
-FRAGILE = [
-    "jquery",
-]
-
 # Dependencies which have to be updated in lockstep, not individually
 GROUP = [
     "@patternfly"
@@ -61,8 +56,6 @@ def prefix(name, version):
         return version
     if name.startswith("@patternfly"):
         return "prerelease"
-    if name not in FRAGILE:
-        return "^" + version
     return "~" + version
 
 
