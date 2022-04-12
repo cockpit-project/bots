@@ -19,7 +19,11 @@
 
 # To use this example add a line to an issue with the "bot" label
 #
-#  * [ ] npm-update patternfly
+#  * [ ] npm-update @patternfly
+#
+# To ignore specific package you can use `~` in front of context
+#
+# * [ ] npm-update ~@patternfly
 #
 
 # Dependencies which have to be updated in lockstep, not individually
@@ -68,6 +72,11 @@ def output(*args):
 def run(context, verbose=False, **kwargs):
     pending_updates = []
 
+    ignore_context = None
+    if context and context.startswith("~"):
+        ignore_context = context[1:]
+        context = None
+
     if not kwargs["dry"]:
         api = task.github.GitHub()
 
@@ -113,6 +122,12 @@ def run(context, verbose=False, **kwargs):
             if task.verbose:
                 sys.stderr.write("Ignoring '{0}' as it does not belong to current update group {1}\n"
                                  .format(package, group))
+            continue
+
+        # Ignore if context is specified and does not match
+        if context and not package.startswith(context):
+            continue
+        if ignore_context and package.startswith(ignore_context):
             continue
 
         # Check if we got an upgrade
