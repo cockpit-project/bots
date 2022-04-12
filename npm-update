@@ -90,9 +90,6 @@ def run(context, verbose=False, **kwargs):
                     if task.verbose:
                         sys.stderr.write("Ignoring '{0}' as there is pending PR #{1}\n".format(pkg, issue["number"]))
 
-    # The only time git will checkout an empty subdir is if it's a gitlink
-    is_gitlink = not subprocess.call(['rmdir', 'node_modules'])
-
     package_json_path = os.path.join(BASE_DIR, "package.json")
     old = read_package_json(package_json_path)
     old_deps = old['dependencies']
@@ -153,16 +150,18 @@ def run(context, verbose=False, **kwargs):
     updated_packages = sorted(updates)
 
     if updated_packages and not kwargs["dry"]:
+        # If node_modules/ is a gitlink, run the script to update it
+        if os.path.exists('tools/node-modules'):
+            subprocess.check_call(['tools/node-modules', 'install'])
+            subprocess.check_call(['tools/node-modules', 'push'])
+            subprocess.check_call(['git', 'add', 'node_modules'])
+
         # Create a pull request from these changes
         title = "package.json: Update " + ', '.join(updated_packages)
         branch = task.branch(updated_packages[0], title, pathspec="package.json", **kwargs)
 
         kwargs["title"] = title
         pull = task.pull(branch, **kwargs)
-
-        # If node_modules/ is a gitlink, request `/npm install`
-        if is_gitlink:
-            task.comment(pull, "/npm install")
 
         # List of files that probably touch this package
         lines = output("git", "grep", "-Ew", '|'.join(updated_packages))
