@@ -332,13 +332,13 @@ def push_branch(branch, force=False):
     execute(*cmd)
 
 
-def branch(context, message, pathspec=".", issue=None, branch=None, push=True, **kwargs):
+def branch(context, message, pathspec=".", issue=None, push=True, **kwargs):
     name = named(kwargs)
-    if not branch:
-        execute("git", "checkout", "--detach")
-        current = time.strftime('%Y%m%d-%H%M%M')
-        branch = "{0} {1} {2}".format(name, context or "", current).strip()
-        branch = branch.replace(" ", "-").replace("--", "-")
+
+    execute("git", "checkout", "--detach")
+    current = time.strftime('%Y%m%d-%H%M%M')
+    branch = "{0} {1} {2}".format(name, context or "", current).strip()
+    branch = branch.replace(" ", "-").replace("--", "-")
 
     # Tell git about our github token for authentication
     try:
