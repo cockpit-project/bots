@@ -19,8 +19,10 @@
 # our GitHub interacition.
 
 import argparse
+from datetime import datetime
 import os
 import random
+import re
 import shutil
 import socket
 import subprocess
@@ -336,9 +338,8 @@ def branch(context, message, pathspec=".", issue=None, push=True, **kwargs):
     name = named(kwargs)
 
     execute("git", "checkout", "--detach")
-    current = time.strftime('%Y%m%d-%H%M%M')
-    branch = "{0} {1} {2}".format(name, context or "", current).strip()
-    branch = branch.replace(" ", "-").replace("--", "-")
+    branch = f'{name}-{context or ""}-{datetime.utcnow():%Y%m%d-%H%M%M}'
+    branch = re.sub('[^A-Za-z0-9]+', '-', branch)
 
     # Tell git about our github token for authentication
     try:
