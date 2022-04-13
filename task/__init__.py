@@ -337,9 +337,9 @@ def push_branch(branch, force=False):
 def branch(context, message, pathspec=".", issue=None, push=True, **kwargs):
     name = named(kwargs)
 
-    execute("git", "checkout", "--detach")
     branch = f'{name}-{context or ""}-{datetime.utcnow():%Y%m%d-%H%M%M}'
     branch = re.sub('[^A-Za-z0-9]+', '-', branch)
+    execute("git", "checkout", "-b", branch)
 
     # Tell git about our github token for authentication
     try:
