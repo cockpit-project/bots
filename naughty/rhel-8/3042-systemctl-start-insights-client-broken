@@ -1,1 +1,0 @@
-subprocess.CalledProcessError: Command 'systemctl start insights-client' returned non-zero exit status 1.
