@@ -1,1 +1,1 @@
-avc:  denied  { getattr } for * comm="insights-client" path="/var/lib/insights/last_stable.egg"
+avc:  denied  { read } for * name="pubring.kbx" * scontext=system_u:system_r:insights_client_t:s0*
