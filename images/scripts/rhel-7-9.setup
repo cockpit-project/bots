@@ -194,15 +194,13 @@ fi
 # rpm.egg, never at newest.egg. So copying newest.egg to
 # last_stable.egg makes that work as expected, too.
 
-if [ -x /usr/bin/insights-client ]; then
-    rpm -q insights-client
-    insights-client --version
-    insights-client --status --verbose || true
-    if [ -f /var/lib/insights/newest.egg ]; then
-        cp /var/lib/insights/newest.egg /var/lib/insights/last_stable.egg
-        cp /var/lib/insights/newest.egg.asc /var/lib/insights/last_stable.egg.asc
-        rm -f /etc/insights-client/rpm.egg /etc/insights-client/rpm.egg.asc
-    fi
+rpm -q insights-client
+insights-client --version
+insights-client --status --verbose || true
+if [ -f /var/lib/insights/newest.egg ]; then
+    cp /var/lib/insights/newest.egg /var/lib/insights/last_stable.egg
+    cp /var/lib/insights/newest.egg.asc /var/lib/insights/last_stable.egg.asc
+    rm -f /etc/insights-client/rpm.egg /etc/insights-client/rpm.egg.asc
 fi
 
 # Pre-install cockpit packages from base, to check for API breakages
