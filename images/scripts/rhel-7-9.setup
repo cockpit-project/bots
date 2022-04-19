@@ -196,7 +196,7 @@ fi
 
 rpm -q insights-client
 insights-client --version
-insights-client --status --verbose || true
+insights-client --status || true
 if [ -f /var/lib/insights/newest.egg ]; then
     cp /var/lib/insights/newest.egg /var/lib/insights/last_stable.egg
     cp /var/lib/insights/newest.egg.asc /var/lib/insights/last_stable.egg.asc
