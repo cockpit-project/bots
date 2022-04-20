@@ -55,7 +55,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-testing/dnf-copr',
-            'rhel-9-0-distropkg',
+            'rhel-9-1',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -88,6 +88,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'rhel-9-1',
             f'{TEST_OS_DEFAULT}/devel',
         ],
     },
@@ -107,6 +108,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-testing',
+            'rhel-9-1',
             f'{TEST_OS_DEFAULT}/devel',
         ],
     },
@@ -130,6 +132,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-35',
             'fedora-35/firefox',
             'fedora-36',
+            'rhel-9-1',
         ],
     },
     'candlepin/subscription-manager': {
@@ -176,6 +179,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'rhel-8-6',
             'rhel-9-0',
+            'rhel-9-1',
             'centos-8-stream',
             'fedora-36',
         ]
