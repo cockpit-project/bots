@@ -104,11 +104,11 @@ REPO_BRANCH_CONTEXT = {
             f'{TEST_OS_DEFAULT}/firefox',
             'rhel-8-6',
             'rhel-9-0',
+            'rhel-9-1',
             'centos-8-stream',
         ],
         '_manual': [
             'fedora-testing',
-            'rhel-9-1',
             f'{TEST_OS_DEFAULT}/devel',
         ],
     },
