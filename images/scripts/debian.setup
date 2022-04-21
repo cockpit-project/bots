@@ -211,9 +211,6 @@ systemctl disable apt-daily.timer apt-daily-upgrade.timer fstrim.timer man-db.ti
 echo "kernel.core_pattern=|/lib/systemd/systemd-coredump %P %u %g %s %t %c %e" > /etc/sysctl.d/50-coredump.conf
 printf 'DefaultLimitCORE=infinity\n' >> /etc/systemd/system.conf
 
-# in case there are unnecessary packages
-$APT autoremove || true
-
 # disable udev network names, our tests expect the kernel schema
 sed -i '/GRUB_CMDLINE_LINUX=/ s/"$/ net.ifnames=0 biosdevname=0"/' /etc/default/grub
 rm -f /etc/udev/rules.d/70-persistent-net.rules /etc/udev/rules.d/75-cloud-ifupdown.rules
@@ -221,12 +218,6 @@ update-grub
 sed -i 's/ens[^[:space:]:]*/eth0/' /etc/network/interfaces /etc/network/interfaces.d/* /etc/netplan/*.yaml || true
 update-initramfs -u
 
-
-# reduce image size
-apt-get clean
-pbuilder clean
-rm -f /var/cache/apt/*cache.bin
-/var/lib/testvm/zero-disk.setup
 
 # Final tweaks
 
@@ -261,3 +252,12 @@ fi
 if grep -q 'ID=ubuntu' /etc/os-release; then
     snap install hello-world
 fi
+
+# reduce image size; don't keep old kernels
+sed -i '/linux/d' /etc/apt/apt.conf.d/01autoremove
+$APT autoremove --purge || true
+apt-get clean
+pbuilder clean
+rm -f /var/cache/apt/*cache.bin
+
+/var/lib/testvm/zero-disk.setup
