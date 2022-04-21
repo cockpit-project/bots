@@ -43,6 +43,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-6-distropkg',
             'centos-8-stream',
             'rhel-9-0',
+            'rhel-9-1',
         ],
         'rhel-7.9': [
             'rhel-7-9',
@@ -55,7 +56,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-testing/dnf-copr',
-            'rhel-9-1',
         ],
     },
     'cockpit-project/starter-kit': {
