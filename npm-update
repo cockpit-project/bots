@@ -41,7 +41,7 @@ import tempfile
 sys.dont_write_bytecode = True
 
 import task
-from lib.constants import BASE_DIR
+from lib.constants import BASE_DIR, BOTS_DIR
 
 
 def read_package_json(package_json_path):
@@ -100,8 +100,8 @@ def run(context, verbose=False, **kwargs):
         write_package_json(f'{tmpdir}/package.json', {**old, 'dependencies': prefixed})
 
         if task.verbose:
-            sys.stderr.write("+ npm outdated --json")
-        result = subprocess.run(['npm', 'outdated', '--json'], cwd=tmpdir, stdout=subprocess.PIPE)
+            sys.stderr.write(f"+ {BOTS_DIR}/npm outdated --json")
+        result = subprocess.run([f'{BOTS_DIR}/npm', 'outdated', '--json'], cwd=tmpdir, stdout=subprocess.PIPE)
 
     # Check which upgrades we could do
     group = None
