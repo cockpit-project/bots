@@ -68,6 +68,10 @@ cmd_outdated() {
     '
 }
 
+cmd_prune() {
+    : # npm install already produces a clean result each time
+}
+
 main() {
     if [ $# = 0 ]; then
         # don't list the "private" ones
