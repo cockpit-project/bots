@@ -1,0 +1,88 @@
+#!/bin/sh
+
+# This is a helper script which downloads the `node:alpine` container and runs
+# `npm` commands inside of it, as an alternative to installing and running
+# `npm` on the host.
+
+set -eu
+
+cmd_sh() {
+    # Lots of cockpit developers are using toolbox, which can't recursively run
+    # podman, but flatpak-spawn offers a nice workaround for that.
+    if [ -f /run/.toolboxenv ]; then
+        exec flatpak-spawn --host -- "$0" sh "$@"
+        exit 1
+    fi
+
+    CACHE="cockpit-project-npm-cache-volume"
+    IMAGE="docker.io/library/node:alpine"
+
+    # make sure the node user can write to the cache volume
+    podman run \
+        --rm \
+        --volume "${CACHE}":/home/node/.npm:U \
+        "${IMAGE}" chown -R node:node /home/node >&2
+
+    # do the actual work
+    exec podman run \
+        --log-driver='none' \
+        --rm \
+        --init \
+        --user node \
+        --workdir /home/node \
+        --interactive \
+        --attach stdin \
+        --attach stdout \
+        --attach stderr \
+        --volume "${CACHE}":/home/node/.npm \
+        "${IMAGE}" /bin/sh -c "$1"
+}
+
+cmd_download() {
+    if [ -t 1 ]; then
+        echo 'This command outputs tar to stdout.  Use `bots/npm install` instead.'
+        exit 1
+    fi
+
+    cmd_sh '
+        set -eux
+        tee package.json >/dev/null
+        npm install --ignore-scripts >&2 & wait -n    # allows the shell to catch SIGINT
+        cp package.json node_modules/.package.json
+        tar --directory=node_modules --create .
+    '
+}
+
+cmd_install() {
+    rm -rf node_modules
+    mkdir node_modules
+    cat 'package.json' | cmd_download | tar --directory node_modules --exclude '.git*' --extract
+    cp node_modules/.package-lock.json package-lock.json
+}
+
+cmd_outdated() {
+    cat 'package.json' | cmd_sh '
+        set -eux
+        tee package.json >/dev/null
+        npm outdated '"$*"' & wait -n    # allows the shell to catch SIGINT
+    '
+}
+
+main() {
+    if [ $# = 0 ]; then
+        # don't list the "private" ones
+        echo 'This command requires a subcommand: install outdated sh'
+        exit 1
+    fi
+
+    local fname="$(printf 'cmd_%s' "$1" | tr '-' '_')"
+    if ! type -t "${fname}" | grep -q function; then
+        echo "Unknown subcommand '$1'"
+        exit 1
+    fi
+
+    shift
+    "${fname}" "$@"
+}
+
+main "$@"
