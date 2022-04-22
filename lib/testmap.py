@@ -136,11 +136,9 @@ REPO_BRANCH_CONTEXT = {
     },
     'candlepin/subscription-manager': {
         'main': [
-            'rhel-8-5',
             'rhel-8-6',
             'rhel-9-0',
-            'fedora-35',
-            'fedora-35/rawhide',
+            'rhel-9-1',
             'fedora-36',
         ],
         'subscription-manager-1.28': [
