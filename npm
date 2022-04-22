@@ -56,16 +56,16 @@ cmd_download() {
 cmd_install() {
     rm -rf node_modules
     mkdir node_modules
-    cat 'package.json' | cmd_download | tar --directory node_modules --exclude '.git*' --extract
+    cmd_download < package.json | tar --directory node_modules --exclude '.git*' --extract
     cp node_modules/.package-lock.json package-lock.json
 }
 
 cmd_outdated() {
-    cat 'package.json' | cmd_sh '
+    cmd_sh '
         set -eux
         tee package.json >/dev/null
         npm outdated '"$*"' & wait -n    # allows the shell to catch SIGINT
-    '
+    ' < package.json
 }
 
 main() {
