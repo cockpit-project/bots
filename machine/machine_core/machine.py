@@ -217,7 +217,7 @@ class Machine(ssh_connection.SSHConnection):
             # https://bugzilla.redhat.com/show_bug.cgi?id=2056207
             allowed.append(r'audit.* denied  { read } for  pid=[0-9]+ comm="systemd-sysctl" .*')
 
-        if self.image in ['ubuntu-stable', 'ubuntu-2004']:
+        if self.image in ['ubuntu-stable']:
             # HACK: https://bugs.debian.org/951477
             allowed.append(r'Process .* \(ip6?tables\) of user 0 dumped core.*')
             allowed.append(r'Process .* \(iptables-restor\) of user 0 dumped core.*')

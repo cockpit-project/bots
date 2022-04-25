@@ -30,7 +30,6 @@ REPO_BRANCH_CONTEXT = {
             'arch',
             'debian-stable',
             'debian-testing',
-            'ubuntu-2004',
             'ubuntu-2204',
             'ubuntu-stable',
             'fedora-35',
@@ -216,7 +215,7 @@ IMAGE_REFRESH_TRIGGERS = {
     ],
     "services": [
         f"{TEST_OS_DEFAULT}@cockpit-project/cockpit",
-        "ubuntu-2004@cockpit-project/cockpit",
+        "ubuntu-latest@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
         "rhel-9-0@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",

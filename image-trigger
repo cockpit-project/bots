@@ -31,7 +31,6 @@ REFRESH = {
     "fedora-testing": {"refresh-days": 3},
     "fedora-coreos": {},
     "fedora-rawhide-boot": {},
-    "ubuntu-2004": {},
     "ubuntu-2204": {},
     "ubuntu-stable": {},
     "rhel-7-9": {},
