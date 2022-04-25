@@ -1,4 +1,0 @@
-#* n/a (systemd-resolved + *)
-*
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
-Process * (systemd-resolve) of user * dumped core.
