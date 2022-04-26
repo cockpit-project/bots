@@ -221,6 +221,7 @@ if [ -x /usr/bin/insights-client ]; then
         cp /var/lib/insights/newest.egg /var/lib/insights/last_stable.egg
         cp /var/lib/insights/newest.egg.asc /var/lib/insights/last_stable.egg.asc
         rm -f /etc/insights-client/rpm.egg /etc/insights-client/rpm.egg.asc
+        restorecon -vR /var/lib/insights
     fi
 fi
 
@@ -357,9 +358,6 @@ fi
 dnf repoquery --installonly --latest-limit=-1 -q | xargs --no-run-if-empty rpm -e --verbose
 
 # Fix the SELinux contexts for all the paths that were created/edited so far
-restorecon -vR \
-  /etc/ \
-  /var/lib/insights/ \
-  $NULL
+restorecon -vR /etc/
 
 /var/lib/testvm/zero-disk.setup --keep-mock-cache
