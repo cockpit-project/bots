@@ -46,6 +46,19 @@ deploy_to cockpit-project/cockpit-weblate \
     --deploy-from \
         cockpit-project/cockpit/cockpit-weblate/DEPLOY_KEY
 
+# cockpit-machines
+deploy_to cockpit-project/cockpit-machines \
+    --deploy-from \
+        cockpit-project/cockpit-machines/self/DEPLOY_KEY
+
+deploy_to cockpit-project/cockpit-machines-dist \
+    --deploy-from \
+        cockpit-project/cockpit-machines/cockpit-machines-dist/DEPLOY_KEY
+
+deploy_to cockpit-project/cockpit-machines-weblate \
+    --deploy-from \
+        cockpit-project/cockpit-machines/cockpit-machines-weblate/DEPLOY_KEY
+
 # shared
 deploy_to cockpit-project/node-cache \
     --deploy-from \
