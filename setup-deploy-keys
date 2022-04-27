@@ -49,6 +49,7 @@ deploy_to cockpit-project/cockpit-weblate \
 # cockpit-machines
 deploy_to cockpit-project/cockpit-machines \
     --deploy-from \
+        cockpit-project/cockpit-machines/npm-update/SELF_DEPLOY_KEY \
         cockpit-project/cockpit-machines/self/DEPLOY_KEY
 
 deploy_to cockpit-project/cockpit-machines-dist \
@@ -63,7 +64,9 @@ deploy_to cockpit-project/cockpit-machines-weblate \
 deploy_to cockpit-project/node-cache \
     --deploy-from \
         cockpit-project/cockpit/npm-update/NODE_CACHE_DEPLOY_KEY \
-        cockpit-project/cockpit/node-cache/DEPLOY_KEY
+        cockpit-project/cockpit/node-cache/DEPLOY_KEY \
+        cockpit-project/cockpit-machines/npm-update/NODE_CACHE_DEPLOY_KEY \
+        cockpit-project/cockpit-machines/node-cache/DEPLOY_KEY
 
 # flathub
 deploy_to cockpit-project/org.cockpit_project.CockpitClient \
