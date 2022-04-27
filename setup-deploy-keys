@@ -1,0 +1,58 @@
+#!/bin/sh -x
+
+# (Re-)generate all deploy keys on
+#   https://github.com/cockpit-project/cockpit/settings/environments
+#
+# Your personal access token needs `public_repo` for this to work:
+#   https://github.com/settings/tokens
+#
+# You might want this first:
+#   dnf install python3-pynacl
+#
+# Helpful command to check/update the lists below:
+#   git grep -l 'environment: cockpit-dist' (or whatever)
+#
+# Note: this script doesn't delete old secrets, so if you make adjustments,
+#       please do that manually.
+
+set -eu
+cd "$(realpath -m "$0"/..)"
+
+DRY_RUN="-v"
+if test -n "${1:-}"; then
+    if test "$1" = "--dry-run" -o "$1" = "-n"; then
+        DRY_RUN="-n"
+    else
+        echo "Unrecognised argument"
+        exit 1
+    fi
+fi
+
+deploy_to() {
+    ./github-upload-secrets ${DRY_RUN} --deploy-to "$@"
+}
+
+# cockpit
+deploy_to cockpit-project/cockpit \
+    --deploy-from \
+        cockpit-project/cockpit/npm-update/COCKPIT_DEPLOY_KEY \
+        cockpit-project/cockpit/self/DEPLOY_KEY
+
+deploy_to cockpit-project/cockpit-dist \
+    --deploy-from \
+        cockpit-project/cockpit/cockpit-dist/DEPLOY_KEY
+
+deploy_to cockpit-project/cockpit-weblate \
+    --deploy-from \
+        cockpit-project/cockpit/cockpit-weblate/DEPLOY_KEY
+
+# shared
+deploy_to cockpit-project/node-cache \
+    --deploy-from \
+        cockpit-project/cockpit/npm-update/NODE_CACHE_DEPLOY_KEY \
+        cockpit-project/cockpit/node-cache/DEPLOY_KEY
+
+# flathub
+deploy_to cockpit-project/org.cockpit_project.CockpitClient \
+    --deploy-from \
+        cockpit-project/cockpit/flathub/DEPLOY_KEY
