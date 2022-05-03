@@ -1,0 +1,4 @@
+error: Failed to create vol loop0p1
+error: Storage volume not found: no storage vol with matching path '/dev/loop0p1'
+*
+  File "test/check-machines-disks", line *, in testAddDiskPool
