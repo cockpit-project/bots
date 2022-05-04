@@ -87,6 +87,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-coreos',
             'rhel-9-1',
             f'{TEST_OS_DEFAULT}/devel',
         ],
