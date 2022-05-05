@@ -41,6 +41,7 @@ jobs:
               ':!images' \
               ':!image-create' \
               ':!image-customize' \
+              ':!image-trigger' \
               ':!naughty' \
               ':!machine/machine_core' \
               ':!lib/testmap.py' \
