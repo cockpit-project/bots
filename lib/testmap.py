@@ -55,6 +55,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-testing/dnf-copr',
+            'fedora-rawhide',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -62,6 +63,7 @@ REPO_BRANCH_CONTEXT = {
             TEST_OS_DEFAULT,
             'centos-8-stream',
             'fedora-36',
+            'fedora-rawhide',
         ],
         '_manual': [
             f'{TEST_OS_DEFAULT}/firefox',
@@ -88,6 +90,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream',
             'fedora-coreos',
+            'fedora-rawhide',
             'rhel-9-1',
             f'{TEST_OS_DEFAULT}/devel',
         ],
@@ -108,6 +111,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
         '_manual': [
+            'fedora-rawhide',
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/devel',
         ],
