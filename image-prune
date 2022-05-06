@@ -203,8 +203,8 @@ class LocalImageDirectory(ImageCache):
 class S3ImageStore(ImageCache):
     def __init__(self, url):
         self.url = url
-        # A bit magic: we have 2 buckets and 250GB quota.  Try to keep each bucket below ca. 80GB.
-        self.max_bytes = float(os.environ.get("S3_IMAGES_MAX_GB", 80)) * 1000 * 1000 * 1000
+        # A bit magic: we have 2 buckets and 250GB quota.  Try to keep each bucket below ca. 100GB.
+        self.max_bytes = float(os.environ.get("S3_IMAGES_MAX_GB", 100)) * 1000 * 1000 * 1000
 
     def list_files(self):
         result = s3.list_bucket(self.url)
