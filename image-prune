@@ -104,7 +104,7 @@ def get_image_links(ref, git_path):
         raise
     links = [subprocess.check_output(["git", "show", "{0}:{1}".format(ref, entry)], universal_newlines=True)
              for entry in entries]
-    return [link for link in links if link.endswith(".qcow2")]
+    return [link for link in links if link.endswith(".qcow2") or link.endswith(".iso")]
 
 
 def get_image_names(quiet=False, open_pull_requests=True, offline=False):
@@ -162,7 +162,7 @@ class ImageCache:
         expiry_threshold = time.time() - IMAGE_EXPIRE * 86400
 
         for image, mtime in self.list_files():
-            if not any(image.endswith(ext) for ext in ['.qcow2', '.partial']):
+            if not any(image.endswith(ext) for ext in ['.iso', '.qcow2', '.partial']):
                 debug(f'Skipping file {image} with unknown extension')
                 continue
 
