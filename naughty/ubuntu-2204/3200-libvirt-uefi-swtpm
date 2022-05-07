@@ -1,3 +1,0 @@
-*internal error: Could not run '/usr/bin/swtpm_setup'. exitstatus: 1; Check error log '/var/log/swtpm/libvirt/qemu/VmNotInstalled-swtpm.log' for details.*
-*
-  File "test/check-machines-create", line *, in testConfigureBeforeInstall
