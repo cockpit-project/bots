@@ -28,7 +28,7 @@ import urllib.parse
 
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
-from lib.stores import HYBRID_STORES, PUBLIC_STORES, REDHAT_STORES, CA_PEM
+from lib.stores import S3_STORES, PUBLIC_STORES, REDHAT_STORES, CA_PEM
 from lib import s3
 
 from task import api
@@ -102,7 +102,7 @@ def main():
         # determine possible stores, unless explicitly given
         stores = args.store
         if not stores:
-            stores = list(HYBRID_STORES)
+            stores = list(S3_STORES)
 
             # these images are not freely redistributable, keep them Red Hat internal
             if public:

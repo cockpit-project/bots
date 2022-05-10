@@ -35,7 +35,7 @@ PUBLIC_STORES = [url for scope, url in ALL_STORES if scope == 'public']
 REDHAT_STORES = [url for scope, url in ALL_STORES if scope == 'redhat']
 
 # Servers which can host either public or private images (via ACL specification)
-HYBRID_STORES = [url for scope, url in ALL_STORES if scope == 'hybrid']
+S3_STORES = [url for scope, url in ALL_STORES if scope == 's3']
 
 
 def redhat_network():
