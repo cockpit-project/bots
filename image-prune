@@ -187,8 +187,8 @@ class S3ImageStore(ImageCache):
 
 def main():
     parser = argparse.ArgumentParser(description='Prune downloaded images')
-    parser.add_argument("--debug", action="store_true", help="Enable debugging output")
-    parser.add_argument("--force", action="store_true", help="Delete images even if they aren't old")
+    parser.add_argument("--debug", '-d', action="store_true", help="Enable debugging output")
+    parser.add_argument("--force", '-f', action="store_true", help="Delete images even if they aren't old")
     parser.add_argument("-n", "--dry-run", dest="dryrun", action="store_true",
                         help="Don't actually delete images and links")
     parser.add_argument("-c", "--checkout-only", dest="checkout_only", action="store_true",
