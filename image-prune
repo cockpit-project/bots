@@ -158,7 +158,7 @@ class ImageCache:
         """returns True if disk space is not currently an issue"""
         raise NotImplementedError
 
-    def prune(self, keepers, force=False, dryrun=False, quiet=False):
+    def prune(self, keepers, force=False, dryrun=False):
         expiry_threshold = time.time() - IMAGE_EXPIRE * 86400
 
         for image, mtime in self.list_files():
@@ -174,8 +174,7 @@ class ImageCache:
                 logger.debug('Skipping image %s which is new enough (and not forced or low on space)', image)
                 continue
 
-            if not quiet:
-                print(f"Pruning {image}", file=sys.stderr)
+            print(f"Pruning {image}", file=sys.stderr)
 
             if not dryrun:
                 self.delete_file(image)
@@ -230,7 +229,6 @@ def main():
     parser = argparse.ArgumentParser(description='Prune downloaded images')
     parser.add_argument("--debug", action="store_true", help="Enable debugging output")
     parser.add_argument("--force", action="store_true", help="Delete images even if they aren't old")
-    parser.add_argument("--quiet", action="store_true", help="Make downloading quieter")
     parser.add_argument("-n", "--dry-run", dest="dryrun", action="store_true",
                         help="Don't actually delete images and links")
     parser.add_argument("-b", "--branches-only", dest="branches_only", action="store_true",
@@ -261,15 +259,13 @@ def main():
     else:
         collection = LocalImageDirectory(args.directory)
 
-    keepers = get_keepers(quiet=args.quiet,
-                          open_pull_requests=(not args.branches_only),
+    keepers = get_keepers(open_pull_requests=(not args.branches_only),
                           offline=args.offline,
                           checkout_only=args.checkout_only)
 
     collection.prune(keepers,
                      force=args.force,
-                     dryrun=args.dryrun,
-                     quiet=args.quiet and not args.dryrun)
+                     dryrun=args.dryrun)
 
     return 0
 
