@@ -207,7 +207,7 @@ try:
         builder.save()
         if args.upload:
             print("Uploading...")
-            cmd = [os.path.join(BOTS_DIR, "image-upload")]
+            cmd = [os.path.join(BOTS_DIR, "image-upload"), '--prune-s3']
             if args.store:
                 cmd += ["--store", args.store]
             cmd += [args.image]
