@@ -1,4 +1,4 @@
-name: prune naughties
+name: daily
 on:
   schedule:
     - cron: '30 1 * * 0'
