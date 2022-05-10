@@ -7,6 +7,10 @@ on:
 jobs:
   maintenance:
     runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      pull-requests: write
+      contents: write
     steps:
       - name: Set up secrets
         run: echo '${{ secrets.GITHUB_TOKEN }}' > ~/.config/github-token
@@ -16,5 +20,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Trigger naughty-prune
-        run: ./naughty-trigger
+      - name: Run naughty-prune
+        run: |
+          git config --global user.name "GitHub Workflow"
+          git config --global user.email "cockpituous@cockpit-project.org"
+          ./naughty-prune --verbose
