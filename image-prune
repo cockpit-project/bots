@@ -24,125 +24,82 @@ import argparse
 import datetime
 import logging
 import os
+import re
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.parse
 from typing import Iterable, Tuple
 
 from task import github
 
-from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
 from lib import s3
 
 logger = logging.getLogger('image-prune')
 
-def get_refs(open_pull_requests=True, offline=False):
-    """Return dictionary for available refs of the format {'rhel-7.4': 'ad50328990e44c22501bd5e454746d4b5e561b7c'}
-
-       Expects to be called from the top level of the git checkout
-       If offline is true, git show-ref is used instead of listing the remote
-    """
-    # get all remote heads and filter empty lines
-    # output of ls-remote has the format
-    #
-    # d864d3792db442e3de3d1811fa4bc371793a8f4f	refs/heads/main
-    # ad50328990e44c22501bd5e454746d4b5e561b7c	refs/heads/rhel-7.4
-
-    refs = {}
-
-    considerable = {}
-    g = github.GitHub()
-    if open_pull_requests:
-        if offline:
-            raise Exception("Unable to consider open pull requests when in offline mode")
-        for p in g.pulls():
-            files = g.get("pulls/{0}/files".format(p["number"]))
-            images = []
-            for fl in files:
-                fl_name = fl['filename']
-                if fl_name.startswith("images/"):
-                    fl_name_split = fl_name.split("/", 2)
-                    if "/" not in fl_name_split[1]:
-                        images.append(fl_name_split[1])
-            if images:
-                sha = p["head"]["sha"]
-                considerable[sha] = images
-                subprocess.call(["git", "fetch", "origin", "{0}".format(sha)])
-                refs["pull request #{} ({})".format(p["number"], p["title"])] = sha
-
-    git_cmd = "show-ref" if offline else "ls-remote"
-    ref_output = subprocess.check_output(["git", git_cmd], universal_newlines=True).splitlines()
-    # filter out the "refs/heads/" prefix and generate a dictionary
-    prefix = "refs/heads"
-    for ln in ref_output:
-        [ref, name] = ln.split()
-        if name.startswith(prefix):
-            refs[name[len(prefix):]] = ref
-
-    return (refs, considerable)
+def git(*args, cwd='.'):
+    return subprocess.check_output(['git', *args], text=True, cwd=cwd)
 
 
-def get_image_links(ref, git_path):
-    """Return all image links for the given git ref
+def get_images_in_commit(commit, cwd='.'):
+    """Returns all images pointed to by a symlink in images/ from the given commit"""
 
-       Expects to be called from the top level of the git checkout
-    """
-    # get all the links we have first
-    # trailing slash on path is important
-    if not git_path.endswith("/"):
-        git_path = "{0}/".format(git_path)
-
-    try:
-        entries = subprocess.check_output(["git", "ls-tree", "--name-only", ref, git_path],
-                                          universal_newlines=True).splitlines()
-    except subprocess.CalledProcessError as e:
-        if e.returncode == 128:
-            sys.stderr.write("Skipping {0} due to tree error.\n".format(ref))
-            return []
-        raise
-    links = [subprocess.check_output(["git", "show", "{0}:{1}".format(ref, entry)], universal_newlines=True)
-             for entry in entries]
-    return [link for link in links if link.endswith(".qcow2") or link.endswith(".iso")]
+    logger.debug('Keeping all images in %s...', commit)
+    for line in git('cat-file', '-p', f'{commit}:images/', cwd=cwd).splitlines():
+        mode, kind, blob, _name = line.split()
+        if mode == '120000' and kind == 'blob':
+            image = git('cat-file', 'blob', blob, cwd=cwd)
+            logger.debug('  - %s', image)
+            yield image
 
 
-def get_image_names(quiet=False, open_pull_requests=True, offline=False):
-    """Return all image names used by all branches and optionally in open pull requests
-    """
-    images = set()
-    # iterate over visible refs (mostly branches)
-    # this hinges on being in the top level directory of the the git checkout
-    (refs, considerable) = get_refs(open_pull_requests, offline)
-    # list images present in each branch / pull request
-    for name, ref in refs.items():
-        if not quiet:
-            sys.stderr.write("Considering images from {0} ({1})\n".format(name, ref))
-        for link in get_image_links(ref, "images"):
-            if ref in considerable:
-                for consider in considerable[ref]:
-                    if link.startswith(consider):
-                        images.add(link)
-            else:
-                images.add(link)
+def get_images_in_branches(merge_target, *branch_patterns, cwd='.'):
+    """Returns all images introduced by branches, relative to merge_target"""
 
-    return images
+    # KISS: just get a diff and grab anything that looks like an image update
+    for ref_line in git('for-each-ref', *branch_patterns, cwd=cwd).splitlines():
+        _rev, _kind, ref = ref_line.split()
+        logger.debug('Considering images changed in %s...', ref)
+        for patch_line in git('diff', f'{merge_target}...{ref}', '--', 'images/', cwd=cwd).splitlines():
+            if match := re.search(r'^\+([-0-9a-z]+-[0-9a-f]+.(qcow2|iso))', patch_line):
+                image = match.group(1)
+                logger.debug('  - %s', image)
+                yield image
 
 
-def get_keepers(quiet=False, open_pull_requests=True, offline=False, checkout_only=False):
-    if checkout_only:
-        targets = set()
-    else:
-        targets = get_image_names(quiet, open_pull_requests, offline)
+def get_remote_images():
+    """Returns all images currently used by PRs and origin branches on GitHub"""
 
-    # what we have in the current checkout might already have been added by its branch, but check anyway
-    for entry in os.scandir(IMAGES_DIR):
-        # only consider original image entries as trustworthy sources and ignore non-links
-        if '.' not in entry.name and entry.is_symlink():
-            target = os.readlink(entry.path)
-            targets.add(target)
+    api = github.GitHub()
+    logger.debug('Querying open PRs on %s', api.repo)
+    open_prs = [pr['number'] for pr in api.pulls()]
+    logger.debug('Open PRs: %s', open_prs)
 
-    return targets
+    # Use a temporary git repository to work in to avoid touching the local one
+    with tempfile.TemporaryDirectory() as tmpdir:
+        git('init', '-b', 'main', cwd=tmpdir)
+
+        # We store HEAD as `head`, origin branches as `origin/{name}` and PRs as `pr/{nr}`
+        patterns = {'HEAD:refs/heads/head', 'refs/heads/*:refs/heads/origin/*'}
+        patterns.update(f'refs/pull/{nr}/head:refs/heads/pr/{nr}' for nr in open_prs)
+        quiet = ['--quiet'] if not logger.isEnabledFor(logging.DEBUG) else []
+        git('fetch', *quiet, f'https://github.com/{api.repo}', *patterns, cwd=tmpdir)
+
+        yield from get_images_in_commit('head', cwd=tmpdir)
+        yield from get_images_in_branches('head', 'refs/heads/origin/*', 'refs/heads/pr/*', cwd=tmpdir)
+
+
+def get_keepers(offline=False, checkout_only=False):
+    keepers = set(get_images_in_commit('HEAD'))
+
+    if not checkout_only:
+        keepers.update(get_images_in_branches('HEAD', 'refs/heads/*'))
+        if not offline:
+            keepers.update(get_remote_images())
+
+    return keepers
 
 
 class ImageCache:
