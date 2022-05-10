@@ -16,5 +16,5 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Trigger naughty-prune
-        run: ./naughty-trigger
+      - name: Run naughty-prune
+        run: ./naughty-prune

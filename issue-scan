@@ -20,7 +20,6 @@
 NAMES = [
     "example-task",
     "image-refresh",
-    "naughty-prune",
 ]
 
 # RHEL tasks have to be done inside Red Hat network
