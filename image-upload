@@ -26,7 +26,7 @@ import sys
 import time
 import urllib.parse
 
-from lib.constants import IMAGES_DIR
+from lib.constants import BOTS_DIR, IMAGES_DIR
 from lib.directories import get_images_data_dir
 from lib.stores import S3_STORES, PUBLIC_STORES, REDHAT_STORES, CA_PEM
 from lib import s3
@@ -34,7 +34,7 @@ from lib import s3
 from task import api
 
 
-def upload(dest, source, public):
+def upload(dest, source, public, prune=False):
     url = urllib.parse.urlparse(dest)
 
     # Start building the command
@@ -58,6 +58,10 @@ def upload(dest, source, public):
         sys.stderr.write(f"image-upload: no credentials for {dest}")
         return False
 
+    # Only prune after the above checks, to ensure that we have credentials.
+    if prune:
+        subprocess.check_call([f'{BOTS_DIR}/image-prune', '--s3', f'https://{url.hostname}/'])
+
     print("Uploading to", dest, file=sys.stderr)
 
     # Retry with exponential back-off, to defend against short-term networking errors
@@ -76,6 +80,7 @@ def upload(dest, source, public):
 
 def main():
     parser = argparse.ArgumentParser(description='Upload bot state or images')
+    parser.add_argument("--prune-s3", action="store_true", help="Run image-prune before upload to S3")
     parser.add_argument("--store", action="append", default=[], help="Where to send state or images")
     parser.add_argument("--state", action="store_true", help="Images or state not recorded in git")
     parser.add_argument('image', nargs='*')
@@ -113,7 +118,7 @@ def main():
         success = False
         for store in stores:
             dest = urllib.parse.urljoin(store, basename)
-            success |= upload(dest, source, public)
+            success |= upload(dest, source, public, prune=args.prune_s3 and store in S3_STORES)
 
         if not success:
             sys.exit('Failed to upload to any image store')
