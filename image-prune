@@ -17,9 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-# Days after which images expire if not in use
-IMAGE_EXPIRE = 14
-
 import argparse
 import datetime
 import logging
@@ -38,6 +35,10 @@ from lib.directories import get_images_data_dir
 from lib import s3
 
 logger = logging.getLogger('image-prune')
+
+# Days after which images expire if not in use
+IMAGE_EXPIRE = 14
+
 
 def git(*args, cwd='.'):
     return subprocess.check_output(['git', *args], text=True, cwd=cwd)
@@ -151,8 +152,8 @@ class LocalImageDirectory(ImageCache):
         os.unlink(os.path.join(self.directory, filename))
 
     def enough_space(self):
-        st = os.statvfs(self.directory)
-        free = st.f_bavail * st.f_frsize / (1024 * 1024 * 1024)
+        buf = os.statvfs(self.directory)
+        free = buf.f_bavail * buf.f_frsize / (1024 * 1024 * 1024)
         return free >= self.space_threshold
 
 
@@ -161,6 +162,7 @@ class S3ImageStore(ImageCache):
         self.url = url
         # A bit magic: we have 2 buckets and 250GB quota.  Try to keep each bucket below ca. 100GB.
         self.max_bytes = float(os.environ.get("S3_IMAGES_MAX_GB", 100)) * 1000 * 1000 * 1000
+        self.sizes = {}
 
     def list_files(self):
         result = s3.list_bucket(self.url)
@@ -168,9 +170,9 @@ class S3ImageStore(ImageCache):
         # make sure this gets done before we start iterating
         self.sizes = dict(s3.parse_list(result, "Key", "Size"))
 
-        RFC3339ish = '%Y-%m-%dT%H:%M:%S.%f%z'
+        rfc3339ish = '%Y-%m-%dT%H:%M:%S.%f%z'
         for name, stamp in s3.parse_list(result, "Key", "LastModified"):
-            yield name, datetime.datetime.strptime(stamp, RFC3339ish).timestamp()
+            yield name, datetime.datetime.strptime(stamp, rfc3339ish).timestamp()
 
     def delete_file(self, filename):
         with s3.urlopen(self.url._replace(path='/' + filename), method='DELETE'):
@@ -189,7 +191,7 @@ def main():
     parser.add_argument("-n", "--dry-run", dest="dryrun", action="store_true",
                         help="Don't actually delete images and links")
     parser.add_argument("-c", "--checkout-only", dest="checkout_only", action="store_true",
-                        help="Consider neither pull requests on GitHub nor branches, only look at the current checkout")
+                        help="Consider only the current HEAD commit")
     parser.add_argument("-o", "--offline", dest="offline", action="store_true",
                         help="Don't access external sources such as GitHub")
     cache_arg = parser.add_argument_group(title='Cache location',
