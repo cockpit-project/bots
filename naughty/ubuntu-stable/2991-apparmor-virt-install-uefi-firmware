@@ -1,3 +1,0 @@
-# testConfigureBeforeInstall (__main__.TestMachinesCreate)
-*
-*apparmor="DENIED" operation="open" profile="libvirt-*" name="/var/lib/libvirt/qemu/nvram/VmNotInstalled_VARS.fd"*
