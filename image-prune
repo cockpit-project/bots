@@ -29,7 +29,6 @@ import sys
 import time
 import urllib.parse
 from typing import Iterable, Tuple
-from logging import debug
 
 from task import github
 
@@ -37,6 +36,7 @@ from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
 from lib import s3
 
+logger = logging.getLogger('image-prune')
 
 def get_refs(open_pull_requests=True, offline=False):
     """Return dictionary for available refs of the format {'rhel-7.4': 'ad50328990e44c22501bd5e454746d4b5e561b7c'}
@@ -163,15 +163,15 @@ class ImageCache:
 
         for image, mtime in self.list_files():
             if not any(image.endswith(ext) for ext in ['.iso', '.qcow2', '.partial']):
-                debug(f'Skipping file {image} with unknown extension')
+                logger.debug('Skipping file %s with unknown extension', image)
                 continue
 
             if image in keepers:
-                debug(f'Skipping image {image} which is in the keepers list')
+                logger.debug('Skipping image %s which is in the keepers list', image)
                 continue
 
             if not force and self.enough_space() and mtime > expiry_threshold:
-                debug(f'Skipping image {image} which is new enough (and not forced or low on space)')
+                logger.debug('Skipping image %s which is new enough (and not forced or low on space)', image)
                 continue
 
             if not quiet:
