@@ -1,0 +1,6 @@
+  File "test/verify/check-storage-resize", line *, in testResizeNtfs
+    self.checkResize("ntfs", False,
+  File "test/verify/check-storage-resize", line *, in checkResize
+    self.dialog_wait_close()
+*
+warning: mount: /run/foo: unknown filesystem type 'ntfs'.
