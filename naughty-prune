@@ -53,10 +53,6 @@ def run(unused, verbose=False, **kwargs):
     # The head
     head = execute("git", "rev-parse", "HEAD").strip()
 
-    # Don't replace this issue with the pull request(s)
-    if "issue" in kwargs:
-        del kwargs["issue"]
-
     # Get all the open known issues
     issues = task.api.issues(labels=["knownissue"])
     for issue in issues:

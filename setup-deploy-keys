@@ -32,6 +32,11 @@ deploy_to() {
     ./github-upload-secrets ${DRY_RUN} --deploy-to "$@"
 }
 
+# bots
+deploy_to cockpit-project/bots \
+    --deploy-from \
+        cockpit-project/bots/self/DEPLOY_KEY
+
 # cockpit
 deploy_to cockpit-project/cockpit \
     --deploy-from \
