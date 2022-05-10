@@ -56,7 +56,7 @@ def upload(dest, source, public):
     else:
         # No credentials?  That's not going to work...
         sys.stderr.write(f"image-upload: no credentials for {dest}")
-        return 1
+        return False
 
     print("Uploading to", dest, file=sys.stderr)
 
@@ -64,14 +64,14 @@ def upload(dest, source, public):
     for retry in range(3):
         try:
             subprocess.check_call(cmd)
-            return 0
+            return True
         except subprocess.CalledProcessError:
             delay = 10 * 4 ** retry
             sys.stderr.write(f"image-upload: retrying upload to {dest} in {delay}s..\n")
             time.sleep(delay)
-    else:
-        sys.stderr.write(f"image-upload: unable to upload image: {dest}\n")
-        return 1
+
+    sys.stderr.write(f"image-upload: unable to upload image: {dest}\n")
+    return False
 
 
 def main():
@@ -113,14 +113,11 @@ def main():
         success = False
         for store in stores:
             dest = urllib.parse.urljoin(store, basename)
-            ret = upload(dest, source, public)
-            if ret == 0:
-                success = True
+            success |= upload(dest, source, public)
 
         if not success:
-            # all stores failed, so return last exit code
-            return ret
+            sys.exit('Failed to upload to any image store')
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
