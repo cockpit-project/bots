@@ -224,8 +224,6 @@ def main():
                      force=args.force,
                      dryrun=args.dryrun)
 
-    return 0
-
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
