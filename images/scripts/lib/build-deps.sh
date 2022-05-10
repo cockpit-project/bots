@@ -30,14 +30,21 @@ echo "$spec" | rpmspec -D "$OS_VER" -D 'version 0' --buildrequires --query /dev/
 # - rpmlint for validating built RPMs
 # - gettext to build/merge GNU gettext translations
 # - desktop-file-utils for validating desktop files
-# - nodejs & nodejs-devel for starter-kit and other projects which rebuild webpack during RPM build
-EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs nodejs-devel"
+# - nodejs for starter-kit and other projects which rebuild webpack during RPM build
+EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs"
 
 # libappstream-glib-devel is needed for merging translations in AppStream XML files in starter-kit and derivatives
 # on RHEL 8 only: gettext in RHEL 8 does not know about .metainfo.xml files, and libappstream-glib-devel
 # provides /usr/share/gettext/its/appdata.{its,loc} for them
 case "$OS_VER" in
     rhel*8|centos*8) EXTRA_DEPS="$EXTRA_DEPS libappstream-glib-devel" ;;
+    *) ;;
+esac
+
+# pull nodejs-devel on Fedora for compliance with the guidelines on using nodejs modules:
+# https://docs.fedoraproject.org/en-US/packaging-guidelines/Node.js/#_buildrequires
+case "$OS_VER" in
+    fedora*) EXTRA_DEPS="$EXTRA_DEPS nodejs-devel" ;;
     *) ;;
 esac
 
