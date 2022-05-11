@@ -134,8 +134,8 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-35',
-            'fedora-35/firefox',
             'fedora-36',
+            '{TEST_OS_DEFAULT}/firefox',
             'rhel-9-1',
         ],
     },
