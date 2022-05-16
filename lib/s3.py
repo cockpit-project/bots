@@ -29,7 +29,6 @@ __all__ = (
     "list_bucket",
     "parse_list",
     "sign_curl",
-    "sign_request",
     "urlopen",
 )
 
@@ -62,7 +61,7 @@ def is_key_present(url: urllib.parse.ParseResult) -> bool:
     return get_key(url.hostname) is not None
 
 
-def sign_request(url: urllib.parse.ParseResult, method='GET', checksum=SHA256_NIL, headers={}) -> Dict[str, str]:
+def sign_request(url: urllib.parse.ParseResult, method, headers, checksum) -> Dict[str, str]:
     """Signs an AWS request using the AWS4-HMAC-SHA256 algorithm
 
     Returns a dictionary of extra headers which need to be sent along with the request.
@@ -94,16 +93,16 @@ def sign_request(url: urllib.parse.ParseResult, method='GET', checksum=SHA256_NI
     return headers
 
 
-def sign_curl(url: urllib.parse.ParseResult, method='GET', checksum=SHA256_NIL, headers={}) -> List[str]:
+def sign_curl(url: urllib.parse.ParseResult, method='GET', headers={}, checksum=SHA256_NIL) -> List[str]:
     """Same as sign_request() but formats the result as an argument list for curl, including the url"""
-    headers = sign_request(url, method=method, checksum=checksum, headers=headers)
+    headers = sign_request(url, method, headers, checksum)
     return [f'-H{key}:{value}' for key, value in headers.items()] + [url.geturl()]
 
 
-def urlopen(url: urllib.parse.ParseResult, method='GET') -> IO:
+def urlopen(url: urllib.parse.ParseResult, method='GET', headers={}, data=b'') -> IO:
     """Same as sign_request() but calls urlopen() on the result"""
-    headers = sign_request(url, method=method)
-    request = urllib.request.Request(url.geturl(), headers=headers, method=method)
+    headers = sign_request(url, method, headers, hashlib.sha256(data).hexdigest())
+    request = urllib.request.Request(url.geturl(), headers=headers, method=method, data=data)
     return urllib.request.urlopen(request)
 
 
