@@ -56,6 +56,8 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
+            'rhel-8-7',
+            'rhel-8-7-distropkg',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -92,6 +94,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
             'fedora-coreos',
             'fedora-rawhide',
+            'rhel-8-7',
             f'{TEST_OS_DEFAULT}/devel',
         ],
     },
@@ -114,6 +117,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-rawhide',
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/devel',
+            'rhel-8-7',
         ],
     },
     'weldr/lorax': {
@@ -136,6 +140,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-35',
             'fedora-36',
             '{TEST_OS_DEFAULT}/firefox',
+            'rhel-8-7',
             'rhel-9-1',
         ],
     },
@@ -161,6 +166,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-0',
         ],
         '_manual': [
+            'rhel-8-7',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -173,6 +179,8 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
             'rhel-8-6/subscription-manager-1.28',
+            'rhel-8-7',
+            'rhel-8-7/subscription-manager-1.28',
         ],
     },
     'cockpit-project/cockpit-certificates': {
@@ -180,7 +188,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-35',
         ],
         '_manual': [
-            'rhel-8-6',
+            'rhel-8-7',
             'rhel-9-0',
             'rhel-9-1',
             'centos-8-stream',
