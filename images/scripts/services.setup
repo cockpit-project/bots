@@ -35,6 +35,12 @@ EOF
 chmod 755 /root/run-freeipa
 /root/run-freeipa
 
+# HACK: Podman fails to relabel symlinks properly, accidentally relabelling their targets instead
+# https://github.com/opencontainers/selinux/pull/173
+# Disable relabelling for subsequent runs and make SELinux permissive.
+sed -i 's/data:Z/data/' /root/run-freeipa
+sed -i 's/enforcing/permissive/' /etc/selinux/config
+
 podman logs -f freeipa &
 LOGS=$!
 
