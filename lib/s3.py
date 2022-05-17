@@ -10,6 +10,7 @@
 import base64
 import hashlib
 import hmac
+import logging
 import os.path
 import shlex
 import sys
@@ -36,6 +37,8 @@ ACL = 'x-amz-acl'
 PUBLIC = 'public-read'
 ACL_PUBLIC = f'{ACL}:{PUBLIC}'
 SHA256_NIL = hashlib.sha256(b'').hexdigest()
+
+logger = logging.getLogger('s3')
 
 
 def get_key(hostname):
@@ -103,7 +106,9 @@ def urlopen(url: urllib.parse.ParseResult, method='GET', headers={}, data=b'') -
     """Same as sign_request() but calls urlopen() on the result"""
     headers = sign_request(url, method, headers, hashlib.sha256(data).hexdigest())
     request = urllib.request.Request(url.geturl(), headers=headers, method=method, data=data)
-    return urllib.request.urlopen(request)
+    response = urllib.request.urlopen(request)
+    logger.debug('%s %s → %s', method, url.geturl(), response.status)
+    return response
 
 
 def list_bucket(url: urllib.parse.ParseResult) -> ET:
