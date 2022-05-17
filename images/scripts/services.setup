@@ -197,7 +197,7 @@ podman run -d --rm --name grafana -p 3000:3000 \
     -e GF_SECURITY_ADMIN_PASSWORD=foobar \
     -e GF_INSTALL_PLUGINS="redis-datasource,performancecopilot-pcp-app=https://github.com/performancecopilot/grafana-pcp/releases/download/${latest_ver}/performancecopilot-pcp-app-${latest_ver#v}.zip" \
     -e GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS="performancecopilot-pcp-app,redis-datasource" \
-    quay.io/bitnami/grafana
+    docker.io/bitnami/grafana
 
 # wait until set up completed
 until curl http://localhost:3000; do sleep 1; done
@@ -210,7 +210,7 @@ podman run -d --rm --name grafana -p 3000:3000 \
     -v grafana-data-plugins:/opt/bitnami/grafana/data/plugins \
     -e GF_SECURITY_ADMIN_PASSWORD=foobar \
     -e GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS="performancecopilot-pcp-app,redis-datasource" \
-    quay.io/bitnami/grafana
+    docker.io/bitnami/grafana
 EOF
 chmod 755 /root/run-grafana
 
