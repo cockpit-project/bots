@@ -103,7 +103,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-35',
             'fedora-36',
             f'{TEST_OS_DEFAULT}/firefox',
-            'rhel-8-6',
+            'rhel-8-7',
             'rhel-9-1',
             'centos-8-stream',
         ],
@@ -111,7 +111,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-rawhide',
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/devel',
-            'rhel-8-7',
         ],
     },
     'weldr/lorax': {
