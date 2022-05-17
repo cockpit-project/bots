@@ -1,0 +1,332 @@
+#!/usr/bin/python3
+
+# This file is part of Cockpit.
+
+# Copyright (C) 2022 Red Hat, Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import codecs
+import json
+import locale
+import logging
+import mimetypes
+import os
+import subprocess
+import tempfile
+import textwrap
+import time
+import urllib.parse
+
+from lib.constants import LIB_DIR
+from lib import s3
+from task import github
+
+
+logger = logging.getLogger('s3-streamer')
+
+
+class Destination:
+    def has(self, filename):
+        raise NotImplementedError
+
+    def write(self, filename, data):
+        raise NotImplementedError
+
+    def delete(self, filenames):
+        raise NotImplementedError
+
+
+class LocalDestination(Destination):
+    def __init__(self, directory):
+        self.directory = directory
+        os.makedirs(self.directory)
+
+    def path(self, filename):
+        return os.path.join(self.directory, filename)
+
+    def has(self, filename):
+        return os.path.exists(self.path(filename))
+
+    def write(self, filename, data):
+        print(f'Write {self.path(filename)}')
+        with open(self.path(filename), 'wb+') as file:
+            file.write(data)
+
+    def delete(self, filenames):
+        for filename in filenames:
+            print(f'Delete {self.path(filename)}')
+            os.unlink(self.path(filename))
+
+
+class S3Destination(Destination):
+    def __init__(self, directory):
+        self.directory = directory.rstrip('/') + '/'
+
+    def url(self, filename):
+        return urllib.parse.urlparse(self.directory + filename)
+
+    def has(self, filename):
+        raise NotImplementedError('use Index')
+
+    def write(self, filename, data):
+        headers = {
+            'Content-Type': mimetypes.guess_type(filename)[0] or 'text/plain',
+            s3.ACL: s3.PUBLIC
+        }
+        with s3.urlopen(self.url(filename), data=data, method='PUT', headers=headers) as _:
+            pass
+
+    def delete(self, filenames):
+        # to do: multi-object delete API
+        for filename in filenames:
+            with s3.urlopen(self.url(filename), method='DELETE') as _:
+                pass
+
+
+class Index(Destination):
+    def __init__(self, destination, filename='index.html'):
+        self.destination = destination
+        self.filename = filename
+        self.files = set()
+        self.dirty = True
+
+    def has(self, filename):
+        return filename in self.files
+
+    def write(self, filename, data):
+        self.destination.write(filename, data)
+        self.files.add(filename)
+        self.dirty = True
+
+    def delete(self, filenames):
+        self.destination.delete(self.destination, filenames)
+        self.files.difference_update(filenames)
+        self.dirty = True
+
+    def sync(self):
+        if self.dirty:
+            self.destination.write(self.filename, textwrap.dedent('''
+                <html>
+                  <body>
+                    <h1>Directory listing for /</h1>
+                    <hr>
+                    <ul>''' + ''.join(f'''
+                      <li><a href={f}>{f}</a></li> ''' for f in self.files) + '''
+                    </ul>
+                  </body>
+                </html>
+                ''').encode('utf-8'))
+            self.dirty = False
+
+
+class AttachmentsDirectory:
+    def __init__(self, destination, local_directory):
+        self.destination = destination
+        self.path = local_directory
+
+    def scan(self):
+        for subdir, _dirs, files in os.walk(self.path):
+            for file in files:
+                path = os.path.join(subdir, file)
+                name = os.path.relpath(path, start=self.path)
+
+                if not self.destination.has(name):
+                    logger.debug('Uploading attachment %s', name)
+                    with open(path, 'rb') as file:
+                        data = file.read()
+                    self.destination.write(name, data)
+
+
+class ChunkedUploader:
+    SIZE_LIMIT = 1000000  # 1MB
+    TIME_LIMIT = 30       # 30s
+
+    def __init__(self, index, filename, encoding=None):
+        self.input_decoder = codecs.getincrementaldecoder(encoding or locale.getpreferredencoding())()
+        self.suffixes = {'chunks'}
+        self.chunks = []
+        self.index = index
+        self.destination = index.destination
+        self.filename = filename
+        self.pending = b''
+        self.send_at = 0  # Send the first write immediately
+
+    def init(self):
+        self.destination.write(f'{self.filename}.chunks', json.dumps([]).encode('ascii'))
+        AttachmentsDirectory(self.index, f'{LIB_DIR}/s3-html').scan()
+
+    def append_block(self, block):
+        self.chunks.append([block])
+
+        # 2048 algorithm.
+        #
+        # This can be changed to merge more or less often, or to never merge at
+        # all. The only restriction is that it may only ever update the last
+        # item in the list.
+        while len(self.chunks) > 1 and len(self.chunks[-1]) == len(self.chunks[-2]):
+            last = self.chunks.pop()
+            second_last = self.chunks.pop()
+            self.chunks.append(second_last + last)
+
+        # Now we figure out how to send that last item.
+        # Let's keep the client dumb: it doesn't need to know about blocks: only bytes.
+        chunk_sizes = [sum(len(block) for block in chunk) for chunk in self.chunks]
+
+        if chunk_sizes:
+            last_chunk_start = sum(chunk_sizes[:-1])
+            last_chunk_end = last_chunk_start + chunk_sizes[-1]
+            last_chunk_suffix = f'{last_chunk_start}-{last_chunk_end}'
+            self.destination.write(f'{self.filename}.{last_chunk_suffix}', b''.join(self.chunks[-1]))
+            self.suffixes.add(last_chunk_suffix)
+
+        self.destination.write(f'{self.filename}.chunks', json.dumps(chunk_sizes).encode('ascii'))
+
+    def write(self, data, final=False):
+        # Transcode the data (if necessary), and ensure that it's complete characters
+        self.pending += self.input_decoder.decode(data, final=final).encode('utf-8')
+
+        if final:
+            everything = b''.join(b''.join(block for block in chunk) for chunk in self.chunks) + self.pending
+            self.index.write(self.filename, everything)
+
+            # If the client ever sees a 404, it knows that the streaming is over.
+            self.destination.delete([f'{self.filename}.{suffix}' for suffix in self.suffixes])
+
+        if self.pending:
+            now = time.monotonic()
+
+            if self.send_at is None:
+                self.send_at = now + ChunkedUploader.TIME_LIMIT
+
+            if now >= self.send_at or len(self.pending) >= ChunkedUploader.SIZE_LIMIT:
+                self.append_block(self.pending)
+                self.send_at = None
+                self.pending = b''
+
+
+class Status:
+    def post(self, state, description):
+        raise NotImplementedError
+
+
+class GitHubStatus(Status):
+    def __init__(self, repo, revision, context, link):
+        logger.debug('GitHub repo %s context %s link %s', repo, context, link)
+        self.github = github.GitHub(repo=repo)
+        self.status = {'context': context, 'target_url': link}
+        self.revision = revision
+
+    def post(self, state, description):
+        logger.debug('POST statuses/%s %s %s', self.revision, state, description)
+        self.github.post(f'statuses/{self.revision}', dict(self.status, state=state, description=description))
+
+
+class LocalStatus(Status):
+    def __init__(self, directory):
+        print(f'Writing logs to {directory}')
+
+    def post(self, state, description):
+        print(f'Status [{state}] {description}')
+
+
+def main():
+    parser = argparse.ArgumentParser()
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--s3', help="Write to the given S3 URL [default: S3_LOGS_URL]")
+    group.add_argument('--directory', help="Write to the named local directory")
+
+    parser.add_argument('--test-name', required=True, help='Test name')
+    parser.add_argument('--repo', default=None, help="The repository in which the tested PR is opened")
+    parser.add_argument('--revision', required=True, help="Revision of the PR head")
+    parser.add_argument('--github-context', required=True, help="The full context as written in github")
+
+    parser.add_argument('cmd', nargs='+', help="Command to stream the output of")
+    args = parser.parse_args()
+
+    subdir = f'{args.test_name}-{args.revision[:8]}-{args.github_context}'
+    subdir = subdir.replace('@', '-').replace('#', '-').replace('/', '-')
+
+    if args.directory:
+        destination = LocalDestination(os.path.join(args.directory, subdir))
+        status = LocalStatus(destination.directory)
+    else:
+        url = args.s3 or os.getenv('S3_LOGS_URL') or 'https://cockpit-logs.us-east-1.linodeobjects.com/'
+        destination = S3Destination(urllib.parse.urljoin(url, subdir))
+        status = GitHubStatus(args.repo, args.revision, args.github_context, destination.directory + 'log.html')
+
+    # We want the pipe buffer as big as possible, for two reasons:
+    #   - uploading to S3 might take a while and we don't want the output of
+    #     the test to block in the meantime
+    #   - having a large buffer means that we can do a single read and be sure
+    #     to get all the data.  This is particularly important at exit: we don't
+    #     wait for EOF on the log before exiting.
+    #
+    # This is the default value on Linux, and big enough for our purposes.  It
+    # could theoretically have been lowered via /proc/sys/fs/pipe-max-size, but
+    # then fcntl() will fail and we'll find out about it.
+    max_pipe_size = 1048576
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        index = Index(destination)
+        attachments_directory = AttachmentsDirectory(index, tmpdir)
+        log_uploader = ChunkedUploader(index, 'log')
+
+        with subprocess.Popen(args.cmd, env=dict(os.environ, TEST_ATTACHMENTS=tmpdir),
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                              stdin=subprocess.DEVNULL, pipesize=max_pipe_size) as process:
+            # We want non-blocking reads so that we can send attachments and
+            # flush pending chunked data in case the output stalls.
+            os.set_blocking(process.stdout.fileno(), False)
+
+            # Send the static files to start
+            log_uploader.init()
+
+            # In progress...
+            status.post('pending', github.TESTING)
+
+            process_exited = False
+            while not process_exited:
+                # Order is important: poll the process, read the log, upload attachments, send the log.
+                #
+                # The idea is that we want to read the log one last time after
+                # the process has exited, and we also want to make sure that
+                # any attachment gets uploaded before its mention in the log
+                # reaches the server.
+
+                time.sleep(1)
+                process_exited = process.poll() is not None
+
+                try:
+                    data = os.read(process.stdout.fileno(), max_pipe_size)
+                except BlockingIOError:
+                    data = b''
+
+                attachments_directory.scan()
+
+                log_uploader.write(data, final=process_exited)
+
+                index.sync()
+
+            if process.returncode != 0:
+                status.post('failure', f'Tests failed with code {process.returncode}')
+            else:
+                status.post('success', 'Tests passed')
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    main()
