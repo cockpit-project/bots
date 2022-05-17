@@ -41,7 +41,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-7',
             'rhel-8-7-distropkg',
             'centos-8-stream',
-            'rhel-9-0',
             'rhel-9-1',
         ],
         'rhel-7.9': [
@@ -80,7 +79,6 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             'arch',
             'rhel-8-6',
-            'rhel-9-0',
             'rhel-9-1',
             'fedora-35',
             'fedora-36',
@@ -107,7 +105,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-36',
             f'{TEST_OS_DEFAULT}/firefox',
             'rhel-8-6',
-            'rhel-9-0',
             'rhel-9-1',
             'centos-8-stream',
         ],
@@ -226,7 +223,7 @@ IMAGE_REFRESH_TRIGGERS = {
         f"{TEST_OS_DEFAULT}@cockpit-project/cockpit",
         "ubuntu-latest@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
-        "rhel-9-0@cockpit-project/cockpit",
+        "rhel-9-1@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
         "rhel-8-6@candlepin/subscription-manager",
         "rhel-9-1@candlepin/subscription-manager-cockpit",
