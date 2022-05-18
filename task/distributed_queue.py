@@ -84,6 +84,13 @@ class DistributedQueue(object):
         if no_amqp:
             raise ImportError('pika is not available')
 
+        # Try looking in the XDG_RUNTIME_DIR instead.  Nice for local hacking.
+        if not os.path.isdir(secrets_dir) and secrets_dir.startswith('/run'):
+            if runtime_dir := os.environ.get('XDG_RUNTIME_DIR'):
+                user_secrets = secrets_dir.replace('/run', runtime_dir)
+                if os.path.isdir(user_secrets):
+                    secrets_dir = user_secrets
+
         try:
             host, port = amqp_server.split(':')
         except ValueError:
