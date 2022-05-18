@@ -75,7 +75,8 @@ def sign_request(url: urllib.parse.ParseResult, method, headers, checksum) -> Di
 
     amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
 
-    headers = headers.copy()  # don't modify the user's copy, or the default
+    # Header canonicalisation demands all header names in lowercase
+    headers = {key.lower(): value for key, value in headers.items()}
     headers.update({'host': url.hostname, 'x-amz-content-sha256': checksum, 'x-amz-date': amzdate})
     headers_str = ''.join(f'{k}:{v}\n' for k, v in sorted(headers.items()))
     headers_list = ';'.join(sorted(headers))
