@@ -19,7 +19,8 @@ echo foobar | passwd --stdin root
 #
 COCKPIT_DEPS="\
 device-mapper-multipath \
-glibc-all-langpacks \
+glibc-langpack-de \
+glibc-langpack-pt \
 glib-networking \
 grubby \
 json-glib \
@@ -74,7 +75,7 @@ libsss_sudo \
 
 TEST_PACKAGES="\
 acl \
-ansible \
+ansible-core \
 gdb \
 strace \
 ltrace \
