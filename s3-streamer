@@ -84,10 +84,14 @@ class S3Destination(Destination):
         raise NotImplementedError('use Index')
 
     def write(self, filename, data):
+        content_type, content_encoding = mimetypes.guess_type(filename)
         headers = {
-            'Content-Type': mimetypes.guess_type(filename)[0] or 'text/plain',
+            'Content-Type': content_type or 'text/plain',
             s3.ACL: s3.PUBLIC
         }
+        if content_encoding:
+            headers['Content-Encoding'] = content_encoding
+
         with s3.urlopen(self.url(filename), data=data, method='PUT', headers=headers) as _:
             pass
 
