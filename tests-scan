@@ -61,6 +61,8 @@ def main():
                         help='Display human readable output rather than tasks')
     parser.add_argument('-n', '--dry', action="store_true", default=False,
                         help='Don''t actually change anything on GitHub')
+    parser.add_argument('-f', '--force', action="store_true", default=False,
+                        help='Perform all actions, even those that should be skipped')
     parser.add_argument('--repo', default=None,
                         help='Repository to scan and checkout.')
     parser.add_argument('-c', '--context', action="append", default=[],
@@ -80,6 +82,10 @@ def main():
         return 1
     if opts.pull_data and (opts.pull_number or opts.sha):
         parser.error("--pull-data and --pull-number/--sha are mutually exclusive")
+
+    if opts.force:
+        if not opts.repo or not opts.context or not (opts.pull_number or opts.sha):
+            parser.error('--force requires --repo, --context, and one of --pull-number or --sha')
 
     api = github.GitHub(repo=opts.repo)
 
@@ -102,8 +108,8 @@ def main():
 
 
 # Prepare a human readable output
-def tests_human(priority, name, number, revision, ref, context, base, repo, bots_ref, github_context):
-    if not priority:
+def tests_human(priority, name, number, revision, ref, context, base, repo, bots_ref, github_context, options):
+    if not priority and not options.force:
         return
     try:
         priority = int(priority)
@@ -135,7 +141,7 @@ def tests_invoke(priority, name, number, revision, ref, context, base,
         priority = int(priority)
     except (ValueError, TypeError):
         priority = 0
-    if priority <= 0:
+    if priority <= 0 and not options.force:
         return
     current = time.strftime('%Y%m%d-%H%M%S')
     (image, _, scenario) = context.partition("/")
@@ -392,7 +398,7 @@ def scan_for_pull_tasks(api, contexts, opts, repo):
 
     if opts.human_readable:
         results.sort(reverse=True, key=lambda x: str(x))
-        return list([tests_human(*x) for x in results])
+        return list([tests_human(*x, options=opts) for x in results])
     if not opts.amqp:
         return list([tests_invoke(*x, options=opts) for x in results])
     with distributed_queue.DistributedQueue(opts.amqp, ['rhel', 'public']) as q:
