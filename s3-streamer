@@ -24,6 +24,8 @@ import locale
 import logging
 import mimetypes
 import os
+import platform
+import shlex
 import subprocess
 import tempfile
 import textwrap
@@ -164,8 +166,9 @@ class ChunkedUploader:
         self.pending = b''
         self.send_at = 0  # Send the first write immediately
 
-    def init(self):
-        self.destination.write(f'{self.filename}.chunks', json.dumps([]).encode('ascii'))
+    def start(self, data):
+        # Send the initial data immediately, to get the chunks file written out.
+        self.append_block(data.encode('utf-8'))
         AttachmentsDirectory(self.index, f'{LIB_DIR}/s3-html').scan()
 
     def append_block(self, block):
@@ -293,10 +296,10 @@ def main():
             os.set_blocking(process.stdout.fileno(), False)
 
             # Send the static files to start
-            log_uploader.init()
+            log_uploader.start(f"Running on: {platform.node()}\nCommand: {shlex.join(args.cmd)}\n")
 
             # In progress...
-            status.post('pending', github.TESTING)
+            status.post('pending', f'Testing in progress [{platform.node()}]')
 
             process_exited = False
             while not process_exited:
