@@ -47,6 +47,10 @@ rm -rf /var/tmp/*
 journalctl --relinquish-var || true
 rm -rf /var/log/journal/*
 
+if [ -x /usr/sbin/duperemove ]; then
+    /usr/sbin/duperemove -rd / || true
+fi
+
 if [ $(findmnt / -n -o fstype) != "btrfs" ]; then
   dd if=/dev/zero of=/root/junk || true
   sync

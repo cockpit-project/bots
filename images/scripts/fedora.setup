@@ -139,7 +139,7 @@ dnf remove -y kernel-headers
 # we only need cloud-init for the initial boot, afterwards it just slows down booting
 dnf remove -y cloud-init
 
-dnf $DNF_OPTS -y install mock dnf-plugins-core rpm-build
+dnf $DNF_OPTS -y install mock dnf-plugins-core rpm-build duperemove
 useradd -c Builder -G mock builder
 
 if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
