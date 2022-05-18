@@ -160,8 +160,9 @@ class ChunkedUploader:
     SIZE_LIMIT = 1000000  # 1MB
     TIME_LIMIT = 30       # 30s
 
-    def __init__(self, index, filename, encoding=None):
-        self.input_decoder = codecs.getincrementaldecoder(encoding or locale.getpreferredencoding())()
+    def __init__(self, index, filename):
+        assert locale.getpreferredencoding() == 'UTF-8'
+        self.input_decoder = codecs.getincrementaldecoder('UTF-8')(errors='replace')
         self.suffixes = {'chunks'}
         self.chunks = []
         self.index = index
