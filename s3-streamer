@@ -25,6 +25,7 @@ import logging
 import mimetypes
 import os
 import platform
+import re
 import shlex
 import subprocess
 import tempfile
@@ -301,7 +302,16 @@ def main():
             os.set_blocking(process.stdout.fileno(), False)
 
             # Send the static files to start
-            log_uploader.start(f"Running on: {platform.node()}\nCommand: {shlex.join(args.cmd)}\n")
+            pretty_name = re.sub(r'^pull-(\d+)-\d+-\d+$', r'PR #\1', args.test_name)
+            log_uploader.start(textwrap.dedent(f"""
+                {status.github.repo} {pretty_name}: {args.github_context} on {platform.node()}
+
+                Running on:    {platform.node()}
+                Current time:  {time.strftime('%c UTC', time.gmtime())}
+                Test name:     {args.test_name}
+                Command:       {shlex.join(args.cmd)}
+
+            """).lstrip())
 
             # In progress...
             status.post('pending', f'Testing in progress [{platform.node()}]')
