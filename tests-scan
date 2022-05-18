@@ -313,8 +313,8 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
             # end up with a bunch of half tested pull requests
             baseline += 1.0 - (min(100000, float(number)) / 100000)
 
-        # Create list of statuses to process
-        todos = {}
+        # Create list of statuses to process: always process the requested contexts, if given
+        todos = {context: {} for context in contexts}
         for status in statuses:  # Firstly add all valid contexts that already exist in github
             if contexts and status not in contexts:
                 continue
