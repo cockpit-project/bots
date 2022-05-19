@@ -51,6 +51,14 @@ deploy_to cockpit-project/cockpit-weblate \
     --deploy-from \
         cockpit-project/cockpit/cockpit-weblate/DEPLOY_KEY
 
+deploy_to cockpit-project/cockpit-project.github.io \
+    --deploy-from \
+        cockpit-project/cockpit/release/WEBSITE_DEPLOY_KEY
+
+deploy_to cockpit-project/cockpit-container \
+    --deploy-from \
+        cockpit-project/cockpit/container-release/DEPLOY_KEY
+
 # cockpit-machines
 deploy_to cockpit-project/cockpit-machines \
     --deploy-from \
