@@ -5,5 +5,7 @@ if [ $(uname -m) = x86_64 ]; then
     # images for testing cockpit-podman
     podman pull quay.io/libpod/busybox
     podman pull quay.io/libpod/alpine
-    podman pull quay.io/cockpit/registry:2
+    podman pull docker.io/registry:2
+    # FIXME: once all images were rebuilt to pick up the docker image, change cockpit-podman's tests and drop the alias
+    podman tag docker.io/registry:2 quay.io/cockpit/registry:2
 fi
