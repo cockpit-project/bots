@@ -53,7 +53,7 @@ deploy_to cockpit-project/cockpit-weblate \
 
 deploy_to cockpit-project/cockpit-project.github.io \
     --deploy-from \
-        cockpit-project/cockpit/release/WEBSITE_DEPLOY_KEY
+        cockpit-project/cockpit/website/DEPLOY_KEY
 
 deploy_to cockpit-project/cockpit-container \
     --deploy-from \
