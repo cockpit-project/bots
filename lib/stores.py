@@ -24,11 +24,8 @@ from lib.constants import LIB_DIR
 
 ALL_STORES = [line.split() for line in open(os.path.join(LIB_DIR, 'stores'))]
 
-# Servers which have public images
+# hosted on public internet
 PUBLIC_STORES = [url for scope, url in ALL_STORES if scope == 'public']
 
-# Servers which have the private RHEL images
+# hosted behind the Red Hat VPN
 REDHAT_STORES = [url for scope, url in ALL_STORES if scope == 'redhat']
-
-# Servers which can host either public or private images (via ACL specification)
-S3_STORES = [url for scope, url in ALL_STORES if scope == 's3']

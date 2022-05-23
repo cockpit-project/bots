@@ -1,2 +1,2 @@
-s3	https://cockpit-images.eu-central-1.linodeobjects.com/
-s3	https://cockpit-images.us-east-1.linodeobjects.com/
+public	https://cockpit-images.eu-central-1.linodeobjects.com/
+public	https://cockpit-images.us-east-1.linodeobjects.com/
