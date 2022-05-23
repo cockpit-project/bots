@@ -18,7 +18,6 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import getpass
 import os
 import re
 import subprocess
@@ -28,36 +27,31 @@ import urllib.parse
 
 from lib.constants import BOTS_DIR, IMAGES_DIR
 from lib.directories import get_images_data_dir
-from lib.network import CA_PEM
-from lib.stores import S3_STORES, PUBLIC_STORES, REDHAT_STORES
+from lib.network import CA_PEM, redhat_network
+from lib.stores import PUBLIC_STORES, REDHAT_STORES
 from lib import s3
-
-from task import api
 
 
 def upload(dest, source, public, prune=False):
     url = urllib.parse.urlparse(dest)
 
-    # Start building the command
-    cmd = ["curl", "--no-progress-meter", "--fail", "--upload-file", source]
-
-    # Pass credentials, if present
-    if s3.is_key_present(url):
-        headers = {s3.ACL: s3.PUBLIC} if public else {}
-
-        # slightly magic: we already know the checksum: it's part of the filename
-        hash_value = re.search('[0-9a-f]{64}', source).group(0)
-
-        cmd += s3.sign_curl(url, method='PUT', headers=headers, checksum=hash_value)
-
-    elif api.token:
-        user = url.username or getpass.getuser()
-        cmd += ["--user", user + ":" + api.token, '--cacert', CA_PEM, dest]
-
-    else:
+    if not s3.is_key_present(url):
         # No credentials?  That's not going to work...
         sys.stderr.write(f"image-upload: no credentials for {dest}")
         return False
+
+    # Start building the command
+    cmd = ["curl", "--no-progress-meter", "--fail", "--upload-file", source]
+
+    if any(dest.startswith(store) for store in REDHAT_STORES):
+        cmd += ['--cacert', CA_PEM]
+
+    headers = {s3.ACL: s3.PUBLIC} if public else {}
+
+    # slightly magic: we already know the checksum: it's part of the filename
+    hash_value = re.search('[0-9a-f]{64}', source).group(0)
+
+    cmd += s3.sign_curl(url, method='PUT', headers=headers, checksum=hash_value)
 
     # Only prune after the above checks, to ensure that we have credentials.
     if prune:
@@ -105,21 +99,15 @@ def main():
         basename = os.path.basename(source)
         public = not basename.startswith('rhel')
 
-        # determine possible stores, unless explicitly given
         stores = args.store
         if not stores:
-            stores = list(S3_STORES)
-
-            # these images are not freely redistributable, keep them Red Hat internal
-            if public:
-                stores.extend(PUBLIC_STORES)
-            else:
-                stores.extend(REDHAT_STORES)
-
+            stores = PUBLIC_STORES
+            if redhat_network():
+                stores += REDHAT_STORES
         success = False
         for store in stores:
             dest = urllib.parse.urljoin(store, basename)
-            success |= upload(dest, source, public, prune=args.prune_s3 and store in S3_STORES)
+            success |= upload(dest, source, public, prune=args.prune_s3)
 
         if not success:
             sys.exit('Failed to upload to any image store')
