@@ -1,0 +1,62 @@
+#!/usr/bin/python3
+
+# For example: ./s3-lifecycle --days 90 https://cockpit-logs.us-east-1.linodeobjects.com/
+# NB: The policy gets applied once daily, at midnight.
+
+import argparse
+import base64
+import logging
+import hashlib
+import textwrap
+import urllib
+
+from pathlib import Path
+
+from lib import s3
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Gets (default) or sets (--days, --file) S3 lifecycle policy')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--days', type=int, help='Set a simple expiry policy, in days')
+    group.add_argument('--file', type=Path, help='Set the expiry policy from the given XML file')
+    parser.add_argument('url', metavar='URL', help='The S3 URL to set the policy on')
+    args = parser.parse_args()
+
+    lifecycle = urllib.parse.urlparse(args.url)._replace(query='lifecycle=')
+
+    if args.days:
+        # https://www.linode.com/docs/products/storage/object-storage/guides/lifecycle-policies/
+        xml = textwrap.dedent(f"""
+            <LifecycleConfiguration>
+                <Rule>
+                    <ID>delete-all-objects</ID>
+                    <Filter>
+                        <Prefix></Prefix>
+                    </Filter>
+                    <Status>Enabled</Status>
+                    <Expiration>
+                        <Days>{args.days}</Days>
+                    </Expiration>
+                </Rule>
+            </LifecycleConfiguration>""")
+    elif args.file:
+        xml = args.file.read_text()
+    else:
+        with s3.urlopen(lifecycle) as response:
+            print(response.read())
+        return
+
+    # For some reason this request requires Content-MD5, even though we also SHA256 the body...
+    data = xml.encode('ascii')
+    md5 = hashlib.md5()
+    md5.update(data)
+    headers = {'Content-MD5': base64.b64encode(md5.digest()).decode('ascii')}
+
+    with s3.urlopen(lifecycle, method='PUT', headers=headers, data=data) as response:
+        print(response.status)
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    main()
