@@ -107,8 +107,13 @@ def urlopen(url: urllib.parse.ParseResult, method='GET', headers={}, data=b'') -
     """Same as sign_request() but calls urlopen() on the result"""
     headers = sign_request(url, method, headers, hashlib.sha256(data).hexdigest())
     request = urllib.request.Request(url.geturl(), headers=headers, method=method, data=data)
-    response = urllib.request.urlopen(request)
-    logger.debug('%s %s → %s', method, url.geturl(), response.status)
+    try:
+        response = urllib.request.urlopen(request)
+    except urllib.error.HTTPError as exc:
+        logger.debug('%s %s %s → %s:', method, url.geturl(), headers, exc.status)
+        logger.debug('  %s', exc.read())
+        raise
+
     return response
 
 
