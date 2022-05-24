@@ -27,7 +27,7 @@ import urllib.parse
 
 from lib.constants import BOTS_DIR, IMAGES_DIR
 from lib.directories import get_images_data_dir
-from lib.network import CA_PEM, redhat_network
+from lib.network import get_host_ca, redhat_network
 from lib.stores import PUBLIC_STORES, REDHAT_STORES
 from lib import s3
 
@@ -44,8 +44,8 @@ def upload(store, source, public, prune=False):
     # Start building the command
     cmd = ["curl", "--no-progress-meter", "--fail", "--upload-file", source]
 
-    if store in REDHAT_STORES:
-        cmd += ['--cacert', CA_PEM]
+    if ca := get_host_ca(url.netloc):
+        cmd += ['--cacert', ca]
 
     headers = {s3.ACL: s3.PUBLIC} if public else {}
 

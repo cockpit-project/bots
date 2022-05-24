@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-import ssl
 import sys
 import sqlite3
 import urllib.request
@@ -27,7 +26,7 @@ import re
 
 from datetime import datetime
 
-from lib.network import CA_PEM
+from lib.network import host_ssl_context
 from lib import testmap
 from task import github
 
@@ -64,9 +63,6 @@ def main():
     if opts.test_parser:
         test_parser(opts.test_parser)
         return 0
-
-    ctx = ssl.create_default_context()
-    ctx.load_verify_locations(cafile=CA_PEM)
 
     db_conn = sqlite3.connect(opts.db)
     cursor = db_conn.cursor()
@@ -156,7 +152,7 @@ def main():
                 logging.debug("scanning log %s", raw_log)
 
                 with urllib.request.urlopen(raw_log,
-                                            context=ctx if "logs.cockpit-project.org" in raw_log else None) as fp:
+                                            context=host_ssl_context(urllib.parse.urlparse(raw_log).netloc)) as fp:
                     for (testname, failed, retry_reason, seconds) in find_tests(fp):
                         insert_test(cursor, run_id, testname, failed, retry_reason, seconds)
 
