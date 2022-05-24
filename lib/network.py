@@ -1,6 +1,6 @@
 # This file is part of Cockpit.
 #
-# Copyright (C) 2017 Red Hat, Inc.
+# Copyright (C) 2022 Red Hat, Inc.
 #
 # Cockpit is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
@@ -19,16 +19,29 @@
 # our GitHub interacition.
 
 import os
+import socket
 
-from lib.constants import LIB_DIR
+from lib.constants import IMAGES_DIR
 
-ALL_STORES = [line.split() for line in open(os.path.join(LIB_DIR, 'stores'))]
+# Cockpit image/log server CA
+CA_PEM = os.getenv("COCKPIT_CA_PEM", os.path.join(IMAGES_DIR, "files", "ca.pem"))
 
-# Servers which have public images
-PUBLIC_STORES = [url for scope, url in ALL_STORES if scope == 'public']
 
-# Servers which have the private RHEL images
-REDHAT_STORES = [url for scope, url in ALL_STORES if scope == 'redhat']
+def redhat_network():
+    '''Check if we can access the Red Hat network
 
-# Servers which can host either public or private images (via ACL specification)
-S3_STORES = [url for scope, url in ALL_STORES if scope == 's3']
+    The result gets cached, so this can be called several times.
+    '''
+    if redhat_network.result is None:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(10)
+            s.connect(("download.devel.redhat.com", 443))
+            redhat_network.result = True
+        except OSError:
+            redhat_network.result = False
+
+    return redhat_network.result
+
+
+redhat_network.result = None

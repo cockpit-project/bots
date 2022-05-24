@@ -43,7 +43,8 @@ import urllib.parse
 
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir, xdg_config_home
-from lib.stores import S3_STORES, PUBLIC_STORES, REDHAT_STORES, CA_PEM
+from lib.network import CA_PEM
+from lib.stores import S3_STORES, PUBLIC_STORES, REDHAT_STORES
 from lib.testmap import get_test_image
 from lib import s3
 
