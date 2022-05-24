@@ -28,7 +28,8 @@ import urllib.parse
 
 from lib.constants import BOTS_DIR, IMAGES_DIR
 from lib.directories import get_images_data_dir
-from lib.stores import S3_STORES, PUBLIC_STORES, REDHAT_STORES, CA_PEM
+from lib.network import CA_PEM
+from lib.stores import S3_STORES, PUBLIC_STORES, REDHAT_STORES
 from lib import s3
 
 from task import api

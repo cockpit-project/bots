@@ -27,7 +27,7 @@ import re
 
 from datetime import datetime
 
-from lib.stores import CA_PEM
+from lib.network import CA_PEM
 from lib import testmap
 from task import github
 

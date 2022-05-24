@@ -24,7 +24,7 @@ import sys
 import time
 import urllib.request
 
-from lib.stores import CA_PEM
+from lib.network import CA_PEM
 import task
 
 logs_ssl_cockpit = ssl.create_default_context(cafile=CA_PEM)
