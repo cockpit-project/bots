@@ -21,6 +21,7 @@ from typing import Dict, List, Iterable, IO
 import xml.etree.ElementTree as ET
 
 from .directories import xdg_config_home
+from .network import host_ssl_context
 
 __all__ = (
     "ACL",
@@ -108,7 +109,7 @@ def urlopen(url: urllib.parse.ParseResult, method='GET', headers={}, data=b'') -
     headers = sign_request(url, method, headers, hashlib.sha256(data).hexdigest())
     request = urllib.request.Request(url.geturl(), headers=headers, method=method, data=data)
     try:
-        response = urllib.request.urlopen(request)
+        response = urllib.request.urlopen(request, context=host_ssl_context(url.netloc))
     except urllib.error.HTTPError as exc:
         logger.debug('%s %s %s → %s:', method, url.geturl(), headers, exc.status)
         logger.debug('  %s', exc.read())

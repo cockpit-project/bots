@@ -18,25 +18,14 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import ssl
 import subprocess
 import sys
 import time
+import urllib.parse
 import urllib.request
 
-from lib.network import CA_PEM
+from lib.network import host_ssl_context
 import task
-
-logs_ssl_cockpit = ssl.create_default_context(cafile=CA_PEM)
-
-
-def ssl_context_for(log_url):
-    # sinks which use the Cockpit CI CA
-    if "logs.cockpit-project.org" in log_url:
-        return logs_ssl_cockpit
-
-    # other cockpit sinks and test providers (Semaphore, Travis, etc.) have an official certificate
-    return None
 
 
 def print_summary(by_state, state):
@@ -52,7 +41,7 @@ def print_failure(context, url):
     print("  " + url)
     if url.endswith(".html"):
         url = url[:-5]
-    with urllib.request.urlopen(url, context=ssl_context_for(url)) as f:
+    with urllib.request.urlopen(url, context=host_ssl_context(urllib.parse.urlparse(url).netloc)) as f:
         for line in f:
             if line.startswith(b"not ok"):
                 print("  " + line.strip().decode())

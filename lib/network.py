@@ -19,12 +19,45 @@
 # our GitHub interacition.
 
 import os
+import ssl
 import socket
 
 from lib.constants import IMAGES_DIR
 
 # Cockpit image/log server CA
 CA_PEM = os.getenv("COCKPIT_CA_PEM", os.path.join(IMAGES_DIR, "files", "ca.pem"))
+
+
+CA_PEM_DOMAINS = [
+    "e2e.bos.redhat.com",
+    # points to our AWS sink; obsolete after 2022-07 when we settled down on "S3 logs only"
+    "logs.cockpit-project.org",
+    # development/cockpituous project tests
+    "localdomain",
+]
+
+
+def get_host_ca(hostname):
+    '''Return custom CA that applies to the given host name.
+
+    Self-hosted infrastructure uses CA_PEM, while publicly hosted infrastructure ought to have
+    an officially trusted TLS certificate. Return None for these.
+    '''
+    # strip off port
+    hostname = hostname.split(':')[0]
+
+    if any((hostname == domain or hostname.endswith("." + domain)) for domain in CA_PEM_DOMAINS):
+        return CA_PEM
+    return None
+
+
+def host_ssl_context(hostname):
+    '''Return SSLContext suitable for given hostname.
+
+    This uses get_host_ca() to determine an appropriate CA.
+    '''
+    cafile = get_host_ca(hostname)
+    return ssl.create_default_context(cafile=cafile) if cafile else None
 
 
 def redhat_network():
