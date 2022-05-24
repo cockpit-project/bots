@@ -219,7 +219,7 @@ IMAGE_REFRESH_TRIGGERS = {
     ],
     "services": [
         f"{TEST_OS_DEFAULT}@cockpit-project/cockpit",
-        "ubuntu-latest@cockpit-project/cockpit",
+        "ubuntu-stable@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
         "rhel-9-1@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
