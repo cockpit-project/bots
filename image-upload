@@ -32,7 +32,8 @@ from lib.stores import PUBLIC_STORES, REDHAT_STORES
 from lib import s3
 
 
-def upload(dest, source, public, prune=False):
+def upload(store, source, public, prune=False):
+    dest = urllib.parse.urljoin(store, os.path.basename(source))
     url = urllib.parse.urlparse(dest)
 
     if not s3.is_key_present(url):
@@ -43,7 +44,7 @@ def upload(dest, source, public, prune=False):
     # Start building the command
     cmd = ["curl", "--no-progress-meter", "--fail", "--upload-file", source]
 
-    if any(dest.startswith(store) for store in REDHAT_STORES):
+    if store in REDHAT_STORES:
         cmd += ['--cacert', CA_PEM]
 
     headers = {s3.ACL: s3.PUBLIC} if public else {}
@@ -55,7 +56,7 @@ def upload(dest, source, public, prune=False):
 
     # Only prune after the above checks, to ensure that we have credentials.
     if prune:
-        subprocess.check_call([f'{BOTS_DIR}/image-prune', '--s3', f'https://{url.hostname}/'])
+        subprocess.check_call([f'{BOTS_DIR}/image-prune', '--s3', store])
 
     print("Uploading to", dest, file=sys.stderr)
 
@@ -96,8 +97,7 @@ def main():
         sources.append(source)
 
     for source in sources:
-        basename = os.path.basename(source)
-        public = not basename.startswith('rhel')
+        public = not os.path.basename(source).startswith('rhel')
 
         stores = args.store
         if not stores:
@@ -106,8 +106,7 @@ def main():
                 stores += REDHAT_STORES
         success = False
         for store in stores:
-            dest = urllib.parse.urljoin(store, basename)
-            success |= upload(dest, source, public, prune=args.prune_s3)
+            success |= upload(store, source, public, prune=args.prune_s3)
 
         if not success:
             sys.exit('Failed to upload to any image store')
