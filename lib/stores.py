@@ -1,6 +1,6 @@
 # This file is part of Cockpit.
 #
-# Copyright (C) 2017 Red Hat, Inc.
+# Copyright (C) 2022 Red Hat, Inc.
 #
 # Cockpit is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
@@ -15,17 +15,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-# Shared GitHub code. When run as a script, we print out info about
-# our GitHub interacition.
-
-import os
-
-from lib.constants import LIB_DIR
-
-ALL_STORES = [line.split() for line in open(os.path.join(LIB_DIR, 'stores'))]
-
 # hosted on public internet
-PUBLIC_STORES = [url for scope, url in ALL_STORES if scope == 'public']
+PUBLIC_STORES = [
+    "https://cockpit-images.eu-central-1.linodeobjects.com/",
+    "https://cockpit-images.us-east-1.linodeobjects.com/",
+]
 
 # hosted behind the Red Hat VPN
-REDHAT_STORES = [url for scope, url in ALL_STORES if scope == 'redhat']
+REDHAT_STORES = [
+    "https://cockpit-11.apps.cnfdb2.e2e.bos.redhat.com/images/",
+]
