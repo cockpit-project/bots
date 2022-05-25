@@ -86,7 +86,8 @@ def find(name, stores, latest, quiet):
         url = urllib.parse.urlparse(urllib.parse.urljoin(store, name))
 
         args = []
-        if ca := get_host_ca(url.netloc):
+        ca = get_host_ca(url.netloc)
+        if ca:
             args += ['--cacert', ca]
 
         # First, check if this is an S3 store for which we have a key
