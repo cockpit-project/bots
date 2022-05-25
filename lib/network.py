@@ -51,6 +51,16 @@ def get_host_ca(hostname):
     return None
 
 
+def get_curl_ca_arg(hostname):
+    '''Return curl CLI arguments for talking to hostname.
+
+    This uses get_host_ca() to determine an appropriate CA for talking to hostname.
+    Returns ["--cacert", "CAFilePath"] or [] as approprioate.
+    '''
+    ca = get_host_ca(hostname)
+    return ['--cacert', ca] if ca else []
+
+
 def host_ssl_context(hostname):
     '''Return SSLContext suitable for given hostname.
 

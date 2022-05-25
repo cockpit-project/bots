@@ -43,7 +43,7 @@ import urllib.parse
 
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
-from lib.network import get_host_ca, redhat_network
+from lib.network import get_curl_ca_arg, redhat_network
 from lib.stores import PUBLIC_STORES, REDHAT_STORES
 from lib.testmap import get_test_image
 from lib import s3
@@ -85,10 +85,7 @@ def find(name, stores, latest, quiet):
     for store in stores:
         url = urllib.parse.urlparse(urllib.parse.urljoin(store, name))
 
-        args = []
-        ca = get_host_ca(url.netloc)
-        if ca:
-            args += ['--cacert', ca]
+        args = get_curl_ca_arg(url.netloc)
 
         # First, check if this is an S3 store for which we have a key
         if s3.is_key_present(url):
