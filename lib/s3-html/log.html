@@ -406,6 +406,8 @@ async function fetch_from(url, offset) {
     return null;
 }
 
+class StopError extends Error { };
+
 async function fetch_content(filename) {
     /* Content is unicode text, but we need to know how many bytes we have in
      * order to perform chunk calculations.  Track that separately.
@@ -413,31 +415,36 @@ async function fetch_content(filename) {
     let content = '';
     let bytes = 0;
 
-    let chunks;
-    while ((chunks = JSON.parse(await fetch_from(`${filename}.chunks`)))) {
-        let chunk_start = 0;
+    try {
+        let chunks;
+        while ((chunks = JSON.parse(await fetch_from(`${filename}.chunks`)))) {
+            let chunk_start = 0;
 
-        for (const chunk_size of chunks) {
-            const chunk_end = chunk_start + chunk_size;
+            for (const chunk_size of chunks) {
+                const chunk_end = chunk_start + chunk_size;
 
-            if (bytes < chunk_end) {
-                const offset = bytes - chunk_start;
-                if ((chunk = await fetch_from(`${filename}.${chunk_start}-${chunk_end}`, offset))) {
-                    bytes = chunk_end;
-                    content += chunk;
-                } else {
-                    /* If we got nothing, it means the chunk was deleted on the server.
-                     * That happens when the complete log is available.
-                     */
-                    break;
+                if (bytes < chunk_end) {
+                    const offset = bytes - chunk_start;
+                    if ((chunk = await fetch_from(`${filename}.${chunk_start}-${chunk_end}`, offset))) {
+                        bytes = chunk_end;
+                        content += chunk;
+                    } else {
+                        /* If we got nothing, it means the chunk was deleted on the server.
+                         * That happens when the complete log is available.
+                         */
+                       throw new StopError();
+                    }
                 }
+
+                chunk_start = chunk_end;
             }
 
-            chunk_start = chunk_end;
+            set_content(content);
+            await sleep(30);
         }
-
-        set_content(content);
-        await sleep(30);
+    } catch (e) {
+        if (!(e instanceof StopError))
+            throw e;
     }
 
     content += await fetch_from(filename, content.length);
