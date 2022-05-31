@@ -375,6 +375,8 @@ function sleep(seconds) {
     return new Promise(resolve => setTimeout(resolve, 1000 * seconds));
 }
 
+class NotFoundError extends Error { };
+
 async function fetch_from(url, offset) {
     for (let attempts = 0; attempts < 10; attempts++) {
         const options = {};
@@ -393,9 +395,11 @@ async function fetch_from(url, offset) {
                     return text;
                 }
             } else {
-                return null;
+                throw new NotFoundError;
             }
         } catch (error) {
+            if (error instanceof NotFoundError)
+                throw new NotFoundError;
             const delay = 2 ** attempts;
             console.log(`Failed to fetch ${url}.  Waiting ${delay}.`);
             await sleep(delay);
@@ -403,7 +407,7 @@ async function fetch_from(url, offset) {
     }
 
     console.log(`Giving up on ${url}.`);
-    return null;
+    throw new NotFoundError;
 }
 
 async function fetch_content(filename) {
@@ -413,31 +417,31 @@ async function fetch_content(filename) {
     let content = '';
     let bytes = 0;
 
-    let chunks;
-    while ((chunks = JSON.parse(await fetch_from(`${filename}.chunks`)))) {
-        let chunk_start = 0;
+    try {
+        while (true) {
+            const chunks = JSON.parse(await fetch_from(`${filename}.chunks`));
+            let chunk_start = 0;
 
-        for (const chunk_size of chunks) {
-            const chunk_end = chunk_start + chunk_size;
+            for (const chunk_size of chunks) {
+                const chunk_end = chunk_start + chunk_size;
 
-            if (bytes < chunk_end) {
-                const offset = bytes - chunk_start;
-                if ((chunk = await fetch_from(`${filename}.${chunk_start}-${chunk_end}`, offset))) {
+                if (bytes < chunk_end) {
+                    const offset = bytes - chunk_start;
+                    const chunk = await fetch_from(`${filename}.${chunk_start}-${chunk_end}`, offset);
                     bytes = chunk_end;
                     content += chunk;
-                } else {
-                    /* If we got nothing, it means the chunk was deleted on the server.
-                     * That happens when the complete log is available.
-                     */
-                    break;
                 }
+
+                chunk_start = chunk_end;
             }
 
-            chunk_start = chunk_end;
+            set_content(content);
+            await sleep(30);
         }
-
-        set_content(content);
-        await sleep(30);
+    } catch (e) {
+        // If any of the chunk files are not found, the complete file is expected to be present.
+        if (!(e instanceof NotFoundError))
+            throw e;
     }
 
     content += await fetch_from(filename, content.length);
