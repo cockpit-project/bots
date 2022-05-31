@@ -444,7 +444,7 @@ async function fetch_content(filename) {
             throw e;
     }
 
-    content += await fetch_from(filename, content.length);
+    content += await fetch_from(filename, bytes);
     set_content(content);
 
     console.log('Thank you for using s3-streamer.  Have a nice day.')
