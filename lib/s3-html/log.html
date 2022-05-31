@@ -426,10 +426,8 @@ async function fetch_content(filename) {
                 const chunk_end = chunk_start + chunk_size;
 
                 if (bytes < chunk_end) {
-                    const offset = bytes - chunk_start;
-                    const chunk = await fetch_from(`${filename}.${chunk_start}-${chunk_end}`, offset);
+                    content += await fetch_from(`${filename}.${chunk_start}-${chunk_end}`, bytes - chunk_start);
                     bytes = chunk_end;
-                    content += chunk;
                 }
 
                 chunk_start = chunk_end;
