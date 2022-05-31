@@ -73,6 +73,16 @@ deploy_to cockpit-project/cockpit-machines-weblate \
     --deploy-from \
         cockpit-project/cockpit-machines/cockpit-machines-weblate/DEPLOY_KEY
 
+# cockpit-podman
+deploy_to cockpit-project/cockpit-podman \
+    --deploy-from \
+        cockpit-project/cockpit-podman/npm-update/SELF_DEPLOY_KEY \
+        cockpit-project/cockpit-podman/self/DEPLOY_KEY
+
+deploy_to cockpit-project/cockpit-podman-weblate \
+    --deploy-from \
+        cockpit-project/cockpit-podman/cockpit-podman-weblate/DEPLOY_KEY
+
 # shared
 deploy_to cockpit-project/node-cache \
     --deploy-from \
