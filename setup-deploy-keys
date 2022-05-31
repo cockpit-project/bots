@@ -88,7 +88,9 @@ deploy_to cockpit-project/node-cache \
         cockpit-project/cockpit/npm-update/NODE_CACHE_DEPLOY_KEY \
         cockpit-project/cockpit/node-cache/DEPLOY_KEY \
         cockpit-project/cockpit-machines/npm-update/NODE_CACHE_DEPLOY_KEY \
-        cockpit-project/cockpit-machines/node-cache/DEPLOY_KEY
+        cockpit-project/cockpit-machines/node-cache/DEPLOY_KEY \
+        cockpit-project/cockpit-podman/npm-update/NODE_CACHE_DEPLOY_KEY \
+        cockpit-project/cockpit-podman/node-cache/DEPLOY_KEY
 
 # flathub
 deploy_to cockpit-project/org.cockpit_project.CockpitClient \
