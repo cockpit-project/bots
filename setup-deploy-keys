@@ -76,8 +76,7 @@ deploy_to cockpit-project/cockpit-machines-weblate \
 # cockpit-podman
 deploy_to cockpit-project/cockpit-podman \
     --deploy-from \
-        cockpit-project/cockpit-podman/npm-update/SELF_DEPLOY_KEY \
-        cockpit-project/cockpit-podman/self/DEPLOY_KEY
+        cockpit-project/cockpit-podman/npm-update/SELF_DEPLOY_KEY
 
 deploy_to cockpit-project/cockpit-podman-weblate \
     --deploy-from \
