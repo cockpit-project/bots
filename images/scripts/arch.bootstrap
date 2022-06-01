@@ -20,7 +20,7 @@
 set -eux
 
 URL='https://america.mirror.pkgbuild.com/images/latest/'
-IMAGE="$(curl -L -s "$URL" | grep -o '"Arch-Linux-x86_64-cloudimg-[^"]*.qcow2"' | tr -d '"' | head -n1)"
+IMAGE="$(curl -L -s "$URL" | grep -o '"Arch-Linux-x86_64-cloudimg-[^"]*.qcow2"' | tr -d '"' | tail -n1)"
 [ -n "$IMAGE" ]
 
 exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL/$IMAGE"
