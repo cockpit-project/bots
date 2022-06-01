@@ -338,7 +338,7 @@ def branch(context, message, pathspec=".", issue=None, push=True, branch=None, *
     name = named(kwargs)
 
     if not branch:
-        branch = f'{name}-{context or ""}-{datetime.utcnow():%Y%m%d-%H%M%M}'
+        branch = f'{name}-{context or ""}-{datetime.utcnow():%Y%m%d-%H%M%S}'
         branch = re.sub('[^A-Za-z0-9]+', '-', branch)
         execute("git", "checkout", "-b", branch)
 
