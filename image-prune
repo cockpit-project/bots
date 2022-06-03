@@ -26,6 +26,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
 import urllib.parse
 from typing import Iterable, Tuple
 
@@ -176,8 +177,13 @@ class S3ImageStore(ImageCache):
             yield datetime.datetime.strptime(stamp, rfc3339ish).timestamp(), name
 
     def delete_file(self, filename):
-        with s3.urlopen(self.url._replace(path='/' + filename), method='DELETE'):
-            pass
+        try:
+            with s3.urlopen(self.url._replace(path='/' + filename), method='DELETE'):
+                pass
+        except urllib.error.HTTPError as e:
+            # 404 → already gone? *shrug* eventual consistency or parallel image-prune run
+            if e.code != 404:
+                raise
         del self.sizes[filename]
 
     def enough_space(self):
