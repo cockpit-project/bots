@@ -25,6 +25,7 @@ import logging
 import os
 import re
 import socket
+from ssl import SSLEOFError
 import subprocess
 import time
 import urllib.parse
@@ -215,7 +216,7 @@ class GitHub(object):
                 if response.status != HTTPStatus.BAD_GATEWAY:
                     # success!
                     break
-            except (ConnectionResetError, http.client.BadStatusLine, socket.error) as e:
+            except (ConnectionResetError, http.client.BadStatusLine, socket.error, SSLEOFError) as e:
                 logging.warning(f"Transient error during GitHub request, attempt #{retry}: {e}")
 
             self.conn = None
