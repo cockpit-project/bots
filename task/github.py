@@ -18,7 +18,6 @@
 # Shared GitHub code. When run as a script, we print out info about
 # our GitHub interacition.
 
-import errno
 import http.client
 from http import HTTPStatus
 import json
@@ -201,41 +200,29 @@ class GitHub(object):
         headers["User-Agent"] = "Cockpit Tests"
         if self.token:
             headers["Authorization"] = "token " + self.token
-        connected = False
-        bad_gateway_errors = 0
-        while not connected and bad_gateway_errors < 5:
+
+        for retry in range(5):
             if not self.conn:
                 if self.url.scheme == 'http':
                     self.conn = http.client.HTTPConnection(self.url.netloc)
                 else:
                     self.conn = http.client.HTTPSConnection(self.url.netloc)
-                connected = True
-            self.conn.set_debuglevel(self.debug and 1 or 0)
+                self.conn.set_debuglevel(self.debug and 1 or 0)
+
             try:
                 self.conn.request(method, self.qualify(resource), data, headers)
                 response = self.conn.getresponse()
-                if response.status == HTTPStatus.BAD_GATEWAY:
-                    bad_gateway_errors += 1
-                    self.conn = None
-                    connected = False
-                    time.sleep(bad_gateway_errors * 2)
-                    continue
-                break
-            # This happens when GitHub disconnects in python3
-            except ConnectionResetError:
-                if connected:
-                    raise
-                self.conn = None
-            # This happens when GitHub disconnects a keep-alive connection
-            except http.client.BadStatusLine:
-                if connected:
-                    raise
-                self.conn = None
-            # This happens when TLS is the source of a disconnection
-            except socket.error as ex:
-                if connected or ex.errno != errno.EPIPE:
-                    raise
-                self.conn = None
+                if response.status != HTTPStatus.BAD_GATEWAY:
+                    # success!
+                    break
+            except (ConnectionResetError, http.client.BadStatusLine, socket.error) as e:
+                logging.warning(f"Transient error during GitHub request, attempt #{retry}: {e}")
+
+            self.conn = None
+            time.sleep(2 ** retry)
+        else:
+            raise IOError("Repeated failure to talk to GitHub API, giving up")
+
         heads = {}
         for (header, value) in response.getheaders():
             heads[header.lower()] = value
