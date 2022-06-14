@@ -34,6 +34,8 @@ HOUR = 3600
 def main():
     parser = argparse.ArgumentParser(description='Generate infrastructure and test statistics')
     parser.add_argument("--db", default="test-results.db", help="Database name")
+    parser.add_argument("--s3", metavar="URL", type=urllib.parse.urlparse,
+                        help="Upload generated file to given S3 URL")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     opts = parser.parse_args()
 
@@ -198,9 +200,13 @@ merged_failures {merged_failures}
         for uri, size in space_usage.items():
             output += f's3_usage_bytes{{store="{uri}"}} {size}\n'
 
-    print(output)
-
     db_conn.close()
+
+    print(output)
+    if opts.s3:
+        with s3.urlopen(opts.s3, data=output.encode("UTF-8"), method="PUT",
+                        headers={"Content-Type": "text/plain", s3.ACL: s3.PUBLIC}):
+            pass
 
     return 0
 
