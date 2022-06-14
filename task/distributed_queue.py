@@ -56,7 +56,8 @@ arguments = {
         "x-max-priority": MAX_PRIORITY
     },
     'statistics': {
-        "x-max-priority": MAX_PRIORITY
+        "x-max-priority": MAX_PRIORITY,
+        "x-single-active-consumer": True,
     },
 }
 
