@@ -34,6 +34,7 @@ import time
 import urllib.parse
 
 from lib.constants import LIB_DIR
+from lib.stores import LOG_STORE
 from lib import s3
 from task import github
 
@@ -273,7 +274,7 @@ def main():
         destination = LocalDestination(os.path.join(args.directory, subdir))
         status = LocalStatus(destination.directory)
     else:
-        url = args.s3 or os.getenv('S3_LOGS_URL') or 'https://cockpit-logs.us-east-1.linodeobjects.com/'
+        url = args.s3 or os.getenv('S3_LOGS_URL', LOG_STORE)
         destination = S3Destination(urllib.parse.urljoin(url, subdir))
         status = GitHubStatus(args.repo, args.revision, args.github_context, destination.directory + 'log.html')
 
