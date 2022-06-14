@@ -72,7 +72,12 @@ def sign_request(url: urllib.parse.ParseResult, method, headers, checksum) -> Di
     If the method is PUT then the checksum of the data to be uploaded must be provided.
     @headers, if given, are a dict of additional headers to be signed (eg: `x-amz-acl`)
     """
-    access_key, secret_key = get_key(url.hostname)
+    if url.scheme != 'https':
+        sys.exit("S3 URLs must be https")
+    try:
+        access_key, secret_key = get_key(url.hostname)
+    except TypeError:
+        sys.exit(f"No key found for {url.hostname}")
 
     amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
 
