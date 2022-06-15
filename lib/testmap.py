@@ -139,7 +139,7 @@ REPO_BRANCH_CONTEXT = {
     },
     'candlepin/subscription-manager': {
         'main': [
-            'rhel-8-6',
+            'rhel-8-7',
             'rhel-9-0',
             'rhel-9-1',
             'fedora-36',
@@ -148,6 +148,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-4',
             'rhel-8-5',
             'rhel-8-6',
+            'rhel-8-7',
         ],
         'subscription-manager-1.28.21': [
             'rhel-8-5',
@@ -159,7 +160,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-0',
         ],
         '_manual': [
-            'rhel-8-7',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -171,7 +171,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
-            'rhel-8-6/subscription-manager-1.28',
             'rhel-8-7',
             'rhel-8-7/subscription-manager-1.28',
         ],
@@ -223,7 +222,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "debian-stable@cockpit-project/cockpit",
         "rhel-9-1@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
-        "rhel-8-6@candlepin/subscription-manager",
+        "rhel-8-7@candlepin/subscription-manager",
         "rhel-9-1@candlepin/subscription-manager-cockpit",
     ]
 }
