@@ -19,7 +19,7 @@ case "$OS_VER" in
         ;;
 
     *)
-        spec=$($GET "$COCKPIT_GIT/main/tools/cockpit.spec.in" | sed 's/@BUILD_ALL@/1/; s/@[A-Z_]*/0/g')
+        spec=$($GET "$COCKPIT_GIT/main/tools/cockpit.spec")
         ;;
 esac
 
