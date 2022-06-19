@@ -1,1 +1,0 @@
-Error: plugin type="bridge" failed (add): failed to find plugin "bridge" in path [/usr/local/libexec/cni /usr/libexec/cni /usr/local/lib/cni /usr/lib/cni /opt/cni/bin]
