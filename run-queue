@@ -67,7 +67,7 @@ def consume_webhook_queue(channel, amqp):
             sha = pull_request['head']['sha']
             db = os.path.join(get_images_data_dir(), "test-results.db")
             cmd = (f"./store-tests --db {db} --repo {repo} {sha} && "
-                   f"./prometheus-stats --db {db} --s3 {LOG_STORE}/prometheus")
+                   f"./prometheus-stats --db {db} --s3 {os.path.join(LOG_STORE, 'prometheus')}")
             body = {
                 "command": cmd,
             }
