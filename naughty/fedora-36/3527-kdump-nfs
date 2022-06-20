@@ -1,0 +1,1 @@
+AssertionError: 'Kdump compressed dump' not found in "/srv/kdump/var/crash/10.111.113.1*/vmcore: cannot open `/srv/kdump/var/crash/10.111.113.1*/vmcore' (No such file or directory)\n"
