@@ -36,7 +36,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-36',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
-            f'{TEST_OS_DEFAULT}/container-bastion',
             'fedora-coreos',
             'rhel-8-7',
             'rhel-8-7-distropkg',
