@@ -335,5 +335,6 @@ def tests_for_image(image):
 
 def tests_for_po_refresh(project):
     if project == "cockpit-project/cockpit":
-        return ["fedora-coreos"]
+        # check-pages "all languages" test only runs on RHEL; plus required status
+        return ["rhel-9-1", "fedora-coreos"]
     return REPO_BRANCH_CONTEXT.get(project, {}).get(get_default_branch(project), [])
