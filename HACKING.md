@@ -29,8 +29,7 @@ bots what to do. Often certan bots will just file issues for tasks that are outs
 And in many cases other bots will then perform those tasks.
 
 These bots are listed in the `./issue-scan` file. They are written using the
-`tasks/__init__.py` code, and you can see `example-task` for an
-example of one.
+`tasks/__init__.py` code. These are deprecated in favor of GitHub workflows.
 
 ## Bots printing output
 

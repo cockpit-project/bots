@@ -18,7 +18,6 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 NAMES = [
-    "example-task",
     "image-refresh",
 ]
 
