@@ -82,6 +82,12 @@ deploy_to cockpit-project/cockpit-podman-weblate \
     --deploy-from \
         cockpit-project/cockpit-podman/cockpit-podman-weblate/DEPLOY_KEY
 
+# cockpit-composer
+
+deploy_to osbuild/cockpit-composer-weblate \
+    --deploy-from \
+        osbuild/cockpit-composer/cockpit-composer-weblate/DEPLOY_KEY
+
 # shared
 deploy_to cockpit-project/node-cache \
     --deploy-from \
