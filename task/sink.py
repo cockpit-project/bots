@@ -17,11 +17,8 @@
 
 import json
 import os
-import shutil
 import subprocess
 import sys
-import tarfile
-import tempfile
 
 __all__ = (
     'Sink',
@@ -30,8 +27,6 @@ __all__ = (
 
 class Sink(object):
     def __init__(self, host, identifier, status=None):
-        self.attachments = tempfile.mkdtemp(prefix="attachments.", dir="/var/tmp")
-        os.environ["TEST_ATTACHMENTS"] = self.attachments
         self.status = status
 
         # Start a gzip and cat processes
@@ -49,9 +44,6 @@ class Sink(object):
         sys.stderr.flush()
         self.ferr = os.dup(2)
         os.dup2(self.ssh.stdin.fileno(), 2)
-
-    def attach(self, filename):
-        shutil.copy(filename, self.attachments)
 
     def flush(self, status=None):
         assert self.ssh is not None
@@ -73,16 +65,6 @@ class Sink(object):
             status = self.status
         if status is not None:
             self.ssh.stdin.write(b"\n" + json.dumps(status).encode('utf-8'))
-
-        # Send a zero character and send the attachments
-        files = os.listdir(self.attachments)
-        if len(files):
-            self.ssh.stdin.write(b'\x00')
-            self.ssh.stdin.flush()
-            with tarfile.open(name="attachments.tgz", mode="w:gz", fileobj=self.ssh.stdin) as tar:
-                for filename in files:
-                    tar.add(os.path.join(self.attachments, filename), arcname=filename, recursive=True)
-        shutil.rmtree(self.attachments)
 
         # All done sending output
         try:
