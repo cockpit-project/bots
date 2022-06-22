@@ -99,6 +99,10 @@ case "$RELEASE" in
         # no sscg yet
         COCKPIT_DEPS="${COCKPIT_DEPS/sscg /}"
         ;;
+    testing)
+        # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
+        IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
+        ;;
     focal)
         # no podman package yet
         TEST_PACKAGES="${TEST_PACKAGES/podman /}"
