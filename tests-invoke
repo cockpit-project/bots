@@ -77,6 +77,9 @@ def main():
             entry_point = alt_entry_point
         cmd = ["timeout", "120m", entry_point]
 
+        os.environ["TEST_REVISION"] = opts.revision
+        os.environ["TEST_PULL"] = str(opts.pull_number)
+
         p = subprocess.Popen(cmd)
         while p.poll() is None:
             # Cancel test if PR gets updated while running
