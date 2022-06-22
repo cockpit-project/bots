@@ -1,7 +1,8 @@
 name: image refresh trigger
 on:
   schedule:
-    - cron: '30 1 * * *'
+    # this is UTC-4
+    - cron: '30 22 * * *'
   # can be run manually on https://github.com/cockpit-project/bots/actions
   workflow_dispatch:
 jobs:
