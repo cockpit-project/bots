@@ -1,0 +1,3 @@
+module 'inspect' has no attribute 'getargspec'
+*targetcli*
+*returned non-zero exit status 1.
