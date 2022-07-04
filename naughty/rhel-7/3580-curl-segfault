@@ -1,0 +1,1 @@
+* Segmentation fault      (core dumped) curl* -s https://*:8443/candlepin
