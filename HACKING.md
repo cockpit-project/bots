@@ -1,26 +1,12 @@
 # Hacking on the Cockpit Bots
 
-These are automated bots and testing that works on the Cockpit project. This
-includes updating operating system images, bringing in changes from other
-projects, releasing Cockpit and more.
+Most bots are python scripts. Shared code is in the tasks/ directory.
 
-## Environment for the bots
+## Environment
 
 The bots work in containers that are built in the [cockpituous](https://github.com/cockpit-project/cockpituous)
-repository. New dependencies should be added there in the `tests/Dockerfile`
+repository. New dependencies should be added there in the `tasks/Dockerfile`
 file in that repository.
-
-## Invoking the bots
-
- 1. The containers in the `cockpitous` repository invoke the `.tasks` file
-at root of this repository.
- 1. The ```.tasks``` file prints out a list of possible tasks on standard out.
- 1. The printed tasks are sorted in alphabetical reverse order, and one of the
-first items in the list is executed.
-
-## The bots themselves
-
-Most bots are python scripts. Shared code is in the tasks/ directory.
 
 ## Bots filing issues
 
