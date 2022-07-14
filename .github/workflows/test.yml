@@ -74,4 +74,4 @@ jobs:
               branch="${GITHUB_REF##*/}"
           fi
           cd cockpituous
-          sudo COCKPIT_BOTS_REPO=$repo COCKPIT_BOTS_BRANCH=$branch tasks/run-local.sh ${pr_args:-}
+          COCKPIT_BOTS_REPO=$repo COCKPIT_BOTS_BRANCH=$branch tasks/run-local.sh ${pr_args:-}
