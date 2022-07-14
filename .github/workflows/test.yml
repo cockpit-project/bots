@@ -2,7 +2,7 @@ name: test
 on: [pull_request]
 jobs:
   bots:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: ghcr.io/cockpit-project/unit-tests
       options: --user root
@@ -16,7 +16,7 @@ jobs:
         run: test/run
 
   cockpituous:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     permissions:
       # enough permissions for tests-scan to work
       pull-requests: read
