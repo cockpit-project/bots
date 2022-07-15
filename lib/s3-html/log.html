@@ -137,10 +137,9 @@
         <script>
 
 const tap_range = /^([0-9]+)\.\.([0-9]+)$/m;
-const tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # SKIP .*)?$$/gm;
+const tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # SKIP .*)?$/gm;
 const tap_skipped = /^ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # SKIP (.*$)/gm;
 const tap_total_time = /^# (\d+ TESTS FAILED|TESTS PASSED) \[([0-9]+)s on .*\]$/m
-const test_header_start = "# ----------------------------------------------------------------------"
 
 const entry_template = document.querySelector("#TestEntry").innerHTML;
 Mustache.parse(entry_template);
@@ -221,7 +220,15 @@ function extract(text) {
         let retries = 0;
         let affected_retries = 0;
 
-        const segments = text.split(test_header_start);
+        const segments = [];
+        let last_offset = 0;
+        // tap_result RE marks the *end* of a test, so test output is everything until, and including, the match
+        for (const m of text.matchAll(tap_result)) {
+            const offset = m.index + m[0].length;
+            segments.push(text.slice(last_offset, offset + 1));
+            last_offset = offset;
+        }
+
         document.querySelector('#test-info').textContent = text.slice(0, text.indexOf('\n'));
 
         const test_links = {};
