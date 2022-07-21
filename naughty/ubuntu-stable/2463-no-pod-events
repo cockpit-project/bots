@@ -1,0 +1,1 @@
+wait_js_cond(ph_is_present("#table-pod-1 .pf-c-empty-state")):
