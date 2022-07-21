@@ -20,7 +20,7 @@ import errno
 import subprocess
 import re
 
-from lib.constants import DEFAULT_IDENTITY_FILE, OSTREE_IMAGES, TEST_DIR, BOTS_DIR
+from lib.constants import DEFAULT_IDENTITY_FILE, OSTREE_IMAGES, BOTS_DIR
 from . import ssh_connection
 from . import timeout
 
@@ -118,25 +118,6 @@ class Machine(ssh_connection.SSHConnection):
     def shutdown(self):
         """Overridden by machine classes to gracefully shutdown the running machine"""
         assert False, "Cannot shutdown a machine we didn't start"
-
-    def upload(self, sources, dest, relative_dir=TEST_DIR):
-        """Upload a file into the test machine
-
-        Arguments:
-            sources: the array of paths of the file to upload
-            dest: the file path in the machine to upload to
-        """
-        super(Machine, self).upload(sources, dest, relative_dir)
-
-    def download(self, source, dest, relative_dir=TEST_DIR):
-        """Download a file from the test machine.
-        """
-        super(Machine, self).download(source, dest, relative_dir)
-
-    def download_dir(self, source, dest, relative_dir=TEST_DIR):
-        """Download a directory from the test machine, recursively.
-        """
-        super(Machine, self).download_dir(source, dest, relative_dir)
 
     def pull(self, image):
         """Download image.

@@ -29,6 +29,11 @@ import tempfile
 from . import exceptions
 from . import timeout as timeoutlib
 
+# HACK: some projects directly import ssh_connection before adjusting sys.path; add bots root dir
+sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+
+from lib.constants import TEST_DIR
+
 
 def write_all(fd, data):
     while len(data) > 0:
@@ -368,7 +373,7 @@ class SSHConnection(object):
             raise subprocess.CalledProcessError(proc.returncode, command, output=output)
         return output
 
-    def upload(self, sources, dest, relative_dir="."):
+    def upload(self, sources, dest, relative_dir=TEST_DIR):
         """Upload a file into the test machine
 
         Arguments:
@@ -401,7 +406,7 @@ class SSHConnection(object):
         self.message(" ".join(cmd))
         subprocess.check_call(cmd)
 
-    def download(self, source, dest, relative_dir="."):
+    def download(self, source, dest, relative_dir=TEST_DIR):
         """Download a file from the test machine.
         """
         assert source and dest
@@ -425,7 +430,7 @@ class SSHConnection(object):
         self.message(" ".join(cmd))
         subprocess.check_call(cmd)
 
-    def download_dir(self, source, dest, relative_dir="."):
+    def download_dir(self, source, dest, relative_dir=TEST_DIR):
         """Download a directory from the test machine, recursively.
         """
         assert source and dest
