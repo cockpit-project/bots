@@ -1,5 +1,0 @@
-Traceback (most recent call last):*
-  File "test/verify/check-system-realms", line *, in testClientCertAuthentication
-    b.wait_in_text(".pf-c-modal-box:contains('Administrative access')", "You now have administrative access")
-*
-testlib.Error: timeout

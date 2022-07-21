@@ -111,10 +111,6 @@ case "$RELEASE" in
         # gettext version too old to ship metainfo.its
         PBUILDER_EXTRA="${PBUILDER_EXTRA:-} appstream"
         ;;
-    impish)
-        # no sscg yet
-        COCKPIT_DEPS="${COCKPIT_DEPS/sscg /}"
-        ;;
 esac
 
 if grep -q 'ID=debian' /etc/os-release; then
