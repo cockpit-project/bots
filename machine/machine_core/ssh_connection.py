@@ -373,7 +373,7 @@ class SSHConnection(object):
             raise subprocess.CalledProcessError(proc.returncode, command, output=output)
         return output
 
-    def upload(self, sources, dest, relative_dir=TEST_DIR):
+    def upload(self, sources, dest, relative_dir=TEST_DIR, use_scp=False):
         """Upload a file into the test machine
 
         Arguments:
@@ -386,24 +386,41 @@ class SSHConnection(object):
         if not self.__ssh_direct_opt_var():
             self._ensure_ssh_master()
 
-        cmd = [
-            "scp",
-            "-r", "-p",
-            "-P", str(self.ssh_port),
-            *self.__execution_opts(),
-        ]
-        if not self.verbose:
-            cmd += ["-q"]
+        if use_scp:
+            cmd = [
+                "scp",
+                "-r", "-p",
+                "-P", str(self.ssh_port),
+                *self.__execution_opts(),
+            ]
+            if not self.verbose:
+                cmd += ["-q"]
+        else:
+            cmd = [
+                "rsync",
+                "--recursive", "--perms", "--copy-links",
+                "-e",
+                f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self.__execution_opts()]),
+            ]
+            if self.verbose:
+                cmd += ["--verbose"]
 
         def relative_to_test_dir(path):
             return os.path.join(relative_dir, path)
         cmd += map(relative_to_test_dir, sources)
 
-        cmd += ["%s@[%s]:%s" % (self.ssh_user, self.ssh_address, dest)]
+        cmd += [f"{self.ssh_user}@[{self.ssh_address}]:{dest}"]
 
         self.message("Uploading", ", ".join(sources))
-        self.message(" ".join(cmd))
-        subprocess.check_call(cmd)
+        self.message(" ".join([shlex.quote(a) for a in cmd]))
+        try:
+            subprocess.check_call(cmd)
+        except subprocess.CalledProcessError as e:
+            if not use_scp and e.returncode == 127:
+                self.message("rsync not available, falling back to scp")
+                self.upload(sources, dest, relative_dir, use_scp=True)
+            else:
+                raise
 
     def download(self, source, dest, relative_dir=TEST_DIR):
         """Download a file from the test machine.
