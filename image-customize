@@ -222,7 +222,11 @@ class UploadAction(ActionBase):
     @staticmethod
     def execute(machine_instance, srcdest):
         src, dest = srcdest.split(":")
-        machine_instance.upload([os.path.abspath(src)], dest)
+        abssrc = os.path.abspath(src)
+        # preserve trailing / for rsync compatibility
+        if src.endswith('/'):
+            abssrc += '/'
+        machine_instance.upload([abssrc], dest)
 
 
 def main():

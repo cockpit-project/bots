@@ -81,9 +81,9 @@ class MachineBuilder:
         self.machine.start()
         try:
             self.machine.wait_boot(timeout_sec=120)
-            self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib")], "/var/lib/testvm")
+            self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib/")], "/var/lib/testvm")
             self.machine.upload([script], "/var/tmp/SETUP")
-            self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib", "base")],
+            self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib", "base/")],
                                 "/var/tmp/cockpit-base")
 
             env = {
