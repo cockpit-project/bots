@@ -387,10 +387,9 @@ class SSHConnection(object):
             self._ensure_ssh_master()
 
         cmd = [
-            "scp", "-B",
+            "scp",
             "-r", "-p",
             "-P", str(self.ssh_port),
-            *self.ssh_default_opts,
             *self.__execution_opts(),
         ]
         if not self.verbose:
@@ -417,9 +416,8 @@ class SSHConnection(object):
         dest = os.path.join(relative_dir, dest)
 
         cmd = [
-            "scp", "-B",
+            "scp",
             "-P", str(self.ssh_port),
-            *self.ssh_default_opts,
             *self.__execution_opts(),
         ]
         if not self.verbose:
@@ -441,9 +439,8 @@ class SSHConnection(object):
         dest = os.path.join(relative_dir, dest)
 
         cmd = [
-            "scp", "-B",
+            "scp",
             "-P", str(self.ssh_port),
-            *self.ssh_default_opts,
             *self.__execution_opts(),
             "-r",
         ]
