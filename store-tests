@@ -153,8 +153,17 @@ def main():
 
                 with urllib.request.urlopen(raw_log,
                                             context=host_ssl_context(urllib.parse.urlparse(raw_log).netloc)) as fp:
-                    for (testname, failed, retry_reason, seconds) in find_tests(fp):
+                    data = fp.readlines()
+                    for (testname, failed, retry_reason, seconds) in find_tests(data):
                         insert_test(cursor, run_id, testname, failed, retry_reason, seconds)
+
+                    # Find coverage line - normally second to last line, so check only last 20 lines
+                    for line in data[-20:]:
+                        if b"Overall line coverage: " in line:
+                            coverage_str = line.split(b"Overall line coverage: ")[1].strip()
+                            coverage = float(coverage_str.strip(b"%"))
+                            insert_coverage(cursor, run_id, coverage)
+                            break
 
     db_conn.commit()
     db_conn.close()
@@ -183,6 +192,11 @@ def init_db(cursor):
                      seconds INTEGER NOT NULL,
                      FOREIGN KEY (run) REFERENCES TestRuns(id))
                    """)
+    cursor.execute("""CREATE TABLE if not exists TestCoverage
+                    (coverage REAL,
+                     run INTEGER NOT NULL,
+                     FOREIGN KEY (run) REFERENCES TestRuns(id))
+                   """)
 
 
 def insert_run(cursor, project, revision, context, url, time, retry, waited, took, state, desc):
@@ -193,6 +207,10 @@ def insert_run(cursor, project, revision, context, url, time, retry, waited, too
 def insert_test(cursor, run_id, testname, failed, retry_reason, seconds):
     cursor.execute("INSERT INTO Tests VALUES (?, ?, ?, ?, ?)",
                    (testname, retry_reason, int(failed), run_id, int(seconds)))
+
+
+def insert_coverage(cursor, run_id, coverage):
+    cursor.execute("INSERT INTO TestCoverage VALUES (?, ?)", (coverage, run_id))
 
 
 def find_tests(fp):
