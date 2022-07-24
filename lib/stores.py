@@ -23,7 +23,8 @@ PUBLIC_STORES = [
 
 # hosted behind the Red Hat VPN
 REDHAT_STORES = [
-    "https://cockpit-11.apps.cnfdb2.e2e.bos.redhat.com/images/",
+    # e2e down for maintenance
+    # "https://cockpit-11.apps.cnfdb2.e2e.bos.redhat.com/images/",
 ]
 
 LOG_STORE = "https://cockpit-logs.us-east-1.linodeobjects.com/"
