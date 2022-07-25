@@ -46,9 +46,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-9',
             'centos-7',
         ],
-        'rhel-9.0': [
-            'rhel-9-0',
-        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
@@ -179,7 +176,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'rhel-8-7',
-            'rhel-9-0',
             'rhel-9-1',
             'centos-8-stream',
             'fedora-36',
