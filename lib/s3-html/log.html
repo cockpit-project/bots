@@ -209,10 +209,22 @@ function extract(text) {
         first = parseInt(m[1], 10);
         last = parseInt(m[2], 10);
         total = last-first+1;
+        const test_start_offset = m.index + m[0].length + 1;
+        const text_init = text.slice(0, test_start_offset);
+        const text_tests = text.slice(test_start_offset);
         const t = tap_total_time.exec(text);
         if (t) {
             total_test_time = Math.ceil(parseInt(t[2], 10) / 60);
         }
+
+        const init_entry = { idx: 0,
+                             id: "initialization",
+                             title: "initialization",
+                             passed: true,
+                             links: [],
+                             text: text_init,
+                           };
+        entries.push({ idx: init_entry.idx, entry: init_entry, html: Mustache.render(entry_template, init_entry) });
 
         passed = 0;
         failed = 0;
@@ -223,9 +235,9 @@ function extract(text) {
         const segments = [];
         let last_offset = 0;
         // tap_result RE marks the *end* of a test, so test output is everything until, and including, the match
-        for (const m of text.matchAll(tap_result)) {
+        for (const m of text_tests.matchAll(tap_result)) {
             const offset = m.index + m[0].length;
-            segments.push(text.slice(last_offset, offset + 1));
+            segments.push(text_tests.slice(last_offset, offset + 1));
             last_offset = offset;
         }
 
@@ -243,14 +255,7 @@ function extract(text) {
                           interesting: false,
                           links: [],
                           text: segment};
-            if (m = tap_range.exec(segment)) {
-                entry.idx = 0;
-                entry.id = "initialization"
-                entry.title = entry.id;
-                // hide this by default
-                // maybe we can have better criteria?
-                entry.passed = true;
-            } else if (m = tap_result.exec(segment)) {
+            if (m = tap_result.exec(segment)) {
                 entry.idx = m[2];
                 entry.id = m[2];
                 let r = 0;
