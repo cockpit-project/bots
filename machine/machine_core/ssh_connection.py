@@ -433,13 +433,12 @@ class SSHConnection(object):
         dest = os.path.join(relative_dir, dest)
 
         cmd = [
-            "scp",
-            "-P", str(self.ssh_port),
-            *self.__execution_opts(),
+            "rsync",
+            "-e", f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self.__execution_opts()]),
         ]
-        if not self.verbose:
-            cmd += ["-q"]
-        cmd += ["%s@[%s]:%s" % (self.ssh_user, self.ssh_address, source), dest]
+        if self.verbose:
+            cmd += ["--verbose"]
+        cmd += [f"{self.ssh_user}@[{self.ssh_address}]:{source}", dest]
 
         self.message("Downloading", source)
         self.message(" ".join(cmd))
@@ -456,22 +455,18 @@ class SSHConnection(object):
         dest = os.path.join(relative_dir, dest)
 
         cmd = [
-            "scp",
-            "-P", str(self.ssh_port),
-            *self.__execution_opts(),
-            "-r",
+            "rsync",
+            "--recursive", "--copy-links",
+            "-e", f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self.__execution_opts()]),
         ]
-        if not self.verbose:
-            cmd += ["-q"]
-        cmd += ["%s@[%s]:%s" % (self.ssh_user, self.ssh_address, source), dest]
+        if self.verbose:
+            cmd += ["--verbose"]
+        cmd += [f"{self.ssh_user}@[{self.ssh_address}]:{source}", dest]
 
         self.message("Downloading", source)
         self.message(" ".join(cmd))
         try:
             subprocess.check_call(cmd)
-            target = os.path.join(dest, os.path.basename(source))
-            if os.path.exists(target):
-                subprocess.check_call(["find", target, "-type", "f", "-exec", "chmod", "0644", "{}", ";"])
         except subprocess.CalledProcessError:
             self.message("Error while downloading directory '{0}'".format(source))
 
