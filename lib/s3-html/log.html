@@ -193,6 +193,31 @@ let link_patterns = [
     }
 ];
 
+function find_patterns(segment) {
+    function fmt(tmpl, match) {
+        return tmpl.replace(/\$([0-9]+)/g, function (m, x) { return match[Number(x)]; });
+    }
+
+    const links = [];
+    for (let i = 0; i < link_patterns.length; i++) {
+        let p = link_patterns[i];
+        if (!p.pattern)
+            continue
+        let r = new RegExp(p.pattern, 'gm');
+        while (m = r.exec(segment)) {
+            links.push({link_html: Mustache.render(link_template,
+                                                   {
+                                                       url: fmt(p.url || "$0", m),
+                                                       title: fmt(p.title || p.url || "$0", m),
+                                                       icon: p.icon || "bi bi-box-arrow-up-right",
+                                                       label: fmt(p.label || "file")
+                                                   })
+                       });
+        }
+    }
+    return links;
+}
+
 function extract(text) {
     let m, s;
     let first, last, total, passed, failed, skipped, total_test_time;
@@ -221,9 +246,10 @@ function extract(text) {
                              id: "initialization",
                              title: "initialization",
                              passed: true,
-                             links: [],
+                             links: find_patterns(text_init),
                              text: text_init,
                            };
+
         entries.push({ idx: init_entry.idx, entry: init_entry, html: Mustache.render(entry_template, init_entry) });
 
         passed = 0;
@@ -309,27 +335,7 @@ function extract(text) {
                   }
             }
 
-            function fmt(tmpl, match) {
-                return tmpl.replace(/\$([0-9]+)/g, function (m, x) { return match[Number(x)]; });
-            }
-
-            for (let i = 0; i < link_patterns.length; i++) {
-                let p = link_patterns[i];
-                if (!p.pattern)
-                    continue
-                let r = new RegExp(p.pattern, 'gm');
-                while (m = r.exec(segment)) {
-                    entry.links.push({link_html: Mustache.render(link_template,
-                                                                 {
-                                                                     url: fmt(p.url || "$0", m),
-                                                                     title: fmt(p.title || p.url || "$0", m),
-                                                                     icon: p.icon || "bi bi-box-arrow-up-right",
-                                                                     label: fmt(p.label || "file")
-                                                                 })
-                                     });
-                }
-            }
-
+            entry.links = find_patterns(segment);
             entry.failed = !entry.passed && !entry.skipped;
             entry.collapsed = !entry.failed;
             entries.push({ idx: entry.idx, entry: entry, html: Mustache.render(entry_template, entry) });
