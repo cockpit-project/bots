@@ -63,6 +63,7 @@ mdadm \
 nfs-server \
 podman \
 qemu-kvm \
+rsync \
 redis \
 socat \
 systemd-coredump \
