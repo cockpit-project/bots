@@ -217,6 +217,10 @@ class Machine(ssh_connection.SSHConnection):
             # Default PAM configuration logs motd for cockpit-session
             allowed.append(".*cockpit-session: pam: Web console: .*")
 
+        if self.image in ['fedora-testing']:
+            # regression in https://bodhi.fedoraproject.org/updates/FEDORA-2022-320775eb9a (blocked)
+            allowed.append('audit.*denied.* comm="mv" .*NetworkManager_dispatcher_console_t:s0.*')
+
         return allowed
 
     def get_admin_group(self):
