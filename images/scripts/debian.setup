@@ -253,6 +253,11 @@ if grep -q 'ID=ubuntu' /etc/os-release; then
     snap install hello-world
 fi
 
+# HACK: https://bugs.debian.org/1016064
+if [ "$RELEASE" = "testing" ]; then
+    adduser --force-badname --system --quiet --home /run/rpcbind --no-create-home _rpc
+fi
+
 # reduce image size; don't keep old kernels
 sed -i '/linux/d' /etc/apt/apt.conf.d/01autoremove
 $APT autoremove --purge || true
