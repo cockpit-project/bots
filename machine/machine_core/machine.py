@@ -190,25 +190,6 @@ class Machine(ssh_connection.SSHConnection):
             # These images don't have any non-C locales (mostly deliberate, to test this scenario somewhere)
             allowed.append("invalid or unusable locale: .*")
 
-        if self.image.startswith('fedora') or self.image.startswith('rhel-9'):
-            # Fedora and RHEL 9 have switched to dbus-broker
-            allowed.append("dbus-daemon didn't send us a dbus address; not installed?.*")
-
-        if self.image in ['fedora-36']:
-            # https://bugzilla.redhat.com/show_bug.cgi?id=2056207
-            allowed.append(r'audit.* denied  { read } for  pid=[0-9]+ comm="systemd-sysctl" .*')
-
-        if self.image in ['ubuntu-stable']:
-            # HACK: https://bugs.debian.org/951477
-            allowed.append(r'Process .* \(ip6?tables\) of user 0 dumped core.*')
-            allowed.append(r'Process .* \(iptables-restor\) of user 0 dumped core.*')
-            allowed.append(r'Process .* \(ip6tables-resto\) of user 0 dumped core.*')
-            allowed.append(r'Process .* \(ebtables\) of user 0 dumped core.*')
-            # don't ignore all stack traces
-            allowed.append('^#[0-9]+ .*(nftnl|xtables-nft|__libc_start_main).*')
-            # but we have to ignore that general header line
-            allowed.append('^Stack trace of.*')
-
         if self.image in ['rhel-8-6', 'rhel-8-6-distropkg', 'centos-8-stream']:
             # https://bugzilla.redhat.com/show_bug.cgi?id=2055199
             allowed.append('audit.*denied  { execute } for .* comm="nm-dispatcher" name="04-iscsi".*')
