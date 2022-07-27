@@ -131,9 +131,6 @@ fi
 if grep -q 'ID=ubuntu' /etc/os-release; then
     PBUILDER_OPTS='COMPONENTS="main universe"'
 
-    # our tests need scsi_debug, which the cloud kernel does not have; install full kernel
-    TEST_PACKAGES="$TEST_PACKAGES linux-image-generic"
-
     # we want to have some snaps installed
     TEST_PACKAGES="$TEST_PACKAGES snapd"
 
@@ -180,6 +177,18 @@ $APT install $TEST_PACKAGES $COCKPIT_DEPS $DEBUG_PACKAGES $IPA_CLIENT_PACKAGES
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 $APT --no-install-recommends install cockpit
+
+if grep -q 'ID=ubuntu' /etc/os-release; then
+    # Extract scsi_debug and team modules from full kernel; let's not install linux-image-generic
+    # just for that, it increases boot time by over 10s and image size by > 600 MB
+    EXTRA=$(apt-cache show linux-image-generic | grep Depends: | grep -o 'linux-modules-extra[^,]*' | sort -n | tail -n1)
+    (cd /tmp/
+     apt-get download "$EXTRA"
+     dpkg-deb --fsys-tarfile ${EXTRA}_*.deb | tar -C / --wildcards -xv '*/scsi_debug.ko' '*/team*.ko'
+     rm $EXTRA_*.deb
+    )
+    depmod
+fi
 
 # Prepare for building
 #
