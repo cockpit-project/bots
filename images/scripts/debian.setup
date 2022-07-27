@@ -114,6 +114,9 @@ case "$RELEASE" in
         ;;
 esac
 
+# smaller and faster initrd; see https://launchpad.net/bugs/1592684
+echo 'MODULES=dep' > /etc/initramfs-tools/conf.d/modules-dep.conf
+
 if grep -q 'ID=debian' /etc/os-release; then
     # For debugging libvirt crashes
     DEBUG_PACKAGES="\
