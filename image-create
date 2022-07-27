@@ -27,7 +27,6 @@ import os
 import shutil
 import subprocess
 import sys
-import time
 import tempfile
 
 from lib.constants import BOTS_DIR
@@ -137,21 +136,8 @@ class MachineBuilder:
         self.machine.message("Running setup script %s" % (script))
         self.run_setup_script(script)
 
-        tries_left = 3
-        successfully_booted = False
-        while tries_left > 0:
-            try:
-                # make sure we can boot the system
-                self.boot_system()
-                successfully_booted = True
-                break
-            except testvm.Failure:
-                # we might need to wait for the image to become available again
-                # accessing it in maintain=True mode successively can trigger qemu errors
-                time.sleep(3)
-                tries_left -= 1
-        if not successfully_booted:
-            raise testvm.Failure("Unable to verify that machine boot works.")
+        # make sure we can boot the system
+        self.boot_system()
 
     def save(self):
         data_dir = testvm.get_images_data_dir()
