@@ -115,14 +115,14 @@ class MachineBuilder:
             self.machine.stop(timeout_sec=500)
 
     def boot_system(self):
-        """Start the system to make sure it can boot, then shutdown cleanly
-        This also takes care of any selinux relabeling setup triggered
-        Don't wait for an ip address during start, since the system might reboot"""
+        """Start the system to make sure it can boot, then shutdown cleanly"""
+
         self.machine.start()
+        # avoid too long boot times -- they cause painfully long tests, and are a bug
         try:
-            self.machine.wait_boot(timeout_sec=120)
+            self.machine.wait_boot(timeout_sec=30)
         finally:
-            self.machine.stop(timeout_sec=120)
+            self.machine.stop(timeout_sec=30)
 
     def build(self):
         self.bootstrap_system()
