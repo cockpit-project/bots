@@ -52,7 +52,7 @@ def get_key(hostname):
                 access, secret = fp.read().split()
                 return access, secret
         except ValueError:
-            print('ignoring invalid content of {s3_key_dir}/{hostname}', file=sys.stderr)
+            print(f'ignoring invalid content of {s3_key_dir}/{hostname}', file=sys.stderr)
         except FileNotFoundError:
             pass
         _, _, hostname = hostname.partition('.')  # strip a leading component
