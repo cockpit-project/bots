@@ -72,8 +72,8 @@ def sign_request(url: urllib.parse.ParseResult, method, headers, checksum) -> Di
     If the method is PUT then the checksum of the data to be uploaded must be provided.
     @headers, if given, are a dict of additional headers to be signed (eg: `x-amz-acl`)
     """
-    if url.scheme != 'https':
-        sys.exit("S3 URLs must be https")
+    if url.scheme not in ['http', 'https']:
+        sys.exit("S3 URLs must be http(s)")
     try:
         access_key, secret_key = get_key(url.hostname)
     except TypeError:
