@@ -44,7 +44,7 @@ printf 'SELINUX=permissive\nSELINUXTYPE=targeted\n' > /etc/selinux/config
 setenforce 0
 systemctl disable --now firewalld
 
-wait yum -y install docker python libselinux-python
+wait yum -y install docker python libselinux-python rsync
 
 hostnamectl set-hostname f1.cockpit.lan
 
