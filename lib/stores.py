@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+from lib.directories import xdg_config_home
+
 # hosted on public internet
 PUBLIC_STORES = [
     "https://cockpit-images.eu-central-1.linodeobjects.com/",
@@ -26,5 +28,13 @@ REDHAT_STORES = [
     # e2e down for maintenance
     # "https://cockpit-11.apps.cnfdb2.e2e.bos.redhat.com/images/",
 ]
+
+# local stores
+try:
+    with open(xdg_config_home('cockpit-dev', 'image-stores'), 'r') as fp:
+        PUBLIC_STORES += fp.read().strip().split("\n")
+except FileNotFoundError:
+    pass
+
 
 LOG_STORE = "https://cockpit-logs.us-east-1.linodeobjects.com/"
