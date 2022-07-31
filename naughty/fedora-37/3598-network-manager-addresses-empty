@@ -1,3 +1,0 @@
-Traceback (most recent call last):
-*
-wait_js_cond(ph_in_text("#networking-interfaces tr[data-interface='cockpit1']","10.111.")): timeout
