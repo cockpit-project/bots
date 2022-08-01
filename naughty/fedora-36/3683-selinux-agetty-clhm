@@ -1,0 +1,1 @@
+audit: type=1400 audit*: avc:  denied  { read } for * comm="agetty" name="22_clhm_eth0.issue" * scontext=system_u:system_r:getty_t:s0-s0:c0.c1023 tcontext=system_u:object_r:NetworkManager_dispatcher_console_var_run_t:s0*
