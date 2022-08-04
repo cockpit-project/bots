@@ -187,7 +187,8 @@ if grep -q 'ID=ubuntu' /etc/os-release; then
      dpkg-deb --fsys-tarfile ${EXTRA}_*.deb | tar -C / --wildcards -xv '*/scsi_debug.ko' '*/team*.ko'
      rm $EXTRA_*.deb
     )
-    depmod
+    # call for the updated kernel, not the currently running one
+    depmod "${EXTRA#linux-modules-extra-}"
 fi
 
 # Prepare for building
