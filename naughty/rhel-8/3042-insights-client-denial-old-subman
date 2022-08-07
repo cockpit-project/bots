@@ -1,5 +1,0 @@
-Traceback (most recent call last):*
-  File "integration-tests/check-subscriptions", line *, in testInsights
-    b.wait_visible("#overview a[href='http://cloud.redhat.com/insights/inventory/123-nice-id']")
-*
-testlib.Error: timeout
