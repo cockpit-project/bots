@@ -4,9 +4,6 @@ set -eu
 
 # run static code checks like pyflakes and pep8
 PYEXEFILES="$(git grep -lI '^#!.*python') $(git ls-files "*.py")"
-python3 -m pyflakes $PYEXEFILES
-
-# FIXME: Fix code for the warnings and re-enable them
-python3 -m pycodestyle --max-line-length=120 --ignore W504,E402 $PYEXEFILES
+flake8 $PYEXEFILES
 
 ./test-bots
