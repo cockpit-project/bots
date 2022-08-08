@@ -302,7 +302,7 @@ class SSHConnection(object):
             self.ssh_address
         ]
         additional_ssh_params = []
-        cmd = []
+        cmd = ['set -e;']
 
         additional_ssh_params += self.__execution_opts(direct=direct)
 
