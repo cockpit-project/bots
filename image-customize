@@ -117,6 +117,7 @@ class BuildAction(ActionBase):
         else:
             raise NotImplementedError(f"unknown build platform: {out}")
 
+    @staticmethod
     def build_deb(machine, vm_source):
         build_opts = 'nocheck' if opt_quick else ''
 
@@ -144,6 +145,7 @@ class BuildAction(ActionBase):
         # install packages
         machine.execute("dpkg -i /var/tmp/build/*.deb")
 
+    @staticmethod
     def build_rpm(machine, vm_source):
         mock_opts = ''
         if opt_verbose:
@@ -171,6 +173,7 @@ class BuildAction(ActionBase):
         machine.execute('packages=$(find /var/tmp/build -name "*.rpm" -not -name "*.src.rpm"); '
                         f'rpm -U --force --verbose {"--nodigest --nosignature" if opt_quick else ""} $packages')
 
+    @staticmethod
     def build_arch(machine, vm_source):
         # unpack source tree's arch packaging directory (PKGBUILD refers to some files)
         # and set PKGBUILD variables
