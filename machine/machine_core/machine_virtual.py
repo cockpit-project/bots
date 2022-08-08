@@ -178,12 +178,11 @@ class VirtNetwork:
                     sock.bind(("127.0.0.1", port))
                     self.locked.append(lockf)
                 except IOError:
-                    if force:
-                        return port
-                    os.close(lockf)
-                    continue
-                else:
-                    return port
+                    if not force:
+                        os.close(lockf)
+                        continue
+
+                return port
         raise Failure("Couldn't find unique network port number")
 
     # Create resources for an interface, returns address and XML
