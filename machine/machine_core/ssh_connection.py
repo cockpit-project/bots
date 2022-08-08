@@ -80,18 +80,16 @@ class SSHConnection(object):
         while (time.time() - start_time) < timeout_sec:
             addrinfo = socket.getaddrinfo(self.ssh_address, self.ssh_port, 0, socket.SOCK_STREAM)
             (family, socktype, proto, canonname, sockaddr) = addrinfo[0]
-            sock = socket.socket(family, socktype, proto)
-            sock.settimeout(5)
-            try:
-                sock.connect(sockaddr)
-                data = sock.recv(10)
-                if len(data):
-                    self.ssh_reachable = True
-                    return True
-            except IOError:
-                pass
-            finally:
-                sock.close()
+            with socket.socket(family, socktype, proto) as sock:
+                sock.settimeout(5)
+                try:
+                    sock.connect(sockaddr)
+                    data = sock.recv(10)
+                    if len(data):
+                        self.ssh_reachable = True
+                        return True
+                except IOError:
+                    pass
             time.sleep(0.5)
         return False
 
