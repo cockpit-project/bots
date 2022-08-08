@@ -22,7 +22,6 @@ import subprocess
 import sys
 
 import task
-from task import github
 
 from lib.constants import BOTS_DIR, SCRIPTS_DIR
 from lib import testmap
@@ -65,11 +64,11 @@ def run(image, verbose=False, **kwargs):
         pull = task.pull(branch, labels=['bot', 'no-test'], run_tests=False, **kwargs)
 
         # Trigger this pull request
-        api = github.GitHub()
+        api = task.github.GitHub()
         head = pull["head"]["sha"]
         for trigger in triggers:
             api.post("statuses/{0}".format(head), {"state": "pending", "context": trigger,
-                                                   "description": github.NOT_TESTED_DIRECT})
+                                                   "description": task.github.NOT_TESTED_DIRECT})
 
 
 if __name__ == '__main__':
