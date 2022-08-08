@@ -224,7 +224,7 @@ class Machine(ssh_connection.SSHConnection):
             self.execute(cmd)
             self.wait_for_cockpit_running(atomic_wait_for_host or "localhost")
         elif tls:
-            self.execute(script="""#!/bin/sh
+            self.execute("""
             rm -f /etc/systemd/system/cockpit.service.d/notls.conf &&
             systemctl reset-failed 'cockpit*' &&
             systemctl daemon-reload &&
@@ -232,7 +232,7 @@ class Machine(ssh_connection.SSHConnection):
             systemctl start cockpit.socket
             """)
         else:
-            self.execute(script="""#!/bin/sh
+            self.execute("""
             mkdir -p /etc/systemd/system/cockpit.service.d/ &&
             rm -f /etc/systemd/system/cockpit.service.d/notls.conf &&
             printf "[Service]
@@ -295,13 +295,13 @@ class Machine(ssh_connection.SSHConnection):
         self.execute(cmd.format(mac=mac))
 
     def wait_for_cockpit_running(self, address="localhost", port=9090, seconds=30, tls=False):
-        WAIT_COCKPIT_RUNNING = """#!/bin/sh
+        WAIT_COCKPIT_RUNNING = """
         until curl --insecure --silent --connect-timeout 2 --max-time 3 %s://%s:%s >/dev/null; do
             sleep 0.5;
         done;
         """ % (tls and "https" or "http", address, port)
         with timeout.Timeout(seconds=seconds, error_message="Timeout while waiting for cockpit to start"):
-            self.execute(script=WAIT_COCKPIT_RUNNING)
+            self.execute(WAIT_COCKPIT_RUNNING)
 
     def curl(self, *args, headers=None):
         cmd = ['curl', '--silent', '--show-error']

@@ -96,7 +96,7 @@ class MachineBuilder:
             self.machine.message("run setup script on guest")
 
             try:
-                self.machine.execute(script="/var/tmp/SETUP " + self.machine.image,
+                self.machine.execute(f"/var/tmp/SETUP {self.machine.image}",
                                      environment=env, quiet=not self.machine.verbose, timeout=7200)
                 self.machine.execute("rm -f /var/tmp/SETUP")
 
