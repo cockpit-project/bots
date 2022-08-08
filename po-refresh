@@ -26,7 +26,6 @@ import sys
 sys.dont_write_bytecode = True
 
 import task
-from task import github
 from lib.constants import BASE_DIR
 from lib import testmap
 
@@ -142,7 +141,7 @@ def run(context, verbose=False, **kwargs):
     branch = task.branch(context, "po: Update from Fedora Weblate", pathspec="po/",
                          branch=local_branch, **kwargs)
 
-    api = github.GitHub()
+    api = task.github.GitHub()
 
     if local_branch and not branch:  # We only introduced/dropped language but otherwise no updates
         if kwargs["issue"]:
@@ -165,7 +164,7 @@ def run(context, verbose=False, **kwargs):
     triggers = testmap.tests_for_po_refresh(api.repo)
     for trigger in triggers:
         api.post("statuses/{0}".format(head), {"state": "pending", "context": trigger,
-                                               "description": github.NOT_TESTED_DIRECT})
+                                               "description": task.github.NOT_TESTED_DIRECT})
 
 
 if __name__ == '__main__':

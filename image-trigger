@@ -55,7 +55,6 @@ sys.dont_write_bytecode = True
 
 from lib.constants import BASE_DIR
 import task
-from task import github
 
 
 def main():
@@ -64,7 +63,7 @@ def main():
                         help="Print verbose information")
     parser.add_argument("image", nargs="?")
     opts = parser.parse_args()
-    api = github.GitHub()
+    api = task.github.GitHub()
 
     try:
         scan(api, opts.image, opts.verbose)
