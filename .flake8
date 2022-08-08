@@ -1,0 +1,8 @@
+[flake8]
+ignore=
+    # line break after binary operator
+    W504
+    # module level import not at top of file
+    E402
+
+max-line-length = 120

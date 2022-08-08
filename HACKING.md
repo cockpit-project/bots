@@ -29,8 +29,8 @@ There are static code and syntax checks which you should run often:
 
     $ test/run
 
-You will need to install the pyflakes and pycodestyle packages for python3 in
-order to run this script.
+You will need to install the python3-flake8 package for python3 in order to run
+this script.
 
 It is highly recommended to set this up as a git pre-push hook, to avoid
 pushing PRs that will fail on trivial errors:
