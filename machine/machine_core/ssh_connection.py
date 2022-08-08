@@ -259,24 +259,19 @@ class SSHConnection(object):
         else:
             return ["-o", "ControlPath=" + self.ssh_master]
 
-    def execute(self, command=None, script=None, input=None, environment={},
+    def execute(self, command, input=None, environment={},
                 stdout=None, quiet=False, direct=False, timeout=120,
                 ssh_env=["env", "-u", "LANGUAGE", "LC_ALL=C"], check=True):
         """Execute a shell command in the test machine and return its output.
 
-        Either specify @command or @script
-
-        Arguments:
-            command: The string to execute by /bin/sh; or
-                     an argument list execute without shell interpretation
-            script: A multi-line script to execute in /bin/sh
+            command: The string or argument list to execute by /bin/sh (still with shell interpretation)
             input: Input to send to the command
             environment: Additional environment variables
             timeout: Applies if not already wrapped in a #Timeout context
         Returns:
-            The command/script output as a string.
+            The command output as a string.
         """
-        assert command or script
+        assert command
         assert self.ssh_address
 
         if not self.__ssh_direct_opt_var(direct=direct):
@@ -306,70 +301,25 @@ class SSHConnection(object):
 
         additional_ssh_params += self.__execution_opts(direct=direct)
 
-        if command:
-            if getattr(command, "strip", None):  # Is this a string?
-                cmd += [command]
-                if not quiet:
-                    self.message("+", command)
-            else:
-                # use shlex.join() once Python 3.8 is available everywhere
-                cmd.append(' '.join(shlex.quote(arg) for arg in command))
-                if not quiet:
-                    self.message("+", *command)
+        if getattr(command, "strip", None):  # Is this a string?
+            cmd += [command]
+            if not quiet:
+                self.message("+", command)
         else:
-            assert not input, "input not supported to script"
-            cmd += ["sh", "-s"]
-            if self.verbose:
-                cmd += ["-x"]
-            input = env_script
-            input += script
-            command = "<script>"
+            # use shlex.join() once Python 3.8 is available everywhere
+            cmd.append(' '.join(shlex.quote(arg) for arg in command))
+            if not quiet:
+                self.message("+", *command)
         command_line = ssh_env + default_ssh_params + additional_ssh_params + env_command + cmd
 
         with timeoutlib.Timeout(seconds=timeout, error_message="Timed out on '%s'" % command, machine=self):
-            if stdout:
-                subprocess.call(command_line, stdout=stdout)
-                return
+            res = subprocess.run(command_line,
+                                 stdin=None if input is not None else subprocess.DEVNULL,
+                                 input=input.encode("UTF-8") if input else None,
+                                 stdout=stdout or subprocess.PIPE,
+                                 check=check)
 
-            output = ""
-            proc = subprocess.Popen(command_line, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdin_fd = proc.stdin.fileno()
-            stdout_fd = proc.stdout.fileno()
-            stderr_fd = proc.stderr.fileno()
-            rset = [stdout_fd, stderr_fd]
-            wset = [stdin_fd]
-            while len(rset) > 0 or len(wset) > 0:
-                ret = select.select(rset, wset, [], 10)
-                for fd in ret[0]:
-                    if fd == stdout_fd:
-                        data = os.read(fd, 1024)
-                        if not data:
-                            rset.remove(stdout_fd)
-                            proc.stdout.close()
-                        else:
-                            if self.verbose:
-                                write_all(sys.__stdout__.fileno(), data)
-                            output += data.decode('utf-8', 'replace')
-                    elif fd == stderr_fd:
-                        data = os.read(fd, 1024)
-                        if not data:
-                            rset.remove(stderr_fd)
-                            proc.stderr.close()
-                        elif not quiet or self.verbose:
-                            write_all(sys.__stderr__.fileno(), data)
-                for fd in ret[1]:
-                    if fd == stdin_fd:
-                        if input:
-                            num = os.write(fd, input.encode('utf-8'))
-                            input = input[num:]
-                        if not input:
-                            wset.remove(stdin_fd)
-                            proc.stdin.close()
-            proc.wait()
-
-        if proc.returncode != 0 and check:
-            raise subprocess.CalledProcessError(proc.returncode, command, output=output)
-        return output
+        return None if stdout else res.stdout.decode("UTF-8", "replace")
 
     def upload(self, sources, dest, relative_dir=TEST_DIR, use_scp=False):
         """Upload a file into the test machine
