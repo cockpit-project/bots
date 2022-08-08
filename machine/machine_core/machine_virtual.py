@@ -169,23 +169,21 @@ class VirtNetwork:
         except FileExistsError:
             pass
         for port in range(start, start + (100 * step), step):
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            lockpath = os.path.join(resources, "network-{0}".format(port))
-            try:
-                lockf = os.open(lockpath, os.O_WRONLY | os.O_CREAT)
-                fcntl.flock(lockf, fcntl.LOCK_NB | fcntl.LOCK_EX)
-                sock.bind(("127.0.0.1", port))
-                self.locked.append(lockf)
-            except IOError:
-                if force:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                lockpath = os.path.join(resources, "network-{0}".format(port))
+                try:
+                    lockf = os.open(lockpath, os.O_WRONLY | os.O_CREAT)
+                    fcntl.flock(lockf, fcntl.LOCK_NB | fcntl.LOCK_EX)
+                    sock.bind(("127.0.0.1", port))
+                    self.locked.append(lockf)
+                except IOError:
+                    if force:
+                        return port
+                    os.close(lockf)
+                    continue
+                else:
                     return port
-                os.close(lockf)
-                continue
-            else:
-                return port
-            finally:
-                sock.close()
         raise Failure("Couldn't find unique network port number")
 
     # Create resources for an interface, returns address and XML
