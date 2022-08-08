@@ -594,4 +594,4 @@ class VirtMachine(Machine):
     def needs_writable_usr(self):
         # On atomic systems, we need a hack to change files in /usr/lib/systemd
         if self.ostree_image:
-            self.execute(command="mount -o remount,rw /usr")
+            self.execute("mount -o remount,rw /usr")

@@ -488,7 +488,7 @@ class SSHConnection(object):
             cmd += " && chown '%s' '%s'" % (owner, dest)
         if perm:
             cmd += " && chmod '%s' '%s'" % (perm, dest)
-        self.execute(command=cmd, input=content)
+        self.execute(cmd, input=content)
 
     def spawn(self, shell_cmd, log_id, check=True):
         """Spawn a process in the test machine.
