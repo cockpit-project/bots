@@ -125,7 +125,7 @@ TEST_KVM_XML = """
 # The main network interface which we use to communicate between VMs
 TEST_MCAST_XML = """
     <qemu:arg value='-netdev'/>
-    <qemu:arg value='socket,mcast=230.0.0.1:{mcast},id=mcast0'/>
+    <qemu:arg value='socket,mcast=230.0.0.1:{mcast},id=mcast0,localaddr=127.0.0.1'/>
     <qemu:arg value='-device'/>
     <qemu:arg value='virtio-net-pci,netdev=mcast0,mac={mac},bus=pci.0,addr=0x0f'/>
 """
