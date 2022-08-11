@@ -96,27 +96,27 @@ class Machine(ssh_connection.SSHConnection):
         message = (tty and LOCAL_MESSAGE or '') + REMOTE_MESSAGE
         return message.format(**keys)
 
-    def start(self):
+    def start(self) -> None:
         """Overridden by machine classes to start the machine"""
         self.message("Assuming machine is already running")
 
-    def stop(self):
+    def stop(self) -> None:
         """Overridden by machine classes to stop the machine"""
         self.message("Not shutting down already running machine")
 
-    def wait_poweroff(self, timeout_sec=120):
+    def wait_poweroff(self, timeout_sec: int = 120) -> None:
         """Overridden by machine classes to wait for a machine to stop"""
         assert False, "Cannot wait for a machine we didn't start"
 
-    def kill(self):
+    def kill(self) -> None:
         """Overridden by machine classes to unconditionally kill the running machine"""
         assert False, "Cannot kill a machine we didn't start"
 
-    def shutdown(self, timeout_sec=120):
+    def shutdown(self, timeout_sec: int = 120) -> None:
         """Overridden by machine classes to gracefully shutdown the running machine"""
         assert False, "Cannot shutdown a machine we didn't start"
 
-    def pull(self, image):
+    def pull(self, image: str) -> str:
         """Download image.
         """
         if "/" in image:
@@ -214,7 +214,7 @@ class Machine(ssh_connection.SSHConnection):
 
         return allowed
 
-    def get_admin_group(self):
+    def get_admin_group(self) -> str:
         if "debian" in self.image or "ubuntu" in self.image:
             return "sudo"
         else:
