@@ -22,7 +22,7 @@ from .machine import Machine
 from .exceptions import Failure, RepeatableFailure
 from .machine_virtual import VirtMachine, VirtNetwork
 
-__all__ = [
-    Timeout, Machine, Failure, RepeatableFailure, VirtMachine, VirtNetwork,
-    BOTS_DIR, TEST_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT
-]
+__all__ = (
+    "Timeout", "Machine", "Failure", "RepeatableFailure", "VirtMachine", "VirtNetwork",
+    "BOTS_DIR", "TEST_DIR", "DEFAULT_IMAGE", "TEST_OS_DEFAULT"
+)
