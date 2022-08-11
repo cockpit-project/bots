@@ -210,7 +210,7 @@ class VirtNetwork:
         '''
         result = self.interface(number)
         result["mcast"] = self.network
-        result["restrict"] = restrict and "on" or "off"
+        result["restrict"] = "on" if restrict else "off"
         result["forward"] = {"22": 2200, "9090": 9090}
         result["forward"].update(forward)
         forwards = []
