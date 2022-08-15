@@ -314,8 +314,7 @@ class SSHConnection(object):
 
         with timeoutlib.Timeout(seconds=timeout, error_message="Timed out on '%s'" % command, machine=self):
             res = subprocess.run(command_line,
-                                 stdin=None if input is not None else subprocess.DEVNULL,
-                                 input=input.encode("UTF-8") if input else None,
+                                 input=input.encode("UTF-8") if input else b'',
                                  stdout=stdout or subprocess.PIPE,
                                  check=check)
 
