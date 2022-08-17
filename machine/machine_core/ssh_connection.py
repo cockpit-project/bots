@@ -277,17 +277,6 @@ class SSHConnection(object):
         if not self.__ssh_direct_opt_var(direct=direct):
             self._ensure_ssh_master()
 
-        env_script = ""
-        env_command = []
-        if environment and isinstance(environment, dict):
-            for name, value in environment.items():
-                env_script += "%s='%s'\n" % (name, value)
-                env_script += "export %s\n" % name
-                env_command.append("{}={}".format(name, value))
-        elif environment == {}:
-            pass
-        else:
-            raise Exception("enviroment support dict or list items given: {0}".format(environment))
         default_ssh_params = [
             "ssh",
             "-p", str(self.ssh_port),
@@ -297,7 +286,9 @@ class SSHConnection(object):
             self.ssh_address
         ]
         additional_ssh_params = []
+
         cmd = ['set -e;']
+        cmd += [f'export {name}={shlex.quote(value)}; ' for name, value in environment.items()]
 
         additional_ssh_params += self.__execution_opts(direct=direct)
 
@@ -310,7 +301,7 @@ class SSHConnection(object):
             cmd.append(' '.join(shlex.quote(arg) for arg in command))
             if not quiet:
                 self.message("+", *command)
-        command_line = ssh_env + default_ssh_params + additional_ssh_params + env_command + cmd
+        command_line = ssh_env + default_ssh_params + additional_ssh_params + cmd
 
         with timeoutlib.Timeout(seconds=timeout, error_message="Timed out on '%s'" % command, machine=self):
             res = subprocess.run(command_line,
