@@ -107,7 +107,7 @@ class BuildAction(ActionBase):
         machine_instance.upload([source], vm_source, relative_dir=".")
 
         # this will fail if neither is available -- exception is clear enough, this is a developer tool
-        out = machine_instance.execute("(which pbuilder || which mock || which pacman) 2>/dev/null")
+        out = machine_instance.execute("(which pbuilder || which mock || which pacman) 2>/dev/null", check=False)
         if 'pbuilder' in out:
             BuildAction.build_deb(machine_instance, vm_source)
         elif 'mock' in out:
