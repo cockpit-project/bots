@@ -11,3 +11,19 @@ ignore = [
     "E731",  # Do not assign a `lambda` expression, use a `def`
 ]
 line-length = 118
+
+[[tool.mypy.overrides]]
+module = "pika.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "testmap.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "libvirt.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "libvirt_qemu.*"
+ignore_missing_imports = true
