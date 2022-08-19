@@ -2,6 +2,4 @@ Traceback (most recent call last):*
   File "test/verify/check-system-info", line *, in testCPUSecurityMitigationsEnable
     m.execute(r"""set -e
 *
-    grep -q '^options.*\bnosmt\b' /boot/loader/entries/*42.0.0*.conf ||
-*
-' returned non-zero exit status 1.
+*grep *nosmt*' returned non-zero exit status 1.
