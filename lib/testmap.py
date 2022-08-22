@@ -48,6 +48,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'fedora-37',
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
@@ -62,6 +63,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             f'{TEST_OS_DEFAULT}/firefox',
+            'fedora-37',
         ],
     },
     'cockpit-project/cockpit-ostree': {
@@ -85,6 +87,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-37',
             'fedora-rawhide',
             f'{TEST_OS_DEFAULT}/devel',
         ],
@@ -104,6 +107,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
         '_manual': [
+            'fedora-37',
             'fedora-rawhide',
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/devel',
@@ -129,6 +133,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'fedora-37',
             'fedora-rawhide',
         ],
     },
@@ -179,6 +184,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-1',
             'centos-8-stream',
             'fedora-36',
+            'fedora-37',
         ]
     },
     'rhinstaller/anaconda': {
