@@ -13,8 +13,10 @@ if [ -z "${SKIP_STATIC_CHECK:-}" ]; then
     test_ruff
 
     # run static code checks like flake8 and mypy
-    PYEXEFILES="$(git grep -lI '^#!.*python') $(git ls-files "*.py")"
+    PYEXEFILES="$(echo $(git grep -lI '^#!.*python') $(git ls-files "*.py") | xargs -n 1 | sort -u)"
     flake8 $PYEXEFILES
+
+    mypy --no-error-summary .
 fi
 
 ./test-bots
