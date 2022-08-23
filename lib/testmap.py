@@ -59,11 +59,11 @@ REPO_BRANCH_CONTEXT = {
             TEST_OS_DEFAULT,
             'centos-8-stream',
             'fedora-36',
+            'fedora-37',
             'fedora-rawhide',
         ],
         '_manual': [
             f'{TEST_OS_DEFAULT}/firefox',
-            'fedora-37',
         ],
     },
     'cockpit-project/cockpit-ostree': {
@@ -80,6 +80,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-1',
             'fedora-35',
             'fedora-36',
+            'fedora-37',
             'fedora-coreos',
             'debian-testing',
             'ubuntu-2204',
@@ -87,7 +88,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream',
-            'fedora-37',
             'fedora-rawhide',
             f'{TEST_OS_DEFAULT}/devel',
         ],
@@ -178,13 +178,13 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-certificates': {
         'master': [
             'fedora-35',
+            'fedora-37',
         ],
         '_manual': [
             'rhel-8-7',
             'rhel-9-1',
             'centos-8-stream',
             'fedora-36',
-            'fedora-37',
         ]
     },
     'rhinstaller/anaconda': {
