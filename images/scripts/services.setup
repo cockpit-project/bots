@@ -147,7 +147,10 @@ ansible-galaxy install rvm.ruby
 
 cd
 mkdir -p playbookdir/roles/
-git clone --depth=1 https://github.com/candlepin/ansible-role-candlepin.git playbookdir/roles/candlepin
+
+# https://github.com/candlepin/ansible-role-candlepin/pull/27 regressed this, so pin it back
+git clone -n https://github.com/candlepin/ansible-role-candlepin.git playbookdir/roles/candlepin
+git -C playbookdir/roles/candlepin checkout 5fc50e9e83a7afe975f593fe6ed883a8b2d6bac9
 
 cat > playbookdir/playbook.yml <<- EOP
 - hosts: localhost
