@@ -143,6 +143,7 @@ echo 'candlepin ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/candlepin
 EOF
 
 podman exec -i -u candlepin candlepin sh -eux <<EOF
+ansible-galaxy collection install ansible.posix
 ansible-galaxy install rvm.ruby
 
 cd
