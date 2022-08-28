@@ -1,3 +1,0 @@
-> warning: Error wiping newly created partition /dev/loop*: Failed to open the device '/dev/loop*'
-*
-  File "*test/verify/check-storage*
