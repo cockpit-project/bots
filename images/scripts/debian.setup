@@ -211,8 +211,8 @@ pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
 /usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get | pbuilder --login --save-after-login
 rm -rf /tmp/out
 
-# Debian does not automatically start the default libvirt network
-virsh net-autostart default
+# (some) Debian does not automatically start the default libvirt network
+test -L /etc/libvirt/qemu/networks/autostart/default.xml || virsh net-autostart default
 
 # Disable services which we don't want running by default
 systemctl disable --now redis-server tuned
