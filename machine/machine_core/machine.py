@@ -203,6 +203,9 @@ class Machine(ssh_connection.SSHConnection):
             allowed.append('audit.*denied  { sys_admin } .* comm="systemd-gpt-aut".*')
             # https://bugzilla.redhat.com/show_bug.cgi?id=2122888
             allowed.append('audit.*denied  { sys_admin } .* comm="mv" .*NetworkManager_dispatcher_console_t.*')
+            # https://bugzilla.redhat.com/show_bug.cgi?id=2122918
+            allowed.append('audit.*denied  { execmem } .* comm="libvirt_leasesh".*')
+            allowed.append('audit.*denied  { execmem } .* comm="virtlogd".*')
 
         return allowed
 
