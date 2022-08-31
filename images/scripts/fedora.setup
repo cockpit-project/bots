@@ -150,8 +150,8 @@ fi
 
 opsys=$(cut -d '-' -f 1 <<< "$IMAGE")
 version=$(cut -d '-' -f 2 <<< "$IMAGE")
-# If version is not number (ie: testing) then use Fedora 35
-if ! [ "$version" -eq "$version" ] 2>/dev/null; then version=35; fi
+# If version is not number (ie: testing) then use Fedora 36
+if ! [ "$version" -eq "$version" ] 2>/dev/null; then version=36; fi
 
 # Earlier Fedoras and RHEL 8 still shipped this in qemu-common
 if [ "$version" -eq "36" ]; then
