@@ -287,7 +287,11 @@ class SSHConnection(object):
         ]
         additional_ssh_params = []
 
-        cmd = ['set -e;']
+        cmd = []
+
+        if check:
+            cmd.append('set -e;')
+
         cmd += [f'export {name}={shlex.quote(value)}; ' for name, value in environment.items()]
 
         additional_ssh_params += self.__execution_opts(direct=direct)
