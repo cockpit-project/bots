@@ -198,6 +198,10 @@ class Machine(ssh_connection.SSHConnection):
             # Default PAM configuration logs motd for cockpit-session
             allowed.append(".*cockpit-session: pam: Web console: .*")
 
+        if self.image == "fedora-37":
+            # https://bugzilla.redhat.com/show_bug.cgi?id=2083900
+            allowed.append('audit.*denied  { sys_admin } .* comm="systemd-gpt-aut".*')
+
         return allowed
 
     def get_admin_group(self):
