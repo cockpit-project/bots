@@ -76,27 +76,27 @@ libsss_sudo \
 TEST_PACKAGES="\
 acl \
 ansible-core \
-gdb \
-strace \
-ltrace \
-targetcli \
-dnf-automatic \
-cryptsetup \
 clevis-luks \
+cryptsetup \
+dnf-automatic \
 firewalld \
-socat \
-tang \
-podman \
-ntpsec \
+gdb \
 libvirt-daemon-driver-storage-iscsi \
 libvirt-daemon-driver-storage-iscsi-direct \
 libvirt-daemon-driver-storage-logical \
-tlog \
+ltrace \
 nginx \
-tcsh \
+ntpsec \
+podman \
 redis \
+socat \
+strace \
 stratis-cli \
 stratisd \
+tang \
+targetcli \
+tcsh \
+tlog \
 "
 
 ABRT_PACKAGES="\
