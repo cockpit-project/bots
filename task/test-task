@@ -81,7 +81,7 @@ def mockServer():
             if self.path == "/repos/project/repo/pulls":
                 content_len = int(self.headers.get('content-length'))
                 data = json.loads(self.rfile.read(content_len).decode('utf-8'))
-                assert(data['title'] == "[no-test] Task title")
+                assert data['title'] == "[no-test] Task title"
                 data["number"] = 1234
                 self.replyJson(data)
             elif self.path == "/repos/project/repo/pulls/1234":
@@ -121,14 +121,14 @@ def mockServer():
 
 
 def mock_execute(*args):
-    assert(args[0] == 'git')
+    assert args[0] == 'git'
     if args[1] == "show":
         return "Task title\n"
     elif args[1] == "commit" and args[2] == "--amend":
         if args[4] != "Task title\nCloses #1234":
             raise Exception("Incorrect commit message")
     elif args[1] == "push":
-        assert(args[2] == "-f")
+        assert args[2] == "-f"
     else:
         raise Exception("Mocking unsupported git command")
 
