@@ -417,16 +417,18 @@ class SSHConnection(object):
             append: If True, append to existing file instead of replacing it
             owner: If set, call chown on the file with the given owner string
             perm: Optional file permission as chmod shell string (e.g. "0600")
+
+        The directory of dest is created automatically.
         """
         assert dest
         assert self.ssh_address
 
-        cmd = "cat %s '%s'" % (append and '>>' or '>', dest)
+        self.execute(["mkdir", "-p", os.path.dirname(dest)])
+        self.execute(f"cat {append and '>>' or '>'} {shlex.quote(dest)}", input=content)
         if owner:
-            cmd += " && chown '%s' '%s'" % (owner, dest)
+            self.execute(["chown", owner, dest])
         if perm:
-            cmd += " && chmod '%s' '%s'" % (perm, dest)
-        self.execute(cmd, input=content)
+            self.execute(["chmod", perm, dest])
 
     def spawn(self, shell_cmd, log_id, check=True):
         """Spawn a process in the test machine.
