@@ -1,7 +1,0 @@
-Traceback (most recent call last):*
-  File "test/check-application", line *, in testCheckpointRestoreCGroupsV2
-    return self._testCheckpointRestore()
-  File "test/check-application", line *, in _testCheckpointRestore
-    b.wait(lambda: self.getContainerAttr("swamped-crate", "State") in 'Running')
-*
-testlib.Error: timed out waiting for predicate to become true
