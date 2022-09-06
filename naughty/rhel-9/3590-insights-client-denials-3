@@ -1,0 +1,1 @@
+audit: type=1400 audit*: avc:  denied  { read } for  pid=* comm="gpg" name="last_stable.egg.asc" dev="*" ino=* scontext=system_u:system_r:gpg_t:s0 tcontext=unconfined_u:object_r:insights_client_var_lib_t:*
