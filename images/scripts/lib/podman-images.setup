@@ -6,4 +6,5 @@ if [ $(uname -m) = x86_64 ]; then
     podman pull quay.io/libpod/busybox
     podman pull quay.io/libpod/alpine
     podman pull quay.io/cockpit/registry:2
+    podman pull docker://k8s.gcr.io/pause:3.5
 fi
