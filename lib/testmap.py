@@ -225,7 +225,11 @@ IMAGE_REFRESH_TRIGGERS = {
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
         "rhel-8-7@candlepin/subscription-manager",
         "rhel-9-1@candlepin/subscription-manager-cockpit",
-    ]
+    ],
+    # Anaconda builds in fedora-37 and runs tests in fedora-rawhide-boot
+    "fedora-37": [
+        "fedora-rawhide-boot@rhinstaller/anaconda"
+    ],
 }
 
 
