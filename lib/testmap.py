@@ -53,6 +53,8 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
+            'rhel-8-8',
+            'rhel-9-2',
         ],
     },
     'cockpit-project/starter-kit': {
