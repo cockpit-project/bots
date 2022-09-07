@@ -211,6 +211,9 @@ pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
 /usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get | pbuilder --login --save-after-login
 rm -rf /tmp/out
 
+# libvirtd might need a restart after installing other packages
+systemctl restart libvirtd
+
 # Debian does not automatically start the default libvirt network
 virsh net-autostart default
 
