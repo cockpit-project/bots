@@ -40,6 +40,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-coreos',
             'rhel-8-7',
             'rhel-8-7-distropkg',
+            'rhel-8-8',
             'centos-8-stream',
             'rhel-9-1',
             'rhel-9-2',
@@ -54,7 +55,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
-            'rhel-8-8',
         ],
     },
     'cockpit-project/starter-kit': {
