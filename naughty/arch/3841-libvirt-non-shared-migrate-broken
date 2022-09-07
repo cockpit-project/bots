@@ -1,0 +1,6 @@
+  File "check-machines-migrate", line *, in testCopyStorageMigration
+    self._testMigrationGeneric(True, False, None)
+  File "check-machines-migrate", line *, in _testMigrationGeneric
+    b.wait_not_present("#migrate-modal")
+*
+testlib.Error: timeout
