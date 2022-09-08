@@ -1,0 +1,4 @@
+> error: *Could not get process id of swtpm*
+*
+  File "check-machines-create", line *, in testConfigureBeforeInstall
+    wait(lambda: "VmNotInstalled" in m.execute("virsh list --persistent"), delay=3)
