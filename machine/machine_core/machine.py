@@ -207,6 +207,12 @@ class Machine(ssh_connection.SSHConnection):
             allowed.append('audit.*denied  { execmem } .* comm="libvirt_leasesh".*')
             allowed.append('audit.*denied  { execmem } .* comm="virtlogd".*')
 
+        if self.image == "ubuntu-stable":
+            # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
+            allowed.append('audit.* apparmor="DENIED" operation="open" ' +
+                           'profile=".*" name="/sys/devices/system/cpu/possible" .* ' +
+                           'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
+
         return allowed
 
     def get_admin_group(self):
