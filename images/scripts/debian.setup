@@ -3,6 +3,10 @@
 
 set -ex
 
+# Enable ssh if necessary so that we get the "sshd" alias symlink that
+# everything expects.
+systemctl preset ssh
+
 # Enable a console on ttyS0 so that we can log-in via vm-run.
 # and make the boot up more verbose
 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT/# GRUB_CMDLINE_LINUX_DEFAULT/' /etc/default/grub
