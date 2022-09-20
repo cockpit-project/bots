@@ -142,25 +142,30 @@ REPO_BRANCH_CONTEXT = {
     },
     'candlepin/subscription-manager': {
         'main': [
-            'rhel-8-7',
+            'rhel-8-8',
             'rhel-9-0',
             'rhel-9-1',
+            'rhel-9-2',
             'fedora-36',
+            'fedora-37',
         ],
         'subscription-manager-1.28': [
             'rhel-8-4',
-            'rhel-8-5',
             'rhel-8-6',
             'rhel-8-7',
-        ],
-        'subscription-manager-1.28.21': [
-            'rhel-8-5',
+            'rhel-8-8',
         ],
         'subscription-manager-1.28.29': [
             'rhel-8-6',
         ],
+        'subscription-manager-1.28.32': [
+            'rhel-8-7',
+        ],
         'subscription-manager-1.29.26': [
             'rhel-9-0',
+        ],
+        'subscription-manager-1.29.30': [
+            'rhel-9-1',
         ],
         '_manual': [
         ],
@@ -171,6 +176,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-9-stream',
             'fedora-35',
             'fedora-36',
+            'fedora-37',
         ],
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
