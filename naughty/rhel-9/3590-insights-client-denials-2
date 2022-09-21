@@ -1,1 +1,0 @@
-audit: type=1400 audit*: avc:  denied  { write } for  pid=* comm="insights-client" name="insights-client.pid" dev="tmpfs" ino=* scontext=system_u:system_r:insights_client_t:s0 tcontext=unconfined_u:object_r:var_run_t:*
