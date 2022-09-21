@@ -1,1 +1,0 @@
-audit: type=1400 audit*: avc:  denied  { write } for  pid=* comm="platform-python" name="cache" dev="*" ino=* scontext=system_u:system_r:insights_client_t:s0 tcontext=system_u:object_r:var_t:s0*
