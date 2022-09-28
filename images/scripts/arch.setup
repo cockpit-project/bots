@@ -156,6 +156,10 @@ pacman -Rscn --noconfirm cloud-init reflector
 # this is evil (it forces sshd.service to run after network-online.service) and unnecessary
 systemctl disable reflector-init.service
 
+# Causes some sort of race condition in waiting on NTP to be synced
+# https://github.com/cockpit-project/bots/issues/3901#issuecomment-1260579703
+systemctl disable systemd-time-wait-sync.service
+
 # Reduce image size, clear package cache
 pacman -Scc
 
