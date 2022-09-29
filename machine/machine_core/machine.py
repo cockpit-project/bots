@@ -201,11 +201,13 @@ class Machine(ssh_connection.SSHConnection):
         if self.image in ["fedora-37", "fedora-testing"]:
             # https://bugzilla.redhat.com/show_bug.cgi?id=2083900
             allowed.append('audit.*denied  { sys_admin } .* comm="systemd-gpt-aut".*')
-            # https://bugzilla.redhat.com/show_bug.cgi?id=2122888
-            allowed.append('audit.*denied  { sys_admin } .* comm="mv" .*NetworkManager_dispatcher_console_t.*')
             # https://bugzilla.redhat.com/show_bug.cgi?id=2122918
             allowed.append('audit.*denied  { execmem } .* comm="libvirt_leasesh".*')
             allowed.append('audit.*denied  { execmem } .* comm="virtlogd".*')
+
+        if self.image in ["fedora-36", "fedora-37", "fedora-testing"]:
+            # https://bugzilla.redhat.com/show_bug.cgi?id=2122888
+            allowed.append('audit.*denied  { sys_admin } .* comm="mv" .*NetworkManager_dispatcher_console_t.*')
 
         if self.image == "ubuntu-stable":
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
