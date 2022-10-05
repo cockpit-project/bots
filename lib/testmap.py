@@ -32,7 +32,6 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'ubuntu-2204',
             'ubuntu-stable',
-            'fedora-35',
             'fedora-36',
             'fedora-37',
             f'{TEST_OS_DEFAULT}/devel',
@@ -81,7 +80,6 @@ REPO_BRANCH_CONTEXT = {
             'arch',
             'rhel-8-7',
             'rhel-9-1',
-            'fedora-35',
             'fedora-36',
             'fedora-37',
             'fedora-coreos',
@@ -102,7 +100,6 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'ubuntu-2204',
             'ubuntu-stable',
-            'fedora-35',
             'fedora-36',
             'fedora-37',
             f'{TEST_OS_DEFAULT}/firefox',
@@ -128,7 +125,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'osbuild/cockpit-composer': {
         'main': [
-            'fedora-35',
             'fedora-36',
             'fedora-36/firefox',
             'rhel-8-7',
@@ -174,7 +170,6 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             'rhel-9-1',
             'centos-9-stream',
-            'fedora-35',
             'fedora-36',
             'fedora-37',
         ],
@@ -186,7 +181,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-certificates': {
         'master': [
-            'fedora-35',
             'fedora-37',
         ],
         '_manual': [

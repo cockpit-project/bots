@@ -26,7 +26,6 @@ REFRESH = {
     "centos-9-stream": {},
     "debian-testing": {},
     "debian-stable": {},
-    "fedora-35": {},
     "fedora-36": {},
     "fedora-37": {},
     "fedora-testing": {"refresh-days": 3},
