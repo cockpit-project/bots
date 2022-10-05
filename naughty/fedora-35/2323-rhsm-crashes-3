@@ -1,6 +1,0 @@
-[systemd]
-Failed Units: 1
-  rhsm.service
-*
-  File "check-system-terminal", line *, in testBasic
-    wait_line(n, prompt)

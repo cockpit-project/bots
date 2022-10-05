@@ -128,11 +128,6 @@ if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
     dnf config-manager --set-enabled updates-testing
 fi
 
-if [ "$IMAGE" = "fedora-35" ]; then
-    # functionality still shipped in qemu-common
-    TEST_PACKAGES="${TEST_PACKAGES/qemu-virtiofsd /}"
-fi
-
 dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $ABRT_PACKAGES
 
