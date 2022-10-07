@@ -85,4 +85,4 @@ def redhat_network():
     return redhat_network.result
 
 
-redhat_network.result = None
+redhat_network.result = None  # type: ignore
