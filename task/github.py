@@ -324,7 +324,7 @@ class GitHub(object):
         page = 1
         count = 100
         while count == 100:
-            data = self.get("statuses/{0}?page={1}&per_page={2}".format(revision, page, count))
+            data = self.get("commits/{0}/statuses?page={1}&per_page={2}".format(revision, page, count))
             count = 0
             page += 1
             result += data
