@@ -8,10 +8,13 @@ test_ruff() {
     ruff check --no-cache .
 }
 
-test_ruff
 
-# run static code checks like pyflakes and pep8
-PYEXEFILES="$(git grep -lI '^#!.*python') $(git ls-files "*.py")"
-flake8 $PYEXEFILES
+if [ -z "${SKIP_STATIC_CHECK:-}" ]; then
+    test_ruff
+
+    # run static code checks like flake8 and mypy
+    PYEXEFILES="$(git grep -lI '^#!.*python') $(git ls-files "*.py")"
+    flake8 $PYEXEFILES
+fi
 
 ./test-bots
