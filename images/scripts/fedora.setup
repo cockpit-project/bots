@@ -108,6 +108,14 @@ libreport-plugin-bugzilla \
 libreport-fedora
 "
 
+# These packages are downloaded to the image so that the tests can
+# install them on-demand.
+
+PACKAGE_SET_CLEVIS="\
+clevis-systemd
+clevis-dracut
+"
+
 # avoid NM-wait-online hanging on disconnected interfaces
 mkdir -p /etc/NetworkManager/conf.d/
 printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
@@ -130,6 +138,9 @@ fi
 
 dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $ABRT_PACKAGES
+
+mkdir -p /var/lib/package-sets/clevis
+dnf $DNF_OPTS download --downloaddir=/var/lib/package-sets/clevis $PACKAGE_SET_CLEVIS
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 dnf --setopt=install_weak_deps=False install -y cockpit

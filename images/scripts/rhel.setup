@@ -188,7 +188,18 @@ if [ "$IMAGE" = "centos-8-stream" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/kpatch-dnf /}"
 fi
 
+# These packages are downloaded to the image so that the tests can
+# install them on-demand.
+
+PACKAGE_SET_CLEVIS="\
+clevis-systemd
+clevis-dracut
+"
+
 dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
+
+mkdir -p /var/lib/package-sets/clevis
+dnf download --downloaddir=/var/lib/package-sets/clevis $PACKAGE_SET_CLEVIS
 
 # we only need cloud-init for the initial boot, afterwards it just slows down booting
 if rpm -q cloud-init; then
