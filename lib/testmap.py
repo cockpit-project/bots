@@ -133,7 +133,12 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-37',
+            'fedora-37/firefox',
             'fedora-rawhide',
+            'rhel-8-8',
+            'centos-8-stream',
+            'rhel-9-2',
+            'centos-9-stream',
         ],
     },
     'candlepin/subscription-manager': {
