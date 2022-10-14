@@ -211,7 +211,7 @@ class Machine(ssh_connection.SSHConnection):
 
         if self.image == "ubuntu-stable":
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
-            allowed.append('audit.* apparmor="DENIED" operation="open" ' +
+            allowed.append('audit.* apparmor="DENIED" operation="open" class="file" ' +
                            'profile=".*" name="/sys/devices/system/cpu/possible" .* ' +
                            'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
 
