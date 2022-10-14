@@ -120,12 +120,7 @@ class MachineBuilder:
         self.machine.start()
         # avoid too long boot times -- they cause painfully long tests, and are a bug
         try:
-            timeout = 30
-            if self.machine.image == "fedora-rawhide":
-                # except with fedora-rawhide, which is slow by design:
-                # https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/HRJT4UF35MRJ7C4ZXVHBFXB4BTW64YSO/
-                timeout = 120
-            self.machine.wait_boot(timeout_sec=timeout)
+            self.machine.wait_boot(timeout_sec=30)
         finally:
             self.machine.stop(timeout_sec=30)
 
