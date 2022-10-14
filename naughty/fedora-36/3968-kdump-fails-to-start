@@ -1,0 +1,2 @@
+b.wait_not_present(pathInput)*
+*test/verify/check-kdump TestKdump.testBasic
