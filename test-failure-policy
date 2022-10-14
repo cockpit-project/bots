@@ -38,6 +38,8 @@ def main():
     parser = argparse.ArgumentParser(description='Check a traceback for a known issue')
     parser.add_argument('-o', "--offline", action='store_true',
                         help="Work offline, don't fetch new data or contact servers")
+    parser.add_argument('-a', '--all', action='store_true',
+                        help='Check for matching naughties in all other images')
     parser.add_argument('image', help="The image to check against")
     opts = parser.parse_args()
 
@@ -61,6 +63,11 @@ def main():
         if number:
             print("Known issue #{0}".format(number))
             return 77
+        elif opts.all:
+            number, img = check_all_known_issues(api, output, opts.image)
+            if number:
+                print(f"Known issue #{number} in {img}")
+                return 78
 
         if checkRetry(output):
             print("due to failure of test harness or framework")
@@ -108,6 +115,28 @@ def checkRetry(trace):
 
 # -----------------------------------------------------------------------------
 # Known Issue Matching and Filing
+
+
+def check_all_known_issues(api, trace, image):
+    img = None
+    number = None
+    naughty_dir = os.path.join(BOTS_DIR, "naughty")
+
+    for dir_entry in os.scandir(naughty_dir):
+        # Skip symlinks so we don't check duplicates
+        if dir_entry.is_symlink():
+            continue
+
+        img = dir_entry.name
+
+        # Skip the image we already checked
+        if img != get_test_image(image):
+            number = check_known_issue(api, trace, img)
+            if number:
+                break
+
+    return number, img
+
 
 def normalize_traceback(trace):
     # All file paths converted to basename
