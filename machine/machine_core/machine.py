@@ -215,6 +215,15 @@ class Machine(ssh_connection.SSHConnection):
                            'profile=".*" name="/sys/devices/system/cpu/possible" .* ' +
                            'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
 
+            # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1993304
+            allowed.append('audit.* apparmor="DENIED" operation="open" class="file" ' +
+                           'profile=".*" name="/sys/bus/usb/devices/" .* ' +
+                           'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
+
+            allowed.append('audit.* apparmor="DENIED" operation="getattr" class="file" ' +
+                           'profile=".*" name="/sys/bus/usb/devices/.*" .* ' +
+                           'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
+
         return allowed
 
     def get_admin_group(self):
