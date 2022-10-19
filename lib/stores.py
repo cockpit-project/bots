@@ -32,7 +32,9 @@ REDHAT_STORES = [
 # local stores
 try:
     with open(xdg_config_home('cockpit-dev', 'image-stores'), 'r') as fp:
-        PUBLIC_STORES += fp.read().strip().split("\n")
+        data = fp.read().strip()
+        if data:
+            PUBLIC_STORES += data.split("\n")
 except FileNotFoundError:
     pass
 
