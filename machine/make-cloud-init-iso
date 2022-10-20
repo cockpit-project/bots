@@ -62,6 +62,12 @@ ssh_keys:
 ${host_key}
   rsa_public: ${host_key_pub}
 
+# Disable systemd-time-wait-sync as it can block reacing network.target and activating ssh.
+# On our test environment NTP is blocked so on Arch Linux systemd-timesyncd hangs forever 
+# blocking systemd-time-wait-sync from completing.
+bootcmd:
+ - [ sh, -c, "systemctl disable --now systemd-time-wait-sync.service || true"]
+
 # make sure that our user script runs on every boot
 cloud_final_modules:
  - scripts-per-once
