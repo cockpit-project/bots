@@ -85,6 +85,14 @@ libnss-myhostname \
 
 DEBUG_PACKAGES=''
 
+# These packages are downloaded to the image so that the tests can
+# install them on-demand.
+
+PACKAGE_SET_CLEVIS="\
+clevis-systemd
+clevis-dracut
+"
+
 # wait until cloud-init finishes, so that it doesn't clobber sources.list
 until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 
@@ -178,6 +186,11 @@ systemctl restart systemd-networkd.service || true
 
 # install our dependencies
 $APT install $TEST_PACKAGES $COCKPIT_DEPS $DEBUG_PACKAGES $IPA_CLIENT_PACKAGES
+
+# download package sets
+
+mkdir -p /var/lib/package-sets/clevis
+( cd /var/lib/package-sets/clevis; $APT download $PACKAGE_SET_CLEVIS )
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 $APT --no-install-recommends install cockpit
