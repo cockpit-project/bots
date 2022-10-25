@@ -60,6 +60,8 @@ redis \
 openbsd-netcat \
 nfs-utils \
 sssd \
+stratisd \
+stratis-cli \
 tang \
 ntfs-3g \
 "
