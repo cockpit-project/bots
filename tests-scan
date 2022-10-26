@@ -19,7 +19,7 @@
 
 import argparse
 import json
-import pipes
+import shlex
 import sys
 import time
 import logging
@@ -169,18 +169,18 @@ def tests_invoke(priority, name, number, revision, ref, context, base,
     cmd = " ".join([checkout, "&& cd make-checkout-workdir &&", test_env, invoke])
     return (wrapper + ' -- /bin/sh -c "' + cmd + '"').format(
         priority=priority,
-        name=pipes.quote(name),
-        revision=pipes.quote(revision),
-        base=pipes.quote(str(base)),
-        ref=pipes.quote(ref),
-        bots_ref=pipes.quote(bots_ref),
-        image=pipes.quote(image),
-        scenario=(pipes.quote(scenario)),
+        name=shlex.quote(name),
+        revision=shlex.quote(revision),
+        base=shlex.quote(str(base)),
+        ref=shlex.quote(ref),
+        bots_ref=shlex.quote(bots_ref),
+        image=shlex.quote(image),
+        scenario=(shlex.quote(scenario)),
         github_context=github_context,
         current=current,
         pull_number=number,
-        repo=pipes.quote(repo),
-        github_base=pipes.quote(options.repo),
+        repo=shlex.quote(repo),
+        github_base=shlex.quote(options.repo),
     )
 
 
