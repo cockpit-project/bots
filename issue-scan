@@ -28,7 +28,7 @@ REDHAT_TASKS = [
 ]
 
 import argparse
-import pipes
+import shlex
 import sys
 import json
 import logging
@@ -153,7 +153,7 @@ def output_task(command, issue, repo, verbose):
         )
     else:
         if context:
-            context = pipes.quote(context)
+            context = shlex.quote(context)
         return (checkout + "cd make-checkout-workdir && " + cmd + " ; cd ..").format(
             issue=int(number),
             priority=distributed_queue.MAX_PRIORITY,
