@@ -82,6 +82,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-1',
             'fedora-36',
             'fedora-37',
+            f'{TEST_OS_DEFAULT}/devel',
             'fedora-coreos',
             'debian-testing',
             'ubuntu-2204',
@@ -90,7 +91,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream',
             'fedora-rawhide',
-            f'{TEST_OS_DEFAULT}/devel',
         ],
     },
     'cockpit-project/cockpit-machines': {
