@@ -66,7 +66,6 @@ TEST_DOMAIN_XML = """
   {cpu}
   <os>
     <type arch='{arch}'>hvm</type>
-    <boot dev='hd'/>
   </os>
   <memory unit='MiB'>{memory_in_mib}</memory>
   <currentMemory unit='MiB'>{memory_in_mib}</currentMemory>
@@ -79,6 +78,7 @@ TEST_DOMAIN_XML = """
       <source file='{drive}'/>
       <target dev='vda' bus='virtio'/>
       <serial>ROOT</serial>
+      <boot order='2'/>
     </disk>
     <controller type='scsi' model='virtio-scsi' index='0' id='hot'/>
     <graphics type='vnc' autoport='yes' listen='127.0.0.1'>
@@ -114,6 +114,7 @@ TEST_DISK_XML = """
   <serial>%(serial)s</serial>
   <address type='drive' controller='0' bus='0' target='2' unit='%(unit)d'/>
   <target dev='%(dev)s' bus='scsi'/>
+  %(extra)s
 </disk>
 """
 
@@ -515,7 +516,7 @@ class VirtMachine(Machine):
         finally:
             self._cleanup()
 
-    def add_disk(self, size=None, serial=None, path=None, type='raw'):
+    def add_disk(self, size=None, serial=None, path=None, type='raw', boot_disk=False):
         index = len(self._disks)
 
         if path:
@@ -538,6 +539,7 @@ class VirtMachine(Machine):
             'unit': index,
             'dev': dev,
             'type': type,
+            'extra': "<boot order='1'/>" if boot_disk else "",
         }
 
         if self._domain.attachDeviceFlags(disk_desc, libvirt.VIR_DOMAIN_AFFECT_LIVE) != 0:
