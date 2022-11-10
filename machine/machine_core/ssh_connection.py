@@ -260,7 +260,7 @@ class SSHConnection(object):
             return ["-o", "ControlPath=" + self.ssh_master]
 
     def execute(self, command, input=None, environment={},
-                stdout=None, quiet=False, direct=False, timeout=120,
+                stdout=subprocess.PIPE, quiet=False, direct=False, timeout=120,
                 ssh_env=["env", "-u", "LANGUAGE", "LC_ALL=C"], check=True):
         """Execute a shell command in the test machine and return its output.
 
@@ -306,10 +306,9 @@ class SSHConnection(object):
         with timeoutlib.Timeout(seconds=timeout, error_message="Timed out on '%s'" % command, machine=self):
             res = subprocess.run(command_line,
                                  input=input.encode("UTF-8") if input else b'',
-                                 stdout=stdout or subprocess.PIPE,
-                                 check=check)
+                                 stdout=stdout, check=check)
 
-        return None if stdout else res.stdout.decode("UTF-8", "replace")
+        return None if res.stdout is None else res.stdout.decode("UTF-8", "replace")
 
     def upload(self, sources, dest, relative_dir=TEST_DIR, use_scp=False):
         """Upload a file into the test machine
