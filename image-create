@@ -97,7 +97,7 @@ class MachineBuilder:
 
             try:
                 self.machine.execute(f"/var/tmp/SETUP {self.machine.image}",
-                                     environment=env, stdout=sys.stdout, quiet=not self.machine.verbose, timeout=7200)
+                                     environment=env, stdout=None, quiet=not self.machine.verbose, timeout=7200)
                 self.machine.execute("rm -f /var/tmp/SETUP")
 
                 if self.machine.image == 'openshift':

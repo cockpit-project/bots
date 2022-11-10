@@ -89,7 +89,7 @@ try:
     if args.execute:
         for cmd in args.execute:
             print('#', cmd)
-            machine.execute(cmd, stdout=1)
+            machine.execute(cmd, stdout=None)
 
     # Graphics console necessary
     if args.graphics:
