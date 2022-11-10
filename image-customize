@@ -28,6 +28,7 @@ from machine import testvm
 opt_quick = False
 opt_verbose = False
 opt_build_options = None
+stdout_disposition = None
 
 
 def prepare_install_image(base_image, install_image, resize, fresh):
@@ -140,7 +141,7 @@ class BuildAction(ActionBase):
 
         # build binary packages
         machine.execute(f"cd /var/tmp/build; DEB_BUILD_OPTIONS='{build_opts}' pbuilder build --buildresult . "
-                        f"{opt_build_options} *.dsc", timeout=1800)
+                        f"{opt_build_options} *.dsc", timeout=1800, stdout=stdout_disposition)
 
         # install packages
         machine.execute("dpkg -i /var/tmp/build/*.deb")
@@ -167,7 +168,7 @@ class BuildAction(ActionBase):
         # as the mock is offline and pre-installed
         machine.execute("su builder -c 'mock --no-clean --no-cleanup-after --disablerepo=* "
                         f"--offline --resultdir /var/tmp/build {mock_opts} --rebuild {srpm}'",
-                        timeout=1800)
+                        timeout=1800, stdout=stdout_disposition)
 
         # install RPMs
         machine.execute('packages=$(find /var/tmp/build -name "*.rpm" -not -name "*.src.rpm"); '
@@ -192,7 +193,8 @@ class BuildAction(ActionBase):
         machine.execute(f"su builder {opt_build_options} /var/tmp/mkbuild.sh")
 
         # build binaries
-        machine.execute("cd /var/tmp/build; makechrootpkg -r /var/lib/archbuild/cockpit -U builder", timeout=1800)
+        machine.execute("cd /var/tmp/build; makechrootpkg -r /var/lib/archbuild/cockpit -U builder",
+                        timeout=1800, stdout=stdout_disposition)
 
         # install packages
         machine.execute("pacman -U --noconfirm /var/tmp/build/*.pkg.tar.zst")
@@ -275,10 +277,12 @@ def main():
 
     args.base_image = testvm.get_test_image(args.base_image)
 
-    global opt_quick, opt_verbose, opt_build_options
+    global opt_quick, opt_verbose, opt_build_options, stdout_disposition
     opt_quick = args.quick
     opt_verbose = args.verbose
     opt_build_options = args.build_options
+    if not args.verbose:
+        stdout_disposition = subprocess.DEVNULL
 
     if '/' not in args.base_image:
         subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), args.base_image])
