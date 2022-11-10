@@ -122,13 +122,17 @@ chmod 755 /root/run-samba-domain
 #
 #############################
 cat <<EOF > ./Dockerfile
-FROM quay.io/fedora/fedora:35
+FROM quay.io/fedora/fedora:36
 RUN dnf -y install systemd && dnf clean all
+CMD ["/sbin/init"]
 EOF
 
 podman build --tag fedora_systemd .
 
-podman run --name=candlepin --uts=host --publish=8443:8443 --privileged --detach -t fedora_systemd /usr/sbin/init
+podman run --name=candlepin --uts=host --publish=8443:8443 --privileged --detach -t fedora_systemd
+
+# give systemd the time to start in the container
+sleep 5
 
 podman exec -i candlepin sh -eux <<EOF
 # wait until booted
@@ -136,27 +140,30 @@ systemctl start multi-user.target
 # ensure latest ca-certificates
 dnf update -y
 # Install dependencies
-dnf -y install ansible libselinux-python3 python3-firewall git-core openssl sudo which hostname initscripts gettext selinux-policy
+dnf -y install ansible libselinux-python3 python3-firewall git-core openssl sudo which hostname initscripts gettext selinux-policy acl
 
 useradd candlepin
 echo 'candlepin ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/candlepin
 EOF
 
 podman exec -i -u candlepin candlepin sh -eux <<EOF
-ansible-galaxy install rvm.ruby
+ansible-galaxy collection install ansible.posix community.general community.mysql community.postgresql
 
 cd
 mkdir -p playbookdir/roles/
-
-# https://github.com/candlepin/ansible-role-candlepin/pull/27 regressed this, so pin it back
-git clone -n https://github.com/candlepin/ansible-role-candlepin.git playbookdir/roles/candlepin
-git -C playbookdir/roles/candlepin checkout 5fc50e9e83a7afe975f593fe6ed883a8b2d6bac9
+git clone --depth=1 https://github.com/candlepin/ansible-role-candlepin.git playbookdir/roles/candlepin
+# create an empty/fake rvm.ruby module
+mkdir playbookdir/roles/rvm.ruby
 
 cat > playbookdir/playbook.yml <<- EOP
 - hosts: localhost
+  connection: local
   roles:
      - role: candlepin
-       cp_deploy_args: "-g -a -f -t"
+       vars:
+         cp_configure_mariadb: false
+         cp_configure_ruby: false
+         cp_deploy_args: "-g -a -f -t"
 EOP
 
 ansible-playbook -v --skip-tags 'system_update' playbookdir/playbook.yml

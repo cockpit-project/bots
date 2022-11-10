@@ -15,7 +15,3 @@ xz -cd "$CACHE" > "$OUTPUT"
 # boot it once to run ignition
 qemu-system-x86_64 -enable-kvm -nographic -m 1024 -device virtio-rng-pci \
     -drive file="$OUTPUT",if=virtio -fw_cfg name=opt/com.coreos/config,file=$BASE/lib/cockpit-ci.ign
-
-# HACK: centos7 is incompatible with cgroupsv2 host (https://bugzilla.redhat.com/show_bug.cgi?id=1970237)
-# but candlepin is incompabile with anything newer than CentoS 7 (https://github.com/candlepin/ansible-role-candlepin/pull/12)
-./image-customize --run-command 'rpm-ostree kargs --append=systemd.unified_cgroup_hierarchy=0' --verbose --base-image "$OUTPUT" "$OUTPUT"
