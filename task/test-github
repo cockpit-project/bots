@@ -59,10 +59,11 @@ def mockServer():
             self.wfile.write(value.encode('utf-8'))
             self.wfile.flush()
 
-        def replyJson(self, value, headers={}, status=200):
-            headers["Content-type"] = "application/json"
+        def replyJson(self, value, headers=None, status=200):
             self.server.data["count"] += 1
-            self.replyData(json.dumps(value), headers=headers, status=status)
+            all_headers = {"Content-type": "application/json"}
+            all_headers.update(headers or {})
+            self.replyData(json.dumps(value), headers=all_headers, status=status)
 
         def do_GET(self):
             parsed = urllib.parse.urlparse(self.path)
