@@ -249,10 +249,6 @@ class VirtMachine(Machine):
                  graphics=False, overlay_dir=None, **args):
         self.maintain = maintain
 
-        # Currently all images are run on x86_64. When that changes we will have
-        # an override file for those images that are not
-        self.arch = "x86_64"
-
         self.memory_mb = memory_mb or VirtMachine.memory_mb or MEMORY_MB
         self.cpus = cpus or VirtMachine.cpus or 1
         self.graphics = graphics
