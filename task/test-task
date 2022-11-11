@@ -66,9 +66,10 @@ def mockServer():
             self.wfile.write(value)
             self.wfile.flush()
 
-        def replyJson(self, value, headers={}, status=200):
-            headers["Content-type"] = "application/json"
-            self.replyData(json.dumps(value).encode('utf-8'), headers=headers, status=status)
+        def replyJson(self, value, headers=None, status=200):
+            all_headers = {"Content-type": "application/json"}
+            all_headers.update(headers or {})
+            self.replyData(json.dumps(value).encode('utf-8'), headers=all_headers, status=status)
 
         def do_GET(self):
             if self.path in DATA:
