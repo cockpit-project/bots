@@ -62,7 +62,7 @@ def main():
 
     if opts.test_parser:
         test_parser(opts.test_parser)
-        return 0
+        return
 
     db_conn = sqlite3.connect(opts.db)
     cursor = db_conn.cursor()
@@ -71,8 +71,7 @@ def main():
     api = github.GitHub(repo=opts.repo)
     statuses = api.all_statuses(opts.revision)
     if not statuses:
-        logging.warning("Revision %s has no statuses", opts.revision)
-        return 0
+        sys.exit(f"Revision {opts.revision} has no statuses")
 
     contexts = {}
 
@@ -256,4 +255,4 @@ def test_parser(logfile):
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
