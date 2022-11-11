@@ -221,7 +221,6 @@ First occurrence: {1}
 Times recorded: 1
 {2}- {1}
 """.format(err.strip(), occ, latest_occurrences))
-                updated = True
 
             # update comment, no need to check others
             body = "<hr>\n".join(parts)
