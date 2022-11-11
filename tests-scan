@@ -397,7 +397,7 @@ def scan_for_pull_tasks(api, contexts, opts, repo):
     results = cockpit_tasks(api, not opts.dry, contexts, repo, opts.pull_data, opts.pull_number, opts.sha, opts.amqp)
 
     if opts.human_readable:
-        results.sort(reverse=True, key=lambda x: str(x))
+        results.sort(reverse=True, key=str)
         return list([tests_human(*x, options=opts) for x in results])
     if not opts.amqp:
         return list([tests_invoke(*x, options=opts) for x in results])
