@@ -165,10 +165,7 @@ class VirtNetwork:
 
     def _lock(self, start, step=1, force=False):
         resources = os.path.join(tempfile.gettempdir(), ".cockpit-test-resources")
-        try:
-            os.mkdir(resources, 0o755)
-        except FileExistsError:
-            pass
+        os.makedirs(resources, 0o755, exist_ok=True)
         for port in range(start, start + (100 * step), step):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -461,7 +458,7 @@ class VirtMachine(Machine):
 
             self._domain = None
         except Exception as e:
-            sys.stderr.write("WARNING: Cleanup failed: %s\n" % e)
+            sys.stderr.write(f"WARNING: Cleanup failed: {e}\n")
 
     def kill(self):
         # stop system immediately, with potential data loss
@@ -475,8 +472,8 @@ class VirtMachine(Machine):
                 # not graceful
                 with stdchannel_redirected(sys.stderr, os.devnull):
                     self._domain.destroyFlags(libvirt.VIR_DOMAIN_DESTROY_DEFAULT)
-            except libvirt.libvirtError:
-                pass
+            except libvirt.libvirtError as e:
+                sys.stderr.write(f"WARNING: Destroying machine failed: {e}\n")
         self._cleanup(quick=True)
 
     def wait_poweroff(self, timeout_sec=120):

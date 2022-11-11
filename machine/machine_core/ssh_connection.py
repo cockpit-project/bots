@@ -89,8 +89,7 @@ class SSHConnection(object):
                         self.ssh_reachable = True
                         return True
                 except IOError:
-                    pass
-            time.sleep(0.5)
+                    time.sleep(0.5)
         return False
 
     def wait_user_login(self):
