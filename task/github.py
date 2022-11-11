@@ -142,6 +142,7 @@ class GitHub(object):
                     if match:
                         self.token = match.group(1)
                 except FileNotFoundError:
+                    # token not found anywhere, so only reading operations are available
                     pass
 
         # default cache directory

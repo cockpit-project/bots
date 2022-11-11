@@ -36,6 +36,7 @@ try:
         if data:
             PUBLIC_STORES += data.split("\n")
 except FileNotFoundError:
+    # that config file is optional
     pass
 
 

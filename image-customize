@@ -47,6 +47,7 @@ def prepare_install_image(base_image, install_image, resize, fresh):
             try:
                 os.unlink(f)
             except FileNotFoundError:
+                # if there is no existing overlay, that's fine
                 pass
 
     if not os.path.exists(install_image):
