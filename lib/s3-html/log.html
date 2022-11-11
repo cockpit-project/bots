@@ -139,7 +139,7 @@
 const tap_range = /^([0-9]+)\.\.([0-9]+)$/m;
 const tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # SKIP .*)?$/gm;
 const tap_skipped = /^ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # SKIP (.*$)/gm;
-const tap_total_time = /^# (\d+ TESTS FAILED|TESTS PASSED) \[([0-9]+)s on .*\]$/m
+const tap_total_time = /^# (\d+ TESTS FAILED|TESTS PASSED) \[([0-9]+)s on .*\]$/m;
 
 const entry_template = document.querySelector("#TestEntry").innerHTML;
 Mustache.parse(entry_template);
@@ -467,7 +467,7 @@ async function fetch_content(filename) {
     content += await fetch_from(filename, bytes);
     set_content(content);
 
-    console.log('Thank you for using s3-streamer.  Have a nice day.')
+    console.log('Thank you for using s3-streamer.  Have a nice day.');
 }
 
 fetch_content('log');
