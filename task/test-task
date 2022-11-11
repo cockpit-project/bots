@@ -19,10 +19,9 @@
 
 ADDRESS = ("127.0.0.9", 9898)
 
-import ctypes
 import json
+import multiprocessing
 import os
-import signal
 import shutil
 import tempfile
 import unittest
@@ -104,20 +103,9 @@ def mockServer():
 
     httpd = http.server.HTTPServer(ADDRESS, Handler)
     httpd.data = data
-
-    child = os.fork()
-    if child != 0:
-        return child
-
-    # prctl(PR_SET_PDEATHSIG, SIGTERM)
-    try:
-        libc = ctypes.CDLL('libc.so.6')
-        libc.prctl(1, 15)
-    except OSError:
-        pass
-
-    httpd.serve_forever()
-    os._exit(1)
+    process = multiprocessing.Process(target=httpd.serve_forever)
+    process.start()
+    return process
 
 
 def mock_execute(*args):
@@ -134,8 +122,8 @@ def mock_execute(*args):
 
 
 def mockKill(child):
-    os.kill(child, signal.SIGTERM)
-    os.waitpid(child, 0)
+    child.terminate()
+    child.join()
 
 
 class TestTask(unittest.TestCase):
