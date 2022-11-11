@@ -104,7 +104,7 @@ class Machine(ssh_connection.SSHConnection):
         """Overridden by machine classes to stop the machine"""
         self.message("Not shutting down already running machine")
 
-    def wait_poweroff(self):
+    def wait_poweroff(self, timeout_sec=120):
         """Overridden by machine classes to wait for a machine to stop"""
         assert False, "Cannot wait for a machine we didn't start"
 
@@ -112,7 +112,7 @@ class Machine(ssh_connection.SSHConnection):
         """Overridden by machine classes to unconditionally kill the running machine"""
         assert False, "Cannot kill a machine we didn't start"
 
-    def shutdown(self):
+    def shutdown(self, timeout_sec=120):
         """Overridden by machine classes to gracefully shutdown the running machine"""
         assert False, "Cannot shutdown a machine we didn't start"
 
