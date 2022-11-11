@@ -68,7 +68,10 @@ class Machine(ssh_connection.SSHConnection):
         if not browser:
             browser = address
 
-        super(Machine, self).__init__(user, ssh_address, ssh_port, identity_file, verbose=verbose)
+        if not label and image != "unknown":
+            label = "{}-{}-{}".format(image, ssh_address, ssh_port)
+
+        super(Machine, self).__init__(user, ssh_address, ssh_port, identity_file, verbose=verbose, label=label)
 
         self.arch = arch
         self.image = image
@@ -78,12 +81,6 @@ class Machine(ssh_connection.SSHConnection):
         else:
             self.web_address = browser
             self.web_port = web_port
-        if label:
-            self.label = label
-        elif self.image != "unknown":
-            self.label = "{}-{}-{}".format(self.image, self.ssh_address, self.ssh_port)
-        else:
-            self.label = "{}@{}:{}".format(self.ssh_user, self.ssh_address, self.ssh_port)
 
         # The Linux kernel boot_id
         self.boot_id = None

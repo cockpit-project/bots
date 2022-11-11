@@ -46,7 +46,7 @@ class SSHConnection(object):
     ssh_default_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null",
                         "-o", "IdentitiesOnly=yes", "-o", "BatchMode=yes", "-o", "PKCS11Provider=none"]
 
-    def __init__(self, user, address, ssh_port, identity_file, verbose=False):
+    def __init__(self, user, address, ssh_port, identity_file, verbose=False, label=None):
         self.verbose = verbose
 
         # Currently all images are x86_64. When that changes we will have
@@ -58,7 +58,7 @@ class SSHConnection(object):
         self.ssh_master = None
         self.ssh_process = None
         self.ssh_reachable = False
-        self.label = "{}@{}:{}".format(self.ssh_user, self.ssh_address, self.ssh_port)
+        self.label = label if label else "{}@{}:{}".format(self.ssh_user, self.ssh_address, self.ssh_port)
 
     def disconnect(self):
         self.ssh_reachable = False
