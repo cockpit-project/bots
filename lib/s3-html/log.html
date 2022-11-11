@@ -226,22 +226,20 @@ function find_patterns(segment) {
 }
 
 function extract(text) {
-    let m, s;
     let first, last, total, passed, failed, skipped, total_test_time;
     /* default is to show the text we have, unless we find actual results */
     let altered_text = Mustache.render(text_only_template, {
                     text: text
                 });
     const entries = [];
-    const indices = {};
     const testingElem = document.querySelector('#testing');
     const testingProgressElem = document.querySelector('#testing-progress');
-
-    if (m = tap_range.exec(text)) {
-        first = parseInt(m[1], 10);
-        last = parseInt(m[2], 10);
+    const tap_range_match = tap_range.exec(text)
+    if (tap_range_match) {
+        first = parseInt(tap_range_match[1], 10);
+        last = parseInt(tap_range_match[2], 10);
         total = last-first+1;
-        const test_start_offset = m.index + m[0].length + 1;
+        const test_start_offset = tap_range_match.index + tap_range_match[0].length + 1;
         const text_init = text.slice(0, test_start_offset);
         const text_tests = text.slice(test_start_offset);
         const t = tap_total_time.exec(text);
@@ -276,7 +274,6 @@ function extract(text) {
 
         document.querySelector('#test-info').textContent = text.slice(0, text.indexOf('\n'));
 
-        const test_links = {};
         const ids = { };
         segments.forEach(function (segment, segmentIndex) {
             tap_range.lastIndex = 0;
