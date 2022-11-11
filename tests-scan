@@ -110,7 +110,7 @@ def main():
 # Prepare a human readable output
 def tests_human(priority, name, number, revision, ref, context, base, repo, bots_ref, github_context, options):
     if not priority and not options.force:
-        return
+        return ""
     try:
         priority = int(priority)
     except (ValueError, TypeError):
@@ -142,7 +142,7 @@ def tests_invoke(priority, name, number, revision, ref, context, base,
     except (ValueError, TypeError):
         priority = 0
     if priority <= 0 and not options.force:
-        return
+        return ""
     current = time.strftime('%Y%m%d-%H%M%S')
     (image, _, scenario) = context.partition("/")
 
