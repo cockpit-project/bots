@@ -111,10 +111,6 @@ def main():
 def tests_human(priority, name, number, revision, ref, context, base, repo, bots_ref, github_context, options):
     if not priority and not options.force:
         return ""
-    try:
-        priority = int(priority)
-    except (ValueError, TypeError):
-        pass
     return "{name:11} {context:25} {revision:10} {priority:2}{repo}{bots_ref}{branches}".format(
         priority=priority,
         revision=revision[0:7],
