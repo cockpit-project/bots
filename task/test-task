@@ -116,8 +116,10 @@ def mock_execute(*args):
     elif args[1] == "commit" and args[2] == "--amend":
         if args[4] != "Task title\nCloses #1234":
             raise Exception("Incorrect commit message")
+        return ""
     elif args[1] == "push":
         assert args[2] == "-f"
+        return ""
     else:
         raise Exception("Mocking unsupported git command")
 
