@@ -21,6 +21,7 @@
 import json
 import os
 import stat
+import sys
 import tempfile
 import time
 import urllib.request
@@ -52,16 +53,22 @@ class Cache(object):
 
     # Prune old expired data from the cache directory
     def prune(self):
-        if not os.path.exists(self.directory):
-            return
-        now = time.time()
         try:
-            for filename in os.listdir(self.directory):
-                path = os.path.join(self.directory, filename)
-                if os.path.isfile(path) and os.stat(path).st_mtime < now - 7 * 86400:
-                    os.remove(path)
-        except OSError:
+            entries = os.scandir(self.directory)
+        except FileNotFoundError:
+            # it's OK if the cache directory was deleted
             pass
+
+        oldest = time.time() - 7 * 86400  # discard files older than one week
+        for entry in entries:
+            if entry.is_file() and entry.stat().st_mtime < oldest:
+                try:
+                    os.remove(entry.path)
+                except FileNotFoundError:
+                    # maybe it got pruned by another process
+                    pass
+                except OSError as exc:
+                    sys.stderr.write(f"Failed to remove GitHub cache item {entry.path}: {exc}\n")
 
     # Read a resource from the cache or return None
     def read(self, resource):
