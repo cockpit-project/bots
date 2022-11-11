@@ -144,7 +144,7 @@
                 repo = "%"; // Use SQL wildcard
 
             if (test) {
-                const top10 = []
+                const top10 = [];
                 const rows = db.exec(`
                         SELECT context, COUNT(*) AS failed
                         FROM TestRuns
@@ -270,7 +270,7 @@
                 // Get all failures sorted by number of occurrences
                 // Ignore selenium tests as they have a bug where skipped tests show up as failures.
                 // They are also deprecated and not very flaky, so not interesting to show.
-                const top10 = []
+                const top10 = [];
                 const rows = db.exec(`
                         SELECT t1.testname, TestRuns.project, (t2.failed * 100.0) / COUNT(run) AS percent
                         FROM Tests AS t1
