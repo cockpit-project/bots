@@ -21,7 +21,6 @@ import subprocess
 from .constants import GIT_DIR
 
 _images_data_dir = None
-_temp_dir = None
 
 
 def xdg_home(subdir, envvar, *components, override=None):
