@@ -407,12 +407,9 @@ def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=Tru
     label(pull, labels)
 
     # Update the issue if it is a dict
-    if issue:
-        try:
-            issue["title"] = kwargs["title"]
-            issue["pull_request"] = {"url": pull["url"]}
-        except TypeError:
-            pass
+    if isinstance(issue, dict):
+        issue["title"] = kwargs["title"]
+        issue["pull_request"] = {"url": pull["url"]}
 
     if pull["number"]:
         # If we want to run tests automatically, drop [no-test] from title before force push
