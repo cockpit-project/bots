@@ -376,6 +376,7 @@ class VirtMachine(Machine):
                             Machine.wait_boot(self)
                         sys.stderr.write(message)
                     except (Failure, subprocess.CalledProcessError):
+                        # machine not booted yet, try again in next iteration
                         pass
                     message = None
                 (pid, ret) = os.waitpid(proc.pid, message and os.WNOHANG or 0)
@@ -417,6 +418,7 @@ class VirtMachine(Machine):
             while subprocess.call(cmdline, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) == 0:
                 pass
         except KeyboardInterrupt:
+            # user-requested Control-C, stop
             pass
 
     def start(self):

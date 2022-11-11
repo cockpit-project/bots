@@ -224,11 +224,12 @@ def committed_target(image):
     # The image file in the images directory, may be same as dest
     image_file = os.path.join(IMAGES_DIR, os.readlink(link))
 
-    # Double check that symlink in place but never make a cycle.
+    # Double check that symlink in place
     if os.path.abspath(dest) != os.path.abspath(image_file):
         try:
             os.symlink(os.path.abspath(dest), image_file)
         except FileExistsError:
+            # .. but never make a cycle
             pass
 
     return dest

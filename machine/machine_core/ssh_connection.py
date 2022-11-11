@@ -145,7 +145,7 @@ class SSHConnection(object):
                 if self.boot_id != boot_id:
                     break
             except exceptions.Failure:
-                pass
+                pass  # try again
         else:
             raise exceptions.Failure("Timeout waiting for system to reboot properly")
 
