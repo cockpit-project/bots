@@ -49,7 +49,6 @@ from lib.stores import PUBLIC_STORES, REDHAT_STORES
 from lib.testmap import get_test_image
 from lib import s3
 
-DEVNULL = open("/dev/null", "r+")
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
 
 if os.isatty(1):
