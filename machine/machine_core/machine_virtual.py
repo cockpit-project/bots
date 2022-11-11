@@ -463,10 +463,7 @@ class VirtMachine(Machine):
     def kill(self):
         # stop system immediately, with potential data loss
         # to shutdown gracefully, use shutdown()
-        try:
-            self.disconnect()
-        except Exception:
-            pass
+        self.disconnect()
         if self._domain:
             try:
                 # not graceful
