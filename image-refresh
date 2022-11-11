@@ -70,6 +70,8 @@ def run(image, verbose=False, **kwargs):
             api.post("statuses/{0}".format(head), {"state": "pending", "context": trigger,
                                                    "description": task.github.NOT_TESTED_DIRECT})
 
+    return 0
+
 
 if __name__ == '__main__':
     task.main(function=run, title="Refresh image")
