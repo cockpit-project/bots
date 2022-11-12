@@ -57,7 +57,7 @@ class Cache(object):
             entries = os.scandir(self.directory)
         except FileNotFoundError:
             # it's OK if the cache directory was deleted
-            pass
+            return
 
         oldest = time.time() - 7 * 86400  # discard files older than one week
         for entry in entries:
