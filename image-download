@@ -219,6 +219,7 @@ def committed_target(image):
         try:
             os.symlink(dest, os.path.join(IMAGES_DIR, os.readlink(link)))
         except FileExistsError:
+            # can happen in unclean trees and deleting the image in the cache dir directly
             pass
 
     # The image file in the images directory, may be same as dest
@@ -254,10 +255,11 @@ def wait_lock(target):
 
         yield
 
-        # clean up lock file; parallel runs may remove it already
+        # clean up lock file
         try:
             os.unlink(lockfile)
         except FileNotFoundError:
+            # parallel runs may remove it already
             pass
 
 
