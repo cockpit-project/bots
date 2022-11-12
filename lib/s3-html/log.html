@@ -234,7 +234,7 @@ function extract(text) {
     const entries = [];
     const testingElem = document.querySelector('#testing');
     const testingProgressElem = document.querySelector('#testing-progress');
-    const tap_range_match = tap_range.exec(text)
+    const tap_range_match = tap_range.exec(text);
     if (tap_range_match) {
         first = parseInt(tap_range_match[1], 10);
         last = parseInt(tap_range_match[2], 10);
