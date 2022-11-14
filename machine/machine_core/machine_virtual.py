@@ -525,13 +525,14 @@ class VirtMachine(Machine):
         if not serial:
             serial = "DISK{0}".format(index)
         dev = 'sd' + string.ascii_lowercase[index]
+        extra = "<boot order='1'/>" if boot_disk else ""
         disk_desc = TEST_DISK_XML % {
             'file': image,
             'serial': serial,
             'unit': index,
             'dev': dev,
             'type': type,
-            'extra': "<boot order='1'/>" if boot_disk else "",
+            'extra': extra,
         }
 
         if self._domain.attachDeviceFlags(disk_desc, libvirt.VIR_DOMAIN_AFFECT_LIVE) != 0:
@@ -544,6 +545,7 @@ class VirtMachine(Machine):
             "dev": dev,
             "index": index,
             "type": type,
+            "extra": extra,
         }
 
         self._disks.append(disk)
@@ -556,7 +558,8 @@ class VirtMachine(Machine):
                 'serial': disk["serial"],
                 'unit': disk["index"],
                 'dev': disk["dev"],
-                'type': disk["type"]
+                'type': disk["type"],
+                'extra': disk["extra"],
             }
 
             if self._domain:
