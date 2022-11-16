@@ -122,7 +122,7 @@ chmod 755 /root/run-samba-domain
 #
 #############################
 cat <<EOF > ./Dockerfile
-FROM quay.io/fedora/fedora:36
+FROM quay.io/fedora/fedora:37
 RUN dnf -y install systemd && dnf clean all
 CMD ["/sbin/init"]
 EOF
