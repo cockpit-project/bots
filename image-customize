@@ -85,6 +85,11 @@ class InstallAction(ActionBase):
             machine_instance.upload([os.path.abspath(package)], dest)
             package = dest
 
+        # requesting install of Python wheel?
+        if package.endswith('.whl'):
+            machine_instance.execute(f"pip install --no-index --prefix=/usr {package}", timeout=120)
+            return
+
         # this will fail if neither is available -- exception is clear enough, this is a developer tool
         out = machine_instance.execute("which dnf || which yum || which apt-get")
         if 'dnf' in out:
