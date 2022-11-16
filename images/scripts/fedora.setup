@@ -40,6 +40,7 @@ openssl \
 PackageKit \
 pcp \
 pcp-libs \
+python3-pip \
 python3-tracer \
 qemu-block-curl \
 qemu-char-spice \
