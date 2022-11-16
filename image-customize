@@ -77,6 +77,14 @@ class InstallAction(ActionBase):
     '''Install local rpm or distro package'''
     @staticmethod
     def execute(machine_instance, package):
+        # If we have a '/' in the package name, or if a file with that name
+        # exists in the current directory, then assume that this is a package
+        # we're uploading from the host.
+        if '/' in package or os.path.isfile(package):
+            dest = "/var/tmp/" + os.path.basename(package)
+            machine_instance.upload([os.path.abspath(package)], dest)
+            package = dest
+
         # this will fail if neither is available -- exception is clear enough, this is a developer tool
         out = machine_instance.execute("which dnf || which yum || which apt-get")
         if 'dnf' in out:
@@ -85,14 +93,6 @@ class InstallAction(ActionBase):
             install_command = "yum --setopt=skip_missing_names_on_install=False -y install"
         else:
             install_command = "apt-get install -y"
-
-        if os.path.isfile(package):
-            pname = os.path.basename(package)
-            dest = "/var/tmp/" + pname
-            machine_instance.upload([os.path.abspath(package)], dest)
-            package = dest
-        elif '/' in package:
-            sys.stderr.write("Bad package name or path: %s\n" % package)
 
         machine_instance.execute(f"{install_command} {package}", timeout=1800)
 
