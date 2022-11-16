@@ -89,7 +89,7 @@ class InstallAction(ActionBase):
         if os.path.isfile(package):
             pname = os.path.basename(package)
             dest = "/var/tmp/" + pname
-            machine_instance.upload([package], dest)
+            machine_instance.upload([os.path.abspath(package)], dest)
             package = dest
         elif '/' in package:
             sys.stderr.write("Bad package name or path: %s\n" % package)
