@@ -19,7 +19,9 @@ These bots are listed in the `./issue-scan` file. They are written using the
 
 ## Bots printing output
 
-The bot output is posted using the cockpitous [sink](https://github.com/cockpit-project/cockpituous/tree/main/sink) code. See that link for how it works.
+The bots which run on our own infrastructure post their output into the
+requesting GitHub issue. This currently only applies to `image-refresh`, all
+other bots run in GitHub actions.
 
 ## Contributing to bots
 

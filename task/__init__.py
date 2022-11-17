@@ -31,7 +31,6 @@ import time
 import traceback
 
 from . import github
-from . import sink
 from lib.constants import BASE_DIR
 
 
@@ -90,8 +89,6 @@ def main(**kwargs):
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("--issue", dest="issue", action="store",
                         help="Act on an already created task issue")
-    parser.add_argument("--publish", dest="publish", default=os.environ.get("TEST_PUBLISH", ""),
-                        action="store", help="Publish results centrally to a sink")
     parser.add_argument("--dry", dest="dry", action="store_true",
                         help="Dry run to validate this task if supported")
     parser.add_argument("context", nargs="?")
@@ -104,10 +101,12 @@ def main(**kwargs):
     if "verbose" not in task:
         task["verbose"] = opts.verbose
     task["issue"] = opts.issue
-    task["publish"] = opts.publish
     task["dry"] = opts.dry
 
     ret = run(opts.context, **task)
+    if isinstance(ret, tuple):
+        # some bots pass (exitcode, log_url)
+        ret = ret[0]
 
     if ret:
         sys.stderr.write("{0}: {1}\n".format(task["name"], ret))
@@ -122,132 +121,57 @@ def named(task):
         return os.path.basename(os.path.realpath(sys.argv[0]))
 
 
-def begin(publish, name, context, issue):
-    if not publish:
-        return None
-
-    hostname = socket.gethostname().split(".")[0]
-    current = time.strftime('%Y%m%d-%H%M%M')
-
-    # Update the body for an existing issue
-    if issue:
-        number = issue["number"]
-        identifier = "{0}-{1}-{2}".format(name, number, current)
-        title = issue["title"]
-        wip = "WIP: {0}: [no-test] {1}".format(hostname, title)
-        requests = [{
-            "method": "POST",
-            "resource": api.qualify("issues/{0}".format(number)),
-            "data": {"title": wip}
-        }, {
-            "method": "POST",
-            "resource": api.qualify("issues/{0}/comments".format(number)),
-            "data": {"body": "{0} in progress on {1}.\nLog: :link".format(name, hostname)}
-        }]
-        watches = [{
-            "resource": api.qualify("issues/{0}".format(number)),
-            "result": {"title": wip}
-        }]
-        aborted = [{
-            "method": "POST",
-            "resource": api.qualify("issues/{0}".format(number)),
-            "data": {"title": title}
-        }, {
-            "method": "POST",
-            "resource": api.qualify("issues/{0}/comments".format(number)),
-            "data": {"body": "Task aborted."}
-        }]
-    else:
-        identifier = "{0}-{1}".format(name, current)
-        requests = []
-        watches = []
-        aborted = []
-
-    status = {
-        "github": {
-            "token": api.token,
-            "requests": requests,
-            "watches": watches
-        },
-
-        "onaborted": {
-            "github": {
-                "token": api.token,
-                "requests": aborted
-            }
-        }
-    }
-
-    publishing = sink.Sink(publish, identifier, status)
-    sys.stderr.write("# Task: {0} {1}\n# Host: {2}\n\n".format(name, context or "", hostname))
-
-    # For statistics
-    publishing.start = time.time()
-
-    return publishing
-
-
-def finish(publishing, ret, name, context, issue):
-    if not publishing:
+def report_begin(name, context, issue, dry=False):
+    if dry:
         return
 
-    if not ret:
-        comment = None
-        result = "Completed"
-    elif isinstance(ret, str):
-        comment = "{0}: :link".format(ret)
-        result = ret
-    else:
-        comment = "Task failed: :link"
-        result = "Failed"
+    hostname = socket.gethostname().split(".")[0]
 
-    duration = int(time.time() - publishing.start)
-    sys.stderr.write("\n# Result: {0}\n# Duration: {1}s\n".format(result, duration))
-
+    # Update the requesting issue
     if issue:
-        # Note that we check whether pass or fail ... this is because
-        # the task is considered "done" until a human comes through and
-        # triggers it again by unchecking the box.
-        item = "{0} {1}".format(name, context or "").strip()
-        checklist = github.Checklist(issue["body"])
-        checklist.check(item, ret and "FAIL" or True)
-
         number = issue["number"]
+        title = issue["title"]
+        # set issue title to machine which processes the request
+        api.post(api.qualify(f"issues/{number}"), {"title": f"WIP: {hostname}: [no-test] {title}"})
 
-        # The sink wants us to escape colons :S
-        body = checklist.body.replace(':', '::')
 
-        requests = [{
-            "method": "POST",
-            "resource": api.qualify("issues/{0}".format(number)),
-            "data": {"title": "{0}".format(issue["title"]), "body": body}
-        }]
-
-        # Close the issue if it's not a pull request, successful, and all tasks done
-        if "pull_request" not in issue and not ret and len(checklist.items) == len(checklist.checked()):
-            requests[0]["data"]["state"] = "closed"
-
-        # Comment if there was a failure
-        if comment:
-            requests.insert(0, {
-                "method": "POST",
-                "resource": api.qualify("issues/{0}/comments".format(number)),
-                "data": {"body": comment}
-            })
-
+def report_finish(ret, name, context, issue, duration, dry=False):
+    if not ret:
+        result = "Completed"
+        log_comment = "Completed (no log available)"
+    elif isinstance(ret, tuple):  # (retcode, log_url)
+        result = "Success" if ret[0] == 0 else "Failed"
+        log_comment = f"{result}. Log: {ret[1]}"
+    elif isinstance(ret, str):
+        # log (unknown if success or failure)
+        result = "Completed"
+        log_comment = f"{result}. Log: {ret}"
     else:
-        requests = []
+        result = "Failed"
+        log_comment = "Task failed (no log available)"
 
-    publishing.status['github']['requests'] = requests
-    publishing.status['github']['watches'] = None
-    publishing.status['github']['onaborted'] = None
-    publishing.flush()
+    sys.stderr.write(f"\n# {log_comment}\n# Duration: {duration}s\n")
+
+    if not issue or dry:
+        return
+
+    # Note that we check whether pass or fail ... this is because
+    # the task is considered "done" until a human comes through and
+    # triggers it again by unchecking the box.
+    item = "{0} {1}".format(name, context or "").strip()
+    checklist = github.Checklist(issue["body"])
+    checklist.check(item, result == "Failed" and "FAIL" or True)
+
+    number = issue["number"]
+
+    api.post(api.qualify(f"issues/{number}"), {"title": issue["title"], "body": checklist.body})
+    comment(number, log_comment)
 
 
 def run(context, function, **kwargs):
     number = kwargs.get("issue", None)
-    publish = kwargs.get("publish", "")
     name = kwargs["name"]
+    dry = kwargs.get("dry", False)
 
     issue = None
     if number:
@@ -256,10 +180,13 @@ def run(context, function, **kwargs):
             return "No such issue: {0}".format(number)
         elif issue["title"].startswith("WIP:"):
             return "Issue is work in progress: {0}: {1}\n".format(number, issue["title"])
+        issue["number"] = number
         kwargs["issue"] = issue
         kwargs["title"] = issue["title"]
 
-    publishing = begin(publish, name, context, issue=issue)
+    start_time = time.time()
+
+    report_begin(name, context, issue=issue, dry=dry)
 
     ret = "Task threw an exception"
     try:
@@ -274,7 +201,7 @@ def run(context, function, **kwargs):
     except Exception:
         traceback.print_exc()
     finally:
-        finish(publishing, ret, name, context, issue)
+        report_finish(ret, name, context, issue, time.time() - start_time, dry=dry)
     return ret or 0
 
 
