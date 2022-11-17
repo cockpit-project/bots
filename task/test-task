@@ -38,7 +38,8 @@ DATA = {
         "default_branch": "main"
     },
     "/repos/project/repo/issues/3333": {
-        "title": "The issue title"
+        "title": "The issue title",
+        "body": "Some bug\n - [ ] image-refresh foonux\n",
     },
     "/repos/project/repo/pulls/1234": {
         "title": "Task title",
@@ -99,6 +100,8 @@ def mockServer():
                 content_len = int(self.headers.get('content-length'))
                 data = json.loads(self.rfile.read(content_len).decode('utf-8'))
                 self.replyJson(data)
+            elif self.path.startswith("/repos/project/repo/issues/3333"):
+                self.replyJson({})
             else:
                 self.send_error(405, 'Method not allowed: ' + self.path)
 

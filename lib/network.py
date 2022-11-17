@@ -30,8 +30,6 @@ CA_PEM = os.getenv("COCKPIT_CA_PEM", os.path.join(IMAGES_DIR, "files", "ca.pem")
 
 CA_PEM_DOMAINS = [
     "e2e.bos.redhat.com",
-    # points to our AWS sink; obsolete after 2022-07 when we settled down on "S3 logs only"
-    "logs.cockpit-project.org",
     # development/cockpituous project tests
     "localdomain",
 ]
