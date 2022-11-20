@@ -1,2 +1,0 @@
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
-*avc:  denied  { read } for * comm="pmie" name="net" dev="proc" * scontext=system_u:system_r:pcp_pmie_t:s0 tcontext=system_u:object_r:proc_net_t:s0 tclass=lnk_file permissive=0
