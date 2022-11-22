@@ -82,6 +82,7 @@ cryptsetup \
 dnf-automatic \
 firewalld \
 gdb \
+gettext \
 libvirt-daemon-driver-storage-iscsi \
 libvirt-daemon-driver-storage-iscsi-direct \
 libvirt-daemon-driver-storage-logical \
