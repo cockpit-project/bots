@@ -19,7 +19,7 @@
 
 set -eux
 
-URL='https://download.fedoraproject.org/pub/fedora/linux/development/37/Cloud/x86_64/images/'
+URL='https://download.fedoraproject.org/pub/fedora/linux/releases/37/Cloud/x86_64/images/'
 IMAGE="$(curl -L -s "$URL" | grep -o '"Fedora-Cloud-Base-[^"]*.qcow2"' | tr -d '"' | tail -n1)"
 [ -n "$IMAGE" ]
 
