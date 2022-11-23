@@ -111,20 +111,20 @@ def sign_curl(url: urllib.parse.ParseResult, method='GET', headers={}, checksum=
 
 def urlopen(url: urllib.parse.ParseResult, method='GET', headers={}, data=b'') -> IO:
     """Same as sign_request() but calls urlopen() on the result"""
-    tries = 3
+    retries = 0
     while True:
         headers = sign_request(url, method, headers, hashlib.sha256(data).hexdigest())
         request = urllib.request.Request(url.geturl(), headers=headers, method=method, data=data)
         try:
             return urllib.request.urlopen(request, context=host_ssl_context(url.netloc))
         except urllib.error.HTTPError as exc:
-            logger.debug('%s %s %s → %s:', method, url.geturl(), headers, exc.status)
+            logger.debug('%s %s %s attempt #%i → %s:', method, url.geturl(), headers, retries, exc.status)
             logger.debug('  %s', exc.read())
             if exc.status == 503:
-                tries -= 1
-                if tries != 0:
-                    # First wait 1s, then wait 10s
-                    time.sleep(10 ** (2 - tries))
+                if retries <= 3:
+                    # 1 → 4 → 16 → 64 s back-off
+                    time.sleep(4 ** retries)
+                    retries += 1
                     continue
             raise
 
