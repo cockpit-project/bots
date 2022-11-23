@@ -180,7 +180,7 @@ def run(context, function, **kwargs):
             return "No such issue: {0}".format(number)
         elif issue["title"].startswith("WIP:"):
             return "Issue is work in progress: {0}: {1}\n".format(number, issue["title"])
-        issue["number"] = number
+        issue["number"] = int(number)
         kwargs["issue"] = issue
         kwargs["title"] = issue["title"]
 
