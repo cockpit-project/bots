@@ -89,6 +89,7 @@ REPO_BRANCH_CONTEXT = {
             'ubuntu-stable',
         ],
         '_manual': [
+            'rhel-8-8',
             'centos-8-stream',
             'fedora-rawhide',
         ],
@@ -108,6 +109,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
         ],
         '_manual': [
+            'rhel-8-8',
             'fedora-rawhide',
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/devel',
