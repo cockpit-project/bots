@@ -118,6 +118,9 @@ class MachineBuilder:
         """Start the system to make sure it can boot, then shutdown cleanly"""
 
         self.machine.start()
+        self.machine.message("SPAWNING VIRSH CONSOLE")
+        self.machine.spawn("virsh -c qemu:///session console %s > /tmp/consoleoutput" % str(self.machine._domain.name()), "consoleoutput")
+
         # avoid too long boot times -- they cause painfully long tests, and are a bug
         try:
             timeout = 30

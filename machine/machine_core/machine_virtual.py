@@ -478,21 +478,36 @@ class VirtMachine(Machine):
         if self._domain:
             start_time = time.time()
             while (time.time() - start_time) < timeout_sec:
+                self.message("HERE1")
                 try:
                     with stdchannel_redirected(sys.stderr, os.devnull):
                         if not self._domain.isActive():
                             break
                 except libvirt.libvirtError as le:
+                    self.message("LOG1")
+                    self.message(str(le))
                     if 'no domain' in str(le) or 'not found' in str(le):
                         break
                     raise
                 time.sleep(1)
             else:
+                self.message("HERE2")
+                domain_name = self._domain.name()
+                home = os.path.expanduser('~')
+                self.message("CONSOLE OUTPUT:")
+                self.message(self.execute("cat /tmp/consoleoutput"))
+                with open(f'{home}/.cache/libvirt/qemu/log/{domain_name}.log') as f:
+                    contents = f.read()
+                    self.message("LOG2")
+                    self.message(contents)
                 raise Failure("Waiting for machine poweroff timed out")
             try:
+                self.message("HERE3")
                 with stdchannel_redirected(sys.stderr, os.devnull):
                     self._domain.destroyFlags(libvirt.VIR_DOMAIN_DESTROY_DEFAULT)
             except libvirt.libvirtError as le:
+                self.message("LOG3")
+                self.message(str(le))
                 if 'not found' not in str(le) and 'not running' not in str(le):
                     raise
         self._cleanup(quick=True)
