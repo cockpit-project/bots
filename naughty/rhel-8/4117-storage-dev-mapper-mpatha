@@ -1,0 +1,2 @@
+  File "/work/bots/make-checkout-workdir/test/verify/check-storage-multipath", line *, in testBasic
+    b.wait_in_text(detail_row_value(*), "/dev/mapper/mpatha")
