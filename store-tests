@@ -89,6 +89,9 @@ def main():
     for status in reversed(statuses):
         if not testmap.is_valid_context(status["context"], api.repo):
             continue
+        # HACK: cockpit's pybridge scenario is known to fail a lot of tests; drop this once it's green
+        if '/pybridge' in status["context"]:
+            continue
 
         cc = contexts.setdefault(status["context"], [])
 
