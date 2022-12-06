@@ -58,6 +58,7 @@ jobs:
         with:
           repository: cockpit-project/cockpituous
           path: cockpituous
+          ref: fix-tests
 
       - name: Test local CI deployment
         if: steps.changes.outputs.changed
