@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "test/verify/check-kdump", line *, in testBasic
+    b.wait_not_present(pathInput)
+*
+testlib.Error: timeout
+wait_js_cond(!ph_is_present("#kdump-settings-ssh-directory")): Uncaught (in promise) Error: condition did not become true
