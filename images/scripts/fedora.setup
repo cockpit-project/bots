@@ -18,6 +18,7 @@ echo foobar | passwd --stdin root
 # the distribution repository is updated.
 #
 COCKPIT_DEPS="\
+criu-libs \
 device-mapper-multipath \
 glibc-langpack-de \
 glibc-langpack-pt \
