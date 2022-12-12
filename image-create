@@ -79,7 +79,13 @@ class MachineBuilder:
         """Prepare a test image further by running some commands in it."""
         self.machine.start()
         try:
-            self.machine.wait_boot(timeout_sec=120)
+            timeout = 120
+            # HACK: except with arch, the `reflector-init` service blocks ssh and it takes quite a while to
+            # complete depending on picked mirrors and network performance.
+            # https://gitlab.archlinux.org/archlinux/arch-boxes/-/issues/153
+            if self.machine.image == "arch":
+                timeout = 240
+            self.machine.wait_boot(timeout_sec=timeout)
             self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib/")], "/var/lib/testvm")
             self.machine.upload([script], "/var/tmp/SETUP")
             self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib", "base/")],
