@@ -200,6 +200,9 @@ rm -rf /var/log/audit/
 # clean up old kernels after upgrading
 dnf repoquery --installonly --latest-limit=-1 -q | xargs --no-run-if-empty rpm -e --verbose
 
+# pmlogger.service sometimes causes long shutdown hangs; disable all PCP services and timers
+systemctl --all --legend=false list-units 'pm*' | awk '{print $1}' | xargs systemctl disable
+
 # reduce image size
 dnf clean all
 rm -rf /var/lib/mock/*-bootstrap
