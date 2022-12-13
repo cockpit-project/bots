@@ -1,0 +1,5 @@
+# testNfsMountWithoutDiscovery (__main__.TestStorageNfs.testNfsMountWithoutDiscovery)
+*
+> warning: mount.nfs: Broken pipe
+*
+wait_js_cond(!ph_is_present("#dialog")): timeout
