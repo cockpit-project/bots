@@ -95,17 +95,22 @@ def consume_webhook_queue(channel, amqp):
 
 
 def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result, declare_stats_result):
-    queue = 'public'
-    if redhat_network():
-        # Try the rhel queue if the public queue is empty
-        if declare_public_result.method.message_count == 0:
-            queue = 'rhel'
-            # If both are non-empty, shuffle
-        elif declare_rhel_result.method.message_count > 0:
-            queue = ['public', 'rhel'][random.randrange(2)]
-
     if statistics_queue and declare_stats_result.method.message_count > 0:
-        queue = [queue, 'statistics'][random.randrange(2)]
+        # statistics queue is quick to process, always do that first
+        queue = 'statistics'
+    elif os.path.exists('/dev/kvm') or os.getenv('COCKPIT_TESTMAP_INJECT'):
+        # only process test queues in capable environments: with KVM support, or during integration tests
+        queue = 'public'
+        if redhat_network():
+            # Try the rhel queue if the public queue is empty
+            if declare_public_result.method.message_count == 0:
+                queue = 'rhel'
+                # If both are non-empty, shuffle
+            elif declare_rhel_result.method.message_count > 0:
+                queue = ['public', 'rhel'][random.randrange(2)]
+    else:
+        # nothing to do
+        return None, None
 
     method_frame, header_frame, body = channel.basic_get(queue=queue)
     if not method_frame:
