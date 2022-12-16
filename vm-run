@@ -33,7 +33,8 @@ parser.add_argument('-G', '--graphics', action='store_true', help='Display a gra
 parser.add_argument('-q', '--quiet', action='store_true', help="Don't connect text console")
 parser.add_argument('-c', '--client', action='store_true', help="Open Cockpit Client (implies -q)")
 parser.add_argument('-C', '--cpus', default=None, type=int, help='Number of cpus in the target machine')
-parser.add_argument('-S', '--storage', default=None, type=str, help='Add a second qcow2 disk at this path')
+parser.add_argument('-S', '--storage', default=[], action='append',
+                    help='Add a qcow2 disk(s) at this path')
 parser.add_argument('-e', '--execute', metavar='COMMAND', action='append',
                     help='Execute this (shell-interpreted) command (implies -q)')
 parser.add_argument('-s', '--systemd-start', metavar='UNIT', action='append', dest='execute',
@@ -77,8 +78,8 @@ try:
 
     machine.start()
 
-    if args.storage:
-        machine.add_disk(path=args.storage, type='qcow2')
+    for disk in args.storage:
+        machine.add_disk(path=disk, type='qcow2')
 
     # we need this to execute any commands, but we also want to wait here
     # before we display the "Press ^C" message
