@@ -36,6 +36,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-37',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
+            f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-coreos',
             'rhel-8-7',
             'rhel-8-7-distropkg',
@@ -50,7 +51,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
