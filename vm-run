@@ -28,11 +28,11 @@ from lib.constants import BOTS_DIR
 parser = argparse.ArgumentParser(description='Run a test machine')
 parser.add_argument('-v', '--verbose', action='store_true', help='Display verbose details')
 parser.add_argument('-m', '--maintain', action='store_true', help='Changes are permanent')
-parser.add_argument('-M', '--memory', default=None, type=int, help='Memory (in MiB) of the target machine')
+parser.add_argument('-M', '--memory', type=int, help='Memory (in MiB) of the target machine')
 parser.add_argument('-G', '--graphics', action='store_true', help='Display a graphics console')
 parser.add_argument('-q', '--quiet', action='store_true', help="Don't connect text console")
 parser.add_argument('-c', '--client', action='store_true', help="Open Cockpit Client (implies -q)")
-parser.add_argument('-C', '--cpus', default=None, type=int, help='Number of cpus in the target machine')
+parser.add_argument('-C', '--cpus', type=int, help='Number of cpus in the target machine')
 parser.add_argument('-S', '--storage', default=[], action='append',
                     help='Add a qcow2 disk(s) at this path')
 parser.add_argument('-e', '--execute', metavar='COMMAND', action='append',
