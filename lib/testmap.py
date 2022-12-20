@@ -103,14 +103,13 @@ REPO_BRANCH_CONTEXT = {
             'fedora-37',
             f'{TEST_OS_DEFAULT}/firefox',
             'rhel-8-8',
-            'rhel-9-1',
+            'rhel-9-2',
             'centos-8-stream',
         ],
         '_manual': [
             'fedora-rawhide',
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/devel',
-            'rhel-9-2',
         ],
     },
     'weldr/lorax': {
