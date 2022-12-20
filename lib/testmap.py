@@ -38,11 +38,9 @@ REPO_BRANCH_CONTEXT = {
             f'{TEST_OS_DEFAULT}/firefox',
             f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-coreos',
-            'rhel-8-7',
-            'rhel-8-7-distropkg',
             'rhel-8-8',
+            'rhel-8-8-distropkg',
             'centos-8-stream',
-            'rhel-9-1',
             'rhel-9-2',
         ],
         'rhel-7.9': [
