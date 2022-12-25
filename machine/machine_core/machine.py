@@ -299,11 +299,13 @@ class Machine(ssh_connection.SSHConnection):
 
     def set_address(self, address, mac='52:54:01'):
         """Set IP address for the network interface with given mac prefix"""
-        self.execute("""set -eu
+        # HACK: ':' causes some trouble, escape it: https://bugzilla.redhat.com/show_bug.cgi?id=2151504
+        name = f"static-{mac.replace(':', '-')}"
+        self.execute(f"""set -eu
              iface=$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)
-             nmcli con add type ethernet autoconnect yes con-name static-{mac} ifname $iface ip4 {address}
+             nmcli con add type ethernet autoconnect yes con-name {name} ifname $iface ip4 {address}
              nmcli con delete $iface || true # may not have an active connection
-             nmcli con up static-{mac}""".format(mac=mac, address=address))
+             nmcli con up {name}""")
 
     def set_dns(self, nameserver=None, domain=None):
         self.execute(RESOLV_SCRIPT.format(nameserver=nameserver or "127.0.0.1", domain=domain or "cockpit.lan"))
