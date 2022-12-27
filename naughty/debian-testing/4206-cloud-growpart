@@ -1,0 +1,6 @@
+*TestImageCustomize.testResize*
+    machine.wait_boot()
+*
+machine_core.exceptions.Failure: Unable to reach machine*
+*
+subprocess.CalledProcessError: Command '['bots/image-customize', '--verbose', '--resize', '20G', *]' returned non-zero exit status 1.
