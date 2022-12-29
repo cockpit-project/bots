@@ -224,10 +224,10 @@ IMAGE_REFRESH_TRIGGERS = {
         f"{TEST_OS_DEFAULT}@cockpit-project/cockpit",
         "ubuntu-stable@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
-        "rhel-9-1@cockpit-project/cockpit",
+        "rhel-9-2@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
         "rhel-8-8@candlepin/subscription-manager",
-        "rhel-9-1@candlepin/subscription-manager-cockpit",
+        "rhel-9-2@candlepin/subscription-manager-cockpit",
     ],
     # Anaconda builds in fedora-37 and runs tests in fedora-rawhide-boot
     "fedora-37": [
@@ -345,5 +345,5 @@ def tests_for_image(image):
 def tests_for_po_refresh(project):
     if project == "cockpit-project/cockpit":
         # check-pages "all languages" test only runs on RHEL; plus required status
-        return ["rhel-9-1", "fedora-coreos"]
+        return ["rhel-9-2", "fedora-coreos"]
     return REPO_BRANCH_CONTEXT.get(project, {}).get(get_default_branch(project), [])
