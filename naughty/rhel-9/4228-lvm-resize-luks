@@ -1,0 +1,4 @@
+> warning: Error resizing logical volume: Process reported exit code 5:   Child * exited abnormally
+  Failed to resize crypt dev with lvresize_fs_helper.
+*
+*TestStorageResize*
