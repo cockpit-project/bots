@@ -1,0 +1,4 @@
+  File "test/verify/check-storage-vdo", line *, in testVdo
+    self.dialog_wait_close()
+*
+RuntimeError: Timed out on 'journalctl|gzip'
