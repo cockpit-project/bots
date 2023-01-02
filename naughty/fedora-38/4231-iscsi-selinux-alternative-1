@@ -1,0 +1,3 @@
+# testCreateThenInstall (__main__.TestMachinesCreate.testCreateThenInstall)
+*
+RuntimeError: Timed out on 'virsh pool-define-as iscsi-pool --type iscsi --target /dev/disk/by-id --source-host 127.0.0.1 --source-dev iqn.2019-09.cockpit.lan; ls -la /dev/disk/by-id; virsh pool-start iscsi-pool'
