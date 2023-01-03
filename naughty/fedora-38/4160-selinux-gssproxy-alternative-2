@@ -1,0 +1,3 @@
+# testStoragePoolsCreate (__main__.TestMachinesStoragePools.testStoragePoolsCreate)
+*
+wait_js_cond(ph_is_present("#my_dir_pool_two-system-create-volume-button:enabled")): timeout
