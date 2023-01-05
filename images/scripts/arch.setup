@@ -153,11 +153,8 @@ pacman -Syu --noconfirm
 # Reduce image size, clear package cache (/var/cache/pacman/pkg)
 pacman -Scc --noconfirm
 
-# Reduce image size, remove cloud-init, reflector
-pacman -Rscn --noconfirm cloud-init reflector
-
-# this is evil (it forces sshd.service to run after network-online.service) and unnecessary
-systemctl disable reflector-init.service
+# Reduce image size, remove cloud-init
+pacman -Rscn --noconfirm cloud-init
 
 # Causes some sort of race condition in waiting on NTP to be synced
 # https://github.com/cockpit-project/bots/issues/3901#issuecomment-1260579703
