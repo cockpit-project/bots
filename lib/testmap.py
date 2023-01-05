@@ -89,6 +89,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream',
             'fedora-rawhide',
+            'fedora-testing',
             'rhel-9-2',
         ],
     },
