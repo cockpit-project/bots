@@ -13,8 +13,7 @@ podman pull quay.io/jitesoft/nginx
 echo 'UseDNS no' >> /etc/ssh/sshd_config.d/10-no-usedns.conf
 
 # pre-install the distro version, which is useful for testing extensions and manual experiments
-# HACK: workaround criu-libs missing in cockpit-podman dependencies
-rpm-ostree install cockpit-system cockpit-bridge cockpit-networkmanager criu-libs
+rpm-ostree install cockpit-system cockpit-bridge cockpit-networkmanager
 
 # reduce image size
 rpm-ostree cleanup --repomd
