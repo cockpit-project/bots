@@ -179,6 +179,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream/subscription-manager-1.28',
             'rhel-8-7',
             'rhel-8-7/subscription-manager-1.28',
+            'rhel-9-2',
         ],
     },
     'cockpit-project/cockpit-certificates': {
