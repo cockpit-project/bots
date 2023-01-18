@@ -172,6 +172,7 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             'rhel-9-1',
             'centos-9-stream',
+            'rhel-9-2',
             'fedora-36',
             'fedora-37',
         ],
@@ -179,7 +180,6 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream/subscription-manager-1.28',
             'rhel-8-7',
             'rhel-8-7/subscription-manager-1.28',
-            'rhel-9-2',
         ],
     },
     'cockpit-project/cockpit-certificates': {
