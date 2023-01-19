@@ -93,6 +93,10 @@ clevis-systemd
 clevis-dracut
 "
 
+PACKAGE_SET_CHRONYD="\
+chrony
+"
+
 # wait until cloud-init finishes, so that it doesn't clobber sources.list
 until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 
@@ -191,6 +195,9 @@ $APT install $TEST_PACKAGES $COCKPIT_DEPS $DEBUG_PACKAGES $IPA_CLIENT_PACKAGES
 
 mkdir -p /var/lib/package-sets/clevis
 ( cd /var/lib/package-sets/clevis; $APT download $PACKAGE_SET_CLEVIS )
+
+mkdir -p /var/lib/package-sets/chronyd
+( cd /var/lib/package-sets/chronyd; $APT download $PACKAGE_SET_CHRONYD )
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 $APT --no-install-recommends install cockpit
