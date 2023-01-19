@@ -1,0 +1,4 @@
+warning: Error resizing logical volume: Process reported exit code 5: Nothing to read on input.
+  Failed to resize crypt dev with lvresize_fs_helper.
+*
+*TestStorageResize*
