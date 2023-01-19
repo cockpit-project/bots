@@ -163,14 +163,11 @@ if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
     echo "config_opts['dnf.conf'] += '[updates-testing]\nenabled=1'" >>/etc/mock/default.cfg
 fi
 
-opsys=$(cut -d '-' -f 1 <<< "$IMAGE")
-version=$(cut -d '-' -f 2 <<< "$IMAGE")
-# If version is not number (ie: testing) then use Fedora 37
-if ! [ "$version" -eq "$version" ] 2>/dev/null; then version=37; fi
+. /etc/os-release
 
 # don't use a bootstrap chroot to save time and space; everything is offline, and we always just do exactly one build
 echo "config_opts['use_bootstrap'] = False" >>/etc/mock/site-defaults.cfg
-su builder -c "/usr/bin/mock --no-bootstrap-chroot --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
+su builder -c "/usr/bin/mock --no-bootstrap-chroot --verbose -i $(/var/lib/testvm/build-deps.sh "${ID} ${VERSION_ID}")"
 
 # we need to ensure that mock's selinux-policy is older than the host:
 # disabling the updates repository will surely get us a very old version
@@ -182,7 +179,7 @@ su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
 dnf install -y $selinux_pkgs
 
 # for containers.install and cockpit's container/* tests
-podman build --tag cockpit/base --build-arg VERSION=$version /var/tmp/cockpit-base
+podman build --tag cockpit/base --build-arg VERSION=${VERSION_ID} /var/tmp/cockpit-base
 
 # for c-podman tests
 /var/lib/testvm/podman-images.setup
