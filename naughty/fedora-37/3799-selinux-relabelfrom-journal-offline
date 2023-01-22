@@ -1,2 +1,0 @@
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
-*avc:  denied  { relabelfrom } * comm="journal-offline" * scontext=system_u:system_r:syslogd_t:s0
