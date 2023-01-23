@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "test/check-machines-disks", line *, in testInsertDiscCDROM
+*
+  File "test/check-machines-disks", line *, in verify
+    b.wait_not_present(".pf-c-modal-box")
+*
+testlib.Error: timeout
+wait_js_cond(!ph_is_present(".pf-c-modal-box")): Uncaught (in promise) Error: condition did not become true
