@@ -29,9 +29,10 @@ import subprocess
 import sys
 import tempfile
 
-from lib.constants import BOTS_DIR
+from lib.constants import BOTS_DIR, DEFAULT_IDENTITY_PUB_FILE
 
 from machine import testvm
+from machine_core import ssh_connection
 
 parser = argparse.ArgumentParser(description='Create a virtual machine image')
 parser.add_argument('-v', '--verbose', action='store_true', help='Display verbose progress details')
@@ -78,6 +79,18 @@ class MachineBuilder:
     def run_setup_script(self, script):
         """Prepare a test image further by running some commands in it."""
         self.machine.start()
+
+        # Edge management does not allow setting key for root account but rest of this script depends on it
+        if self.machine.image == "rhel4edge":
+            admin_s = ssh_connection.SSHConnection(user="admin",
+                                                   address=self.machine.ssh_address,
+                                                   ssh_port=self.machine.ssh_port,
+                                                   identity_file=self.machine.identity_file)
+            admin_s.wait_boot(timeout_sec=120)
+            admin_s.execute("sudo mkdir -m 700 /root/.ssh")
+            with open(DEFAULT_IDENTITY_PUB_FILE) as pub:
+                admin_s.execute(f"echo '{pub.read().strip()}' | sudo tee -a /root/.ssh/authorized_keys")
+
         try:
             self.machine.wait_boot(timeout_sec=120)
             self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib/")], "/var/lib/testvm")

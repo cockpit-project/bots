@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eux
+
+IMAGE="$1"
+
+podman pull quay.io/cockpit/ws
+podman pull quay.io/jitesoft/nginx
+# for c-podman tests
+/var/lib/testvm/podman-images.setup
+
+# Prevent SSH from hanging for a long time when no external network access
+echo 'UseDNS no' >> /etc/ssh/sshd_config.d/10-no-usedns.conf
+
+if [ "$IMAGE" == "fedora-coreos" ]; then
+    # disable automatic updates
+    systemctl disable --now zincati.service
+
+    # pre-install the distro version, which is useful for testing extensions and manual experiments
+    rpm-ostree install cockpit-system cockpit-bridge cockpit-networkmanager
+fi
+
+if [ "$IMAGE" == "rhel4edge" ]; then
+    # Setup password for admin user as edge management only sets ssh key
+    echo foobar | passwd --stdin admin
+fi
+
+# reduce image size
+rpm-ostree cleanup --repomd
+rm -rf /var/log/journal/*
+/var/lib/testvm/zero-disk.setup

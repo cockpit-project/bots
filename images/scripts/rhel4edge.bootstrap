@@ -1,0 +1,55 @@
+#!/bin/sh
+set -eux
+
+BASE=$(dirname $0)
+
+# Names need to be unique
+timestamp=$(date +%s)
+cat > edge-request.json <<EOF
+{
+  "name": "rhel4edge-$timestamp",
+  "distribution": "rhel-91",
+  "imageType": "rhel-edge-installer",
+  "packages": [
+    { "name": "cockpit-system" },
+    { "name": "socat" },
+    { "name": "openssh-server" }
+  ],
+  "outputTypes": [
+    "rhel-edge-installer",
+    "rhel-edge-commit"
+  ],
+  "commit": {
+    "arch": "x86_64"
+  },
+  "installer": {
+    "username": "admin",
+    "sshkey": "$(cat $BASE/../../machine/identity.pub)"
+  }
+}
+EOF
+
+# File `/secrets/crc_passwd` contains the following line
+# machine console.redhat.com login <username> password <password>
+
+response=$(curl --netrc-file /secrets/crc_passwd --json @edge-request.json https://console.redhat.com/api/edge/v1/images)
+
+ID=$( echo "$response" | jq -r ".ID" )
+STATUS=$( echo "$response" | jq -r ".Status" )
+
+# Building takes around 30 minutes, just do long sleeps
+while [ "$STATUS" == "BUILDING" ]
+do
+    sleep 5m
+    STATUS=$(curl --netrc-file /secrets/crc_passwd https://console.redhat.com/api/edge/v1/images/$ID/status | jq -r ".Status")
+done
+
+if [ "$STATUS" != "SUCCESS" ]; then
+    echo "Failed to build rhel4edge-$timestamp"
+    exit 1
+fi
+
+curl --netrc-file /secrets/crc_passwd -L "https://console.redhat.com/api/edge/v1/storage/isos/$ID" -o "rhel4edge-$timestamp.iso"
+$BASE/virt-install-rhel4edge "$1" x86_64 "rhel4edge-$timestamp.iso"
+
+rm edge-request.json "rhel4edge-$timestamp.iso"
