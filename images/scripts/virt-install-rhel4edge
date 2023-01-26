@@ -1,0 +1,91 @@
+#!/bin/bash
+#
+# Copyright (C) 2015 Red Hat Inc.
+# Author: <kashyap@redhat.com>
+# Further contributions: <pjp@fedoraproject.org>
+# Adapted: <mmarusak@redhat.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+# Adapted from create-guest-qcow2.  We don't use that script as is
+# since it is, to quote Mr Parker, "2% code and 98% config stuff".
+
+set -ex
+
+if [ "$#" -lt 3 ]; then
+    echo >&2 "Usage: virt-install-rhel4edge IMAGE ARCH URL"
+    exit 1
+fi
+
+out=$1
+arch=$2
+url=$3
+
+base=$(dirname $0)
+
+qemu-img create -f qcow2 "$out" 12G
+
+connect="--connect=qemu:///session"
+name=$(basename $1)-builder
+
+cleanup_builder_vm () {
+  if virsh $connect list --state-running --name | grep -q $name; then
+      virsh $connect destroy $name
+  fi
+  if virsh $connect list --all --name | grep -q $name; then
+      virsh $connect undefine $name
+  fi
+}
+
+# Using virt-install is fundamentally an interactive process.  We
+# expect the installation to finish unattended, but it might drop into
+# an emergency shell upon unexpected errors, for example.  Thus, we
+# run it under 'expect' and catch a few known scenarios that require
+# special handling.
+#
+# (Also, virt-install works best when it has a tty.)
+
+supervised_virt_install () {
+expect -- - virt-install "$@" <<'EOF'
+eval spawn $argv
+set timeout -1
+expect {
+  "emergency mode" { send_user "\n\n\n\nABORT - emergency shell\n"
+                     exit 1
+                   }
+  "Please make your choice" { send_user "\n\n\n\nABORT - Anaconda stopped\n"
+                              exit 1
+                            }
+  "Please make a selection" { send_user "\n\n\n\nABORT - Anaconda stopped\n"
+                              exit 1
+                            }
+}
+EOF
+}
+
+cleanup_builder_vm
+
+
+supervised_virt_install $connect \
+                        --name=$name \
+                        --extra-args="inst.ks=hd:LABEL=RHEL-9-1-0-BaseOS-x86_64:/fleet.ks console=ttyS0,115200" \
+                        --disk "path=$out,format=qcow2" \
+                        --ram 4096 \
+                        --vcpus=1 \
+                        --location="$url" \
+                        --nographics \
+                        --noreboot
+
+cleanup_builder_vm
