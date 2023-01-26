@@ -5,4 +5,4 @@ Traceback (most recent call last):
     b.wait_not_present(".pf-c-modal-box")
 *
 testlib.Error: timeout
-wait_js_cond(!ph_is_present(".pf-c-modal-box")): Uncaught (in promise) Error: condition did not become true
+wait_js_cond(!ph_is_present(".pf-c-modal-box"))
