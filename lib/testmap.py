@@ -52,6 +52,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
+            'rhel4edge',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -71,6 +72,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-coreos',
         ],
         '_manual': [
+            'rhel4edge',
         ],
     },
     'cockpit-project/cockpit-podman': {
@@ -91,6 +93,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-rawhide',
             'fedora-testing',
             'rhel-9-2',
+            'rhel4edge',
         ],
     },
     'cockpit-project/cockpit-machines': {
