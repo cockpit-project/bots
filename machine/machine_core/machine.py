@@ -183,7 +183,7 @@ class Machine(ssh_connection.SSHConnection):
 
     def allowed_messages(self):
         allowed = []
-        if self.image.startswith('debian') or self.image == 'fedora-coreos':
+        if self.image.startswith('debian') or self.ostree_image:
             # These images don't have any non-C locales (mostly deliberate, to test this scenario somewhere)
             allowed.append("invalid or unusable locale: .*")
 
