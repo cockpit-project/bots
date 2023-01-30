@@ -34,6 +34,7 @@ IMAGES_DIR = os.path.join(BOTS_DIR, "images")
 SCRIPTS_DIR = os.path.join(IMAGES_DIR, "scripts")
 
 DEFAULT_IDENTITY_FILE = os.path.join(MACHINE_DIR, "identity")
+DEFAULT_IDENTITY_PUB_FILE = os.path.join(MACHINE_DIR, "identity.pub")
 
 TEST_OS_DEFAULT = "fedora-37"
 DEFAULT_IMAGE = os.environ.get("TEST_OS", TEST_OS_DEFAULT)
