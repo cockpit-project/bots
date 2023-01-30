@@ -52,6 +52,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
+            'centos-8-stream/pybridge',
             'rhel4edge',
         ],
     },
