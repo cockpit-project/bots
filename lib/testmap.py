@@ -72,9 +72,9 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-ostree': {
         'main': [
             'fedora-coreos',
+            'rhel4edge',
         ],
         '_manual': [
-            'rhel4edge',
         ],
     },
     'cockpit-project/cockpit-podman': {
@@ -82,6 +82,7 @@ REPO_BRANCH_CONTEXT = {
             'arch',
             'rhel-8-8',
             'rhel-9-1',
+            'rhel4edge',
             'fedora-36',
             'fedora-37',
             f'{TEST_OS_DEFAULT}/devel',
@@ -96,7 +97,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/pybridge',
             'rhel-9-2',
-            'rhel4edge',
         ],
     },
     'cockpit-project/cockpit-machines': {
