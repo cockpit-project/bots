@@ -5,6 +5,8 @@ BASE=$(dirname $0)
 
 # Names need to be unique
 timestamp=$(date +%s)
+
+# check-system-terminal in cockpit requires `clear` command so install ncurses
 cat > edge-request.json <<EOF
 {
   "name": "rhel4edge-$timestamp",
@@ -12,8 +14,13 @@ cat > edge-request.json <<EOF
   "imageType": "rhel-edge-installer",
   "packages": [
     { "name": "cockpit-system" },
+    { "name": "insights-client" },
+    { "name": "ncurses" },
+    { "name": "openssh-server" },
     { "name": "socat" },
-    { "name": "openssh-server" }
+    { "name": "sscg" },
+    { "name": "sssd-common" },
+    { "name": "subscription-manager-cockpit" }
   ],
   "outputTypes": [
     "rhel-edge-installer",
