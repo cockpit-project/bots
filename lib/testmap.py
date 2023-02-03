@@ -59,14 +59,12 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/starter-kit': {
         'main': [
             TEST_OS_DEFAULT,
+            f'{TEST_OS_DEFAULT}/pybridge',
             'centos-8-stream',
-            'fedora-36',
-            'fedora-37',
             'fedora-rawhide',
         ],
         '_manual': [
             f'{TEST_OS_DEFAULT}/firefox',
-            f'{TEST_OS_DEFAULT}/pybridge',
         ],
     },
     'cockpit-project/cockpit-ostree': {
@@ -86,6 +84,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-36',
             'fedora-37',
             f'{TEST_OS_DEFAULT}/devel',
+            f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-coreos',
             'debian-testing',
             'ubuntu-2204',
@@ -95,7 +94,6 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
             'fedora-rawhide',
             'fedora-testing',
-            f'{TEST_OS_DEFAULT}/pybridge',
             'rhel-9-2',
         ],
     },
@@ -195,13 +193,13 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-certificates': {
         'master': [
             'fedora-37',
+            f'{TEST_OS_DEFAULT}/pybridge',
         ],
         '_manual': [
             'rhel-8-7',
             'rhel-9-1',
             'centos-8-stream',
             'fedora-36',
-            f'{TEST_OS_DEFAULT}/pybridge',
         ]
     },
     'rhinstaller/anaconda': {
