@@ -1,3 +1,0 @@
-  File "test/verify/check-storage-vdo", line *, in testVdo
-*
-RuntimeError: Timed out on 'vdo create --device /dev/vdo_vgroup/lvol --name vdo0 --vdoLogicalSize 5G'
