@@ -73,6 +73,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel4edge',
         ],
         '_manual': [
+            'fedora-coreos/pybridge',
         ],
     },
     'cockpit-project/cockpit-podman': {
