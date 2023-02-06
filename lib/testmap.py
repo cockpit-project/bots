@@ -108,6 +108,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-36',
             'fedora-37',
             f'{TEST_OS_DEFAULT}/firefox',
+            f'{TEST_OS_DEFAULT}/pybridge',
             'rhel-8-8',
             'rhel-9-2',
             'centos-8-stream',
@@ -116,7 +117,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-rawhide',
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/devel',
-            f'{TEST_OS_DEFAULT}/pybridge',
         ],
     },
     'weldr/lorax': {
@@ -131,6 +131,7 @@ REPO_BRANCH_CONTEXT = {
     },
     'osbuild/cockpit-composer': {
         'main': [
+            f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-36',
             'fedora-37',
             'fedora-37/firefox',
@@ -142,7 +143,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
-            f'{TEST_OS_DEFAULT}/pybridge',
         ],
     },
     'candlepin/subscription-manager': {
