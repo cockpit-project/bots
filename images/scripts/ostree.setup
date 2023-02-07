@@ -16,7 +16,8 @@ if [ "$IMAGE" == "fedora-coreos" ]; then
     systemctl disable --now zincati.service
 
     # pre-install the distro version, which is useful for testing extensions and manual experiments
-    rpm-ostree install cockpit-system cockpit-bridge cockpit-networkmanager
+    # also install Python for future pybridge, until c-bridge package grows that package dependency
+    rpm-ostree install cockpit-system cockpit-bridge cockpit-networkmanager python3
 fi
 
 if [ "$IMAGE" == "rhel4edge" ]; then
