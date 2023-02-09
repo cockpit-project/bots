@@ -225,6 +225,7 @@ IMAGE_REFRESH_TRIGGERS = {
     "fedora-testing": [
         "fedora-testing@cockpit-project/cockpit",
         "fedora-testing/dnf-copr@cockpit-project/cockpit",
+        "fedora-testing@cockpit-project/cockpit-podman",
     ],
     # some tests run against centos-7's cockpit-ws for backwards compat testing
     "centos-7": [
