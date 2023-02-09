@@ -42,6 +42,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-8-distropkg',
             'centos-8-stream',
             'rhel-9-2',
+            'rhel4edge',
         ],
         'rhel-7.9': [
             'rhel-7-9',
@@ -53,7 +54,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
             'centos-8-stream/pybridge',
-            'rhel4edge',
         ],
     },
     'cockpit-project/starter-kit': {
