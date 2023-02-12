@@ -1,1 +1,0 @@
-avc:  denied  { search } for * comm="rsyslogd" name="net" dev="proc" * scontext=system_u:system_r:syslogd_t:s0 tcontext=system_u:object_r:sysctl_net_t:s0 tclass=dir permissive=0
