@@ -87,7 +87,7 @@ class InstallAction(ActionBase):
 
         # requesting install of Python wheel?
         if package.endswith('.whl'):
-            machine_instance.execute(f"python3 -m pip install --no-index --prefix=/usr {package}", timeout=120)
+            machine_instance.execute(f"python3 -m pip install --no-index --prefix=/usr/local {package}", timeout=120)
             return
 
         # this will fail if neither is available -- exception is clear enough, this is a developer tool
