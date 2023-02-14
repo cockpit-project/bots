@@ -54,6 +54,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
             'centos-8-stream/pybridge',
+            'fedora-38',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -65,6 +66,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             f'{TEST_OS_DEFAULT}/firefox',
+            'fedora-38',
         ],
     },
     'cockpit-project/cockpit-ostree': {
@@ -96,6 +98,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-rawhide',
             'fedora-testing',
             'rhel-9-2',
+            'fedora-38',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -117,6 +120,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-rawhide',
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/devel',
+            'fedora-38',
         ],
     },
     'weldr/lorax': {
@@ -143,6 +147,7 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
+            'fedora-38',
         ],
     },
     'candlepin/subscription-manager': {
@@ -174,6 +179,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             f'{TEST_OS_DEFAULT}/pybridge',
+            'fedora-38',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -189,6 +195,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-7',
             'rhel-8-7/subscription-manager-1.28',
             f'{TEST_OS_DEFAULT}/pybridge',
+            'fedora-38',
         ],
     },
     'cockpit-project/cockpit-certificates': {
@@ -201,6 +208,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-1',
             'centos-8-stream',
             'fedora-36',
+            'fedora-38',
         ]
     },
     'rhinstaller/anaconda': {
