@@ -1,0 +1,4 @@
+# testCreateThenInstall (__main__.TestMachinesCreate.testCreateThenInstall)
+*
+error: Failed to start pool iscsi-pool
+error: internal error: Failed to get host number for iSCSI session with path '/sys/class/iscsi_session/session1/device'
