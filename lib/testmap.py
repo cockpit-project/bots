@@ -156,6 +156,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-36',
             'fedora-37',
             'fedora-38',
+            f'{TEST_OS_DEFAULT}/pybridge',
         ],
         'subscription-manager-1.28': [
             'rhel-8-4',
@@ -176,7 +177,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-2',
         ],
         '_manual': [
-            f'{TEST_OS_DEFAULT}/pybridge',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -186,10 +186,10 @@ REPO_BRANCH_CONTEXT = {
             'fedora-36',
             'fedora-37',
             'fedora-38',
+            f'{TEST_OS_DEFAULT}/pybridge',
         ],
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
-            f'{TEST_OS_DEFAULT}/pybridge',
             'rhel-8-9',
             'rhel-8-9/subscription-manager-1.28',
         ],
