@@ -189,12 +189,12 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-2',
             'fedora-36',
             'fedora-37',
+            f'{TEST_OS_DEFAULT}/pybridge',
         ],
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
             'rhel-8-7',
             'rhel-8-7/subscription-manager-1.28',
-            f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-38',
         ],
     },
