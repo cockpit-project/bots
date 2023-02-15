@@ -187,10 +187,6 @@ class Machine(ssh_connection.SSHConnection):
             # These images don't have any non-C locales (mostly deliberate, to test this scenario somewhere)
             allowed.append("invalid or unusable locale: .*")
 
-        if self.image in ['rhel-8-6', 'rhel-8-6-distropkg', 'centos-8-stream']:
-            # https://bugzilla.redhat.com/show_bug.cgi?id=2055199
-            allowed.append('audit.*denied  { execute } for .* comm="nm-dispatcher" name="04-iscsi".*')
-
         if self.image == "arch":
             # Default PAM configuration logs motd for cockpit-session
             allowed.append(".*cockpit-session: pam: Web console: .*")
@@ -198,32 +194,14 @@ class Machine(ssh_connection.SSHConnection):
         if self.image in ["fedora-37", "fedora-testing"]:
             # https://bugzilla.redhat.com/show_bug.cgi?id=2083900
             allowed.append('audit.*denied  { sys_admin } .* comm="systemd-gpt-aut".*')
-            # https://bugzilla.redhat.com/show_bug.cgi?id=2122918
-            allowed.append('audit.*denied  { execmem } .* comm="libvirt_leasesh".*')
-            allowed.append('audit.*denied  { execmem } .* comm="virtlogd".*')
 
         if self.image in ["fedora-36", "fedora-37", "fedora-testing", "fedora-coreos"]:
             # https://bugzilla.redhat.com/show_bug.cgi?id=2122888
             allowed.append('audit.*denied  { sys_admin } .* comm="mv" .*NetworkManager_dispatcher_console_t.*')
 
-        if self.image == "ubuntu-stable":
+        if self.image in ["debian-testing", "ubuntu-stable"]:
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
             allowed.append('audit.* apparmor="DENIED" operation="open" class="file" ' +
-                           'profile=".*" name="/sys/devices/system/cpu/possible" .* ' +
-                           'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
-
-            # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1993304
-            allowed.append('audit.* apparmor="DENIED" operation="open" class="file" ' +
-                           'profile=".*" name="/sys/bus/usb/devices/" .* ' +
-                           'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
-
-            allowed.append('audit.* apparmor="DENIED" operation="getattr" class="file" ' +
-                           'profile=".*" name="/sys/bus/usb/devices/.*" .* ' +
-                           'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
-
-        if self.image == "debian-testing":
-            # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
-            allowed.append('audit.* apparmor="DENIED" operation="open" ' +
                            'profile=".*" name="/sys/devices/system/cpu/possible" .* ' +
                            'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
 
