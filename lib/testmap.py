@@ -199,14 +199,13 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-certificates': {
         'master': [
             'fedora-37',
+            'fedora-38',
             f'{TEST_OS_DEFAULT}/pybridge',
         ],
         '_manual': [
-            'rhel-8-7',
-            'rhel-9-1',
+            'rhel-8-8',
+            'rhel-9-2',
             'centos-8-stream',
-            'fedora-36',
-            'fedora-38',
         ]
     },
     'rhinstaller/anaconda': {
