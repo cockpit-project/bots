@@ -82,10 +82,10 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             'arch',
             'rhel-8-8',
-            'rhel-9-1',
+            'rhel-9-2',
             'rhel4edge',
-            'fedora-36',
             'fedora-37',
+            'fedora-38',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-coreos',
@@ -97,8 +97,6 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
             'fedora-rawhide',
             'fedora-testing',
-            'rhel-9-2',
-            'fedora-38',
         ],
     },
     'cockpit-project/cockpit-machines': {
