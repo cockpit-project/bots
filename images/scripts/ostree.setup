@@ -63,6 +63,14 @@ if [ "$IMAGE" == "rhel4edge" ]; then
     fi
 fi
 
+# Wait for all systemd jobs to finish before cleaning up.  In
+# particular, this will allow kdump.service to finish creating the
+# kdump initramfs.
+
+while [ -n "$(systemctl list-jobs --legend=no)" ]; do
+    sleep 10
+done
+
 # reduce image size
 rpm-ostree cleanup --repomd
 rm -rf /var/log/journal/*
