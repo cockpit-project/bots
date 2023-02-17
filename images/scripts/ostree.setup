@@ -11,6 +11,9 @@ podman pull quay.io/jitesoft/nginx
 # Prevent SSH from hanging for a long time when no external network access
 echo 'UseDNS no' >> /etc/ssh/sshd_config.d/10-no-usedns.conf
 
+# disable ens15 to avoid long boot hang on NetworkManager-wait-online.service
+nmcli con add con-name "ens15" ifname ens15 type ethernet ipv4.method disabled ipv6.method ignore
+
 if [ "$IMAGE" == "fedora-coreos" ]; then
     # disable automatic updates
     systemctl disable --now zincati.service
