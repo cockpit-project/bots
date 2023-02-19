@@ -1,1 +1,0 @@
-audit: type=1400 audit*: avc:  denied  { signull } for * comm="gpg" scontext=system_u:system_r:gpg_t:s0 tcontext=unconfined_u:unconfined_r:unconfined_t:* tclass=process permissive=0
