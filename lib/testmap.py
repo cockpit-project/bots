@@ -212,6 +212,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-rawhide-boot/devel',
+            'fedora-38-boot/fedora-38',
         ]
     },
 }
