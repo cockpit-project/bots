@@ -74,6 +74,14 @@ while [ -n "$(systemctl list-jobs --legend=no)" ]; do
     sleep 10
 done
 
+# Installing RPMs in a OSTree image sometimes triggers something that
+# will change the mtime of all of /etc on the next boot.  This in turn
+# will trigger a regeneration of the kdump initrd.  This would happen
+# in each test run, which is wasteful and also might interfere with
+# the test itself.  Let's just switch the automatic regeneration off.
+
+! test -e /etc/kdump.conf || echo "force_no_rebuild 1" >>/etc/kdump.conf
+
 # reduce image size
 rpm-ostree cleanup --repomd
 rm -rf /var/log/journal/*
