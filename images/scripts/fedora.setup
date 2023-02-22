@@ -135,6 +135,11 @@ if [ "${IMAGE%-i386}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/podman /}"
 fi
 
+# HACK: https://bugzilla.redhat.com/show_bug.cgi?id=2170110
+if [ "$IMAGE" = "fedora-38" ]; then
+    COCKPIT_DEPS="$COCKPIT_DEPS qemu-audio-spice"
+fi
+
 if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
     dnf config-manager --set-enabled updates-testing
 fi
