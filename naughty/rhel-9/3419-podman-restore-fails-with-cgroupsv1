@@ -1,4 +1,0 @@
-  File "check-application", line *, in testCheckpointRestoreCGroupsV1
-    self._testCheckpointRestore()
-  File "check-application", line *, in _testCheckpointRestore
-    b.wait(lambda: self.getContainerAttr("swamped-crate", "State") in 'Running')
