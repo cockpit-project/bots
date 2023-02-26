@@ -1,3 +1,0 @@
-# testAddDiskSCSI (__main__.TestMachinesDisks.testAddDiskSCSI)
-*
-RuntimeError: Timed out on 'virsh pool-start iscsi-pool'
