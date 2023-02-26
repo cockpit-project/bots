@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "test/check-application", line *, in testCreateContainerValidation
-    b.wait_in_text(".pf-c-alert", "address already in use")
-*
-testlib.Error: timeout
-wait_js_cond(ph_is_present(".pf-c-alert")): Uncaught (in promise) Error: condition did not become true
