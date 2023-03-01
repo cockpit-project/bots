@@ -266,7 +266,7 @@ def main():
     parser.add_argument('-n', '--no-network', action='store_true', help='Do not connect the machine to the Internet')
     parser.add_argument('--cpus', type=int, default=None,
                         help="Number of CPUs for the virtual machine")
-    parser.add_argument('--memory-mb', type=int, default=None,
+    parser.add_argument('--memory-mb', type=int, default=2048,
                         help="RAM size for the virtual machine")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Display verbose progress details')
