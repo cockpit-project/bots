@@ -166,11 +166,17 @@ REPO_BRANCH_CONTEXT = {
         'subscription-manager-1.28.32': [
             'rhel-8-7',
         ],
+        'subscription-manager-1.28.36': [
+            'rhel-8-8',
+        ],
         'subscription-manager-1.29.26': [
             'rhel-9-0',
         ],
         'subscription-manager-1.29.30': [
             'rhel-9-1',
+        ],
+        'subscription-manager-1.29.33': [
+            'rhel-9-2',
         ],
         '_manual': [
             f'{TEST_OS_DEFAULT}/pybridge',
