@@ -99,6 +99,11 @@ no-auto-default=*
 unmanaged-devices=interface-name:eth0
 EOL
 
+# Disable mDNS for systemd-resolved, mDNS always times out in our testing setup which makes
+# multi machine tests time out as the resolved timeout is ~ 7 seconds.
+mkdir -p /etc/systemd/resolved.conf.d
+printf '[Resolve]\nMulticastDNS=false' > /etc/systemd/resolved.conf.d/disable-mdns.conf
+
 # Enable serial console, for debugging networking problems
 sed -i '/GRUB_CMDLINE_LINUX=/ s/"$/ console=ttyS0,115200"/' /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
