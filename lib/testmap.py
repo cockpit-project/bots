@@ -32,8 +32,8 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'ubuntu-2204',
             'ubuntu-stable',
-            'fedora-36',
             'fedora-37',
+            'fedora-38',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             f'{TEST_OS_DEFAULT}/pybridge',
@@ -54,7 +54,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
-            'fedora-38',
         ],
     },
     'cockpit-project/starter-kit': {
