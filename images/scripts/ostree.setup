@@ -4,7 +4,11 @@ set -eux
 IMAGE="$1"
 
 podman pull quay.io/cockpit/ws
-podman pull quay.io/jitesoft/nginx
+# HACK: latest is broken: https://gitlab.com/jitesoft/dockerfiles/nginx/-/issues/2
+podman pull quay.io/jitesoft/nginx:stable
+# the tests don't specify a tag, so re-tag stable
+podman tag quay.io/jitesoft/nginx:stable quay.io/jitesoft/nginx:latest
+
 # for c-podman tests
 /var/lib/testvm/podman-images.setup
 
