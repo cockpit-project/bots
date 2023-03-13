@@ -1,0 +1,6 @@
+  File "test/verify/check-system-services", line *, in _testBasic
+    self.toggle_onoff()
+  File "test/verify/check-system-services", line *, in toggle_onoff
+    self.browser.click(".service-top-panel .pf-c-switch__input")
+*
+testlib.Error: *ph_mouse(".service-top-panel*:not*disabled*click*
