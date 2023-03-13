@@ -1,0 +1,4 @@
+  File "test/verify/check-system-services", line *, in _testBasic
+    self.check_service_details*"Disabled"*"Start", "Disallow running*"Pin unit"*
+*
+testlib.Error: *ph_mouse*.service-top-panel*:not*disabled*click*
