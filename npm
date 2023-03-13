@@ -20,6 +20,7 @@ cmd_sh() {
     # make sure the node user can write to the cache volume
     podman run \
         --rm \
+        --pull=always \
         --volume "${CACHE}":/home/node/.npm:U \
         "${IMAGE}" chown -R node:node /home/node >&2
 
