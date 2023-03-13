@@ -1,0 +1,3 @@
+    runner.checkFilteredOsTest(TestMachinesCreate.VmDialog(self, os_name=config.REDHAT_RHEL_4_7_FILTERED_OS,
+*
+wait_js_cond(ph_is_visible("#os-select li button")): Uncaught (in promise) Error: #os-select li button is ambiguous
