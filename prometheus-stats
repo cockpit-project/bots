@@ -200,6 +200,19 @@ merged_failures {merged_failures}
         for uri, size in space_usage.items():
             output += f's3_usage_bytes{{store="{uri}"}} {size}\n'
 
+    # Code coverage
+    output += """
+# HELP test_coverage Overall percentage of code covered by tests
+# TYPE test_coverage gauge
+"""
+    code_coverage = """
+        SELECT project, coverage, MAX(time) FROM TestCoverage AS tc
+        JOIN TestRuns ON tc.run = TestRuns.id
+        GROUP BY TestRuns.project
+    """
+    for project, coverage, _ in cursor.execute(code_coverage).fetchall():
+        output += f'test_coverage{{project="{project}"}} {coverage}\n'
+
     db_conn.close()
 
     print(output)
