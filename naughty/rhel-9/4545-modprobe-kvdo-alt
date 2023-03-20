@@ -1,0 +1,9 @@
+# testVdo (__main__.TestStorageVDO.testVdo)
+*
+testlib.Error: timeout
+wait_js_cond(!ph_is_present("#dialog")): Uncaught (in promise) Error: condition did not become true
+*
+warning: Error creating volume: Process reported exit code 3: modprobe: FATAL: Module kvdo not found in directory /lib/modules/5.14.0-284.2.1.el9_2.x86_64
+  /usr/sbin/modprobe failed: 1
+  vdo: Required device-mapper target(s) not detected in your kernel.
+  Run `lvcreate --help' for more information.
