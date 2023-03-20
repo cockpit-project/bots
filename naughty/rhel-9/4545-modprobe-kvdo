@@ -1,0 +1,6 @@
+File "/work/bots/make-checkout-workdir/test/verify/check-storage-vdo", line *, in testVdoMissingPackages
+*
+testlib.Error: timeout
+wait_js_cond(ph_in_text("#dialog .pf-c-alert.pf-m-danger","vdoformat")): Uncaught (in promise) Error: actual text: Danger alert:Error creating volume: Process reported exit code 3: modprobe: FATAL: Module kvdo not found in directory /lib/modules/5.14.0-284.2.1.el9_2.x86_64
+  /usr/sbin/modprobe failed: 1
+  vdo: Required device-mapper target(s) not detected in your kernel.
