@@ -9,9 +9,6 @@
 # You might want this first:
 #   dnf install python3-pynacl
 #
-# Helpful command to check/update the lists below:
-#   git grep -l 'environment: cockpit-dist' (or whatever)
-#
 # Note: this script doesn't delete old secrets, so if you make adjustments,
 #       please do that manually.
 
