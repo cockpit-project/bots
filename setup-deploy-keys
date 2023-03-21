@@ -40,10 +40,6 @@ deploy_to cockpit-project/cockpit \
         cockpit-project/cockpit/npm-update/COCKPIT_DEPLOY_KEY \
         cockpit-project/cockpit/self/DEPLOY_KEY
 
-deploy_to cockpit-project/cockpit-dist \
-    --deploy-from \
-        cockpit-project/cockpit/cockpit-dist/DEPLOY_KEY
-
 deploy_to cockpit-project/cockpit-weblate \
     --deploy-from \
         cockpit-project/cockpit/cockpit-weblate/DEPLOY_KEY
@@ -61,10 +57,6 @@ deploy_to cockpit-project/cockpit-machines \
     --deploy-from \
         cockpit-project/cockpit-machines/npm-update/SELF_DEPLOY_KEY \
         cockpit-project/cockpit-machines/self/DEPLOY_KEY
-
-deploy_to cockpit-project/cockpit-machines-dist \
-    --deploy-from \
-        cockpit-project/cockpit-machines/cockpit-machines-dist/DEPLOY_KEY
 
 deploy_to cockpit-project/cockpit-machines-weblate \
     --deploy-from \
