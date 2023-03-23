@@ -170,6 +170,14 @@ run tests-trigger with `--allow`:
 Of course, you should make sure that the pull request is proper and
 doesn't execute evil code during tests.
 
+### tests-trigger with a different origin
+
+If you need to specify --repo in tests-trigger as your remote is different from
+cockpit-project/cockpit, you can set a git configuration option from which
+tests-trigger reads the repo. This has to be set per cockpit project.
+
+    git config cockpit.bots.github-repo cockpit-project/cockpit
+
 ### Refreshing a test image
 
 Test images are refreshed automatically once per week, and even if the
