@@ -51,7 +51,7 @@ want to change that, you can set the `cockpit.bots.images-data-dir` variable
 with `git config` to a directory where to store the pristine virtual machine
 images.  For example:
 
-    $ git config cockpit.bots.images-data-dir /srv/cockpit/images
+    git config cockpit.bots.images-data-dir /srv/cockpit/images
 
 ## Tests
 
@@ -59,7 +59,7 @@ The bots automatically run the tests as needed on pull requests
 and branches. To check when and where tests will be run, use the
 tests-scan tool:
 
-    $ ./tests-scan -vd
+    ./tests-scan -vd
 
 #### Note on eslintrc interaction
 
@@ -152,7 +152,7 @@ If we want to run tests on 'fedora-testing' but with bots from pull request '169
 If you want to run the "fedora-testing" testsuite again for pull
 request #1234 of cockpit-project/cockpit, run tests-trigger like so:
 
-    $ ./tests-trigger --repo cockpit-project/cockpit 1234 fedora-testing
+    ./tests-trigger --repo cockpit-project/cockpit 1234 fedora-testing
 
 You can also invoke bots/tests/trigger from any project checkout, in which case
 you don't need the explicit `--repo` -- it will default to the GitHub origin of
@@ -165,7 +165,7 @@ someone who does not have push access to the repository nor isn't in the
 [Contributors team](https://github.com/orgs/cockpit-project/teams/contributors/members),
 run tests-trigger with `--allow`:
 
-    $ ./tests-trigger --allow [...]
+    ./tests-trigger --allow [...]
 
 Of course, you should make sure that the pull request is proper and
 doesn't execute evil code during tests.
@@ -186,7 +186,7 @@ last refresh has failed, the machines wait one week before trying again.
 If you want the machines to refresh the fedora-testing image immediately,
 run image-trigger like so:
 
-    $ ./image-trigger fedora-testing
+    ./image-trigger fedora-testing
 
 ### Creating new images for a pull request
 
