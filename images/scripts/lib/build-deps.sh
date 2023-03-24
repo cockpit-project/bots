@@ -25,12 +25,16 @@ esac
 
 echo "$spec" | rpmspec -D "$OS_VER" -D 'version 0' --buildrequires --query /dev/stdin | sed 's/.*/"&"/' | tr '\n' ' '
 
-# We build anaconda rpms on fedora-37
-if [ "$OS_VER" = 'fedora 37' ]; then
-    $GET https://raw.githubusercontent.com/rhinstaller/anaconda/master/anaconda.spec.in | \
-        sed 's/@PACKAGE.*@/0/' | rpmspec --buildrequires --query /dev/stdin | \
-        sed 's/.*/"&"/' | tr '\n' ' '
-fi
+# We build anaconda rpms
+case "$OS_VER" in
+    fedora*) # let's try if Anaconda have branch for the given fedora, if not, use master (rawhide)
+        SPEC=$($GET "https://raw.githubusercontent.com/rhinstaller/anaconda/fedora-${OS_VER#fedora }/anaconda.spec.in") || \
+            SPEC=$($GET "https://raw.githubusercontent.com/rhinstaller/anaconda/master/anaconda.spec.in")
+        echo "$SPEC" | \
+            sed 's/@PACKAGE.*@/0/' | rpmspec --buildrequires --query /dev/stdin | \
+            sed 's/.*/"&"/' | tr '\n' ' '
+    ;;
+esac
 
 # some extra build dependencies:
 # - libappstream-glib for validating appstream metadata in starter-kit and derivatives
