@@ -54,6 +54,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-testing',
             'fedora-testing/dnf-copr',
             'fedora-rawhide',
+            'rhel-9-3',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -96,6 +97,7 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
             'fedora-rawhide',
             'fedora-testing',
+            'rhel-9-3',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -117,6 +119,7 @@ REPO_BRANCH_CONTEXT = {
             'fedora-rawhide',
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/devel',
+            'rhel-9-3',
         ],
     },
     'weldr/lorax': {
@@ -144,6 +147,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-rawhide',
             'fedora-38',
+            'rhel-9-3',
         ],
     },
     'candlepin/subscription-manager': {
@@ -181,6 +185,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-38',
+            'rhel-9-3',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -197,6 +202,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-7/subscription-manager-1.28',
             f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-38',
+            'rhel-9-3',
         ],
     },
     'cockpit-project/cockpit-certificates': {
@@ -208,6 +214,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'rhel-8-8',
             'rhel-9-2',
+            'rhel-9-3',
             'centos-8-stream',
         ]
     },

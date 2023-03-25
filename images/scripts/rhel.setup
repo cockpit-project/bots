@@ -59,6 +59,7 @@ EOF
             rhel-9-0) REPO="rhel-9/nightly/RHEL-9/latest-RHEL-9.0" ;;
             rhel-9-1) REPO="rhel-9/rel-eng/RHEL-9/latest-RHEL-9.1" ;;
             rhel-9-2) REPO="rhel-9/nightly/RHEL-9/latest-RHEL-9.2" ;;
+            rhel-9-3) REPO="rhel-9/nightly/RHEL-9/latest-RHEL-9.3" ;;
             *) echo "Unknown image $IMAGE"; exit 1
         esac
 cat <<EOF > /etc/yum.repos.d/nightly.repo
@@ -281,6 +282,7 @@ EOF
             rhel-9-0) REPO="rhel-9.0.0-build" ;;
             rhel-9-1) REPO="rhel-9.1.0-build" ;;
             rhel-9-2) REPO="rhel-9.2.0-build" ;;
+            rhel-9-3) REPO="rhel-9.3.0-build" ;;
             *) echo "Unknown image $IMAGE"; exit 1
         esac
 
