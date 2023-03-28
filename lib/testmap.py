@@ -113,16 +113,14 @@ REPO_BRANCH_CONTEXT = {
             'fedora-38',
             f'{TEST_OS_DEFAULT}/firefox',
             f'{TEST_OS_DEFAULT}/pybridge',
-            'rhel-8-8',
-            'rhel-9-2',
+            'rhel-8-9',
+            'rhel-9-3',
             'centos-8-stream',
         ],
         '_manual': [
             'fedora-rawhide',
             'fedora-testing',
             f'{TEST_OS_DEFAULT}/devel',
-            'rhel-8-9',
-            'rhel-9-3',
         ],
     },
     'weldr/lorax': {
