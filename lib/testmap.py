@@ -377,7 +377,12 @@ def tests_for_image(image):
 
 
 def tests_for_po_refresh(project):
+    # by default, run all tests
+    contexts = REPO_BRANCH_CONTEXT.get(project, {}).get(get_default_branch(project), [])
+    # cockpit's are expensive, so only run a few
     if project == "cockpit-project/cockpit":
-        # check-pages "all languages" test only runs on RHEL; plus required status
-        return ["rhel-9-2", "fedora-coreos"]
-    return REPO_BRANCH_CONTEXT.get(project, {}).get(get_default_branch(project), [])
+        # check-pages "all languages" test only runs on RHEL
+        contexts = sorted([c for c in contexts if c.startswith("rhel-")])[-1:]
+        # plus required f-coreos
+        contexts.append("fedora-coreos")
+    return contexts
