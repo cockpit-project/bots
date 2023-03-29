@@ -1,12 +1,19 @@
 #!/bin/bash
 set -eux
 
-if [ $(uname -m) = x86_64 ]; then
-    # images for testing cockpit-podman
-    podman pull quay.io/libpod/busybox
-    podman pull quay.io/libpod/alpine
-    podman pull quay.io/cockpit/registry:2
-    if [ "$(podman -v | awk '{ print substr($3, 1, 1) }')" -lt 4 ]; then
-        podman pull docker://k8s.gcr.io/pause:3.5
-    fi
+# these are available for many architectures, and supported/updated reasonably well
+podman pull quay.io/prometheus/busybox
+podman pull quay.io/jitesoft/alpine
+podman pull quay.io/libpod/registry:2.8
+
+# podman tests expect the images with a neutral name, so re-tag them
+podman tag quay.io/prometheus/busybox localhost/test-busybox
+podman rmi quay.io/prometheus/busybox
+podman tag quay.io/jitesoft/alpine localhost/test-alpine
+podman rmi quay.io/jitesoft/alpine
+podman tag quay.io/libpod/registry:2.8 localhost/test-registry
+podman rmi quay.io/libpod/registry:2.8
+
+if [ "$(podman -v | awk '{ print substr($3, 1, 1) }')" -lt 4 ]; then
+    podman pull docker://k8s.gcr.io/pause:3.5
 fi
