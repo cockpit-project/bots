@@ -29,7 +29,7 @@ def get_packages(machine):
     # We'd ideally like to get source packages everywhere, but it's a
     # bit more difficult on RPM. (TODO)
     pkgcmd = """if type dpkg-query > /dev/null 2>&1; then
-                    dpkg-query -W -f='${source:Package}\t${version}\n' 2>/dev/null;
+                    dpkg-query -W 2>/dev/null;
                 elif type rpm > /dev/null 2>&1; then
                     rpm -qa --qf '%{NAME}\t%{EVR}\n' 2>/dev/null;
                 else pacman -Q | sed 's/ /\t/' 2>/dev/null; fi"""
