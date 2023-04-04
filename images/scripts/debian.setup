@@ -293,9 +293,9 @@ if grep -q 'ID=ubuntu' /etc/os-release; then
     snap install hello-world
 fi
 
-# HACK: https://bugs.debian.org/1016064
+# HACK: https://bugs.debian.org/1032990
 if [ "$RELEASE" = "testing" ]; then
-    adduser --force-badname --system --quiet --home /run/rpcbind --no-create-home _rpc
+    sed -i '/subid:.*sss/d' /etc/nsswitch.conf
 fi
 
 # reduce image size; don't keep old kernels
