@@ -121,59 +121,34 @@ chmod 755 /root/run-samba-domain
 # candlepin setup
 #
 #############################
-cat <<EOF > ./Dockerfile
-FROM quay.io/fedora/fedora:37
-RUN dnf -y install systemd && dnf clean all
-CMD ["/sbin/init"]
-EOF
 
-podman build --tag fedora_systemd .
-
-podman run --name=candlepin --uts=host --publish=8443:8443 --privileged --detach -t fedora_systemd
+# run the candlepin container to copy the certificates out of it
+podman run -d --name candlepin \
+    --uts=host \
+    -p 8443:8443 \
+    ghcr.io/ptoscano/candlepin-unofficial:latest
 
 # give systemd the time to start in the container
 sleep 5
 
 podman exec -i candlepin sh -eux <<EOF
-# wait until booted
-systemctl start multi-user.target
-# ensure latest ca-certificates
-dnf update -y
-# Install dependencies
-dnf -y install ansible libselinux-python3 python3-firewall git-core openssl sudo which hostname initscripts gettext selinux-policy acl
-
-useradd candlepin
-echo 'candlepin ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/candlepin
+# ensure hostname is installed, as it is used by gen_certs.sh
+dnf --setopt install_weak_deps=False -y install hostname
+# stop tomcat, so we can regenerate the certs
+systemctl stop tomcat
+# regenerate the certs used by Candlepin; this is done so the hostname
+# of the certificate is actually this container's hostname (which actually
+# is the hostname of the system, because of --uts=host)
+~candlepin/devel/candlepin/bin/deployment/gen_certs.sh -f
+# restart tomcat
+systemctl start tomcat
 EOF
 
-podman exec -i -u candlepin candlepin sh -eux <<EOF
-ansible-galaxy collection install ansible.posix community.general community.mysql community.postgresql
-
-cd
-mkdir -p playbookdir/roles/
-git clone --depth=1 https://github.com/candlepin/ansible-role-candlepin.git playbookdir/roles/candlepin
-# create an empty/fake rvm.ruby module
-mkdir playbookdir/roles/rvm.ruby
-
-cat > playbookdir/playbook.yml <<- EOP
-- hosts: localhost
-  connection: local
-  roles:
-     - role: candlepin
-       vars:
-         cp_configure_mariadb: false
-         cp_configure_ruby: false
-         cp_deploy_args: "-g -a -f -t"
-EOP
-
-ansible-playbook -v --skip-tags 'system_update' playbookdir/playbook.yml
-
-sudo dnf clean all
-sudo systemctl enable tomcat
-EOF
+# give candlepin the time to start in the container
+sleep 5
 
 # validate that it works
-curl --insecure --head https://localhost:8443/candlepin/
+until curl --insecure --head https://localhost:8443/candlepin/; do sleep 5; done
 
 # copy the certificate to where the tests expect them
 mkdir -p /home/admin/candlepin
@@ -183,7 +158,7 @@ podman cp candlepin:/etc/candlepin/certs/candlepin-ca.crt /home/admin/candlepin/
 podman cp candlepin:/etc/candlepin/certs/candlepin-ca-pub.key /home/admin/candlepin/certs/
 chown -R admin:admin /home/admin/candlepin/
 
-podman exec candlepin poweroff
+podman stop candlepin
 
 cat <<EOF > /root/run-candlepin
 #!/bin/sh
