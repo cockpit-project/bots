@@ -3,6 +3,11 @@
 set -ex
 IMAGE="$1"
 
+# Use daily UDisks2 stack, for catching regressions early and testing
+# new APIs early.
+
+dnf copr -y enable @storage/udisks-daily
+
 # avoid failures when running image builds in a non-English locale (ssh transfers the host environment)
 unset LANGUAGE
 unset LANG
