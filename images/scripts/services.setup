@@ -191,7 +191,7 @@ podman run -d --rm --name grafana -p 3000:3000 \
     docker.io/bitnami/grafana
 
 # wait until set up completed
-until curl http://localhost:3000; do sleep 1; done
+until curl http://localhost:3000; do sleep 5; done
 podman stop grafana
 
 cat <<EOF > /root/run-grafana
