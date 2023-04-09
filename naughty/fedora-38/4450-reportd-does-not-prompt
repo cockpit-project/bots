@@ -1,2 +1,0 @@
-  File "check-system-journal", line *, in testAbrtReport
-    b.wait_visible(".pf-c-modal-box__body input[type='password']")
