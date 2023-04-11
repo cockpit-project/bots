@@ -52,7 +52,7 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
-            'fedora-testing/dnf-copr',
+            'fedora-testing/daily',
             'fedora-rawhide',
         ],
     },
@@ -243,7 +243,7 @@ OSTREE_BUILD_IMAGE = {
 IMAGE_REFRESH_TRIGGERS = {
     "fedora-testing": [
         "fedora-testing@cockpit-project/cockpit",
-        "fedora-testing/dnf-copr@cockpit-project/cockpit",
+        "fedora-testing/daily@cockpit-project/cockpit",
         "fedora-testing@cockpit-project/cockpit-machines",
         "fedora-testing@cockpit-project/cockpit-podman",
     ],
