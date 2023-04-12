@@ -198,10 +198,17 @@ clevis-systemd
 clevis-dracut
 "
 
+PACKAGE_SET_STRATIS="\
+stratisd
+"
+
 dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
 
 mkdir -p /var/lib/package-sets/clevis
 dnf download --downloaddir=/var/lib/package-sets/clevis $PACKAGE_SET_CLEVIS
+
+mkdir -p /var/lib/package-sets/stratis
+dnf download --downloaddir=/var/lib/package-sets/stratis $PACKAGE_SET_STRATIS
 
 # we only need cloud-init for the initial boot, afterwards it just slows down booting
 if rpm -q cloud-init; then

@@ -119,6 +119,10 @@ clevis-systemd
 clevis-dracut
 "
 
+PACKAGE_SET_STRATIS="\
+stratisd
+"
+
 # avoid NM-wait-online hanging on disconnected interfaces
 mkdir -p /etc/NetworkManager/conf.d/
 printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
@@ -149,6 +153,9 @@ dnf $DNF_OPTS -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $ABRT
 
 mkdir -p /var/lib/package-sets/clevis
 dnf $DNF_OPTS download --downloaddir=/var/lib/package-sets/clevis $PACKAGE_SET_CLEVIS
+
+mkdir -p /var/lib/package-sets/stratis
+dnf $DNF_OPTS download --downloaddir=/var/lib/package-sets/stratis $PACKAGE_SET_STRATIS
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 dnf --setopt=install_weak_deps=False install -y cockpit
