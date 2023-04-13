@@ -44,7 +44,8 @@ if [ -d "/var/cache" ]; then
 fi
 rm -rf /var/tmp/*
 # try to not continue to write to /var for this setup boot
-journalctl --relinquish-var || true
+# HACK: hangs forever in c8s due to https://bugzilla.redhat.com/show_bug.cgi?id=2174645
+timeout 10 journalctl --relinquish-var || true
 rm -rf /var/log/journal/*
 
 if [ $(findmnt / -n -o fstype) != "btrfs" ]; then
