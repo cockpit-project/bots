@@ -344,6 +344,13 @@ if [ -d ~admin/.ssh ]; then
     chown admin:admin ~admin/.ssh
 fi
 
+# HACK: work around https://cockpit-project.org/blog/login-issues.html for sub-man
+case "$IMAGE" in
+    rhel-8-4|rhel-8-6)
+        sed -i 's/is():where()/is(*):where(*)/' /usr/share/cockpit/static/login.js
+        ;;
+esac
+
 # To enable persistent logging
 mkdir -p /var/log/journal
 
