@@ -92,7 +92,7 @@ class MachineBuilder:
                 admin_s.execute(f"echo '{pub.read().strip()}' | sudo tee -a /root/.ssh/authorized_keys")
 
         try:
-            self.machine.wait_boot(timeout_sec=120)
+            self.machine.wait_boot(timeout_sec=300)
             self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib/")], "/var/lib/testvm")
             self.machine.upload([script], "/var/tmp/SETUP")
             self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib", "base/")],
