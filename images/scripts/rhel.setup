@@ -51,40 +51,69 @@ gpgcheck=0
 EOF
 
     elif [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
-        case "$IMAGE" in
-            rhel-8-4) REPO="rhel-8/rel-eng/RHEL-8/latest-RHEL-8.4" ;;
-            rhel-8-6) REPO="rhel-8/rel-eng/RHEL-8/latest-RHEL-8.6" ;;
-            rhel-8-7) REPO="rhel-8/rel-eng/RHEL-8/latest-RHEL-8.7" ;;
-            rhel-8-8) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.8" ;;
-            rhel-8-9) REPO="rhel-8/nightly/RHEL-8/latest-RHEL-8.9" ;;
-            rhel-9-0) REPO="rhel-9/nightly/RHEL-9/latest-RHEL-9.0" ;;
-            rhel-9-1) REPO="rhel-9/rel-eng/RHEL-9/latest-RHEL-9.1" ;;
-            rhel-9-2) REPO="rhel-9/nightly/RHEL-9/latest-RHEL-9.2" ;;
-            rhel-9-3) REPO="rhel-9/nightly/RHEL-9/latest-RHEL-9.3" ;;
-            *) echo "Unknown image $IMAGE"; exit 1
-        esac
-cat <<EOF > /etc/yum.repos.d/nightly.repo
-[RHEL-NIGHTLY-BaseOS]
+        VERSION=${IMAGE#rhel-}
+        MAJOR=${VERSION%%-*}
+        VERSION=${VERSION/-/.}
+        # current development version uses /nightly, released ones /rel-eng + updates
+        if [ "$VERSION" = "9.3" ] || [ "$VERSION" = "8.9" ]; then
+            TREE=nightly
+            UPDATES=""
+        else
+            TREE=rel-eng
+            UPDATES="rhel-${MAJOR}/${TREE}/updates/RHEL-${MAJOR}/latest-RHEL-${VERSION}.0/compose"
+        fi
+
+        REPO="rhel-${MAJOR}/${TREE}/RHEL-${MAJOR}/latest-RHEL-${VERSION}.0/compose"
+
+        cat <<EOF > /etc/yum.repos.d/devel.repo
+[RHEL-BaseOS]
 name=baseos
-baseurl=http://download.devel.redhat.com/$REPO/compose/BaseOS/x86_64/os/
+baseurl=http://download.devel.redhat.com/$REPO/BaseOS/x86_64/os/
 enabled=1
 gpgcheck=0
 
-[RHEL-NIGHTLY-AppStream]
+[RHEL-AppStream]
 name=appstream
-baseurl=http://download.devel.redhat.com/$REPO/compose/AppStream/x86_64/os/
+baseurl=http://download.devel.redhat.com/$REPO/AppStream/x86_64/os/
 enabled=1
 gpgcheck=0
 
-[RHEL-NIGHTLY-BaseOS-Debug]
+[RHEL-BaseOS-Debug]
 name=baseos-debug
-baseurl=http://download.devel.redhat.com/$REPO/compose/BaseOS/x86_64/debug/tree/
+baseurl=http://download.devel.redhat.com/$REPO/BaseOS/x86_64/debug/tree/
 enabled=0
 gpgcheck=0
 
-[RHEL-NIGHTLY-AppStream-Debug]
+[RHEL-AppStream-Debug]
 name=appstream-debug
-baseurl=http://download.devel.redhat.com/$REPO/compose/AppStream/x86_64/debug/tree/
+baseurl=http://download.devel.redhat.com/$REPO/AppStream/x86_64/debug/tree/
+enabled=0
+gpgcheck=0
+EOF
+
+        [ -z "$UPDATES"] || cat <<EOF >> /etc/yum.repos.d/devel.repo
+
+[RHEL-BaseOS-Updates]
+name=baseos-updates
+baseurl=http://download.devel.redhat.com/$UPDATES/BaseOS/x86_64/os/
+enabled=1
+gpgcheck=0
+
+[RHEL-AppStream-Updates]
+name=appstream-updates
+baseurl=http://download.devel.redhat.com/$UPDATES/AppStream/x86_64/os/
+enabled=1
+gpgcheck=0
+
+[RHEL-BaseOS-Debug-Updates]
+name=baseos-debug-updates
+baseurl=http://download.devel.redhat.com/$UPDATES/BaseOS/x86_64/debug/tree/
+enabled=0
+gpgcheck=0
+
+[RHEL-AppStream-Debug-Updates]
+name=appstream-debug-updates
+baseurl=http://download.devel.redhat.com/$UPDATES/AppStream/x86_64/debug/tree/
 enabled=0
 gpgcheck=0
 EOF
@@ -317,13 +346,6 @@ if [ -d ~admin/.ssh ]; then
     chmod 0700 ~admin/.ssh
     chown admin:admin ~admin/.ssh
 fi
-
-# HACK: work around https://cockpit-project.org/blog/login-issues.html for sub-man
-case "$IMAGE" in
-    rhel-8-4|rhel-8-6)
-        sed -i 's/is():where()/is(*):where(*)/' /usr/share/cockpit/static/login.js
-        ;;
-esac
 
 # To enable persistent logging
 mkdir -p /var/log/journal
