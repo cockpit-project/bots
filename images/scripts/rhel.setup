@@ -258,49 +258,22 @@ debuginfo-install -y udisks2
 
 # only install mock and build if DO_BUILD is 1
 if [ "$DO_BUILD" -eq 1 ]; then
+    # install mock from EPEL
+    major=$(cut -d '-' -f 2 <<< "$IMAGE")
+    minor=$(cut -d '-' -f 3 <<< "$IMAGE")
+    dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-${major}.noarch.rpm
+    dnf install -y rpm-build mock
+    dnf config-manager --set-disabled epel
+
     if [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
         dnf install -y rpm-build
-
-        # in RHEL 8, install mock from EPEL
-        if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
-            dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-            dnf install -y mock
-            dnf config-manager --set-disabled epel
-        elif [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
-            # RHEL 9 has no EPEL yet, install from Fedora 34
-            cat <<EOF > /etc/yum.repos.d/fedora.repo
-[fedora]
-name=Fedora
-baseurl=http://download.fedoraproject.org/pub/fedora/linux/releases/34/Everything/\$basearch/os/
-enabled=1
-gpgcheck=0
-EOF
-            dnf install -y --setopt=install_weak_deps=False mock
-            rm  /etc/yum.repos.d/fedora.repo
-        else
-            echo "Unknown RHEL version $IMAGE for building mock" >&2
-            exit 1
-        fi
-
-        case "$IMAGE" in
-            rhel-8-4) REPO="rhel-8.4.0-build" ;;
-            rhel-8-6) REPO="rhel-8.6.0-build" ;;
-            rhel-8-7) REPO="rhel-8.7.0-build" ;;
-            rhel-8-8) REPO="rhel-8.8.0-build" ;;
-            rhel-8-9) REPO="rhel-8.9.0-build" ;;
-            rhel-9-0) REPO="rhel-9.0.0-build" ;;
-            rhel-9-1) REPO="rhel-9.1.0-build" ;;
-            rhel-9-2) REPO="rhel-9.2.0-build" ;;
-            rhel-9-3) REPO="rhel-9.3.0-build" ;;
-            *) echo "Unknown image $IMAGE"; exit 1
-        esac
 
         cat <<EOF > /etc/mock/default.cfg
 config_opts['chroothome'] = '/builddir'
 config_opts['use_host_resolv'] = False
 config_opts['basedir'] = '/var/lib/mock'
 config_opts['rpmbuild_timeout'] = 86400
-config_opts['yum.conf'] = '[main]\\ncachedir=/var/cache/yum\\ndebuglevel=1\\nlogfile=/var/log/yum.log\\nreposdir=/dev/null\\nretries=20\\nobsoletes=1\\ngpgcheck=0\\nassumeyes=1\\nkeepcache=1\\ninstall_weak_deps=0\\nstrict=1\\n\\n# repos\\n\\n[build]\\nname=build\\nbaseurl=http://download.devel.redhat.com/brewroot/repos/$REPO/latest/x86_64/\\nmodule_hotfixes=1\\n'
+config_opts['yum.conf'] = '[main]\\ncachedir=/var/cache/yum\\ndebuglevel=1\\nlogfile=/var/log/yum.log\\nreposdir=/dev/null\\nretries=20\\nobsoletes=1\\ngpgcheck=0\\nassumeyes=1\\nkeepcache=1\\ninstall_weak_deps=0\\nstrict=1\\n\\n# repos\\n\\n[build]\\nname=build\\nbaseurl=http://download.devel.redhat.com/brewroot/repos/rhel-${major}.${minor}.0-build/latest/x86_64/\\nmodule_hotfixes=1\\n'
 config_opts['chroot_setup_cmd'] = 'groupinstall build'
 config_opts['target_arch'] = 'x86_64'
 config_opts['root'] = u'rhel-candidate-x86_64'
@@ -309,12 +282,6 @@ config_opts['macros']['%_topdir'] = '/builddir/build'
 config_opts['macros']['%_rpmfilename'] = '%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm'
 EOF
     elif [ "${IMAGE#centos-*}" != "$IMAGE" ]; then
-        version=$(cut -d '-' -f 2 <<< "$IMAGE")
-        # install mock from EPEL
-        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-${version}.noarch.rpm
-        dnf install -y rpm-build mock
-        dnf config-manager --set-disabled epel
-
         # build mock for CentOS stream repo
         ln -sf centos-stream-${version}-x86_64.cfg /etc/mock/default.cfg
     fi
