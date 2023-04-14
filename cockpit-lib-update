@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+
+# This file is part of Cockpit.
+#
+# Copyright (C) 2023 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
+# Update COCKPIT_REPO_COMMIT to cockpit HEAD automatically, defaults to
+# Makefile as input optionally the full path can be provided. (For example
+# Anaconda uses ui/webui/Makefile.am).
+
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+
+import task
+from lib.constants import BASE_DIR
+
+GIT_URL_RE = r'COCKPIT_REPO_URL\s*=\s*(.*)'
+GIT_COMMIT_RE = r'COCKPIT_REPO_COMMIT\s*=\s*(.*)'
+
+
+def run(context, verbose=False, **kwargs):
+    cockpit_repo_url = 'https://github.com/cockpit-project/cockpit.git'
+    cockpit_repo_commit = 'HEAD'
+    makefile = context or 'Makefile'
+    makefile_path = os.path.join(BASE_DIR, makefile)
+
+    with open(makefile_path) as fp:
+        content = fp.read()
+
+    m = re.search(GIT_URL_RE, content)
+    if m:
+        cockpit_repo_url = m.group(1)
+
+    m = re.search(GIT_COMMIT_RE, content)
+    if m:
+        cockpit_repo_commit = m.group(1)
+
+    # Figure out latest cockpit tip commit
+    with tempfile.TemporaryDirectory('cockpit-repo') as tmpdir:
+        tmpdir = Path(tmpdir)
+        clone_dir = 'cockpit'
+        subprocess.check_call(['git', 'clone', cockpit_repo_url, clone_dir], cwd=tmpdir)
+        git_describe = subprocess.check_output(['git', 'describe'], cwd=tmpdir / clone_dir).decode().strip()
+        git_head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=tmpdir / clone_dir).decode().strip()
+
+    tag, commits, _ = git_describe.split('-')
+    comment = f'{git_head} # {tag} + {commits} commits'
+    content = content.replace(cockpit_repo_commit, comment)
+    with open(makefile_path, 'w') as fp:
+        fp.write(content)
+
+    if not kwargs['dry']:
+        title = f"Makefile: Update Cockpit lib to {git_head[:32]}"
+        branch = task.branch('cockpit-lib', title, pathspec=makefile, **kwargs)
+        kwargs["title"] = title
+        task.pull(branch, **kwargs)
+
+
+if __name__ == '__main__':
+    task.main(function=run, title="Update COCKPIT_REPO_COMMIT for cockpit projects")
