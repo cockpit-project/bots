@@ -151,7 +151,6 @@ REPO_BRANCH_CONTEXT = {
     'candlepin/subscription-manager': {
         'main': [
             'rhel-9-0',
-            'rhel-9-1',
             'rhel-9-2',
             'rhel-9-3',
             'fedora-36',
@@ -161,23 +160,16 @@ REPO_BRANCH_CONTEXT = {
         'subscription-manager-1.28': [
             'rhel-8-4',
             'rhel-8-6',
-            'rhel-8-7',
             'rhel-8-8',
         ],
         'subscription-manager-1.28.29': [
             'rhel-8-6',
-        ],
-        'subscription-manager-1.28.32': [
-            'rhel-8-7',
         ],
         'subscription-manager-1.28.36': [
             'rhel-8-8',
         ],
         'subscription-manager-1.29.26': [
             'rhel-9-0',
-        ],
-        'subscription-manager-1.29.30': [
-            'rhel-9-1',
         ],
         'subscription-manager-1.29.33': [
             'rhel-9-2',
@@ -189,7 +181,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'candlepin/subscription-manager-cockpit': {
         'main': [
-            'rhel-9-1',
             'centos-9-stream',
             'rhel-9-2',
             'rhel-9-3',
@@ -199,10 +190,9 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
-            'rhel-8-7',
-            'rhel-8-7/subscription-manager-1.28',
             f'{TEST_OS_DEFAULT}/pybridge',
             'rhel-8-9',
+            'rhel-8-9/subscription-manager-1.28',
         ],
     },
     'cockpit-project/cockpit-certificates': {
