@@ -161,6 +161,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-4',
             'rhel-8-6',
             'rhel-8-8',
+            'rhel-8-9',
         ],
         'subscription-manager-1.28.29': [
             'rhel-8-6',
@@ -176,7 +177,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             f'{TEST_OS_DEFAULT}/pybridge',
-            'rhel-8-9',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
