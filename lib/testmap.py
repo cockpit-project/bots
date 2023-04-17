@@ -182,7 +182,6 @@ REPO_BRANCH_CONTEXT = {
     'candlepin/subscription-manager-cockpit': {
         'main': [
             'centos-9-stream',
-            'rhel-9-2',
             'rhel-9-3',
             'fedora-36',
             'fedora-37',
