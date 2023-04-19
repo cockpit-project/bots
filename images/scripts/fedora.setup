@@ -13,6 +13,8 @@ printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
 
 echo foobar | passwd --stdin root
 
+. /etc/os-release
+
 # We install all dependencies of the cockpit packages since we want
 # them to not spontaneously change from one test run to the next when
 # the distribution repository is updated.
@@ -140,7 +142,7 @@ if [ "${IMAGE%-i386}" != "$IMAGE" ]; then
 fi
 
 # HACK: https://bugzilla.redhat.com/show_bug.cgi?id=2170110
-if [ "$IMAGE" = "fedora-38" ]; then
+if [ "$VERSION_ID" = "38" ]; then
     COCKPIT_DEPS="$COCKPIT_DEPS qemu-audio-spice"
 fi
 
@@ -174,8 +176,6 @@ if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
     # Enable updates-testing in mock
     echo "config_opts['dnf.conf'] += '[updates-testing]\nenabled=1'" >>/etc/mock/default.cfg
 fi
-
-. /etc/os-release
 
 # don't use a bootstrap chroot to save time and space; everything is offline, and we always just do exactly one build
 echo "config_opts['use_bootstrap'] = False" >>/etc/mock/site-defaults.cfg
