@@ -62,8 +62,14 @@ def run(context, verbose=False, **kwargs):
         git_describe = subprocess.check_output(['git', 'describe'], cwd=tmpdir / clone_dir).decode().strip()
         git_head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=tmpdir / clone_dir).decode().strip()
 
-    tag, commits, _ = git_describe.split('-')
-    comment = f'{git_head} # {tag} + {commits} commits'
+    try:
+        # when HEAD is not tagged, this looks like "290-9-g4a6d86f5b"
+        tag, commits, _ = git_describe.split('-')
+        comment = f'{git_head} # {tag} + {commits} commits'
+    except ValueError:
+        # when HEAD is tagged, use that name
+        comment = f'{git_head} # {git_describe}'
+
     content = content.replace(cockpit_repo_commit, comment)
     with open(makefile_path, 'w') as fp:
         fp.write(content)
