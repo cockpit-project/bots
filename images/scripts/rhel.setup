@@ -313,7 +313,7 @@ config_opts['macros']['%_rpmfilename'] = '%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{AR
 EOF
     elif [ "${IMAGE#centos-*}" != "$IMAGE" ]; then
         # build mock for CentOS stream repo
-        ln -sf centos-stream-${version}-x86_64.cfg /etc/mock/default.cfg
+        ln -sf centos-stream-${major}-x86_64.cfg /etc/mock/default.cfg
     fi
 
     useradd -c Builder -G mock builder
