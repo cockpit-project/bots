@@ -70,9 +70,13 @@ def run(context, verbose=False, **kwargs):
         # when HEAD is tagged, use that name
         comment = f'{git_head} # {git_describe}'
 
-    content = content.replace(cockpit_repo_commit, comment)
+    new_content = content.replace(cockpit_repo_commit, comment)
+    if content == new_content:
+        print("COCKPIT_REPO_COMMIT is already up to date, nothing to do")
+        return
+
     with open(makefile_path, 'w') as fp:
-        fp.write(content)
+        fp.write(new_content)
 
     if not kwargs['dry']:
         title = f"Makefile: Update Cockpit lib to {git_head[:32]}"
