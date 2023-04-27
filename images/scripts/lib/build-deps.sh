@@ -44,6 +44,19 @@ esac
 # - nodejs for starter-kit and other projects which rebuild webpack during RPM build
 EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs"
 
+# We don't grok %generate_buildrequires, so hard-code some extras here
+EXTRA_DEPS="$EXTRA_DEPS \
+    procps-ng \
+    pyproject-rpm-macros \
+    python3-pip \
+    python3-pytest-asyncio \
+    python3-pytest-cov \
+    python3-pytest-timeout \
+    python3-pytest-xdist \
+    python3-tox-current-env \
+    python3-wheel \
+"
+
 # libappstream-glib-devel is needed for merging translations in AppStream XML files in starter-kit and derivatives
 # on RHEL 8 only: gettext in RHEL 8 does not know about .metainfo.xml files, and libappstream-glib-devel
 # provides /usr/share/gettext/its/appdata.{its,loc} for them
