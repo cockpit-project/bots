@@ -19,7 +19,7 @@ case "$OS_VER" in
         ;;
 
     *)
-        spec=$($GET "$COCKPIT_GIT/main/tools/cockpit.spec")
+        spec=$($GET "$COCKPIT_GIT/procps-ng-buildrequire/tools/cockpit.spec")
         ;;
 esac
 
