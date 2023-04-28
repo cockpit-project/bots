@@ -128,6 +128,10 @@ case "$RELEASE" in
         # gettext version too old to ship metainfo.its
         PBUILDER_EXTRA="${PBUILDER_EXTRA:-} appstream"
         ;;
+    lunar)
+        # freeipa-client conflicts with systemd-timesyncd
+        TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
+        ;;
 esac
 
 # smaller and faster initrd; see https://launchpad.net/bugs/1592684
