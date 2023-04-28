@@ -23,7 +23,7 @@ case "$OS_VER" in
         ;;
 esac
 
-echo "$spec" | rpmspec -D "$OS_VER" -D 'version 0' --buildrequires --query /dev/stdin | sed 's/.*/"&"/' | tr '\n' ' '
+echo "$spec" | rpmspec -D "$OS_VER" -D 'version 0' -D 'cockpit_enable_python 1' --buildrequires --query /dev/stdin | sed 's/.*/"&"/' | tr '\n' ' '
 
 # We build anaconda rpms
 case "$OS_VER" in
