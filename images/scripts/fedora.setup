@@ -3,6 +3,8 @@
 set -ex
 IMAGE="$1"
 
+. /etc/os-release
+
 # avoid failures when running image builds in a non-English locale (ssh transfers the host environment)
 unset LANGUAGE
 unset LANG
@@ -64,7 +66,6 @@ udisks2-lvm2 \
 udisks2-iscsi \
 "
 
-
 # We also install the packages necessary to join a FreeIPA domain so
 # that we don't have to go to the network during a test run.
 #
@@ -93,7 +94,6 @@ ltrace \
 nginx \
 ntpsec \
 podman \
-qemu-virtiofsd \
 redis \
 socat \
 strace \
@@ -148,6 +148,10 @@ fi
 
 if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
     dnf config-manager --set-enabled updates-testing
+fi
+
+if [ "$VERSION_ID" -lt "39" ]; then
+    COCKPIT_DEPS="$COCKPIT_DEPS qemu-virtiofsd"
 fi
 
 dnf $DNF_OPTS -y upgrade
