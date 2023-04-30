@@ -273,6 +273,7 @@ def main():
     parser.add_argument('-q', '--quick', action='store_true',
                         help='Disable tests during package build with --build')
     parser.add_argument('image', help='The image to use (destination name when using --base-image)')
+    parser.add_argument('--sit', action='store_true', help='Sit and wait if any VM action fails')
     args = parser.parse_args()
 
     if not args.actions and not args.resize:
@@ -304,6 +305,13 @@ def main():
     try:
         for (handler, arg) in args.actions:
             handler(machine, arg)
+    except Exception as e:
+        if args.sit:
+            print(e, file=sys.stderr)
+            print(machine.diagnose(), file=sys.stderr)
+            print("Press RET to continue...")
+            sys.stdin.readline()
+        raise e
     finally:
         machine.stop()
 
