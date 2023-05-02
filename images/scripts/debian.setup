@@ -97,6 +97,10 @@ PACKAGE_SET_CHRONYD="\
 chrony
 "
 
+PACKAGE_SET_TIMESYNCD="\
+systemd-timesyncd
+"
+
 # wait until cloud-init finishes, so that it doesn't clobber sources.list
 until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 
@@ -202,6 +206,9 @@ mkdir -p /var/lib/package-sets/clevis
 
 mkdir -p /var/lib/package-sets/chronyd
 ( cd /var/lib/package-sets/chronyd; $APT download $PACKAGE_SET_CHRONYD )
+
+mkdir -p /var/lib/package-sets/timesyncd
+( cd /var/lib/package-sets/timesyncd; $APT download $PACKAGE_SET_TIMESYNCD )
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 $APT --no-install-recommends install cockpit
