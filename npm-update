@@ -59,7 +59,7 @@ def prefix(name, version):
     if not version[0].isdigit():
         return version
     if name.startswith("@patternfly"):
-        return "prerelease"
+        return "alpha"
     return "~" + version
 
 
