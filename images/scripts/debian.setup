@@ -76,6 +76,7 @@ virtinst \
 xfsprogs \
 sosreport \
 open-iscsi \
+packagekit-tools \
 targetcli-fb \
 tcsh \
 clevis-luks \
