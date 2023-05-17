@@ -132,7 +132,6 @@ REPO_BRANCH_CONTEXT = {
     'osbuild/cockpit-composer': {
         'main': [
             f'{TEST_OS_DEFAULT}/pybridge',
-            'fedora-36',
             'fedora-37',
             'fedora-37/firefox',
             'rhel-8-8',
@@ -153,7 +152,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-0',
             'rhel-9-2',
             'rhel-9-3',
-            'fedora-36',
             'fedora-37',
             'fedora-38',
             f'{TEST_OS_DEFAULT}/pybridge',
@@ -183,7 +181,6 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             'centos-9-stream',
             'rhel-9-3',
-            'fedora-36',
             'fedora-37',
             'fedora-38',
             f'{TEST_OS_DEFAULT}/pybridge',
