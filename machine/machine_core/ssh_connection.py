@@ -16,15 +16,15 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 
+import errno
 import os
-import time
+import select
+import shlex
 import socket
 import subprocess
-import select
-import errno
-import shlex
 import sys
 import tempfile
+import time
 
 from . import exceptions
 from . import timeout as timeoutlib

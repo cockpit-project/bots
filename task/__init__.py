@@ -19,7 +19,6 @@
 # our GitHub interacition.
 
 import argparse
-from datetime import datetime
 import os
 import random
 import re
@@ -29,10 +28,11 @@ import subprocess
 import sys
 import time
 import traceback
+from datetime import datetime
 
-from . import github
 from lib.constants import BASE_DIR
 
+from . import github
 
 __all__ = (
     "api",
