@@ -2,6 +2,14 @@
 
 set -eu
 
+test_ruff() {
+    command -v ruff >/dev/null || { echo 'no ruff installed'; return 0; }
+    test -n "$(ruff check --show-files .)" || return 0  # no python changes
+    ruff check --no-cache .
+}
+
+test_ruff
+
 # run static code checks like pyflakes and pep8
 PYEXEFILES="$(git grep -lI '^#!.*python') $(git ls-files "*.py")"
 flake8 $PYEXEFILES
