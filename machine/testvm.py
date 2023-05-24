@@ -28,14 +28,14 @@ bots_dir = os.path.dirname(machine_dir)
 if bots_dir not in sys.path:
     sys.path.insert(1, bots_dir)
 
-from machine_core.timeout import Timeout
-from machine_core.machine import Machine
-from machine_core.exceptions import Failure, RepeatableFailure
-from machine_core.machine_virtual import VirtMachine, VirtNetwork
-from lib.constants import BOTS_DIR, TEST_DIR, IMAGES_DIR, SCRIPTS_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT
-from lib.directories import get_images_data_dir
-from machine_core.cli import cmd_cli
-from lib.testmap import get_build_image, get_test_image
+from machine_core.timeout import Timeout  # noqa: E402
+from machine_core.machine import Machine  # noqa: E402
+from machine_core.exceptions import Failure, RepeatableFailure  # noqa: E402
+from machine_core.machine_virtual import VirtMachine, VirtNetwork  # noqa: E402
+from lib.constants import BOTS_DIR, TEST_DIR, IMAGES_DIR, SCRIPTS_DIR, DEFAULT_IMAGE, TEST_OS_DEFAULT  # noqa: E402
+from lib.directories import get_images_data_dir  # noqa: E402
+from machine_core.cli import cmd_cli  # noqa: E402
+from lib.testmap import get_build_image, get_test_image  # noqa: E402
 
 
 __all__ = (

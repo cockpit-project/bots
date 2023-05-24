@@ -32,7 +32,7 @@ from . import timeout as timeoutlib
 # HACK: some projects directly import ssh_connection before adjusting sys.path; add bots root dir
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-from lib.constants import TEST_DIR
+from lib.constants import TEST_DIR  # noqa: E402
 
 
 def write_all(fd, data):

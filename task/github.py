@@ -391,7 +391,9 @@ class GitHub(object):
         count = 100
         while count == 100:
             try:
-                data = self.get(f"/orgs/cockpit-project/teams/contributors/members?page={page}&per_page={count}") or []
+                data = self.get(
+                    f"/orgs/cockpit-project/teams/contributors/members?page={page}&per_page={count}"
+                ) or []
             except GitHubError as e:
                 if e.status == 403:
                     logging.warning("Insufficient token permissions to list team members: %s" % e)
