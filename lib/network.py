@@ -19,8 +19,8 @@
 # our GitHub interacition.
 
 import os
-import ssl
 import socket
+import ssl
 
 from lib.constants import IMAGES_DIR
 

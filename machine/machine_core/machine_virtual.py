@@ -17,18 +17,20 @@
 
 import contextlib
 import fcntl
-import libvirt
-import libvirt_qemu
 import os
 import shlex
-import string
 import socket
+import string
 import subprocess
-import tempfile
 import sys
+import tempfile
 import time
 
-from lib.constants import TEST_DIR, BOTS_DIR
+import libvirt
+import libvirt_qemu
+
+from lib.constants import BOTS_DIR, TEST_DIR
+
 from .exceptions import Failure, RepeatableFailure
 from .machine import Machine
 

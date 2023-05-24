@@ -19,19 +19,20 @@
 # our GitHub interacition.
 
 import http.client
-from http import HTTPStatus
 import json
 import logging
 import os
 import re
 import socket
-from ssl import SSLEOFError
 import subprocess
 import time
 import urllib.parse
+from http import HTTPStatus
+from ssl import SSLEOFError
 
+from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
-from lib.directories import xdg_config_home, xdg_cache_home
+
 from . import cache
 
 __all__ = (

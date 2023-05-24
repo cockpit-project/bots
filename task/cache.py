@@ -24,9 +24,9 @@ import stat
 import sys
 import tempfile
 import time
-import urllib.request
-import urllib.parse
 import urllib.error
+import urllib.parse
+import urllib.request
 
 __all__ = (
     'Cache',
