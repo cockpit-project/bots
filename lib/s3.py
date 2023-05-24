@@ -17,8 +17,8 @@ import sys
 import time
 import urllib.parse
 import urllib.request
-from typing import Dict, List, Iterable, IO
 import xml.etree.ElementTree as ET
+from typing import IO, Dict, Iterable, List
 
 from .directories import xdg_config_home
 from .network import host_ssl_context

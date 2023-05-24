@@ -2,6 +2,7 @@
 select = [
     "E",       # pycodestyle
     "F",       # pyflakes
+    "I",       # isort
 ]
 exclude = [
     ".git/",
