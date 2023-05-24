@@ -2,8 +2,11 @@
 
 set -eu
 
-# run static code checks like pyflakes and pep8
-PYEXEFILES="$(git grep -lI '^#!.*python') $(git ls-files "*.py")"
-flake8 $PYEXEFILES
+test_ruff() {
+    test -n "$(ruff check --show-files . 2>/dev/null)" || return 0  # no python changes
+    ruff check --no-cache .
+}
+
+test_ruff
 
 ./test-bots

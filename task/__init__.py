@@ -245,7 +245,8 @@ def execute(*args):
     if "GIT_ASKPASS" not in env:
         env["GIT_ASKPASS"] = "/bin/true"
     try:
-        output = subprocess.check_output(args, cwd=BASE_DIR, stderr=subprocess.STDOUT, env=env, universal_newlines=True)
+        output = subprocess.check_output(args, cwd=BASE_DIR, stderr=subprocess.STDOUT,
+                                         env=env, universal_newlines=True)
     except subprocess.CalledProcessError as e:
         if verbose:
             sys.stderr.write("! " + str(e))

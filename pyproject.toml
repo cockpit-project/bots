@@ -1,0 +1,12 @@
+[tool.ruff]
+select = [
+    "E",       # pycodestyle
+    "F",       # pyflakes
+]
+exclude = [
+    ".git/",
+]
+ignore = [
+    "E731",  # Do not assign a `lambda` expression, use a `def`
+]
+line-length = 118
