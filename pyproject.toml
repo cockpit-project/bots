@@ -3,6 +3,7 @@ select = [
     "E",       # pycodestyle
     "F",       # pyflakes
     "I",       # isort
+    "G",       # flake8-logging-format
 ]
 exclude = [
     ".git/",
