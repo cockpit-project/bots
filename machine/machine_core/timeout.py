@@ -45,7 +45,7 @@ class Timeout:
             signal.signal(signal.SIGALRM, self.handle_timeout)
             signal.alarm(self.seconds)
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, _type, value, traceback):
         if self.seconds:
             signal.alarm(0)
             signal.signal(signal.SIGALRM, signal.SIG_DFL)
