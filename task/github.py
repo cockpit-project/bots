@@ -219,7 +219,7 @@ class GitHub(object):
                     # success!
                     break
             except (ConnectionResetError, http.client.BadStatusLine, socket.error, SSLEOFError) as e:
-                logging.warning(f"Transient error during GitHub request, attempt #{retry}: {e}")
+                logging.warning("Transient error during GitHub request, attempt #%s: %s", retry, e)
 
             self.conn = None
             time.sleep(2 ** retry)
@@ -397,7 +397,7 @@ class GitHub(object):
                 ) or []
             except GitHubError as e:
                 if e.status == 403:
-                    logging.warning("Insufficient token permissions to list team members: %s" % e)
+                    logging.warning("Insufficient token permissions to list team members: %s", e)
                     break
                 else:
                     raise
