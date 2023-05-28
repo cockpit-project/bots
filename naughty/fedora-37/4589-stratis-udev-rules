@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/work/bots/make-checkout-workdir/test/verify/check-storage-stratis", line *, in testBasic
-    self.assertFalse(udisk_contains_stratis_private)
-AssertionError: True is not false
