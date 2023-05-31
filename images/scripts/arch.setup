@@ -63,6 +63,8 @@ sssd \
 stratisd \
 stratis-cli \
 tang \
+tpm2-tools \
+jq \
 ntfs-3g \
 "
 
