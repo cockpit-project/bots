@@ -44,6 +44,7 @@ gdb \
 fakeroot \
 strace \
 ltrace \
+lvm2 \
 cryptsetup \
 dhclient \
 dnsmasq \
@@ -66,6 +67,7 @@ tang \
 tpm2-tools \
 jq \
 ntfs-3g \
+xfsprogs \
 "
 
 # iptables-nft (which provides ebtables) is required for libvirt NAT networking
