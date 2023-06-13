@@ -136,6 +136,10 @@ pcp \
 perl-json \
 perl-locale-po \
 xmlto \
+python-installer \
+python-pip \
+python-wheel \
+python-build
 "
 
 # Create build chroot for cockpit projects for offline builds, the base chroot
