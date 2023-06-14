@@ -29,6 +29,7 @@ import time
 import urllib.parse
 from http import HTTPStatus
 from ssl import SSLEOFError
+from typing import Any, Dict, List, Optional, Set
 
 from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
@@ -62,7 +63,7 @@ ISSUE_TITLE_IMAGE_REFRESH = "Image refresh for {0}"
 
 
 class Logger(object):
-    def __init__(self, directory):
+    def __init__(self, directory: str) -> None:
         hostname = socket.gethostname().split(".")[0]
         month = time.strftime("%Y%m")
         self.path = os.path.join(directory, "{0}-{1}.log".format(hostname, month))
@@ -70,7 +71,7 @@ class Logger(object):
         os.makedirs(directory, exist_ok=True)
 
     # Yes, we open the file each time
-    def write(self, value):
+    def write(self, value: str) -> None:
         with open(self.path, 'a') as f:
             f.write(value)
 
@@ -82,7 +83,7 @@ class GitHubError(RuntimeError):
     code depending on it continues to work.
     """
 
-    def __init__(self, url, response):
+    def __init__(self, url: str, response):
         self.url = url
         self.data = response.get('data', "")
         self.status = response.get('status')
@@ -192,12 +193,13 @@ class GitHub(object):
 
         return self._url
 
-    def qualify(self, resource):
+    def qualify(self, resource: Optional[str]) -> str:
         if resource is None:
             return self.url.path
         return urllib.parse.urljoin("{0}/".format(self.url.path), resource)
 
-    def request(self, method, resource, data="", headers=None):
+    def request(self, method: str, resource: Optional[str], data: str = "",
+                headers: Optional[Dict] = None) -> Dict[str, Any]:
         if headers is None:
             headers = {}
         headers["User-Agent"] = "Cockpit Tests"
@@ -243,7 +245,7 @@ class GitHub(object):
             "data": response.read().decode('utf-8')
         }
 
-    def get(self, resource=None):
+    def get(self, resource: Optional[str] = None) -> Optional[Any]:
         headers = {}
         qualified = self.qualify(resource)
         cached = self.cache.read(qualified)
@@ -276,7 +278,7 @@ class GitHub(object):
         self.cache.mark()
         return json.loads(response['data'])
 
-    def put(self, resource, data, accept=[]):
+    def put(self, resource: str, data: str, accept: List[Any] = []) -> Optional[Any]:
         response = self.request("PUT", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
@@ -287,7 +289,7 @@ class GitHub(object):
         else:
             return None
 
-    def delete(self, resource, accept=[]):
+    def delete(self, resource: str, accept: List[Any] = []) -> Optional[Any]:
         response = self.request("DELETE", resource, "", {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
@@ -298,7 +300,7 @@ class GitHub(object):
         else:
             return None
 
-    def patch(self, resource, data, accept=[]):
+    def patch(self, resource: str, data: str, accept: List[Any] = []) -> Any:
         response = self.request("PATCH", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
@@ -306,12 +308,13 @@ class GitHub(object):
         self.cache.mark()
         return json.loads(response['data'])
 
-    def statuses(self, revision):
+    def statuses(self, revision: str) -> Dict[Any, Any]:
         result = {}
         page = 1
         count = 100
         while count == 100:
             data = self.get("commits/{0}/status?page={1}&per_page={2}".format(revision, page, count))
+            assert data
             count = 0
             page += 1
             if "statuses" in data:
@@ -321,19 +324,20 @@ class GitHub(object):
                 count = len(data["statuses"])
         return result
 
-    def all_statuses(self, revision):
+    def all_statuses(self, revision: str) -> List[Any]:
         result = []
         page = 1
         count = 100
         while count == 100:
             data = self.get("commits/{0}/statuses?page={1}&per_page={2}".format(revision, page, count))
+            assert data
             count = 0
             page += 1
             result += data
             count = len(data)
         return result
 
-    def pulls(self, state='open', since=None):
+    def pulls(self, state: str = 'open', since: Optional[int] = None):
         result = []
         page = 1
         count = 100
@@ -357,32 +361,31 @@ class GitHub(object):
         return result
 
     # The since argument is seconds since the issue was last time modified
-    def issues(self, labels=["bot"], state="open", since=None):
-        result = []
+    def issues(self, labels: List[str] = ["bot"], state: str = "open", since: Optional[float] = None) -> List[Any]:
+        result: List[Any] = []
         page = 1
         count = 100
         label = ",".join(labels)
+        since_qstr = ""
         if since:
-            since = "&since={0}".format(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(since)))
-        else:
-            since = ""
+            since_qstr = "&since={0}".format(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(since)))
 
         while count == 100:
-            req = "issues?labels={0}&state={1}&page={2}&per_page={3}{4}".format(label, state, page, count, since)
-            issues = self.get(req)
+            req = "issues?labels={0}&state={1}&page={2}&per_page={3}{4}".format(label, state, page, count, since_qstr)
+            issues = self.get(req) or []
 
             page += 1
             count = len(issues)
             result = result + issues
         return result
 
-    def getHead(self, pr):
+    def getHead(self, pr) -> Optional[Any]:
         pull = self.get("pulls/{0}".format(pr))
         if pull:
             return pull.get("head", {}).get("sha")
         return None
 
-    def allowlist(self):
+    def allowlist(self) -> Set[str]:
         # bots and organizations which are allowed to use our CI (these use branches within the main repo for PRs)
         users = {"github-actions[bot]", "candlepin", "cockpit-project", "osbuild", "rhinstaller"}
 
@@ -406,7 +409,7 @@ class GitHub(object):
             page += 1
         return users
 
-    def is_user_allowed(self, user):
+    def is_user_allowed(self, user: str) -> bool:
         return user in self.allowlist()
 
 

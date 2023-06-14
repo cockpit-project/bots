@@ -27,6 +27,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import Any, Dict, Optional
 
 __all__ = (
     'Cache',
@@ -34,7 +35,12 @@ __all__ = (
 
 
 class Cache(object):
-    def __init__(self, directory, lag=None):
+    directory: str
+    lag: int
+    marked: float
+    pruned: bool = False
+
+    def __init__(self, directory: str, lag: Optional[int] = None):
         self.directory = directory
         self.pruned = False
 
@@ -49,10 +55,10 @@ class Cache(object):
         self.lag = lag
 
         # The mark tells us that stuff before this time is not "current"
-        self.marked = 0
+        self.marked: float = 0
 
     # Prune old expired data from the cache directory
-    def prune(self):
+    def prune(self) -> None:
         try:
             entries = os.scandir(self.directory)
         except FileNotFoundError:
@@ -71,7 +77,7 @@ class Cache(object):
                     sys.stderr.write(f"Failed to remove GitHub cache item {entry.path}: {exc}\n")
 
     # Read a resource from the cache or return None
-    def read(self, resource):
+    def read(self, resource: str) -> Optional[Dict[Any, Any]]:
         path = os.path.join(self.directory, urllib.parse.quote(resource, safe=''))
         try:
             with open(path, 'r') as fp:
@@ -80,7 +86,7 @@ class Cache(object):
             return None
 
     # Write a resource to the cache in an atomic way
-    def write(self, resource, contents):
+    def write(self, resource: str, contents: Dict[Any, Any]) -> None:
         path = os.path.join(self.directory, urllib.parse.quote(resource, safe=''))
         os.makedirs(self.directory, exist_ok=True)
         (fd, temp) = tempfile.mkstemp(dir=self.directory)
@@ -93,13 +99,13 @@ class Cache(object):
             self.prune()
 
     # Tell the cache that stuff before this time is not "current"
-    def mark(self, mtime=None):
+    def mark(self, mtime: Optional[float] = None) -> None:
         if not mtime:
             mtime = time.time()
         self.marked = mtime
 
     # Check if a given resource in the cache is "current" or not
-    def current(self, resource):
+    def current(self, resource: str) -> bool:
         path = os.path.join(self.directory, urllib.parse.quote(resource, safe=''))
         try:
             mtime = os.path.getmtime(path)

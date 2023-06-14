@@ -15,16 +15,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+from typing import List
+
 from lib.directories import xdg_config_home
 
 # hosted on public internet
-PUBLIC_STORES = [
+PUBLIC_STORES: List[str] = [
     "https://cockpit-images.eu-central-1.linodeobjects.com/",
     "https://cockpit-images.us-east-1.linodeobjects.com/",
 ]
 
 # hosted behind the Red Hat VPN
-REDHAT_STORES = [
+REDHAT_STORES: List[str] = [
     # e2e down for maintenance
     # "https://cockpit-11.apps.cnfdb2.e2e.bos.redhat.com/images/",
 ]

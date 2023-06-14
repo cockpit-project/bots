@@ -207,7 +207,7 @@ class SSHConnection(object):
         if not self._check_ssh_master():
             raise exceptions.Failure("Couldn't launch an SSH master process")
 
-    def _kill_ssh_master(self):
+    def _kill_ssh_master(self) -> None:
         if self.ssh_master:
             try:
                 os.unlink(self.ssh_master)
@@ -244,7 +244,7 @@ class SSHConnection(object):
                 return True
         return False
 
-    def _ensure_ssh_master(self):
+    def _ensure_ssh_master(self) -> None:
         if not self._check_ssh_master():
             self._start_ssh_master()
 
