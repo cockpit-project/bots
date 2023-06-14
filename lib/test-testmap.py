@@ -49,7 +49,7 @@ class TestTestMap(unittest.TestCase):
         # context from _manual pseudo-branch
         good("fedora-testing", "cockpit-project/cockpit")
         # not known in this branch
-        bad("debian-testing", "cockpit-project/cockpit/rhel-8.5")
+        bad("debian-testing", "cockpit-project/cockpit/rhel-7.9")
 
         # unknown scenarios/projects/branches
         bad("wrongos", "cockpit-project/cockpit")
