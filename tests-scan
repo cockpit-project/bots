@@ -335,7 +335,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
             # Get correct project and branch. Ones from test name have priority
             project = repo
             branch = base
-            os_scenario, bots_pr, context_project, context_branch = testmap.split_context(context)
+            image_scenario, bots_pr, context_project, context_branch = testmap.split_context(context)
             if context_project:
                 project = context_project
                 branch = context_branch or testmap.get_default_branch(project)
@@ -379,7 +379,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                                 number,
                                 revision,
                                 checkout_ref,
-                                os_scenario,
+                                image_scenario,
                                 branch,
                                 project,
                                 bots_ref,
