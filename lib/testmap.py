@@ -272,7 +272,7 @@ def split_context(context):
     repo_branch = ""
 
     context_parts = context.split("@")
-    os_scenario = context_parts[0]
+    image_scenario = context_parts[0]
 
     # Second part can be be either `bots#<pr_number>` or repo specification
     if len(context_parts) > 1:
@@ -285,11 +285,11 @@ def split_context(context):
         repo_branch = context_parts[2]
 
     repo_branch = repo_branch.split('/', 2)
-    return (os_scenario, bots_pr, '/'.join(repo_branch[:2]), ''.join(repo_branch[2:]))
+    return (image_scenario, bots_pr, '/'.join(repo_branch[:2]), ''.join(repo_branch[2:]))
 
 
 def is_valid_context(context, repo):
-    os_scenario, _bots_pr, context_repo, branch = split_context(context)
+    image_scenario, _bots_pr, context_repo, branch = split_context(context)
     # if the context specifies a repo, use that one instead
     branch_contexts = tests_for_project(context_repo or repo)
     if context_repo:
@@ -307,7 +307,7 @@ def is_valid_context(context, repo):
         repo_contexts = set(itertools.chain(*branch_contexts.values()))
 
     # Valid contexts are the ones that exist in the given/current repo
-    return os_scenario in repo_contexts
+    return image_scenario in repo_contexts
 
 
 def projects():
