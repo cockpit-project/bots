@@ -52,7 +52,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-testing',
-            'fedora-testing/daily',
             'fedora-rawhide',
         ],
     },
@@ -63,18 +62,11 @@ REPO_BRANCH_CONTEXT = {
             'centos-8-stream',
             'fedora-rawhide',
         ],
-        '_manual': [
-            f'{TEST_OS_DEFAULT}/firefox',
-            'fedora-38',
-        ],
     },
     'cockpit-project/cockpit-ostree': {
         'main': [
             'fedora-coreos',
             'rhel4edge',
-        ],
-        '_manual': [
-            'fedora-coreos/pybridge',
         ],
     },
     'cockpit-project/cockpit-podman': {
@@ -188,7 +180,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
             'rhel-8-9',
-            'rhel-8-9/subscription-manager-1.28',
         ],
     },
     'cockpit-project/cockpit-certificates': {
@@ -209,9 +200,6 @@ REPO_BRANCH_CONTEXT = {
         'master': [
             'fedora-rawhide-boot',
         ],
-        '_manual': [
-            'fedora-rawhide-boot/devel',
-        ]
     },
 }
 
