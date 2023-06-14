@@ -51,22 +51,28 @@ class TestTestMap(unittest.TestCase):
         # not known in this branch
         bad("debian-testing", "cockpit-project/cockpit/rhel-7.9")
 
-        # unknown scenarios/projects/branches
+        # unknown image/projects/branches
         bad("wrongos", "cockpit-project/cockpit")
-        bad("debian-testing/wrongscen", "cockpit-project/cockpit")
+        bad("wrongos/somescen", "cockpit-project/cockpit")
         bad("debian-testing", "cockpit-project/wrongproject")
         bad("debian-testing", "cockpit-project/cockpit/wrongbranch")
+
+        # accepts any scenario
+        good("debian-testing/newscen", "cockpit-project/cockpit")  # automatic
+        good("fedora-testing/newscen", "cockpit-project/cockpit")  # _manual
 
         # bots has no integration tests for itself
         bad("debian-testing", "cockpit-project/bots")
         # but can refer to foreign projects
         good("debian-testing@cockpit-project/cockpit", "cockpit-project/bots")
         good("debian-testing@cockpit-project/cockpit/main", "cockpit-project/bots")
+        good("debian-testing/somescen@cockpit-project/cockpit", "cockpit-project/bots")
         # can refer to _manual contexts of foreign projects
         good("fedora-testing@cockpit-project/cockpit", "cockpit-project/bots")
         good("fedora-testing@cockpit-project/cockpit/main", "cockpit-project/bots")
+        good("fedora-testing/somescen@cockpit-project/cockpit/main", "cockpit-project/bots")
 
-        # unknown scenarios/project/branches with foreign project
+        # unknown image/project/branches with foreign project
         bad("wrongos@cockpit-project/cockpit", "cockpit-project/bots")
         bad("debian-testing@cockpit-project/wrongproject", "cockpit-project/bots")
         bad("debian-testing@cockpit-project/cockpit/wrongbranch", "cockpit-project/bots")
