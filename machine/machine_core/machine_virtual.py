@@ -204,10 +204,10 @@ class VirtNetwork:
         return result
 
     def host(self, number=None, restrict=False, isolate=False, forward={}):
-        '''Create resources for a host, returns address and XML
+        """Create resources for a host, returns address and XML
 
         isolate: True for no network at all, "user" for QEMU user network instead of bridging
-        '''
+        """
         result = self.interface(number)
         result["mcast"] = self.network
         result["restrict"] = "on" if restrict else "off"
