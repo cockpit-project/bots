@@ -293,7 +293,7 @@ def is_valid_context(context, repo):
     else:
         # FIXME: if context is just a simple OS/scenario, we don't know which branch
         # is meant by the caller; accept known contexts from all branches for now
-        repo_images = set([c.split('/')[0] for c in itertools.chain(*branch_contexts.values())])
+        repo_images = {c.split('/')[0] for c in itertools.chain(*branch_contexts.values())}
 
     # Valid contexts are the ones that exist in the given/current repo
     return image in repo_images

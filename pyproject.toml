@@ -1,5 +1,6 @@
 [tool.ruff]
 select = [
+    "C4",      # flake8-comprehensions
     "D300",    # pydocstyle: Forbid ''' in docstrings
     "E",       # pycodestyle
     "F",       # pyflakes
