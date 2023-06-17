@@ -6,6 +6,7 @@ select = [
     "F",       # pyflakes
     "I",       # isort
     "G",       # flake8-logging-format
+    "RUF",     # ruff rules
 ]
 exclude = [
     ".git/",

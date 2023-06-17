@@ -175,7 +175,7 @@ def main():
             print('\t'.join(items))
         sys.exit(0)
     elif cmd == 'rm':
-        args = ['-XDELETE'] + sign_curl(url, method='DELETE')
+        args = ["-XDELETE", *sign_curl(url, method="DELETE")]
     elif cmd == 'put':
         args = [sign_url(url, method='PUT')]
     elif cmd == 'put-public':
