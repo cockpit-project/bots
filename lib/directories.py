@@ -50,7 +50,7 @@ def get_git_config(*args):
     try:
         myenv = os.environ.copy()
         myenv["GIT_DIR"] = GIT_DIR
-        return subprocess.check_output(("git", "config") + args, universal_newlines=True, env=myenv).strip()
+        return subprocess.check_output(('git', 'config', *args), universal_newlines=True, env=myenv).strip()
 
     except (OSError, subprocess.CalledProcessError):  # 'git' not in PATH, or cmd fails
         return None
