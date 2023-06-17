@@ -36,11 +36,11 @@ CA_PEM_DOMAINS = [
 
 
 def get_host_ca(hostname):
-    '''Return custom CA that applies to the given host name.
+    """Return custom CA that applies to the given host name.
 
     Self-hosted infrastructure uses CA_PEM, while publicly hosted infrastructure ought to have
     an officially trusted TLS certificate. Return None for these.
-    '''
+    """
     # strip off port
     hostname = hostname.split(':')[0]
 
@@ -50,29 +50,29 @@ def get_host_ca(hostname):
 
 
 def get_curl_ca_arg(hostname):
-    '''Return curl CLI arguments for talking to hostname.
+    """Return curl CLI arguments for talking to hostname.
 
     This uses get_host_ca() to determine an appropriate CA for talking to hostname.
     Returns ["--cacert", "CAFilePath"] or [] as approprioate.
-    '''
+    """
     ca = get_host_ca(hostname)
     return ['--cacert', ca] if ca else []
 
 
 def host_ssl_context(hostname):
-    '''Return SSLContext suitable for given hostname.
+    """Return SSLContext suitable for given hostname.
 
     This uses get_host_ca() to determine an appropriate CA.
-    '''
+    """
     cafile = get_host_ca(hostname)
     return ssl.create_default_context(cafile=cafile) if cafile else None
 
 
 def redhat_network():
-    '''Check if we can access the Red Hat network
+    """Check if we can access the Red Hat network
 
     The result gets cached, so this can be called several times.
-    '''
+    """
     if redhat_network.result is None:
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

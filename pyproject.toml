@@ -1,5 +1,6 @@
 [tool.ruff]
 select = [
+    "D300",    # pydocstyle: Forbid ''' in docstrings
     "E",       # pycodestyle
     "F",       # pyflakes
     "I",       # isort

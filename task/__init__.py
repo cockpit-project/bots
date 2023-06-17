@@ -396,9 +396,9 @@ def attach(filename):
 
 
 def default_branch():
-    '''Returns the default branch of a repository
+    """Returns the default branch of a repository
 
     The default branch should be used as a default base.
-    '''
+    """
 
     return api.get()["default_branch"]
