@@ -1,0 +1,3 @@
+testCreateContainerInPodSystem
+*
+wait_js_cond(ph_is_present("#table-system_pod .create-container-in-pod

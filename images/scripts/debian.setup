@@ -71,7 +71,6 @@ rsync \
 redis \
 socat \
 systemd-coredump \
-systemd-timesyncd \
 virtinst \
 xfsprogs \
 sosreport \
@@ -105,7 +104,11 @@ systemd-timesyncd
 # wait until cloud-init finishes, so that it doesn't clobber sources.list
 until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 
-RELEASE=$(grep -m1 ^deb /etc/apt/sources.list | awk '{print $3}')
+# HACK: bookworm cloud images have broken netdev group
+# https://lists.debian.org/debian-cloud/2023/06/msg00029.html and https://bugs.debian.org/1038691
+delgroup netdev
+
+RELEASE=$(. /etc/os-release; echo $VERSION_CODENAME)
 
 # debian-testing image gets bootstrapped from debian stable; upgrade
 if [ "$1" = "debian-testing" ]; then
@@ -113,23 +116,6 @@ if [ "$1" = "debian-testing" ]; then
     echo 'deb http://deb.debian.org/debian testing main' > /etc/apt/sources.list
     RELEASE=testing
 fi
-
-case "$RELEASE" in
-    bullseye)
-        # freeipa not available: https://tracker.debian.org/pkg/freeipa
-        IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
-        # no sscg yet
-        COCKPIT_DEPS="${COCKPIT_DEPS/sscg /}"
-        ;;
-    testing)
-        # freeipa got dropped from testing: https://tracker.debian.org/pkg/freeipa
-        IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
-        ;;
-    lunar)
-        # freeipa-client conflicts with systemd-timesyncd
-        TEST_PACKAGES="${TEST_PACKAGES/systemd-timesyncd /}"
-        ;;
-esac
 
 # smaller and faster initrd; see https://launchpad.net/bugs/1592684
 echo 'MODULES=dep' > /etc/initramfs-tools/conf.d/modules-dep.conf
@@ -150,10 +136,6 @@ if grep -q 'ID=ubuntu' /etc/os-release; then
 
     # we want to have some snaps installed
     TEST_PACKAGES="$TEST_PACKAGES snapd"
-
-    # We want to use/test NetworkManager instead of netplan/networkd for ethernets
-    mkdir -p /etc/NetworkManager/conf.d
-    touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
 fi
 
 # some cloud images have a pre-defined admin user or group, for them cloud-init admin creation fails
@@ -227,9 +209,11 @@ mkdir -p /tmp/out
 curl -L https://github.com/cockpit-project/cockpit/archive/main.tar.gz | tar -C /tmp/out --strip-components=1 --wildcards -zxf - '*/debian/'
 
 # Disable build-dep installation for the real builds
-cat > ~/.pbuilderrc <<- EOF
+cat > /etc/pbuilderrc <<- EOF
 DISTRIBUTION=$RELEASE
 PBUILDERSATISFYDEPENDSCMD=true
+# HACK: auto-detection is broken: https://bugs.debian.org/1038689
+MIRRORSITE=http://deb.debian.org/debian
 $PBUILDER_OPTS
 EOF
 
@@ -262,6 +246,11 @@ update-grub
 sed -i 's/ens[^[:space:]:]*/eth0/' /etc/network/interfaces /etc/network/interfaces.d/* /etc/netplan/*.yaml || true
 update-initramfs -u
 
+# We want to use/test NetworkManager instead of netplan/networkd for ethernets
+printf 'network:\n  renderer: NetworkManager\n' > /etc/netplan/10-nm.yaml
+mkdir -p /etc/NetworkManager/conf.d
+touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
+systemctl disable --now systemd-networkd-wait-online.service
 
 # Final tweaks
 
