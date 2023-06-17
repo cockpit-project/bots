@@ -28,7 +28,7 @@ import subprocess
 import sys
 import time
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 
 from lib.constants import BASE_DIR
 
@@ -266,7 +266,7 @@ def branch(context, message, pathspec=".", issue=None, push=True, branch=None, *
     name = named(kwargs)
 
     if not branch:
-        branch = f'{name}-{context or ""}-{datetime.utcnow():%Y%m%d-%H%M%S}'
+        branch = f'{name}-{context or ""}-{datetime.now(tz=timezone.utc):%Y%m%d-%H%M%S}'
         branch = re.sub('[^A-Za-z0-9]+', '-', branch)
         execute("git", "checkout", "-b", branch)
 
