@@ -4,9 +4,17 @@ select = [
     "D300",    # pydocstyle: Forbid ''' in docstrings
     "E",       # pycodestyle
     "F",       # pyflakes
-    "I",       # isort
     "G",       # flake8-logging-format
+    "I",       # isort
+    "ICN",     # flake8-import-conventions
+    "PLE",     # pylint errors
+    "PGH",     # pygrep-hooks
+    "RSE",     # flake8-raise
     "RUF",     # ruff rules
+    "T10",     # flake8-debugger
+    "TCH",     # flake8-type-checking
+    "W",       # warnings (mostly whitespace)
+    "YTT",     # flake8-2020
 ]
 exclude = [
     ".git/",
