@@ -243,9 +243,6 @@ EOF
 
 $APT install dpkg-dev pbuilder
 
-# HACK: Manually add pybridge build dependencies until https://github.com/cockpit-project/cockpit/pull/18757 lands
-PBUILDER_EXTRA="${PBUILDER_EXTRA:-} dh-python python3-pip python3-setuptools python3-wheel python3-pytest-asyncio python3-pytest-timeout procps"
-
 pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
 /usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get | pbuilder --login --save-after-login
 rm -rf /tmp/out
