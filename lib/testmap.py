@@ -17,8 +17,16 @@
 
 import itertools
 import os.path
+from typing import List
 
 from lib.constants import TEST_OS_DEFAULT
+
+COCKPIT_SCENARIOS = {'networking', 'storage', 'expensive', 'other'}
+
+
+def contexts(image, *scenarios: List[str]):
+    return [image + '/' + '-'.join(i) for i in itertools.product(*scenarios)]
+
 
 REPO_BRANCH_CONTEXT = {
     'cockpit-project/bots': {
@@ -27,23 +35,24 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit': {
         'main': [
-            'arch',
-            'debian-stable',
-            'debian-testing',
-            'ubuntu-2204',
-            'ubuntu-stable',
-            'fedora-37',
-            'fedora-38',
-            f'{TEST_OS_DEFAULT}/devel',
-            f'{TEST_OS_DEFAULT}/firefox',
-            f'{TEST_OS_DEFAULT}/pybridge',
-            'centos-8-stream/pybridge',
-            'fedora-coreos',
-            'rhel-8-9',
-            'rhel-8-9-distropkg',
-            'centos-8-stream',
-            'rhel-9-3',
-            'rhel4edge',
+            *contexts('arch', COCKPIT_SCENARIOS),
+            *contexts('debian-stable', COCKPIT_SCENARIOS),
+            *contexts('debian-testing', COCKPIT_SCENARIOS),
+            *contexts('ubuntu-2204', COCKPIT_SCENARIOS),
+            *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
+            *contexts('fedora-37', COCKPIT_SCENARIOS),
+            *contexts('fedora-38', COCKPIT_SCENARIOS),
+            *contexts(TEST_OS_DEFAULT, ['devel'], COCKPIT_SCENARIOS),
+            *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
+            *contexts(TEST_OS_DEFAULT, ['pybridge'], COCKPIT_SCENARIOS),
+            *contexts('centos-8-stream', ['pybridge'], COCKPIT_SCENARIOS),
+            # no udisks on CoreOS → skip storage
+            *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
+            *contexts('rhel-8-9', COCKPIT_SCENARIOS),
+            *contexts('rhel-8-9-distropkg', COCKPIT_SCENARIOS),
+            *contexts('centos-8-stream', COCKPIT_SCENARIOS),
+            *contexts('rhel-9-3', COCKPIT_SCENARIOS),
+            *contexts('rhel4edge', COCKPIT_SCENARIOS),
         ],
         'rhel-7.9': [
             'rhel-7-9',
