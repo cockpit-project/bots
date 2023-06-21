@@ -21,6 +21,8 @@ import unittest
 
 import testmap
 
+from lib.constants import TEST_OS_DEFAULT
+
 
 class TestTestMap(unittest.TestCase):
     def test_split_context(self):
@@ -76,6 +78,22 @@ class TestTestMap(unittest.TestCase):
         bad("wrongos@cockpit-project/cockpit", "cockpit-project/bots")
         bad("debian-testing@cockpit-project/wrongproject", "cockpit-project/bots")
         bad("debian-testing@cockpit-project/cockpit/wrongbranch", "cockpit-project/bots")
+
+    # cockpit uses a dynamic multi-scenario testmap
+    # this makes some assumptions about the concrete test map, only use scenarios which don't change often
+    def test_cockpit_contexts(self):
+        main_tests = testmap.REPO_BRANCH_CONTEXT["cockpit-project/cockpit"]["main"]
+        # no three-part scenarios, no scenario-less contexts
+        for context in main_tests:
+            self.assertEqual(context.count("/"), 1, f"malformed context {context}")
+            self.assertIn(context.split("/")[1].count("-"), [0, 1],
+                          f"context {context} has unexpected number of scenarios")
+        # standard image with standard scenarios
+        self.assertIn("arch/networking", main_tests)
+        self.assertIn("debian-testing/other", main_tests)
+        # scenario options
+        self.assertIn(f"{TEST_OS_DEFAULT}/devel-storage", main_tests)
+        self.assertIn(f"{TEST_OS_DEFAULT}/firefox-expensive", main_tests)
 
 
 if __name__ == '__main__':
