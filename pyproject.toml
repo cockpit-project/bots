@@ -22,5 +22,6 @@ exclude = [
 ]
 ignore = [
     "E731",  # Do not assign a `lambda` expression, use a `def`
+    "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
 ]
 line-length = 118
