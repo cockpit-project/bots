@@ -49,7 +49,8 @@ REPO_BRANCH_CONTEXT = {
             # no udisks on CoreOS → skip storage
             *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
             *contexts('rhel-8-9', COCKPIT_SCENARIOS),
-            *contexts('rhel-8-9-distropkg', COCKPIT_SCENARIOS),
+            # all skipped
+            *contexts('rhel-8-9-distropkg', COCKPIT_SCENARIOS - {'networking'}),
             *contexts('centos-8-stream', COCKPIT_SCENARIOS),
             *contexts('rhel-9-3', COCKPIT_SCENARIOS),
             *contexts('rhel4edge', COCKPIT_SCENARIOS),
