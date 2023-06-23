@@ -1,3 +1,0 @@
-  File "*", line *, in testPruneUnusedContainersUser
-*
-RuntimeError: Timed out on 'podman run --name inpod --pod pod -tid localhost/test-busybox sh -c 'exit 1''
