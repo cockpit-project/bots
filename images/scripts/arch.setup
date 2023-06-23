@@ -23,7 +23,6 @@ dmidecode \
 openssh \
 networkmanager \
 pcp \
-networkmanager \
 xmlto \
 packagekit \
 libvirt \
