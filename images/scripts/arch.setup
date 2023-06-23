@@ -128,14 +128,11 @@ gtk-doc \
 intltool \
 json-glib \
 krb5 \
-libgsystem \
 libssh \
 libvirt-dbus \
 networkmanager \
 npm \
 pcp \
-perl-json \
-perl-locale-po \
 xmlto \
 python-installer \
 python-pip \
