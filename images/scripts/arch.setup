@@ -36,7 +36,6 @@ devtools \
 "
 
 TEST_PACKAGES="\
-ansible \
 clevis \
 criu \
 gdb \
