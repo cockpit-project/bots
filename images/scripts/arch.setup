@@ -68,6 +68,12 @@ ntfs-3g \
 xfsprogs \
 "
 
+# HACK: https://gitlab.archlinux.org/archlinux/arch-boxes/-/issues/160#note_103055
+# temporarily work around the broken sfdisk detection of growpart and use gptfdisk
+pacman -Sy && pacman -S --noconfirm gptfdisk
+growpart /dev/vda 3
+btrfs filesystem resize max /
+
 # iptables-nft (which provides ebtables) is required for libvirt NAT networking
 # but provides iptables and therefore conflicts. First remove it before installing iptables-nft.
 pacman -Rdd --noconfirm iptables
