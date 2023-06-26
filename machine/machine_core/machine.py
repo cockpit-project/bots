@@ -300,7 +300,7 @@ class Machine(ssh_connection.SSHConnection):
         cmd = "dnsmasq --domain=cockpit.lan " \
               "--interface=\"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\"" \
               " --bind-interfaces --dhcp-range=" + ','.join(range) + ",4h" + \
-              " && firewall-cmd --add-service=dhcp"
+              "; systemctl start firewalld; firewall-cmd --add-service=dhcp"
         self.execute(cmd.format(mac=mac))
 
     def dns_server(self, mac='52:54:01'):
