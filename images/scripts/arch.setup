@@ -125,7 +125,6 @@ echo "builder ALL = NOPASSWD: /usr/sbin/makechrootpkg, /usr/sbin/mkarchroot, /us
 BUILD_DEPS="\
 accountsservice \
 base-devel \
-cockpit \
 git \
 glib-networking \
 gobject-introspection \
