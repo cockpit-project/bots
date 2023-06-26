@@ -208,12 +208,19 @@ fi
 mkdir -p /tmp/out
 curl -L https://github.com/cockpit-project/cockpit/archive/main.tar.gz | tar -C /tmp/out --strip-components=1 --wildcards -zxf - '*/debian/'
 
+
+# HACK: auto-detection is broken: https://bugs.debian.org/1038689
+if grep -q 'ID=ubuntu' /etc/os-release; then
+    MIRRORSITE=http://archive.ubuntu.com/ubuntu
+else
+    MIRRORSITE=http://deb.debian.org/debian
+fi
+
 # Disable build-dep installation for the real builds
 cat > /etc/pbuilderrc <<- EOF
 DISTRIBUTION=$RELEASE
 PBUILDERSATISFYDEPENDSCMD=true
-# HACK: auto-detection is broken: https://bugs.debian.org/1038689
-MIRRORSITE=http://deb.debian.org/debian
+MIRRORSITE=$MIRRORSITE
 $PBUILDER_OPTS
 EOF
 
