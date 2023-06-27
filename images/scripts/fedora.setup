@@ -103,6 +103,7 @@ tang \
 targetcli \
 tcsh \
 tlog \
+wireguard-tools \
 "
 
 ABRT_PACKAGES="\
