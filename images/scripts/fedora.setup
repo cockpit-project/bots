@@ -158,10 +158,10 @@ dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $ABRT_PACKAGES
 
 mkdir -p /var/lib/package-sets/clevis
-dnf $DNF_OPTS download --downloaddir=/var/lib/package-sets/clevis $PACKAGE_SET_CLEVIS
+dnf $DNF_OPTS download --destdir=/var/lib/package-sets/clevis $PACKAGE_SET_CLEVIS
 
 mkdir -p /var/lib/package-sets/stratis
-dnf $DNF_OPTS download --downloaddir=/var/lib/package-sets/stratis $PACKAGE_SET_STRATIS
+dnf $DNF_OPTS download --destdir=/var/lib/package-sets/stratis $PACKAGE_SET_STRATIS
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 dnf --setopt=install_weak_deps=False install -y cockpit
@@ -194,7 +194,7 @@ fi
 # disabling the updates repository will surely get us a very old version
 mkdir /tmp/selinux-policy-rpms
 selinux_pkgs="selinux-policy selinux-policy-devel selinux-policy-targeted"
-dnf download --downloaddir /tmp/selinux-policy-rpms --repo=fedora $selinux_pkgs
+dnf download --destdir /tmp/selinux-policy-rpms --repo=fedora $selinux_pkgs
 su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
 # host system gets the versions with fedora-updates enabled
 dnf install -y $selinux_pkgs
