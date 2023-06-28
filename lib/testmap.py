@@ -17,14 +17,14 @@
 
 import itertools
 import os.path
-from typing import List
+from typing import Iterable
 
 from lib.constants import TEST_OS_DEFAULT
 
 COCKPIT_SCENARIOS = {'networking', 'storage', 'expensive', 'other'}
 
 
-def contexts(image, *scenarios: List[str]):
+def contexts(image, *scenarios: Iterable[str]):
     return [image + '/' + '-'.join(i) for i in itertools.product(*scenarios)]
 
 
