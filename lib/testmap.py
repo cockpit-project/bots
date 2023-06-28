@@ -365,7 +365,7 @@ def tests_for_po_refresh(project):
     # cockpit's are expensive, so only run a few
     if project == "cockpit-project/cockpit":
         # check-pages "all languages" test only runs on RHEL
-        contexts = sorted([c for c in contexts if c.startswith("rhel-")])[-1:]
+        contexts = sorted([c for c in contexts if c.startswith("rhel-")])
         # plus required f-coreos
-        contexts.append("fedora-coreos")
+        contexts.append("fedora-coreos/other")
     return contexts
