@@ -42,7 +42,8 @@ REPO_BRANCH_CONTEXT = {
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
             *contexts('fedora-37', COCKPIT_SCENARIOS),
             *contexts('fedora-38', COCKPIT_SCENARIOS),
-            *contexts(TEST_OS_DEFAULT, ['devel'], COCKPIT_SCENARIOS),
+            # this runs coverage, reports need the whole test suite
+            *contexts(TEST_OS_DEFAULT, ['devel']),
             *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
             *contexts(TEST_OS_DEFAULT, ['pybridge'], COCKPIT_SCENARIOS),
             *contexts('centos-8-stream', ['pybridge'], COCKPIT_SCENARIOS),

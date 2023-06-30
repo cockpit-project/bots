@@ -92,8 +92,9 @@ class TestTestMap(unittest.TestCase):
         self.assertIn("arch/networking", main_tests)
         self.assertIn("debian-testing/other", main_tests)
         # scenario options
-        self.assertIn(f"{TEST_OS_DEFAULT}/devel-storage", main_tests)
         self.assertIn(f"{TEST_OS_DEFAULT}/firefox-expensive", main_tests)
+        # devel runs in one scenario due to coverage
+        self.assertIn(f"{TEST_OS_DEFAULT}/devel", main_tests)
 
 
 if __name__ == '__main__':
