@@ -104,10 +104,6 @@ systemd-timesyncd
 # wait until cloud-init finishes, so that it doesn't clobber sources.list
 until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 
-# HACK: bookworm cloud images have broken netdev group
-# https://lists.debian.org/debian-cloud/2023/06/msg00029.html and https://bugs.debian.org/1038691
-delgroup netdev
-
 RELEASE=$(. /etc/os-release; echo $VERSION_CODENAME)
 
 # debian-testing image gets bootstrapped from debian stable; upgrade
