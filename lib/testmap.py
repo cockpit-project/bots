@@ -219,7 +219,7 @@ REPO_BRANCH_CONTEXT = {
 # their non-Atomic siblings.
 OSTREE_BUILD_IMAGE = {
     "fedora-coreos": "fedora-38",
-    "rhel4edge": "rhel-9-0",
+    "rhel4edge": "rhel-9-2",
 }
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
