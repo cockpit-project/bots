@@ -394,11 +394,11 @@ def scan_for_pull_tasks(api, contexts, opts, repo):
 
     if opts.human_readable:
         results.sort(reverse=True, key=str)
-        return list([tests_human(*x, options=opts) for x in results])
+        return [tests_human(*x, options=opts) for x in results]
     if not opts.amqp:
-        return list([tests_invoke(*x, options=opts) for x in results])
+        return [tests_invoke(*x, options=opts) for x in results]
     with distributed_queue.DistributedQueue(opts.amqp, ['rhel', 'public']) as q:
-        return list([queue_test(*x, channel=q.channel, options=opts) for x in results])
+        return [queue_test(*x, channel=q.channel, options=opts) for x in results]
 
 
 if __name__ == '__main__':
