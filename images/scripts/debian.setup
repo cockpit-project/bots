@@ -81,6 +81,7 @@ tcsh \
 clevis-luks \
 tang \
 libnss-myhostname \
+wireguard-tools \
 "
 
 DEBUG_PACKAGES=''
