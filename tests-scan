@@ -60,7 +60,7 @@ def main():
     parser.add_argument('-v', '--human-readable', action="store_true", default=False,
                         help='Display human readable output rather than tasks')
     parser.add_argument('-n', '--dry', action="store_true", default=False,
-                        help='Don''t actually change anything on GitHub')
+                        help="Don't actually change anything on GitHub")
     parser.add_argument('-f', '--force', action="store_true", default=False,
                         help='Perform all actions, even those that should be skipped')
     parser.add_argument('--repo', default=None,
@@ -72,7 +72,7 @@ def main():
     parser.add_argument('--pull-data', default=None,
                         help='pull_request event GitHub JSON data to evaluate; mutualy exclusive with -p and -s')
     parser.add_argument('-s', '--sha', default=None,
-                        help='SHA beloging to pull request to scan for tasks')
+                        help='SHA belonging to pull request to scan for tasks')
     parser.add_argument('--amqp', default=None,
                         help='The host:port of the AMQP server to publish to (format host:port)')
 
