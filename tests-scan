@@ -97,7 +97,7 @@ def main():
     try:
         results = scan_for_pull_tasks(api, opts.context, opts, opts.repo)
     except RuntimeError as ex:
-        logging.error("tests-scan: " + str(ex))
+        logging.error("tests-scan: %s", ex)
         return 1
 
     for result in results:
@@ -197,7 +197,7 @@ def queue_test(priority, name, number, revision, ref, context, base,
         }
         queue = 'rhel' if is_internal_context(context) else 'public'
         channel.basic_publish('', queue, json.dumps(body), properties=pika.BasicProperties(priority=priority))
-        logging.info("Published '{0}' on '{1}' with command: '{2}'".format(name, revision, command))
+        logging.info("Published '%s' on '%s' with command: '%s'", name, revision, command)
 
 
 def prioritize(status, title, labels, priority, context, number, direct):
@@ -206,7 +206,7 @@ def prioritize(status, title, labels, priority, context, number, direct):
 
     # This commit definitively succeeded or failed
     if state in ["success", "failure"]:
-        logging.info("Skipping '{0}' on #{1} because it has already finished".format(context, number))
+        logging.info("Skipping '%s' on #%s because it has already finished", context, number)
         priority = 0
         update = None
 
@@ -215,13 +215,13 @@ def prioritize(status, title, labels, priority, context, number, direct):
         priority -= 2
 
     elif state in ["pending"]:
-        logging.info("Not updating status for '{0}' on #{1} because it is pending".format(context, number))
+        logging.info("Not updating status for '%s' on #%s because it is pending", context, number)
         update = None
 
     # Ignore context when the PR has [no-test] in the title or as label, unless
     # the context was directly triggered
     if (('no-test' in labels or '[no-test]' in title) and status.get("description", "") != github.NOT_TESTED_DIRECT):
-        logging.info("Skipping '{0}' on #{1} because it is no-test".format(context, number))
+        logging.info("Skipping '%s' on #%s because it is no-test", context, number)
         priority = 0
         update = None
 
@@ -238,13 +238,13 @@ def prioritize(status, title, labels, priority, context, number, direct):
         # Is testing already in progress?
         description = status.get("description", "")
         if description.startswith(github.TESTING):
-            logging.info("Skipping '{0}' on #{1} because it is already running".format(context, number))
+            logging.info("Skipping '%s' on #%s because it is already running", context, number)
             priority = description
             update = None
 
     if update:
         if priority <= 0:
-            logging.info("Not updating status for '{0}' on #{1} because of low priority".format(context, number))
+            logging.info("Not updating status for '%s' on #%s because of low priority", context, number)
             update = None
         else:
             update["description"] = github.NOT_TESTED_DIRECT if direct else github.NOT_TESTED
@@ -285,7 +285,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
         if pull:
             pulls.append(pull)
         else:
-            logging.error("Can't find pull request {0}".format(pull_number))
+            logging.error("Can't find pull request %s", pull_number)
             return 1
     else:
         pulls = api.pulls()
@@ -300,7 +300,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
 
         allowed = api.is_user_allowed(login)
 
-        logging.info("Processing #{0} titled '{1}' on revision {2}".format(number, title, revision))
+        logging.info("Processing #%s titled '%s' on revision %s", number, title, revision)
 
         # If sha is present only scan PR with selected sha
         if sha and revision != sha and not revision.startswith(sha):

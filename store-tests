@@ -104,14 +104,14 @@ def main():
                 new_run["state"] = "pending"
                 cc.append(new_run)
             else:
-                logging.warning("Pending status has unexpected description '{0}', skipping.".format(desc))
+                logging.warning("Pending status has unexpected description '%s', skipping.", desc)
         elif status["state"] in ["success", "failure", "error"]:
             cc[-1]["finished"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()
             cc[-1]["state"] = status["state"]
             if status["state"] == "error":
                 cc[-1]["description"] = desc
         else:
-            logging.warning("Status has unexpected state '{0}', skipping.".format(status["state"]))
+            logging.warning("Status has unexpected state '%s', skipping.", status["state"])
 
     for context, statuses in contexts.items():
         repo = api.repo
@@ -128,12 +128,13 @@ def main():
             started = status.get("started", posted)
             waited = started - posted
             took = status.get("finished", started) - started
-            logging.debug("Processing {0}{1} as {2} that waited {3}s and took {4}s in {5}. {6}".format(
+            logging.debug(
+                "Processing %s%s as %s that waited %ss and took %ss in %s. %s",
                 context,
                 "(retry no." + str(retry) + ")" if retry else "",
                 status["state"] + (" (" + status["description"] + ")" if status.get("description") else ""),
                 waited, took, repo, url
-            ))
+            )
 
             # URL is our primary key, so if we don't have one, just fake something unique
             if not url:
