@@ -30,10 +30,9 @@ import urllib.error
 import urllib.parse
 from typing import Iterable, Tuple
 
-from task import github
-
-from lib.directories import get_images_data_dir
 from lib import s3
+from lib.directories import get_images_data_dir
+from task import github
 
 logger = logging.getLogger('image-prune')
 

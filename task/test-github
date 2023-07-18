@@ -33,8 +33,7 @@ import urllib.parse
 BASE = os.path.dirname(__file__)
 sys.path.insert(1, os.path.join(BASE, ".."))
 
-from task import cache
-from task import github
+from task import cache, github
 
 
 def mockServer():

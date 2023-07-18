@@ -24,8 +24,7 @@ import sqlite3
 import sys
 import urllib.parse
 
-from lib import stores, s3
-
+from lib import s3, stores
 
 # Seconds in an hour
 HOUR = 3600

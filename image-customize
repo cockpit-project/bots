@@ -18,12 +18,11 @@
 
 import argparse
 import os
-import sys
 import subprocess
+import sys
 
 from lib.constants import BOTS_DIR, TEST_DIR
 from machine import testvm
-
 
 opt_quick = False
 opt_verbose = False

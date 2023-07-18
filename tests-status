@@ -24,8 +24,8 @@ import time
 import urllib.parse
 import urllib.request
 
-from lib.network import host_ssl_context
 import task
+from lib.network import host_ssl_context
 
 
 def print_summary(by_state, state):

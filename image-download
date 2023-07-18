@@ -32,6 +32,7 @@
 import argparse
 import contextlib
 import email
+import fcntl
 import io
 import os
 import shutil
@@ -39,15 +40,14 @@ import stat
 import subprocess
 import sys
 import time
-import fcntl
 import urllib.parse
 
+from lib import s3
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
 from lib.network import get_curl_ca_arg, redhat_network
 from lib.stores import PUBLIC_STORES, REDHAT_STORES
 from lib.testmap import get_test_image
-from lib import s3
 
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
 

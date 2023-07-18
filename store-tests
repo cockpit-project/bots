@@ -17,17 +17,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import sqlite3
-import urllib.request
 import argparse
 import logging
 import re
-
+import sqlite3
+import sys
+import urllib.request
 from datetime import datetime
 
-from lib.network import host_ssl_context
 from lib import testmap
+from lib.network import host_ssl_context
 from task import github
 
 # Result line has form like:

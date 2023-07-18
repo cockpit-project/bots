@@ -24,8 +24,8 @@ import subprocess
 import sys
 import time
 
-from task import github
 from lib.constants import BASE_DIR
+from task import github
 
 sys.dont_write_bytecode = True
 

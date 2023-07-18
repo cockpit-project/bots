@@ -5,11 +5,10 @@
 
 import argparse
 import base64
-import logging
 import hashlib
+import logging
 import textwrap
 import urllib
-
 from pathlib import Path
 
 from lib import s3

@@ -19,14 +19,15 @@
 
 import argparse
 import json
+import logging
+import os
 import random
+import smtplib
+import socket
 import subprocess
 import sys
 import time
-import logging
-import os
-import socket
-import smtplib
+
 import pika
 
 from lib.directories import get_images_data_dir

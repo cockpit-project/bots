@@ -22,8 +22,8 @@ import os
 import subprocess
 import sys
 
-from machine import testvm
 from lib.constants import BOTS_DIR
+from machine import testvm
 
 parser = argparse.ArgumentParser(description='Run a test machine')
 parser.add_argument('-v', '--verbose', action='store_true', help='Display verbose details')

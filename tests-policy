@@ -20,8 +20,8 @@
 import argparse
 import datetime
 import fnmatch
-import re
 import os
+import re
 import socket
 import sys
 import traceback
@@ -30,9 +30,9 @@ sys.dont_write_bytecode = True
 
 FLAKE_THRESHOLD = 0.4
 
-from task import github
 from lib.constants import BOTS_DIR
 from lib.testmap import get_test_image
+from task import github
 
 
 def main():
