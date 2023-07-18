@@ -20,6 +20,7 @@
 import argparse
 import json
 import logging
+import re
 import shlex
 import sys
 import time
@@ -69,6 +70,8 @@ def main():
                         help='Test contexts to use.')
     parser.add_argument('-p', '--pull-number', default=None,
                         help='Single pull request to scan for tasks')
+    parser.add_argument('-m', '--match', default=None,
+                        help='Filter triggered contexts from testmap (regular expression)')
     parser.add_argument('--pull-data', default=None,
                         help='pull_request event GitHub JSON data to evaluate; mutualy exclusive with -p and -s')
     parser.add_argument('-s', '--sha', default=None,
@@ -274,9 +277,11 @@ def update_status(api, revision, context, last, changes):
     return True
 
 
-def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp):
+def cockpit_tasks(api, update, contexts, context_filter, repo, pull_data, pull_number, sha, amqp):
     results = []
     pulls = []
+
+    filter_re = re.compile(context_filter) if context_filter else None
 
     if pull_data:
         pulls.append(json.loads(pull_data)['pull_request'])
@@ -324,6 +329,9 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                 todos[status] = statuses[status]
         if not statuses:  # If none defined in github add basic set of contexts
             for context in build_policy(repo, contexts).get(base, []):
+                if filter_re and not filter_re.search(context):
+                    logging.debug("skipping %s because it does not match %s", context, context_filter)
+                    continue
                 todos[context] = {}
 
         # there are 3 different HEADs
@@ -390,7 +398,8 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
 
 
 def scan_for_pull_tasks(api, contexts, opts, repo):
-    results = cockpit_tasks(api, not opts.dry, contexts, repo, opts.pull_data, opts.pull_number, opts.sha, opts.amqp)
+    results = cockpit_tasks(api, not opts.dry, contexts, opts.match, repo,
+                            opts.pull_data, opts.pull_number, opts.sha, opts.amqp)
 
     if opts.human_readable:
         results.sort(reverse=True, key=str)
