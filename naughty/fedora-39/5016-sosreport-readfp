@@ -1,0 +1,4 @@
+  File "tests/test/verify/check-sosreport", line *
+    b.wait_not_present("#sos-dialog")
+*
+testlib.Error: timeout
