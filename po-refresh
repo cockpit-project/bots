@@ -17,17 +17,17 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import json
 import glob
+import json
+import os
 import subprocess
 import sys
 
 sys.dont_write_bytecode = True
 
 import task
-from lib.constants import BASE_DIR
 from lib import testmap
+from lib.constants import BASE_DIR
 
 
 def run(context, verbose=False, **kwargs):

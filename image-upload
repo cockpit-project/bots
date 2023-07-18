@@ -25,11 +25,11 @@ import sys
 import time
 import urllib.parse
 
+from lib import s3
 from lib.constants import BOTS_DIR, IMAGES_DIR
 from lib.directories import get_images_data_dir
 from lib.network import get_curl_ca_arg, redhat_network
 from lib.stores import PUBLIC_STORES, REDHAT_STORES
-from lib import s3
 
 
 def upload(store, source, public, prune=False):

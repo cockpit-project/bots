@@ -19,16 +19,16 @@
 
 import argparse
 import json
+import logging
 import shlex
 import sys
 import time
-import logging
+
+from lib import testmap
+from task import distributed_queue, github, labels_of_pull
 
 sys.dont_write_bytecode = True
 logging.basicConfig(level=logging.INFO)
-
-from task import github, labels_of_pull, distributed_queue
-from lib import testmap
 
 no_amqp = False
 try:

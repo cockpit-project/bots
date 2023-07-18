@@ -27,7 +27,6 @@ sys.path.insert(1, os.path.join(BASE, ".."))
 
 from lib.constants import BOTS_DIR
 
-
 PCP_CRASH = """
 # ----------------------------------------------------------------------
 # testFrameNavigation (check_multi_machine.TestMultiMachine)

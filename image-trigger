@@ -49,14 +49,14 @@ REFRESH = {
 import argparse
 import os
 import random
-import sys
 import subprocess
+import sys
 import time
 
 sys.dont_write_bytecode = True
 
-from lib.constants import BASE_DIR
 import task
+from lib.constants import BASE_DIR
 
 
 def main():

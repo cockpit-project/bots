@@ -12,8 +12,8 @@
 # UI and get a nice "merged" label for it, and the tests will still be
 # green.
 
-import subprocess
 import argparse
+import subprocess
 import sys
 import time
 

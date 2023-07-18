@@ -29,10 +29,10 @@ import subprocess
 import sys
 import tempfile
 
-from lib.constants import BOTS_DIR, DEFAULT_IDENTITY_PUB_FILE
-
-from machine import testvm
 from machine_core import ssh_connection
+
+from lib.constants import BOTS_DIR, DEFAULT_IDENTITY_PUB_FILE
+from machine import testvm
 
 parser = argparse.ArgumentParser(description='Create a virtual machine image')
 parser.add_argument('-v', '--verbose', action='store_true', help='Display verbose progress details')

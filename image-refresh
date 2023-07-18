@@ -24,11 +24,8 @@ import time
 import urllib.parse
 
 import task
-
+from lib import s3, stores, testmap
 from lib.constants import BOTS_DIR, SCRIPTS_DIR
-from lib import testmap
-from lib import stores, s3
-
 
 sys.dont_write_bytecode = True
 

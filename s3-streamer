@@ -33,11 +33,10 @@ import textwrap
 import time
 import urllib.parse
 
+from lib import s3
 from lib.constants import LIB_DIR
 from lib.stores import LOG_STORE
-from lib import s3
 from task import github
-
 
 logger = logging.getLogger('s3-streamer')
 
