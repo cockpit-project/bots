@@ -64,7 +64,7 @@ def show_status(quiet, status, *args, prefix=''):
 
 
 def curl_cmd(args):
-    return ['curl', '--connect-timeout', '10', '--fail'] + args
+    return ['curl', '--connect-timeout', '10', '--fail', *args]
 
 
 def check_curl_args(args):

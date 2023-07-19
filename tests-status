@@ -49,7 +49,7 @@ def print_failure(context, url):
 
 
 def git(*args):
-    return subprocess.check_output(('git',) + args, encoding='utf-8').strip()
+    return subprocess.check_output(('git', *args), encoding='utf-8').strip()
 
 
 # returns a dict of state->[(context, url)]
