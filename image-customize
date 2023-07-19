@@ -258,7 +258,7 @@ def main():
     parser.add_argument('--base-image',
                         help='Base image name, if "image" does not match a standard Cockpit VM image name')
     parser.add_argument('--fresh', action='store_true',
-                        help="Start fresh from the base image; by default, multiple image-customize calls are additive")
+                        help="Start fresh from the base image; by default, image-customize calls are additive")
     parser.add_argument('--build-options', default="",
                         help="Additional options for mock/pbuilder/arch builder")
     parser.add_argument('--resize', help="Resize the image. Size in bytes with using K, M, or G suffix.")

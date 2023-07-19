@@ -58,7 +58,8 @@ def trigger_pull(api, opts):
         current_status = status.get("state", all and "unknown" or "empty")
 
         if current_status not in ["empty", "error", "failure"]:
-            # allow changing if manual testing required, otherwise "pending" state indicates that testing is in progress
+            # allow changing if manual testing required
+            # otherwise "pending" state indicates that testing is in progress
             manual_testing = current_status == "pending" and status.get("description", None) == github.NO_TESTING
             queued = current_status == "pending" and status.get("description", None) == github.NOT_TESTED_DIRECT
             # also allow override with --force or --requeue
