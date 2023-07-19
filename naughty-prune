@@ -26,10 +26,10 @@ import subprocess
 import sys
 import time
 
-sys.dont_write_bytecode = True
-
 import task
 from lib.constants import BASE_DIR
+
+sys.dont_write_bytecode = True
 
 # Number of days after which a known issue is treated as stale
 DAYS = 21

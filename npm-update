@@ -26,11 +26,6 @@
 # * [ ] npm-update ~@patternfly
 #
 
-# Dependencies which have to be updated in lockstep, not individually
-GROUP = [
-    "@patternfly"
-]
-
 import collections
 import json
 import os
@@ -38,10 +33,15 @@ import subprocess
 import sys
 import tempfile
 
-sys.dont_write_bytecode = True
-
 import task
 from lib.constants import BASE_DIR, BOTS_DIR
+
+# Dependencies which have to be updated in lockstep, not individually
+GROUP = [
+    "@patternfly"
+]
+
+sys.dont_write_bytecode = True
 
 
 def read_package_json(package_json_path):

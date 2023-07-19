@@ -19,11 +19,7 @@
 
 import os
 import subprocess
-import sys
 import unittest
-
-BASE = os.path.dirname(__file__)
-sys.path.insert(1, os.path.join(BASE, ".."))
 
 from lib.constants import BOTS_DIR
 
