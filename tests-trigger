@@ -11,7 +11,7 @@ sys.dont_write_bytecode = True
 
 
 def git(*args):
-    return subprocess.check_output(('git',) + args, encoding='utf-8').strip()
+    return subprocess.check_output(('git', *args), encoding='utf-8').strip()
 
 
 def trigger_pull(api, opts):
