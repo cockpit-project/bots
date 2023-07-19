@@ -17,6 +17,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
+import json
+import logging
+import shlex
+import sys
+
+from lib import testmap
+from task import distributed_queue, github, labels_of_pull
+
 NAMES = [
     "image-refresh",
 ]
@@ -27,17 +36,8 @@ REDHAT_TASKS = [
     "redhat"
 ]
 
-import argparse
-import json
-import logging
-import shlex
-import sys
-
 sys.dont_write_bytecode = True
 logging.basicConfig(level=logging.INFO)
-
-from lib import testmap
-from task import distributed_queue, github, labels_of_pull
 
 no_amqp = False
 try:

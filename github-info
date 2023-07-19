@@ -24,9 +24,9 @@ import argparse
 import datetime
 import sys
 
-sys.dont_write_bytecode = True
-
 from task import github
+
+sys.dont_write_bytecode = True
 
 
 def httpdate(dt):

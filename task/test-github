@@ -17,23 +17,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-ADDRESS = ("127.0.0.8", 9898)
-
 import fnmatch
 import json
 import multiprocessing
-import os
 import shutil
-import sys
 import tempfile
 import time
 import unittest
 import urllib.parse
 
-BASE = os.path.dirname(__file__)
-sys.path.insert(1, os.path.join(BASE, ".."))
-
 from task import cache, github
+
+ADDRESS = ("127.0.0.8", 9898)
 
 
 def mockServer():

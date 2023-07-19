@@ -17,6 +17,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
+import os
+import random
+import subprocess
+import sys
+import time
+
+import task
+from lib.constants import BASE_DIR
+
+sys.dont_write_bytecode = True
+
 DAYS = 7
 
 REFRESH = {
@@ -45,18 +57,6 @@ REFRESH = {
     "rhel4edge": {},
     "services": {"refresh-days": 30},
 }
-
-import argparse
-import os
-import random
-import subprocess
-import sys
-import time
-
-sys.dont_write_bytecode = True
-
-import task
-from lib.constants import BASE_DIR
 
 
 def main():

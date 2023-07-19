@@ -17,12 +17,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-MAX_PRIORITY = 9
-
 import argparse
 import sys
 
 from task import distributed_queue
+
+MAX_PRIORITY = 9
 
 
 def main():

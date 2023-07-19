@@ -4,10 +4,10 @@ import argparse
 import subprocess
 import sys
 
-sys.dont_write_bytecode = True
-
 from lib import testmap
 from task import github
+
+sys.dont_write_bytecode = True
 
 
 def git(*args):
