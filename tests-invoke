@@ -57,8 +57,9 @@ def main():
             if pull["head"]["sha"] != opts.revision:
                 # Ignore GitHub API servers with outdated information
                 if pull["updated_at"] < last_updated_at:
-                    sys.stderr.write(f"tests-invoke: Ignoring pull_request response for updated_at {pull['updated_at']}"
-                                     f"; it is older than the previous {last_updated_at}\n")
+                    sys.stderr.write(
+                        f"tests-invoke: Ignoring pull_request response for updated_at {pull['updated_at']}"
+                        f"; it is older than the previous {last_updated_at}\n")
                     return None
 
                 return f"Newer revision {pull['head']['sha']} available on GitHub for this pull request"

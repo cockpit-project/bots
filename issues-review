@@ -73,7 +73,7 @@ def close_issues(api, opts):
 def main():
     parser = argparse.ArgumentParser(description='Label or close labeled stable issues')
     parser.add_argument('-a', '--age', metavar='DAYS', default=90,
-                        help='Label issues whose last update is older than given number of days (default: %(default)s)')
+                        help='Label issues whose last update is older than DAYS (default: %(default)s)')
     parser.add_argument('-l', '--label', default=time.strftime('review-%Y-%m'),
                         help='Label name (default: %(default)s)')
     parser.add_argument('-c', '--close', action='store_true',
