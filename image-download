@@ -52,7 +52,7 @@ from lib.testmap import get_test_image
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
 
 if os.isatty(1):
-    SYMBOLS = {'present': ' ✔', 'absent': ' ⨯', 'selected': '❯❯'}
+    SYMBOLS = {'present': ' ✔', 'absent': ' ⨯', 'selected': '❯❯'}  # noqa: RUF001
 else:
     SYMBOLS = {'present': ' >', 'absent': ' x', 'selected': '=>'}
 
