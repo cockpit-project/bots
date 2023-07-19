@@ -31,7 +31,7 @@ stdout_disposition = None
 
 
 def prepare_install_image(base_image, install_image, resize, fresh):
-    '''Create the necessary layered image for the build/install'''
+    """Create the necessary layered image for the build/install"""
 
     if "/" not in base_image:
         base_image = os.path.join(testvm.IMAGES_DIR, base_image)
@@ -66,14 +66,14 @@ def prepare_install_image(base_image, install_image, resize, fresh):
 
 
 class ActionBase(argparse.Action):
-    '''Keep an ordered list of actions'''
+    """Keep an ordered list of actions"""
 
     def __call__(self, parser, namespace, value, option_string=None):
         getattr(namespace, self.dest).append((self.execute, value))
 
 
 class InstallAction(ActionBase):
-    '''Install local rpm or distro package'''
+    """Install local rpm or distro package"""
     @staticmethod
     def execute(machine_instance, package):
         # If we have a '/' in the package name, or if a file with that name
@@ -102,7 +102,7 @@ class InstallAction(ActionBase):
 
 
 class BuildAction(ActionBase):
-    '''Build and install distribution package(s) from dist tarball or source RPM'''
+    """Build and install distribution package(s) from dist tarball or source RPM"""
 
     @staticmethod
     def execute(machine_instance, source):
