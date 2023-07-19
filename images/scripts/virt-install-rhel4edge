@@ -80,7 +80,7 @@ cleanup_builder_vm
 
 supervised_virt_install $connect \
                         --name=$name \
-                        --extra-args="inst.ks=hd:LABEL=RHEL-9-1-0-BaseOS-x86_64:/fleet.ks console=ttyS0,115200" \
+                        --extra-args="inst.stage2=hd:LABEL=RHEL-9-2-0-BaseOS-x86_64 inst.ks=hd:LABEL=RHEL-9-2-0-BaseOS-x86_64:/fleet.ks console=ttyS0,115200" \
                         --disk "path=$out,format=qcow2" \
                         --ram 4096 \
                         --vcpus=1 \

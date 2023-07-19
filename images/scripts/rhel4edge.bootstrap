@@ -10,7 +10,7 @@ timestamp=$(date +%s)
 cat > edge-request.json <<EOF
 {
   "name": "rhel4edge-$timestamp",
-  "distribution": "rhel-91",
+  "distribution": "rhel-92",
   "imageType": "rhel-edge-installer",
   "packages": [
     { "name": "cockpit-system" },
