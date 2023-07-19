@@ -87,7 +87,6 @@ class MachineBuilder:
                                                    ssh_port=self.machine.ssh_port,
                                                    identity_file=self.machine.identity_file)
             admin_s.wait_boot(timeout_sec=120)
-            admin_s.execute("sudo mkdir -m 700 /root/.ssh")
             with open(DEFAULT_IDENTITY_PUB_FILE) as pub:
                 admin_s.execute(f"echo '{pub.read().strip()}' | sudo tee -a /root/.ssh/authorized_keys")
 
