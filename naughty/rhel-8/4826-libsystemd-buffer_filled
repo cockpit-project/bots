@@ -1,1 +1,0 @@
-Assertion 'sz <= d->buffer_filled' failed at ../src/libsystemd/sd-event/sd-event.c:3229, function event_inotify_data_drop(). Aborting.
