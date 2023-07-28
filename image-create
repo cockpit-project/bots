@@ -56,7 +56,13 @@ class MachineBuilder:
     def __init__(self, machine):
         self.machine = machine
         self.iso = self.machine.image.endswith("boot")
-        self.suffix = ".iso" if self.iso else ".qcow2"
+        self.payload = self.machine.image.endswith("payload")
+        if self.iso:
+            self.suffix = ".iso"
+        elif self.payload:
+            self.suffix = ".tar.gz"
+        else:
+            self.suffix = ".qcow2"
 
         # Use /var/tmp/ as this is going to be a huge file; /tmp/ is commonly tmpfs
         self.target_file = self.machine.image_file
@@ -163,7 +169,7 @@ class MachineBuilder:
         if not os.path.exists(self.machine.image_file):
             raise testvm.Failure("Nothing to save.")
 
-        if not self.iso:
+        if not self.iso and not self.payload:
             rebuild = os.path.join(data_dir, self.machine.image + ".rebuild")
 
             # Copy image via convert, to make it sparse again
@@ -171,16 +177,16 @@ class MachineBuilder:
 
         # Hash the image here
         (sha, x1, x2) = subprocess.check_output(
-            ["sha256sum", self.machine.image_file if self.iso else rebuild], universal_newlines=True
+            ["sha256sum", self.machine.image_file if (self.iso or self.payload) else rebuild], universal_newlines=True
         ).partition(" ")
         if not sha:
             raise testvm.Failure("sha256sum returned invalid output")
 
         name = self.machine.image + "-" + sha + self.suffix
         data_file = os.path.join(data_dir, name)
-        shutil.move(self.machine.image_file if self.iso else rebuild, data_file)
+        shutil.move(self.machine.image_file if (self.iso or self.payload) else rebuild, data_file)
 
-        if not self.iso:
+        if not self.iso and not self.payload:
             # Remove temp image file
             os.unlink(self.machine.image_file)
 
