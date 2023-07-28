@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+# This file is part of Cockpit.
+#
+# Copyright (C) 2023 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
+# create-anaconda-payload  -- Create a payload to be used by anaconda installer tests.
+
+import argparse
+import os
+import subprocess
+
+from lib.constants import BOTS_DIR
+from machine import testvm
+
+KICKSTART = """\
+cmdline
+timezone Europe/Prague --utc
+keyboard --vckeymap=us --xlayouts='us'
+lang en_US.UTF-8
+url --url https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/x86_64/os/
+rootpw test # root gets locked anyway
+%packages --excludedocs --exclude-weakdeps --inst-langs en
+openssh
+xfsprogs
+exfatprogs
+e2fsprogs
+efibootmgr
+grub2-tools
+grub2-pc
+grub2-pc-modules
+grub2-tools-efi
+grub2-tools-extra
+grub2-efi-x64
+shim-x64
+cryptsetup
+btrfs-progs
+mdadm
+lvm2
+%end
+"""
+
+KICKSTART_PATH = "/tmp/payload.ks"
+
+
+def build_payload(image, output):
+    subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), image])
+    machine = testvm.VirtMachine(image=image, memory_mb=4096)
+    try:
+        machine.start()
+        machine.wait_boot()
+        machine.execute("dnf install -y anaconda", timeout=300)
+
+        # Create directory /mnt/sysimage and start installation
+        machine.write(KICKSTART_PATH, KICKSTART)
+        machine.execute(
+            f"mkdir -p /mnt/sysimage && anaconda --kickstart {KICKSTART_PATH} --dirinstall /mnt/sysimage",
+            timeout=600
+        )
+
+        # Change directory to /mnt/sysimage/ and create archive
+        machine.execute("cd /mnt/sysimage && tar --selinux --acls --xattrs -zcvf /root/payload.tar.gz *", timeout=100)
+
+        machine.download("/root/payload.tar.gz", output)
+    finally:
+        machine.stop()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--image', default='fedora-rawhide')
+    parser.add_argument('--output', required=True)
+    args = parser.parse_args()
+
+    if not args.output:
+        raise RuntimeError("Output path not specified")
+
+    build_payload(args.image, args.output)
+
+
+main()
