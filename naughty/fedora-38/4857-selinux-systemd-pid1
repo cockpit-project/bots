@@ -1,2 +1,0 @@
-* type=1400 audit*: avc:  denied  { audit_control } for  pid=1 comm="systemd" capability=* scontext=system_u:system_r:init_t:s0 tcontext=system_u:system_r:init_t:s0 *
-
