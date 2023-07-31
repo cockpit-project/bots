@@ -208,6 +208,7 @@ tlog \
 valgrind \
 vdo \
 virt-install \
+wireguard-tools \
 "
 
 if [ "${IMAGE#rhel*}" != "$IMAGE" ]; then
@@ -218,6 +219,11 @@ fi
 if [ "$IMAGE" = "centos-8-stream" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/kpatch /}"
     TEST_PACKAGES="${TEST_PACKAGES/kpatch-dnf /}"
+fi
+
+# wireguard-tools not available on rhel-8* and centos-8-stream
+if [ "${IMAGE#rhel-8*}" != "$IMAGE" ] || [ "$IMAGE" = "centos-8-stream" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES/wireguard-tools /}"
 fi
 
 # These packages are downloaded to the image so that the tests can
