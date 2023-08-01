@@ -17,7 +17,6 @@ sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT/# GRUB_CMDLINE_LINUX_DEFAULT/' /etc/default
 #
 COCKPIT_DEPS="\
 cryptsetup \
-libblockdev-mdraid2 \
 libjson-glib-1.0-0 \
 libpcp3 \
 libpolkit-agent-1-0 \
@@ -44,6 +43,11 @@ xdg-utils \
 udisks2 \
 udisks2-lvm2 \
 "
+
+# udisks >= 2.10 depends on libblockdev-mdraid, so add it manually only for older OSes
+if [ "$1" = "debian-stable" ] || [ "$1" = "ubuntu-stable" ] || [ "$1" = "ubuntu-2204" ] ; then
+    COCKPIT_DEPS="$COCKPIT_DEPS libblockdev-mdraid2"
+fi
 
 # We also install the packages necessary to join a FreeIPA domain so
 # that we don't have to go to the network during a test run.
