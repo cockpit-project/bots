@@ -68,7 +68,6 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/starter-kit': {
         'main': [
             TEST_OS_DEFAULT,
-            f'{TEST_OS_DEFAULT}/pybridge',
             'centos-8-stream',
             'fedora-rawhide',
         ],
@@ -88,7 +87,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-37',
             'fedora-38',
             f'{TEST_OS_DEFAULT}/devel',
-            f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-coreos',
             'debian-stable',
             'debian-testing',
@@ -112,7 +110,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-38',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
-            f'{TEST_OS_DEFAULT}/pybridge',
             'rhel-8-9',
             'rhel-9-3',
             'centos-8-stream',
@@ -134,7 +131,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'osbuild/cockpit-composer': {
         'main': [
-            f'{TEST_OS_DEFAULT}/pybridge',
             'fedora-37',
             'fedora-37/firefox',
             'rhel-8-8',
@@ -157,7 +153,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-3',
             'fedora-37',
             'fedora-38',
-            f'{TEST_OS_DEFAULT}/pybridge',
         ],
         'subscription-manager-1.28': [
             'rhel-8-4',
@@ -186,7 +181,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-3',
             'fedora-37',
             'fedora-38',
-            f'{TEST_OS_DEFAULT}/pybridge',
         ],
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
@@ -197,7 +191,6 @@ REPO_BRANCH_CONTEXT = {
         'master': [
             'fedora-37',
             'fedora-38',
-            f'{TEST_OS_DEFAULT}/pybridge',
         ],
         '_manual': [
             'rhel-8-8',
