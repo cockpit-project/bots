@@ -6,4 +6,4 @@ Traceback (most recent call last):
 *
     raise Error("%s(%s): %s" % (func, arg, msg))
 testlib.Error: timeout
-wait_js_cond(ph_in_text("#vm-subVmTest1-system-state","Shut off")): Uncaught (in promise) Error: actual text: Running
+wait_js_cond(ph_in_text("#vm-subVmTest1-system-state","Shut off")): * actual text: Running
