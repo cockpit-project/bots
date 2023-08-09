@@ -45,6 +45,7 @@ REFRESH = {
     "fedora-rawhide": {},
     "fedora-rawhide-boot": {},
     "fedora-rawhide-anaconda-payload": {"refresh-days": 30},
+    "fedora-rawhide-live-boot": {"refresh-days": 30},
     "ubuntu-2204": {},
     "ubuntu-stable": {},
     "rhel-7-9": {},
