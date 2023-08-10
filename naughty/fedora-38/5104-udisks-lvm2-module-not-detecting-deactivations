@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "*[check-storage-hidden|check-storage-lvm2]", line *, in *
+    self.content_row_wait_in_col(1, 2, "Inactive volume")
+*
+testlib.Error: Condition did not become true.
