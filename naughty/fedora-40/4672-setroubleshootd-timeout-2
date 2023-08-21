@@ -1,0 +1,6 @@
+> warning: transport closed: disconnected*
+Traceback (most recent call last):
+  File "test/verify/check-selinux", line *, in testTroubleshootAlerts
+    b.wait_in_text(row_selector + " .pf*-c-alert__title", "Solution applied successfully")
+*
+testlib.Error: timeout
