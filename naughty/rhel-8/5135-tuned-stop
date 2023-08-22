@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "*/test/verify/check-system-tuned", line *, in testBasic
+    b.wait_not_present(title_selector)
+*
+testlib.Error: timeout
+wait_js_cond(!ph_is_present(".pf-v5-c-modal-box__header:contains('Change performance profile')")): *
