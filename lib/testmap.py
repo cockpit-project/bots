@@ -69,6 +69,7 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/starter-kit': {
         'main': [
             TEST_OS_DEFAULT,
+            'fedora-39',
             'centos-8-stream',
             'fedora-rawhide',
         ],
