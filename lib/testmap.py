@@ -136,18 +136,16 @@ REPO_BRANCH_CONTEXT = {
     'osbuild/cockpit-composer': {
         'main': [
             'fedora-37',
-            'fedora-37/firefox',
-            'rhel-8-8',
+            'fedora-38',
+            'fedora-38/firefox',
             'centos-8-stream',
-            'rhel-9-2',
             'centos-9-stream',
+            'rhel-8-9',
+            'rhel-9-3',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
-            'fedora-38',
-            'rhel-8-9',
-            'rhel-9-3',
             'fedora-39',
         ],
     },
