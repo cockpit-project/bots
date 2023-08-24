@@ -72,7 +72,7 @@ def main():
     parser.add_argument('--pull-data', default=None,
                         help='pull_request event GitHub JSON data to evaluate; mutualy exclusive with -p and -s')
     parser.add_argument('-s', '--sha', default=None,
-                        help='SHA belonging to pull request to scan for tasks')
+                        help='SHA to scan for tasks')
     parser.add_argument('--amqp', default=None,
                         help='The host:port of the AMQP server to publish to (format host:port)')
 
@@ -143,7 +143,11 @@ def tests_invoke(priority, name, number, revision, ref, context, base,
     (image, _, scenario) = context.partition("/")
 
     checkout = "PRIORITY={priority:04d} ./make-checkout --verbose --repo={repo}"
-    invoke = "../tests-invoke --pull-number {pull_number} --revision {revision} --repo {github_base}"
+    # Special case for when running tests without a PR
+    if number == 0:
+        invoke = "../tests-invoke --revision {revision} --repo {github_base}"
+    else:
+        invoke = "../tests-invoke --pull-number {pull_number} --revision {revision} --repo {github_base}"
     test_env = "TEST_OS={image} BASE_BRANCH={base}"
     wrapper = "./s3-streamer --repo {github_base} --test-name {name}-{current} " \
               "--github-context {github_context} --revision {revision}"
@@ -287,6 +291,21 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
         else:
             logging.error("Can't find pull request %s", pull_number)
             return 1
+    elif sha:
+        pulls.append({
+            "title": f"{sha}",
+            "number": 0,
+            "head": {
+                "sha": sha,
+                "user": {
+                    "login": "cockpit-project"
+                }
+            },
+            "base": {
+                "ref": testmap.get_default_branch(repo)
+            },
+            "labels": [],
+        })
     else:
         pulls = api.pulls()
 
