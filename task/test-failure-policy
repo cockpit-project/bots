@@ -55,6 +55,14 @@ class TestPolicy(unittest.TestCase):
         self.assertEqual(output, "Known issue #9876\n")
         self.assertEqual(proc.returncode, 77)
 
+    def testAlreadyKnownIssue(self):
+        script = os.path.join(BOTS_DIR, "test-failure-policy")
+        cmd = [script, "--offline", "--all", "bogus"]
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+        output = proc.communicate(PCP_CRASH)[0]
+        self.assertEqual(output, "Known issue #9876 in example\n")
+        self.assertEqual(proc.returncode, 78)
+
     def testRetry(self):
         script = os.path.join(BOTS_DIR, "test-failure-policy")
         cmd = [script, "--offline", "example"]
