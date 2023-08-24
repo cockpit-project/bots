@@ -111,6 +111,7 @@ REPO_BRANCH_CONTEXT = {
             'ubuntu-stable',
             'fedora-37',
             'fedora-38',
+            'fedora-39',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             'rhel-8-9',
@@ -120,7 +121,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-rawhide',
             'fedora-testing',
-            'fedora-39',
         ],
     },
     'weldr/lorax': {
