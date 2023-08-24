@@ -54,6 +54,12 @@ firewalld \
 openssh \
 podman \
 qemu \
+qemu-tools \
+qemu-audio-spice \
+qemu-ui-spice-app \
+qemu-hw-usb-host \
+qemu-hw-usb-redirect \
+qemu-block-curl \
 nginx \
 redis \
 openbsd-netcat \
