@@ -33,8 +33,7 @@ sys.dont_write_bytecode = True
 def main():
     parser = argparse.ArgumentParser(description='Run integration tests')
     parser.add_argument('--repo', help="The repository in which the tested PR is opened", default=None)
-    parser.add_argument('--pull-number', help="The number of the pull request to test",
-                        required=True)
+    parser.add_argument('--pull-number', help="The number of the pull request to test")
     parser.add_argument('--revision', help="Revision of the PR head", required=True)
     opts = parser.parse_args()
 
@@ -94,6 +93,14 @@ def main():
                 time.sleep(60)
         return_code = p.returncode
         sys.stderr.write("Test run finished, return code: {0}\n".format(return_code))
+        if not opts.pull_number and return_code != 0:
+            api = github.GitHub(repo=opts.repo)
+            data = {
+                "title": "Nightly tests did not succeed",
+                "body": f"Tests failed on {opts.revision}",
+                "labels": ["nightly"]
+            }
+            api.post("issues", data)
         return return_code
     except RuntimeError as ex:
         ret = str(ex)

@@ -51,6 +51,12 @@ GITHUB_DATA = {
         "statuses": [],
         "sha": "abcdef",
     },
+    # HACK: we can't change the test map dynamically when invoked via test-scan
+    "/repos/cockpit-project/cockpit/commits/abcdef/status?page=1&per_page=100": {
+        "state": "pending",
+        "statuses": [],
+        "sha": "abcdef",
+    },
     "/users/user/repos": [{"full_name": "project/repo"}]
 }
 
@@ -169,6 +175,34 @@ class TestTestsScan(unittest.TestCase):
 
         self.assertEqual(proc.returncode, 0)
         expected_output = self.expected_human_output()
+        self.assertEqual(output.strip(), expected_output)
+        self.assertIsNone(stderr)
+
+    def test_no_pull_request(self):
+        repo = "cockpit-project/cockpit"
+        args = ["--dry", "--sha", self.revision, "--repo", repo,
+                "--context", self.context]
+        proc, output, stderr = self.run_tests_scan(args)
+        expected_output = (f"./s3-streamer --repo {repo} --test-name pull-\\d+-\\d+-\\d+"
+                           f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
+                           f" \"PRIORITY=0006 ./make-checkout --verbose --repo={repo} --rebase=main {self.revision}"
+                           f" && cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=main"
+                           " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke"
+                           f" --revision {self.revision} --repo {repo}\"")
+
+        self.assertEqual(proc.returncode, 0)
+        self.assertRegex(output.strip(), expected_output)
+        self.assertIsNone(stderr)
+
+    def test_no_pull_request_human(self):
+        repo = "cockpit-project/cockpit"
+        args = ["--dry", "--sha", self.revision, "--repo", repo,
+                "--context", self.context, "-v"]
+        proc, output, stderr = self.run_tests_scan(args)
+        expected_output = (f"pull-0      {self.context}            {self.revision}"
+                           f"     6.0  ({repo}) [bots@main]   {{main}}")
+
+        self.assertEqual(proc.returncode, 0)
         self.assertEqual(output.strip(), expected_output)
         self.assertIsNone(stderr)
 
