@@ -48,6 +48,7 @@ pcp-libs \
 python3-pip \
 python3-tracer \
 qemu-block-curl \
+qemu-audio-spice \
 qemu-char-spice \
 qemu-device-usb-host \
 qemu-device-usb-redirect \
@@ -140,11 +141,6 @@ fi
 
 if [ "${IMAGE%-i386}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/podman /}"
-fi
-
-# HACK: https://bugzilla.redhat.com/show_bug.cgi?id=2170110
-if [ "$VERSION_ID" = "38" ]; then
-    COCKPIT_DEPS="$COCKPIT_DEPS qemu-audio-spice"
 fi
 
 if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
