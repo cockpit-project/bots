@@ -149,6 +149,8 @@ fi
 
 if [ "$VERSION_ID" -lt "39" ]; then
     COCKPIT_DEPS="$COCKPIT_DEPS qemu-virtiofsd"
+else
+    COCKPIT_DEPS="$COCKPIT_DEPS virtiofsd"
 fi
 
 dnf $DNF_OPTS -y upgrade
