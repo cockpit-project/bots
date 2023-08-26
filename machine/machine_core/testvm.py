@@ -17,12 +17,12 @@
 
 from lib.constants import BOTS_DIR, DEFAULT_IMAGE, TEST_DIR, TEST_OS_DEFAULT
 
-from .exceptions import Failure, RepeatableFailure
+from .exceptions import Failure
 from .machine import Machine
 from .machine_virtual import VirtMachine, VirtNetwork
 from .timeout import Timeout
 
 __all__ = (
-    "Timeout", "Machine", "Failure", "RepeatableFailure", "VirtMachine", "VirtNetwork",
+    "Timeout", "Machine", "Failure", "VirtMachine", "VirtNetwork",
     "BOTS_DIR", "TEST_DIR", "DEFAULT_IMAGE", "TEST_OS_DEFAULT"
 )

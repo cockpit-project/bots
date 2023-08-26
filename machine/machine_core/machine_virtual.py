@@ -31,7 +31,7 @@ import libvirt_qemu
 
 from lib.constants import BOTS_DIR, TEST_DIR
 
-from .exceptions import Failure, RepeatableFailure
+from .exceptions import Failure
 from .machine import Machine
 
 sys.path.insert(1, BOTS_DIR)
@@ -344,14 +344,8 @@ class VirtMachine(Machine):
         test_domain_desc = TEST_DOMAIN_XML.format(**keys)
 
         # add the virtual machine
-        try:
-            # print >> sys.stderr, test_domain_desc
-            self._domain = self.virt_connection.createXML(test_domain_desc, libvirt.VIR_DOMAIN_START_AUTODESTROY)
-        except libvirt.libvirtError as le:
-            if 'already exists with uuid' in str(le):
-                raise RepeatableFailure("libvirt domain already exists: " + str(le))
-            else:
-                raise
+        # print >> sys.stderr, test_domain_desc
+        self._domain = self.virt_connection.createXML(test_domain_desc, libvirt.VIR_DOMAIN_START_AUTODESTROY)
 
     # start virsh console
     def qemu_console(self, extra_message=""):
@@ -421,26 +415,13 @@ class VirtMachine(Machine):
             pass
 
     def start(self):
-        tries = 0
-        while True:
-            try:
-                self._start_qemu()
-                if not self._domain.isActive():
-                    self._domain.start()
-            except RepeatableFailure:
-                self.kill()
-                if tries < 10:
-                    tries += 1
-                    time.sleep(tries)
-                    continue
-                else:
-                    raise
-            except Failure:
-                self.kill()
-                raise
-
-            # Normally only one pass
-            break
+        try:
+            self._start_qemu()
+            if not self._domain.isActive():
+                self._domain.start()
+        except Failure:
+            self.kill()
+            raise
 
     def stop(self, timeout_sec=120):
         if self.maintain:
