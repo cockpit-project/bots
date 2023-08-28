@@ -23,7 +23,7 @@ from . import machine_virtual
 
 def cmd_cli():
     parser = argparse.ArgumentParser(description="Run a VM image until SIGTERM or SIGINT")
-    parser.add_argument("--memory", type=int, default=1024,
+    parser.add_argument("--memory", type=int, default=machine_virtual.MEMORY_MB,
                         help="Memory in MiB to allocate to the VM (default: %(default)s)")
     parser.add_argument("image", help="Image name")
     args = parser.parse_args()
