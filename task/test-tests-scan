@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+
+# This file is part of Cockpit.
+#
+# Copyright (C) 2023 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
+import json
+import os
+import shutil
+import subprocess
+import tempfile
+import unittest
+
+from lib.constants import BOTS_DIR
+from task.test_mock_server import MockHandler, MockServer
+
+ADDRESS = ("127.0.0.7", 9898)
+
+
+GITHUB_DATA = {
+    "/repos/project/repo": {
+        "default_branch": "main"
+    },
+    "/repos/project/repo/issues/3333": {
+        "title": "The issue title",
+        "body": "Some bug\n - [ ] image-refresh foonux\n",
+    },
+    "/repos/project/repo/pulls/1": {
+        "title": "PR title",
+        "number": 1,
+        "body": "This is the body",
+        "base": {"ref": "abcdef"},
+        "head": {"sha": "abcdef", "user": {"login": "cockpit-project"}},
+        "labels": [],
+    },
+    "/repos/project/repo/commits/abcdef/status?page=1&per_page=100": {
+        "state": "pending",
+        "statuses": [],
+        "sha": "abcdef",
+    },
+    "/users/user/repos": [{"full_name": "project/repo"}]
+}
+
+
+class Handler(MockHandler):
+    def do_GET(self):
+        if self.path in self.server.data:
+            self.replyJson(self.server.data[self.path])
+        elif self.path.startswith('/repos/project/repo/pulls/2'):
+            self.replyJson([])
+        elif self.path.startswith('/repos/project/repo/pulls'):
+            self.replyJson([self.server.data['/repos/project/repo/pulls/1']])
+        else:
+            self.send_error(404, 'Mock Not Found: ' + self.path)
+
+    def do_POST(self):
+        self.send_error(405, 'Method not allowed: ' + self.path)
+
+
+class TestTestsScan(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.mkdtemp()
+        self.server = MockServer(ADDRESS, Handler, GITHUB_DATA)
+        self.server.start()
+        self.repo = "project/repo"
+        self.pull_number = "1"
+        self.context = "fedora/nightly"
+        self.revision = "abcdef"
+
+    def tearDown(self):
+        self.server.kill()
+        shutil.rmtree(self.temp)
+
+    def run_tests_scan(self, args):
+        script = os.path.join(BOTS_DIR, "tests-scan")
+        proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
+                                env={"GITHUB_API": f"http://{ADDRESS[0]}:{ADDRESS[1]}"})
+        output, stderr = proc.communicate()
+        return proc, output, stderr
+
+    def expected_command(self):
+        return (f"./s3-streamer --repo {self.repo} --test-name pull-{self.pull_number}-\\d+-\\d+"
+                f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
+                f" \"PRIORITY=0005 ./make-checkout --verbose --repo={self.repo} {self.revision}"
+                f" && cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH={self.revision}"
+                " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke --pull-number"
+                f" {self.pull_number} --revision {self.revision} --repo {self.repo}\"")
+
+    def expected_human_output(self, pull_number=None):
+        if pull_number is None:
+            pull_number = self.pull_number
+        return f"pull-{pull_number}      {self.context}            {self.revision}" \
+               + f"     5.99999  ({self.repo}) [bots@main]"
+
+    def test_pull_number(self):
+        args = ["--dry", "--repo", self.repo, "--pull-number", self.pull_number,
+                "--context", self.context]
+        proc, output, stderr = self.run_tests_scan(args)
+
+        self.assertEqual(proc.returncode, 0)
+        expected_output = self.expected_command()
+        self.assertRegex(output, expected_output)
+        self.assertIsNone(stderr)
+
+    def test_unkown_pull_number(self):
+        args = ["--dry", "--repo", self.repo, "--pull-number", "2", "--context", "fedora/nightly"]
+        proc, _, stderr = self.run_tests_scan(args)
+
+        self.assertEqual(proc.returncode, 1)
+        self.assertIsNone(stderr)
+
+    def test_pull_data(self):
+        args = ["--dry", "--repo", self.repo, "--pull-data",
+                json.dumps({'pull_request': GITHUB_DATA['/repos/project/repo/pulls/1']}),
+                "--context", self.context]
+        proc, output, stderr = self.run_tests_scan(args)
+
+        self.assertEqual(proc.returncode, 0)
+        expected_output = self.expected_command()
+        self.assertRegex(output, expected_output)
+        self.assertIsNone(stderr)
+
+    def test_no_arguments(self):
+        args = ["--dry", "--repo", self.repo, "--context", self.context]
+        proc, output, stderr = self.run_tests_scan(args)
+
+        self.assertEqual(proc.returncode, 0)
+        expected_output = self.expected_command()
+        self.assertRegex(output.strip(), expected_output)
+        self.assertIsNone(stderr)
+
+    def test_pull_number_human_readable(self):
+        args = ["--dry", "--repo", self.repo, "--pull-number", self.pull_number,
+                "--context", self.context, "-v"]
+        proc, output, stderr = self.run_tests_scan(args)
+
+        self.assertEqual(proc.returncode, 0)
+        expected_output = self.expected_human_output()
+        self.assertEqual(output.strip(), expected_output)
+        self.assertIsNone(stderr)
+
+    def test_pull_data_human_readable(self):
+        args = ["--dry", "--repo", self.repo, "--pull-data",
+                json.dumps({'pull_request': GITHUB_DATA['/repos/project/repo/pulls/1']}),
+                "--context", self.context, "-v"]
+        proc, output, stderr = self.run_tests_scan(args)
+
+        self.assertEqual(proc.returncode, 0)
+        expected_output = self.expected_human_output()
+        self.assertEqual(output.strip(), expected_output)
+        self.assertIsNone(stderr)
+
+    def test_no_arguments_human_readable(self):
+        args = ["--dry", "--repo", self.repo, "--context", self.context, "-v"]
+        proc, output, stderr = self.run_tests_scan(args)
+
+        self.assertEqual(proc.returncode, 0)
+        expected_output = self.expected_human_output()
+        self.assertEqual(output.strip(), expected_output)
+        self.assertIsNone(stderr)
+
+
+if __name__ == '__main__':
+    unittest.main()
