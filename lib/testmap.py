@@ -211,6 +211,9 @@ REPO_BRANCH_CONTEXT = {
         'master': [
             'fedora-rawhide-boot',
         ],
+        'fedora-39': [
+            'fedora-39',
+        ],
     },
 }
 
