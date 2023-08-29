@@ -1,0 +1,2 @@
+*TestUpdates*
+*error: Tracer failed: *AttributeError: module 'rpm' has no attribute 'fi'. Did you mean: 'fd'*
