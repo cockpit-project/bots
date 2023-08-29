@@ -41,6 +41,7 @@ REFRESH = {
     "fedora-37": {},
     "fedora-38": {},
     "fedora-39": {},
+    "fedora-39-boot": {},
     "fedora-testing": {"refresh-days": 3},
     "fedora-coreos": {},
     "fedora-rawhide": {},

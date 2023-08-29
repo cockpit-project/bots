@@ -211,6 +211,9 @@ REPO_BRANCH_CONTEXT = {
         'master': [
             'fedora-rawhide-boot',
         ],
+        'fedora-39': [
+            'fedora-39-boot',
+        ]
     },
 }
 
@@ -248,6 +251,9 @@ IMAGE_REFRESH_TRIGGERS = {
     # Anaconda builds in fedora-37 and runs tests in fedora-rawhide-boot
     "fedora-rawhide": [
         "fedora-rawhide-boot@rhinstaller/anaconda"
+    ],
+    "fedora-39": [
+        "fedora-39-boot@rhinstaller/anaconda"
     ],
 }
 
