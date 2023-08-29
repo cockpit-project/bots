@@ -40,8 +40,8 @@ REPO_BRANCH_CONTEXT = {
             *contexts('debian-testing', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2204', COCKPIT_SCENARIOS),
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
-            *contexts('fedora-37', COCKPIT_SCENARIOS),
             *contexts('fedora-38', COCKPIT_SCENARIOS),
+            *contexts('fedora-39', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
             *contexts(TEST_OS_DEFAULT, ['devel']),
             *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
@@ -63,7 +63,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-testing',
             'fedora-rawhide',
-            'fedora-39',
         ],
     },
     'cockpit-project/starter-kit': {
