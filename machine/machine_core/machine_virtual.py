@@ -75,7 +75,7 @@ TEST_DOMAIN_XML = """
     <acpi/>
   </features>
   <devices>
-    <disk type='file' snapshot='external'>
+    <disk type='file'>
       <driver name='qemu' type='qcow2' cache='unsafe'/>
       <source file='{drive}'/>
       <target dev='vda' bus='virtio'/>
