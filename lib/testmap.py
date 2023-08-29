@@ -253,7 +253,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "fedora-rawhide-boot@rhinstaller/anaconda"
     ],
     "fedora-39": [
-        "fedora-39-boot@rhinstaller/anaconda"
+        "fedora-39-boot@rhinstaller/anaconda/fedora-39"
     ],
 }
 
