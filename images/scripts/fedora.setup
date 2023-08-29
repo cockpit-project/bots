@@ -94,6 +94,7 @@ libvirt-daemon-driver-storage-logical \
 ltrace \
 netcat \
 nginx \
+ntfs-3g \
 ntpsec \
 podman \
 redis \
