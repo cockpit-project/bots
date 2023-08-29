@@ -71,7 +71,12 @@ class Machine(ssh_connection.SSHConnection):
         if not label and image != "unknown":
             label = "{}-{}-{}".format(image, ssh_address, ssh_port)
 
-        super(Machine, self).__init__(user, ssh_address, ssh_port, identity_file, verbose=verbose, label=label)
+        super(Machine, self).__init__(user,
+                                      ssh_address,
+                                      ssh_port,
+                                      identity_file,
+                                      verbose=verbose,
+                                      label=label)
 
         self.arch = arch
         self.image = image

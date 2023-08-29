@@ -86,8 +86,9 @@ TEST_DOMAIN_XML = """
     <graphics type='vnc' autoport='yes' listen='127.0.0.1'>
       <listen type='address' address='127.0.0.1'/>
     </graphics>
-    <console type='pty'>
+    <console type='{console_type}'>
       <target type='serial' port='0'/>
+      {console_source}
     </console>
     <disk type='file' device='cdrom'>
       <source file='{iso}'/>
@@ -245,12 +246,14 @@ class VirtMachine(Machine):
     cpus = None
 
     def __init__(self, image, networking=None, maintain=False, memory_mb=None, cpus=None,
-                 graphics=False, **args):
+                 capture_console=False, graphics=False, **args):
         self.maintain = maintain
 
         self.memory_mb = memory_mb or VirtMachine.memory_mb or MEMORY_MB
         self.cpus = cpus or VirtMachine.cpus or 1
         self.graphics = graphics
+        if capture_console:
+            self.console_file = tempfile.NamedTemporaryFile(suffix='.log', prefix='console-')
 
         # Set up some temporary networking info if necessary
         if networking is None:
@@ -331,6 +334,8 @@ class VirtMachine(Machine):
             "memory_in_mib": self.memory_mb,
             "drive": image_to_use,
             "iso": os.path.join(BOTS_DIR, "machine", "cloud-init.iso"),
+            "console_type": "file" if self.console_file else "pty",
+            "console_source": f"<source path='{self.console_file.name}'/>" if self.console_file else "",
         }
 
         if os.path.exists("/dev/kvm"):
@@ -472,6 +477,7 @@ class VirtMachine(Machine):
                     raise
                 time.sleep(1)
             else:
+                self.print_console_log()
                 raise Failure("Waiting for machine poweroff timed out")
             try:
                 with stdchannel_redirected(sys.stderr, os.devnull):
@@ -573,3 +579,23 @@ class VirtMachine(Machine):
         # On atomic systems, we need a hack to change files in /usr/lib/systemd
         if self.ostree_image:
             self.execute("mount -o remount,rw /usr")
+
+    def print_console_log(self):
+        """Prints VM's console to stderr"""
+        file_name = self.console_file.name
+
+        if not file_name:
+            return
+
+        try:
+            with open(file_name) as f:
+                log = f.read().strip()
+        except OSError as ex:
+            sys.stderr.write(f"Failed to open '{file_name}': {ex}\n")
+            return
+
+        if not log:
+            sys.stderr.write(f"VM's console log file '{file_name}' is empty\n")
+            return
+
+        sys.stderr.write(f"---- Console log starts here ----\n{log}\n---- Console log ends here ----\n")
