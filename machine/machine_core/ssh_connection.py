@@ -119,6 +119,9 @@ class SSHConnection(object):
             time.sleep(1)
         raise exceptions.Failure("Timed out waiting for /run/nologin to disappear")
 
+    def print_console_log(self):
+        pass
+
     def wait_boot(self, timeout_sec=120):
         """Wait for a machine to boot"""
         start_time = time.time()
@@ -129,6 +132,7 @@ class SSHConnection(object):
                 if boot_id:
                     break
         if not boot_id:
+            self.print_console_log()
             raise exceptions.Failure("Unable to reach machine {0} via ssh: {1}:{2}".format(
                 self.label, self.ssh_address, self.ssh_port))
         self.boot_id = boot_id

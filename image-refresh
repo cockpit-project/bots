@@ -46,7 +46,7 @@ def run(image, verbose=False, **kwargs):
         old_image = None
 
     # create the new image
-    cmd = [os.path.join(BOTS_DIR, "image-create"), "--verbose", "--upload", image]
+    cmd = [os.path.join(BOTS_DIR, "image-create"), "--verbose", "--capture-console", "--upload", image]
     os.environ['VIRT_BUILDER_NO_CACHE'] = "yes"
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     log = result.stdout
