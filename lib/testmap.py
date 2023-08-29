@@ -131,7 +131,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'rhel-8-6/osbuild-composer',
-            'fedora-39',
         ],
     },
     'osbuild/cockpit-composer': {
@@ -157,6 +156,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-3',
             'fedora-37',
             'fedora-38',
+            'fedora-39',
         ],
         'subscription-manager-1.28': [
             'rhel-8-4',
@@ -177,7 +177,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-2',
         ],
         '_manual': [
-            'fedora-39',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -186,17 +185,18 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-3',
             'fedora-37',
             'fedora-38',
+            'fedora-39',
         ],
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
             'rhel-8-9',
-            'fedora-39',
         ],
     },
     'cockpit-project/cockpit-certificates': {
         'master': [
             'fedora-37',
             'fedora-38',
+            'fedora-39',
         ],
         '_manual': [
             'rhel-8-8',
