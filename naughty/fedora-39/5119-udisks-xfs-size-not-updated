@@ -1,0 +1,6 @@
+  File "/work/bots/make-checkout-workdir/test/verify/check-storage-resize", line *, in testResizeXfs
+    self.checkResize("xfs", crypto=False,
+  File "/work/bots/make-checkout-workdir/test/verify/check-storage-resize", line *, in checkResize
+    self.content_tab_wait_in_info(1, 1, "Size", "398 MB")
+*
+testlib.Error: timed out waiting for predicate to become true
