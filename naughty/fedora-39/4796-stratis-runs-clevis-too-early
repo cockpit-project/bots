@@ -1,0 +1,2 @@
+  File "test/verify/check-storage-stratis", line *, in testBasic
+    self.wait_mounted(1, 1)  # should be mounted after boot
