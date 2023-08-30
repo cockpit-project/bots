@@ -85,7 +85,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-9',
             'rhel-9-3',
             'rhel4edge',
-            'fedora-37',
             'fedora-38',
             'fedora-39',
             f'{TEST_OS_DEFAULT}/devel',
@@ -108,7 +107,6 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'ubuntu-2204',
             'ubuntu-stable',
-            'fedora-37',
             'fedora-38',
             'fedora-39',
             f'{TEST_OS_DEFAULT}/devel',
@@ -193,7 +191,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-certificates': {
         'master': [
-            'fedora-37',
             'fedora-38',
             'fedora-39',
         ],
@@ -247,7 +244,7 @@ IMAGE_REFRESH_TRIGGERS = {
         "rhel-8-8@candlepin/subscription-manager/subscription-manager-1.28",
         "rhel-9-3@candlepin/subscription-manager-cockpit",
     ],
-    # Anaconda builds in fedora-37 and runs tests in fedora-rawhide-boot
+    # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
     "fedora-rawhide": [
         "fedora-rawhide-boot@rhinstaller/anaconda"
     ],
