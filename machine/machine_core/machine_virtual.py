@@ -245,7 +245,7 @@ class VirtMachine(Machine):
     cpus = None
 
     def __init__(self, image, networking=None, maintain=False, memory_mb=None, cpus=None,
-                 graphics=False, overlay_dir=None, **args):
+                 graphics=False, **args):
         self.maintain = maintain
 
         self.memory_mb = memory_mb or VirtMachine.memory_mb or MEMORY_MB
@@ -273,7 +273,7 @@ class VirtMachine(Machine):
 
         Machine.__init__(self, image=image, **args)
 
-        self.run_dir = overlay_dir or os.getenv("TEST_OVERLAY_DIR", "/var/tmp")
+        self.run_dir = os.getenv("TEST_OVERLAY_DIR", "/var/tmp")
 
         self.virt_connection = self._libvirt_connection(hypervisor="qemu:///session")
 
