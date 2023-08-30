@@ -19,7 +19,6 @@
 
 import fnmatch
 import json
-import multiprocessing
 import shutil
 import tempfile
 import time
@@ -27,84 +26,52 @@ import unittest
 import urllib.parse
 
 from task import cache, github
+from task.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.8", 9898)
+GITHUB_ISSUES = [{"number": "5", "state": "open", "created_at": "2011-04-22T13:33:48Z"},
+                 {"number": "6", "state": "closed", "closed_at": "2011-04-21T13:33:48Z"},
+                 {"number": "7", "state": "open"}]
 
 
-def mockServer():
-    # Data used by the above handler
-    reply_count = 0
-
-    issues = [{"number": "5", "state": "open", "created_at": "2011-04-22T13:33:48Z"},
-              {"number": "6", "state": "closed", "closed_at": "2011-04-21T13:33:48Z"},
-              {"number": "7", "state": "open"}]
-
-    import http.server
-
-    class Handler(http.server.BaseHTTPRequestHandler):
-
-        def replyData(self, value, headers={}, status=200):
-            self.send_response(status)
-            for name, content in headers.items():
-                self.send_header(name, content)
-            self.end_headers()
-            self.wfile.write(value.encode('utf-8'))
-            self.wfile.flush()
-
-        def replyJson(self, value, headers=None, status=200):
-            self.server.reply_count += 1
-            all_headers = {"Content-type": "application/json"}
-            all_headers.update(headers or {})
-            self.replyData(json.dumps(value), headers=all_headers, status=status)
-
-        def do_GET(self):
-            parsed = urllib.parse.urlparse(self.path)
-            if parsed.path == "/count":
-                self.replyJson(self.server.reply_count)
-            elif parsed.path == "/issues":
-                issues_ = issues
-                if "state=open" in self.path:
-                    issues_ = [i for i in issues_ if i["state"] == "open"]
-                if "since=" in self.path:
-                    issues_ = [i for i in issues_ if "created_at" not in i.keys() and "closed_at" not in i.keys()]
-                self.replyJson(issues_)
-            elif parsed.path == "/test/user":
-                if self.headers.get("If-None-Match") == "blah":
-                    self.replyData("", status=304)
-                else:
-                    self.replyJson({"user": "blah"}, headers={"ETag": "blah"})
-            elif parsed.path == "/test/user/modified":
-                if self.headers.get("If-Modified-Since") == "Thu, 05 Jul 2012 15:31:30 GMT":
-                    self.replyData("", status=304)
-                else:
-                    self.replyJson({"user": "blah"}, headers={"Last-Modified": "Thu, 05 Jul 2012 15:31:30 GMT"})
-            elif parsed.path == "/orgs/cockpit-project/teams/contributors/members":
-                self.replyJson([
-                    {"login": "one"},
-                    {"login": "two"},
-                    {"login": "three"}
-                ])
+class Handler(MockHandler):
+    def do_GET(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/count":
+            self.replyJson(self.server.reply_count)
+        elif parsed.path == "/issues":
+            issues_ = self.server.data
+            if "state=open" in self.path:
+                issues_ = [i for i in issues_ if i["state"] == "open"]
+            if "since=" in self.path:
+                issues_ = [i for i in issues_ if "created_at" not in i.keys() and "closed_at" not in i.keys()]
+            self.replyJson(issues_)
+        elif parsed.path == "/test/user":
+            if self.headers.get("If-None-Match") == "blah":
+                self.replyData("", status=304)
             else:
-                self.send_error(404, 'Mock Not Found: ' + parsed.path)
-
-        def do_DELETE(self):
-            parsed = urllib.parse.urlparse(self.path)
-            if parsed.path == '/issues/7':
-                del issues[-1]
-                self.replyJson({})
+                self.replyJson({"user": "blah"}, headers={"ETag": "blah"})
+        elif parsed.path == "/test/user/modified":
+            if self.headers.get("If-Modified-Since") == "Thu, 05 Jul 2012 15:31:30 GMT":
+                self.replyData("", status=304)
             else:
-                self.send_error(404, 'Mock Not Found: ' + parsed.path)
+                self.replyJson({"user": "blah"}, headers={"Last-Modified": "Thu, 05 Jul 2012 15:31:30 GMT"})
+        elif parsed.path == "/orgs/cockpit-project/teams/contributors/members":
+            self.replyJson([
+                {"login": "one"},
+                {"login": "two"},
+                {"login": "three"}
+            ])
+        else:
+            self.send_error(404, 'Mock Not Found: ' + parsed.path)
 
-    httpd = http.server.HTTPServer(ADDRESS, Handler)
-    httpd.reply_count = reply_count
-    process = multiprocessing.Process(target=httpd.serve_forever)
-    process.start()
-    return process
-
-
-def mockKill(child):
-    child.terminate()
-    child.join()
+    def do_DELETE(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == '/issues/7':
+            del self.server.data[-1]
+            self.replyJson({})
+        else:
+            self.send_error(404, 'Mock Not Found: ' + parsed.path)
 
 
 class TestLogger(object):
@@ -118,12 +85,13 @@ class TestLogger(object):
 
 class TestGitHub(unittest.TestCase):
     def setUp(self):
-        self.child = mockServer()
+        self.server = MockServer(ADDRESS, Handler, GITHUB_ISSUES)
+        self.server.start()
         self.temp = tempfile.mkdtemp()
         self.api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/", cacher=cache.Cache(self.temp))
 
     def tearDown(self):
-        mockKill(self.child)
+        self.server.kill()
         shutil.rmtree(self.temp)
 
     def testCache(self):

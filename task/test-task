@@ -18,7 +18,6 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import json
-import multiprocessing
 import os
 import shutil
 import tempfile
@@ -26,11 +25,12 @@ import unittest
 from unittest.mock import patch
 
 import task
+from task.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.9", 9898)
 
 
-DATA = {
+GITHUB_DATA = {
     "/repos/project/repo": {
         "default_branch": "main"
     },
@@ -48,65 +48,39 @@ DATA = {
 }
 
 
-def mockServer():
-    # Data used by below handler
-    data = {}
+class Handler(MockHandler):
+    def do_GET(self):
+        if self.path in self.server.data:
+            self.replyJson(self.server.data[self.path])
+        else:
+            self.send_error(404, 'Mock Not Found: ' + self.path)
 
-    import http.server
-
-    class Handler(http.server.BaseHTTPRequestHandler):
-
-        def replyData(self, value, headers={}, status=200):
-            self.send_response(status)
-            for name, content in headers.items():
-                self.send_header(name, content)
-            self.end_headers()
-            self.wfile.write(value)
-            self.wfile.flush()
-
-        def replyJson(self, value, headers=None, status=200):
-            all_headers = {"Content-type": "application/json"}
-            all_headers.update(headers or {})
-            self.replyData(json.dumps(value).encode('utf-8'), headers=all_headers, status=status)
-
-        def do_GET(self):
-            if self.path in DATA:
-                self.replyJson(DATA[self.path])
-            else:
-                self.send_error(404, 'Mock Not Found: ' + self.path)
-
-        def do_POST(self):
-            if self.path == "/repos/project/repo/pulls":
-                content_len = int(self.headers.get('content-length'))
-                data = json.loads(self.rfile.read(content_len).decode('utf-8'))
-                assert data['title'] == "[no-test] Task title"
-                data["number"] = 1234
-                self.replyJson(data)
-            elif self.path == "/repos/project/repo/pulls/1234":
-                content_len = int(self.headers.get('content-length'))
-                data = json.loads(self.rfile.read(content_len).decode('utf-8'))
-                data["number"] = 1234
-                data["body"] = "This is the body"
-                data["head"] = {"sha": "abcde"}
-                self.replyJson(data)
-            elif self.path == "/repos/project/repo/issues/1234/comments":
-                content_len = int(self.headers.get('content-length'))
-                data = json.loads(self.rfile.read(content_len).decode('utf-8'))
-                self.replyJson(data)
-            elif self.path == "/repos/project/repo/issues/1234/labels":
-                content_len = int(self.headers.get('content-length'))
-                data = json.loads(self.rfile.read(content_len).decode('utf-8'))
-                self.replyJson(data)
-            elif self.path.startswith("/repos/project/repo/issues/3333"):
-                self.replyJson({})
-            else:
-                self.send_error(405, 'Method not allowed: ' + self.path)
-
-    httpd = http.server.HTTPServer(ADDRESS, Handler)
-    httpd.data = data
-    process = multiprocessing.Process(target=httpd.serve_forever)
-    process.start()
-    return process
+    def do_POST(self):
+        if self.path == "/repos/project/repo/pulls":
+            content_len = int(self.headers.get('content-length'))
+            data = json.loads(self.rfile.read(content_len).decode('utf-8'))
+            assert data['title'] == "[no-test] Task title"
+            data["number"] = 1234
+            self.replyJson(data)
+        elif self.path == "/repos/project/repo/pulls/1234":
+            content_len = int(self.headers.get('content-length'))
+            data = json.loads(self.rfile.read(content_len).decode('utf-8'))
+            data["number"] = 1234
+            data["body"] = "This is the body"
+            data["head"] = {"sha": "abcde"}
+            self.replyJson(data)
+        elif self.path == "/repos/project/repo/issues/1234/comments":
+            content_len = int(self.headers.get('content-length'))
+            data = json.loads(self.rfile.read(content_len).decode('utf-8'))
+            self.replyJson(data)
+        elif self.path == "/repos/project/repo/issues/1234/labels":
+            content_len = int(self.headers.get('content-length'))
+            data = json.loads(self.rfile.read(content_len).decode('utf-8'))
+            self.replyJson(data)
+        elif self.path.startswith("/repos/project/repo/issues/3333"):
+            self.replyJson({})
+        else:
+            self.send_error(405, 'Method not allowed: ' + self.path)
 
 
 def mock_execute(*args):
@@ -124,20 +98,16 @@ def mock_execute(*args):
         raise Exception("Mocking unsupported git command")
 
 
-def mockKill(child):
-    child.terminate()
-    child.join()
-
-
 class TestTask(unittest.TestCase):
     def setUp(self):
-        self.child = mockServer()
+        self.server = MockServer(ADDRESS, Handler, GITHUB_DATA)
+        self.server.start()
         self.temp = tempfile.mkdtemp()
         os.environ["GITHUB_API"] = "http://127.0.0.9:9898"
         os.environ["GITHUB_BASE"] = "project/repo"
 
     def tearDown(self):
-        mockKill(self.child)
+        self.server.kill()
         shutil.rmtree(self.temp)
         os.unsetenv("GITHUB_API")
         os.unsetenv("GITHUB_BASE")
