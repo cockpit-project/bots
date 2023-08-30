@@ -29,9 +29,6 @@ import task
 
 ADDRESS = ("127.0.0.9", 9898)
 
-os.environ["GITHUB_API"] = "http://127.0.0.9:9898"
-os.environ["GITHUB_BASE"] = "project/repo"
-
 
 DATA = {
     "/repos/project/repo": {
@@ -136,10 +133,14 @@ class TestTask(unittest.TestCase):
     def setUp(self):
         self.child = mockServer()
         self.temp = tempfile.mkdtemp()
+        os.environ["GITHUB_API"] = "http://127.0.0.9:9898"
+        os.environ["GITHUB_BASE"] = "project/repo"
 
     def tearDown(self):
         mockKill(self.child)
         shutil.rmtree(self.temp)
+        os.unsetenv("GITHUB_API")
+        os.unsetenv("GITHUB_BASE")
 
     def testRunArguments(self):
         status = {"ran": False}
