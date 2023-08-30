@@ -25,11 +25,13 @@ def cmd_cli():
     parser = argparse.ArgumentParser(description="Run a VM image until SIGTERM or SIGINT")
     parser.add_argument("--memory", type=int, default=machine_virtual.MEMORY_MB,
                         help="Memory in MiB to allocate to the VM (default: %(default)s)")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument("image", help="Image name")
     args = parser.parse_args()
 
     network = machine_virtual.VirtNetwork(0, image=args.image)
-    machine = machine_virtual.VirtMachine(image=args.image, networking=network.host(), memory_mb=args.memory)
+    machine = machine_virtual.VirtMachine(image=args.image, networking=network.host(), memory_mb=args.memory,
+                                          verbose=args.verbose)
     machine.start()
     machine.wait_boot()
 
