@@ -273,7 +273,8 @@ class VirtMachine(Machine):
 
         Machine.__init__(self, image=image, **args)
 
-        self.run_dir = os.getenv("TEST_OVERLAY_DIR", "/var/tmp")
+        self.run_dir = os.path.join(os.getenv("TEST_OVERLAY_DIR", "/var/tmp"), "bots-run")
+        os.makedirs(self.run_dir, 0o700, exist_ok=True)
 
         self.virt_connection = self._libvirt_connection(hypervisor="qemu:///session")
 
