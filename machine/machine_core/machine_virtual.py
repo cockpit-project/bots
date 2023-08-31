@@ -281,6 +281,7 @@ class VirtMachine(Machine):
         self._disks = []
         self._domain = None
         self._transient_image = None
+        self._snapshot_file = None
 
         # init variables needed for running a vm
         self._cleanup()
@@ -430,6 +431,28 @@ class VirtMachine(Machine):
         else:
             self.kill()
 
+    def snapshot(self):
+        # only support one snapshot for the time being
+        assert self._snapshot_file is None
+        assert self._domain.isActive()
+        self._snapshot_file = tempfile.NamedTemporaryFile(suffix='.snapshot', prefix=self.label,
+                                                          dir="/var/tmp")
+        self._domain.save(self._snapshot_file.name)
+        # saving automatically destroys the domain
+        self._domain = None
+        if self.verbose:
+            print(f"Snapshotted instance to {self._snapshot_file.name}", file=sys.stderr)
+        self.restore(_quiet=True)
+
+    def restore(self, _quiet=False):
+        assert self._snapshot_file
+        self._destroy()
+        self.virt_connection.restore(self._snapshot_file.name)
+        if self.verbose and not _quiet:
+            print(f"Restoring instance {self.label} from snapshot {self._snapshot_file.name}", file=sys.stderr)
+        self._domain = self.virt_connection.lookupByName(self.label)
+        assert self._domain
+
     def _cleanup(self, quick=False):
         self.disconnect()
         try:
@@ -440,21 +463,30 @@ class VirtMachine(Machine):
                 self._transient_image.close()
                 self._transient_image = None
 
+            if self._snapshot_file is not None:
+                self._snapshot_file.close()
+                self._snapshot_file = None
+
             self._domain = None
         except Exception as e:
             sys.stderr.write(f"WARNING: Cleanup failed: {e}\n")
 
-    def kill(self):
-        # stop system immediately, with potential data loss
-        # to shutdown gracefully, use shutdown()
+    def _destroy(self):
         self.disconnect()
         if self._domain:
             try:
                 # not graceful
                 with stdchannel_redirected(sys.stderr, os.devnull):
                     self._domain.destroyFlags(libvirt.VIR_DOMAIN_DESTROY_DEFAULT)
+                self._domain = None
             except libvirt.libvirtError as e:
                 sys.stderr.write(f"WARNING: Destroying machine failed: {e}\n")
+
+    def kill(self):
+        """Stop system immediately, with potential data loss
+
+        to shutdown gracefully, use shutdown()"""
+        self._destroy()
         self._cleanup(quick=True)
 
     def wait_poweroff(self, timeout_sec=120):
