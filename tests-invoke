@@ -90,7 +90,7 @@ def main():
                 p.terminate()
                 p.wait(timeout=60)
             else:
-                time.sleep(60)
+                time.sleep(int(os.getenv("TEST_INVOKE_SLEEP", "60")))
         return_code = p.returncode
         sys.stderr.write("Test run finished, return code: {0}\n".format(return_code))
         if not opts.pull_number and return_code != 0:
