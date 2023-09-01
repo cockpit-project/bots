@@ -17,13 +17,14 @@
 
 import os
 import subprocess
+from typing import Optional
 
 from .constants import GIT_DIR
 
 _images_data_dir = None
 
 
-def xdg_home(subdir, envvar, *components, override=None):
+def xdg_home(subdir: str, envvar: str, *components: str, override: Optional[str] = None) -> str:
     path = override and os.getenv(override)
 
     if not path:
@@ -35,15 +36,15 @@ def xdg_home(subdir, envvar, *components, override=None):
     return path
 
 
-def xdg_config_home(*components, envvar=None):
+def xdg_config_home(*components: str, envvar: Optional[str] = None) -> str:
     return xdg_home('.config', 'XDG_CONFIG_HOME', *components, override=envvar)
 
 
-def xdg_cache_home(*components, envvar=None):
+def xdg_cache_home(*components: str, envvar: Optional[str] = None) -> str:
     return xdg_home('.cache', 'XDG_CACHE_HOME', *components, override=envvar)
 
 
-def get_git_config(*args):
+def get_git_config(*args: str) -> Optional[str]:
     if not os.path.exists(GIT_DIR):
         return None
 
@@ -56,7 +57,7 @@ def get_git_config(*args):
         return None
 
 
-def get_images_data_dir():
+def get_images_data_dir() -> str:
     global _images_data_dir
 
     if _images_data_dir is None:

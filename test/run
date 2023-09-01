@@ -6,9 +6,19 @@ PYEXEFILES="$(git grep -lI '^#!.*python') $(git ls-files "*.py")"
 test_ruff() {
     command -v ruff >/dev/null || { echo 'no ruff installed'; return 0; }
     ruff check --no-cache . $PYEXEFILES
+
+}
+
+test_mypy() {
+    command -v mypy >/dev/null || { echo 'no mypy installed'; return 0; }
+    mypy_strict_files='
+      lib/directories.py
+    '
+    mypy --no-error-summary --strict $mypy_strict_files
 }
 
 test_ruff
+test_mypy
 
 # run static code checks like pyflakes and pep8
 flake8 $PYEXEFILES
