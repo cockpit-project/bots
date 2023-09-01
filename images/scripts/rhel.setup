@@ -325,7 +325,7 @@ EOF
     useradd -c Builder -G mock builder
     opsys=$(cut -d '-' -f 1 <<< "$IMAGE")
     version=$(cut -d '-' -f 2 <<< "$IMAGE")
-    su builder -c "/usr/bin/mock --verbose -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
+    su builder -c "/usr/bin/mock --verbose --no-bootstrap-image -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
 
     # We need to make sure mock has the same selinux-policy as we do
     mkdir /tmp/selinux-policy-rpms
