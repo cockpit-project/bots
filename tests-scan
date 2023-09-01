@@ -291,7 +291,8 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
         else:
             logging.error("Can't find pull request %s", pull_number)
             return 1
-    elif sha:
+    elif sha and not api.has_open_prs(sha):
+        logging.info("Processing revision %s without pull request", sha)
         pulls.append({
             "title": f"{sha}",
             "number": 0,

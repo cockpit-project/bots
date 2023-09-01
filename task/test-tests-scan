@@ -58,7 +58,7 @@ GITHUB_DATA = {
         "statuses": [],
         "sha": "abcdef",
     },
-    "/users/user/repos": [{"full_name": "project/repo"}]
+    "/users/user/repos": [{"full_name": "project/repo"}],
 }
 
 
@@ -70,8 +70,12 @@ class Handler(MockHandler):
             self.replyJson([])
         elif self.path.startswith('/repos/project/repo/pulls'):
             self.replyJson([self.server.data['/repos/project/repo/pulls/1']])
+        elif self.path == "/repos/cockpit-project/cockpit/commits/abcdef/pulls":
+            self.replyJson([{"state": "closed"}])
+        elif self.path == "/repos/cockpit-project/cockpit/commits/abcdef2/pulls":
+            self.replyJson([{"state": "open"}])
         elif self.path.endswith("/issues"):
-            issues = self.server.data['issues']
+            issues = self.server.data.get('issues', [])
             self.replyJson(issues)
         else:
             self.send_error(404, 'Mock Not Found: ' + self.path)
@@ -239,6 +243,52 @@ class TestTestsScan(unittest.TestCase):
             self.assertEqual(issues[0]['title'], "Nightly tests did not succeed")
             self.assertEqual(issues[0]['body'], f"Tests failed on {self.revision}")
             self.assertEqual(issues[0]['labels'], ["nightly"])
+            self.assertIsNone(stderr)
+
+    def disabled_test_tests_invoke_no_issue(self):
+        repo = "cockpit-project/cockpit"
+        revision = "abcdef1"
+        args = ["--revision", revision, "--repo", repo]
+        script = os.path.join(BOTS_DIR, "tests-invoke")
+        with tempfile.TemporaryDirectory() as tempdir:
+            testdir = f"{tempdir}/.cockpit-ci"
+            os.makedirs(testdir)
+            with open(f"{testdir}/run", "w") as fp:
+                fp.write("#!/bin/bash\nexit 1")
+            os.system(f"chmod +x {testdir}/run")
+            proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
+                                    env={"GITHUB_API": f"http://{ADDRESS[0]}:{ADDRESS[1]}",
+                                         "TEST_INVOKE_SLEEP": "1"},
+                                    cwd=tempdir)
+            output, stderr = proc.communicate()
+            api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/")
+            issues = api.get("issues")
+            self.assertEqual(output, "")
+            self.assertEqual(proc.returncode, 1)
+            self.assertEqual(len(issues), 0)
+            self.assertIsNone(stderr)
+
+    def disabled_test_tests_invoke_open_pr(self):
+        repo = "cockpit-project/cockpit"
+        revision = "abcdef2"
+        args = ["--revision", revision, "--repo", repo]
+        script = os.path.join(BOTS_DIR, "tests-invoke")
+        with tempfile.TemporaryDirectory() as tempdir:
+            testdir = f"{tempdir}/.cockpit-ci"
+            os.makedirs(testdir)
+            with open(f"{testdir}/run", "w") as fp:
+                fp.write("#!/bin/bash\nexit 1")
+            os.system(f"chmod +x {testdir}/run")
+            proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
+                                    env={"GITHUB_API": f"http://{ADDRESS[0]}:{ADDRESS[1]}",
+                                         "TEST_INVOKE_SLEEP": "1"},
+                                    cwd=tempdir)
+            output, stderr = proc.communicate()
+            api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/")
+            issues = api.get("issues")
+            self.assertEqual(output, "")
+            self.assertEqual(proc.returncode, 1)
+            self.assertEqual(len(issues), 0)
             self.assertIsNone(stderr)
 
 

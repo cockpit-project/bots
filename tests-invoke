@@ -39,6 +39,7 @@ def main():
 
     # keep track of the most recent pull.updated_at attribute
     last_updated_at = "0"
+    api = github.GitHub(repo=opts.repo)
 
     def detect_collisions(opts):
         nonlocal last_updated_at
@@ -93,8 +94,7 @@ def main():
                 time.sleep(int(os.getenv("TEST_INVOKE_SLEEP", "60")))
         return_code = p.returncode
         sys.stderr.write("Test run finished, return code: {0}\n".format(return_code))
-        if not opts.pull_number and return_code != 0:
-            api = github.GitHub(repo=opts.repo)
+        if not api.has_open_prs(opts.revision) and return_code != 0:
             data = {
                 "title": "Nightly tests did not succeed",
                 "body": f"Tests failed on {opts.revision}",
