@@ -19,6 +19,7 @@ import contextlib
 import fcntl
 import os
 import shlex
+import shutil
 import socket
 import string
 import subprocess
@@ -440,6 +441,7 @@ class VirtMachine(Machine):
         self._domain.save(self._snapshot_file.name)
         # saving automatically destroys the domain
         self._domain = None
+        shutil.copy(self._transient_image.name, self._transient_image.name + ".snapshot", follow_symlinks=False)
         if self.verbose:
             print(f"Snapshotted instance to {self._snapshot_file.name}", file=sys.stderr)
         self.restore(_quiet=True)
@@ -447,6 +449,7 @@ class VirtMachine(Machine):
     def restore(self, _quiet=False):
         assert self._snapshot_file
         self._destroy()
+        shutil.copy(self._transient_image.name + ".snapshot", self._transient_image.name, follow_symlinks=False)
         self.virt_connection.restore(self._snapshot_file.name)
         if self.verbose and not _quiet:
             print(f"Restoring instance {self.label} from snapshot {self._snapshot_file.name}", file=sys.stderr)
@@ -460,6 +463,10 @@ class VirtMachine(Machine):
                 self.rem_disk(disk, quick)
 
             if self._transient_image is not None:
+                try:
+                    os.unlink(self._transient_image.name + ".snapshot")
+                except FileNotFoundError:
+                    pass
                 self._transient_image.close()
                 self._transient_image = None
 
