@@ -18,9 +18,11 @@
 # Shared GitHub code. When run as a script, we print out info about
 # our GitHub interacition.
 
+import functools
 import os
 import socket
 import ssl
+from typing import List, Optional
 
 from lib.constants import IMAGES_DIR
 
@@ -35,7 +37,7 @@ CA_PEM_DOMAINS = [
 ]
 
 
-def get_host_ca(hostname):
+def get_host_ca(hostname: str) -> Optional[str]:
     """Return custom CA that applies to the given host name.
 
     Self-hosted infrastructure uses CA_PEM, while publicly hosted infrastructure ought to have
@@ -49,7 +51,7 @@ def get_host_ca(hostname):
     return None
 
 
-def get_curl_ca_arg(hostname):
+def get_curl_ca_arg(hostname: str) -> List[str]:
     """Return curl CLI arguments for talking to hostname.
 
     This uses get_host_ca() to determine an appropriate CA for talking to hostname.
@@ -59,7 +61,7 @@ def get_curl_ca_arg(hostname):
     return ['--cacert', ca] if ca else []
 
 
-def host_ssl_context(hostname):
+def host_ssl_context(hostname: str) -> Optional[ssl.SSLContext]:
     """Return SSLContext suitable for given hostname.
 
     This uses get_host_ca() to determine an appropriate CA.
@@ -68,21 +70,16 @@ def host_ssl_context(hostname):
     return ssl.create_default_context(cafile=cafile) if cafile else None
 
 
-def redhat_network():
+@functools.lru_cache
+def redhat_network() -> bool:
     """Check if we can access the Red Hat network
 
     The result gets cached, so this can be called several times.
     """
-    if redhat_network.result is None:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(10)
-            s.connect(("download.devel.redhat.com", 443))
-            redhat_network.result = True
-        except OSError:
-            redhat_network.result = False
-
-    return redhat_network.result
-
-
-redhat_network.result = None
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(10)
+        s.connect(("download.devel.redhat.com", 443))
+        return True
+    except OSError:
+        return False
