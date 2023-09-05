@@ -291,7 +291,7 @@ class SSHConnection(object):
 
         additional_ssh_params += self.__execution_opts(direct=direct)
 
-        if getattr(command, "strip", None):  # Is this a string?
+        if isinstance(command, str):
             cmd += [command]
             if not quiet:
                 self.message("+", command)
