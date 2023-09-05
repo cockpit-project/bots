@@ -17,6 +17,7 @@ test_mypy() {
       lib/stores.py
       lib/constants.py
       machine/machine_core/constants.py
+      machine/machine_core/exceptions.py
     '
     mypy --no-error-summary --strict $mypy_strict_files
 }
