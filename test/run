@@ -14,6 +14,7 @@ test_mypy() {
     mypy_strict_files='
       lib/directories.py
       lib/network.py
+      lib/stores.py
     '
     mypy --no-error-summary --strict $mypy_strict_files
 }
