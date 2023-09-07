@@ -70,7 +70,7 @@ def host_ssl_context(hostname: str) -> Optional[ssl.SSLContext]:
     return ssl.create_default_context(cafile=cafile) if cafile else None
 
 
-@functools.lru_cache
+@functools.lru_cache()
 def redhat_network() -> bool:
     """Check if we can access the Red Hat network
 
