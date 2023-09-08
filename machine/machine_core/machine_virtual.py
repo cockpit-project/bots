@@ -254,6 +254,8 @@ class VirtMachine(Machine):
         self.graphics = graphics
         if capture_console:
             self.console_file = tempfile.NamedTemporaryFile(suffix='.log', prefix='console-')
+        else:
+            self.console_file = None
 
         # Set up some temporary networking info if necessary
         if networking is None:
@@ -582,10 +584,10 @@ class VirtMachine(Machine):
 
     def print_console_log(self):
         """Prints VM's console to stderr"""
-        file_name = self.console_file.name
-
-        if not file_name:
+        if not self.console_file:
             return
+
+        file_name = self.console_file.name
 
         try:
             with open(file_name) as f:
