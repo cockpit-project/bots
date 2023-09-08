@@ -231,7 +231,8 @@ class TestTestsScan(unittest.TestCase):
                 fp.write("#!/bin/bash\nexit 1")
             os.system(f"chmod +x {testdir}/run")
             proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
-                                    env={"GITHUB_API": f"http://{ADDRESS[0]}:{ADDRESS[1]}", "TEST_INVOKE_SLEEP": "1"},
+                                    env={"GITHUB_API": f"http://{ADDRESS[0]}:{ADDRESS[1]}",
+                                         "TEST_INVOKE_SLEEP": "1", "TEST_OS": "fedora-38"},
                                     cwd=tempdir)
             output, stderr = proc.communicate()
             api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/")
@@ -240,7 +241,7 @@ class TestTestsScan(unittest.TestCase):
             self.assertEqual(output, "")
             self.assertEqual(proc.returncode, 1)
             self.assertEqual(len(issues), 1)
-            self.assertEqual(issues[0]['title'], "Nightly tests did not succeed")
+            self.assertEqual(issues[0]['title'], "Nightly tests did not succeed on fedora-38")
             self.assertEqual(issues[0]['body'], f"Tests failed on {self.revision}")
             self.assertEqual(issues[0]['labels'], ["nightly"])
             self.assertIsNone(stderr)
