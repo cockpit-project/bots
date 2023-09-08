@@ -52,6 +52,12 @@ case "$OS_VER" in
     *) ;;
 esac
 
+# TEMP: cockpit on RHEL 8 needs python3-devel to select the default Python version
+case "$OS_VER" in
+    rhel*8|centos*8) EXTRA_DEPS="$EXTRA_DEPS python3-devel" ;;
+    *) ;;
+esac
+
 # pull nodejs-devel on Fedora for compliance with the guidelines on using nodejs modules:
 # https://docs.fedoraproject.org/en-US/packaging-guidelines/Node.js/#_buildrequires
 case "$OS_VER" in
