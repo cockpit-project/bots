@@ -36,10 +36,25 @@ if [ -e "$TARGET_DIR" ]; then
     rm -rf "$TARGET_DIR"
 fi
 
-git clone "https://github.com/$REPO" "$TARGET_DIR"
+for retry in $(seq 5); do
+    if git clone "https://github.com/$REPO" "$TARGET_DIR"; then
+        break
+    fi
+    echo "Retrying git clone..."
+    rm -rf "$TARGET_DIR"
+    sleep $((retry * 5))
+done
+
 cd "$TARGET_DIR"
 
-git fetch origin "$REF"
+for retry in $(seq 5); do
+    if git fetch origin "$REF"; then
+        break
+    fi
+    echo "Retrying git fetch..."
+    sleep $((retry * 5))
+done
+
 git checkout --detach "$REV"
 
 if [ -n "${REBASE:-}" ]; then
