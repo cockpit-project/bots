@@ -44,17 +44,14 @@ esac
 # - nodejs for starter-kit and other projects which rebuild webpack during RPM build
 EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs"
 
+# TEMP: cockpit needs python3-devel to select the default Python version
+EXTRA_DEPS="$EXTRA_DEPS python3-devel"
+
 # libappstream-glib-devel is needed for merging translations in AppStream XML files in starter-kit and derivatives
 # on RHEL 8 only: gettext in RHEL 8 does not know about .metainfo.xml files, and libappstream-glib-devel
 # provides /usr/share/gettext/its/appdata.{its,loc} for them
 case "$OS_VER" in
     rhel*8|centos*8) EXTRA_DEPS="$EXTRA_DEPS libappstream-glib-devel" ;;
-    *) ;;
-esac
-
-# TEMP: cockpit on RHEL 8 needs python3-devel to select the default Python version
-case "$OS_VER" in
-    rhel*8|centos*8) EXTRA_DEPS="$EXTRA_DEPS python3-devel" ;;
     *) ;;
 esac
 
