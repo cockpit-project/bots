@@ -61,7 +61,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-testing',
             'fedora-rawhide',
         ],
     },
@@ -97,7 +96,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream',
             'fedora-rawhide',
-            'fedora-testing',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -117,7 +115,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-rawhide',
-            'fedora-testing',
         ],
     },
     'weldr/lorax': {
@@ -222,12 +219,6 @@ OSTREE_BUILD_IMAGE = {
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
 IMAGE_REFRESH_TRIGGERS = {
-    "fedora-testing": [
-        "fedora-testing@cockpit-project/cockpit",
-        "fedora-testing/daily@cockpit-project/cockpit",
-        "fedora-testing@cockpit-project/cockpit-machines",
-        "fedora-testing@cockpit-project/cockpit-podman",
-    ],
     # some tests run against centos-7's cockpit-ws for backwards compat testing
     "centos-7": [
         TEST_OS_DEFAULT + "@cockpit-project/cockpit",
