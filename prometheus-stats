@@ -36,6 +36,7 @@ def main():
     parser.add_argument("--s3", metavar="URL", type=urllib.parse.urlparse,
                         help="Upload generated file to given S3 URL")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
+    parser.add_argument("--prune", type=int, metavar="DAYS", help="Remove entries older than DAYS")
     opts = parser.parse_args()
 
     if opts.verbose:
@@ -43,6 +44,19 @@ def main():
 
     db_conn = sqlite3.connect(opts.db)
     cursor = db_conn.cursor()
+
+    if opts.prune:
+        # this would be much more elegant with just "PRAGMA foreign_keys = ON", and letting SQLite
+        # auto-cleanup deleted foreign keys in the other tables; but that takes unbearably long
+        cursor.execute(f"CREATE TEMP TABLE to_delete AS SELECT id FROM TestRuns "
+                       f"WHERE time < unixepoch('now', '-{opts.prune} days')")
+        cursor.execute("DELETE FROM Tests WHERE run IN to_delete")
+        cursor.execute("DELETE FROM TestCoverage WHERE run IN to_delete")
+        cursor.execute("DELETE FROM TestRuns WHERE id IN to_delete")
+        db_conn.commit()
+        cursor.execute("VACUUM")
+        db_conn.commit()
+        return
 
     # Output in prometheus format, see:
     # https://prometheus.io/docs/instrumenting/exposition_formats/
