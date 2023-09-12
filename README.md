@@ -212,21 +212,6 @@ used as default OS for test VMs.
 1. If this is a new image, add `_manual` test contexts for the new image to `lib/testmap.py`, and land that into `main`.
 2. Create a PR that updates `TEST_OS_DEFAULT` in `lib/constants.py`, and trigger all tests for that image there.
 
-#### Fedora testing image
-
-The `fedora-testing` image is a Fedora image with updates-testing enabled,
-the version of the image is determined by what the
-`fedora-testing.bootstrap` symlink points too.
-
-To update the Fedora version used:
-
-1. Update the `fedora-testing.bootstrap` symlink to the latest Fedora
-   release.
-2. Update the naughty symlink `naughty/fedora-testing` to the latest
-   Fedora release.
-3. Create a new PR and refresh the image.
-
-
 #### Fedora CoreOS
 
 The Fedora CoreOS image is updated to a new Fedora release out of our
