@@ -49,7 +49,7 @@ class TestTestMap(unittest.TestCase):
 
         good("debian-testing", "cockpit-project/cockpit")
         # context from _manual pseudo-branch
-        good("fedora-testing", "cockpit-project/cockpit")
+        good("fedora-rawhide", "cockpit-project/cockpit")
         # not known in this branch
         bad("debian-testing", "cockpit-project/cockpit/rhel-7.9")
 
@@ -61,7 +61,7 @@ class TestTestMap(unittest.TestCase):
 
         # accepts any scenario
         good("debian-testing/newscen", "cockpit-project/cockpit")  # automatic
-        good("fedora-testing/newscen", "cockpit-project/cockpit")  # _manual
+        good("fedora-rawhide/newscen", "cockpit-project/cockpit")  # _manual
 
         # bots has no integration tests for itself
         bad("debian-testing", "cockpit-project/bots")
@@ -70,9 +70,9 @@ class TestTestMap(unittest.TestCase):
         good("debian-testing@cockpit-project/cockpit/main", "cockpit-project/bots")
         good("debian-testing/somescen@cockpit-project/cockpit", "cockpit-project/bots")
         # can refer to _manual contexts of foreign projects
-        good("fedora-testing@cockpit-project/cockpit", "cockpit-project/bots")
-        good("fedora-testing@cockpit-project/cockpit/main", "cockpit-project/bots")
-        good("fedora-testing/somescen@cockpit-project/cockpit/main", "cockpit-project/bots")
+        good("fedora-rawhide@cockpit-project/cockpit", "cockpit-project/bots")
+        good("fedora-rawhide@cockpit-project/cockpit/main", "cockpit-project/bots")
+        good("fedora-rawhide/somescen@cockpit-project/cockpit/main", "cockpit-project/bots")
 
         # unknown image/project/branches with foreign project
         bad("wrongos@cockpit-project/cockpit", "cockpit-project/bots")
