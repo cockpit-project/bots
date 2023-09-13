@@ -2,9 +2,20 @@
 
 set -eu
 
-usage()
-{
+usage() {
     echo "usage: make-checkout [-v] [--rebase BRANCH] --repo REPO REF [REVISION]" >&2
+}
+
+retry() {
+    for retry in $(seq 5); do
+        if "$@"; then
+            return
+        fi
+        echo "Retrying $@... (attempt $retry)" >&2
+        sleep $((retry * 5))
+    done
+    echo "Failed to run $@" >&2
+    exit 1
 }
 
 eval set -- "$(getopt -o vh -l repo:,rebase:,help,verbose -- "$@")"
@@ -36,29 +47,16 @@ if [ -e "$TARGET_DIR" ]; then
     rm -rf "$TARGET_DIR"
 fi
 
-for retry in $(seq 5); do
-    if git clone "https://github.com/$REPO" "$TARGET_DIR"; then
-        break
-    fi
-    echo "Retrying git clone..."
-    rm -rf "$TARGET_DIR"
-    sleep $((retry * 5))
-done
+retry git clone "https://github.com/$REPO" "$TARGET_DIR"
 
 cd "$TARGET_DIR"
 
-for retry in $(seq 5); do
-    if git fetch origin "$REF"; then
-        break
-    fi
-    echo "Retrying git fetch..."
-    sleep $((retry * 5))
-done
+retry git fetch origin "$REF"
 
 git checkout --detach "$REV"
 
 if [ -n "${REBASE:-}" ]; then
-    git fetch origin "$REBASE"
+    retry git fetch origin "$REBASE"
     SHA=`git rev-parse "origin/$REBASE"`
     echo "Rebasing onto origin/$REBASE $SHA ..."
     git rebase "origin/$REBASE"
