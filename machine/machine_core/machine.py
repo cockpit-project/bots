@@ -204,13 +204,6 @@ class Machine(ssh_connection.SSHConnection):
             # https://bugzilla.redhat.com/show_bug.cgi?id=2122888
             allowed.append('audit.*denied  { sys_admin } .* comm="mv" .*NetworkManager_dispatcher_console_t.*')
 
-        if self.image in ["fedora-38", "fedora-coreos"]:
-            # https://bugzilla.redhat.com/show_bug.cgi?id=2223571
-            allowed.append('audit.*denied  { sendto } .* comm="systemd-network" '
-                           'path="/run/systemd/journal/socket".*systemd_network_generator_t.*')
-            allowed.append('audit.*denied  { write } .* comm="systemd-network" '
-                           'name="kmsg" .*systemd_network_generator_t.*')
-
         if self.image in ["debian-testing", "ubuntu-stable"]:
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
             allowed.append('audit.* apparmor="DENIED" operation="open" class="file" ' +
