@@ -20,6 +20,7 @@ test_mypy() {
       machine/machine_core/exceptions.py
       machine/machine_core/timeout.py
       machine/machine_core/ssh_connection.py
+      machine/machine_core/machine.py
     '
     mypy --no-error-summary --strict $mypy_strict_files
 }
