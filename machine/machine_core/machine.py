@@ -178,6 +178,7 @@ class Machine(ssh_connection.SSHConnection):
             return messages
 
     def audit_messages(self, type_pref: str, cursor: Optional[str] = None) -> List[str]:
+        """Return journal audit messages"""
         if cursor:
             cursor_arg = "--cursor '%s'" % cursor
         else:
@@ -193,6 +194,7 @@ class Machine(ssh_connection.SSHConnection):
         return messages
 
     def allowed_messages(self) -> List[str]:
+        """Get allowed journal messages"""
         allowed = []
         if self.image.startswith('debian') or self.ostree_image:
             # These images don't have any non-C locales (mostly deliberate, to test this scenario somewhere)
@@ -226,6 +228,7 @@ class Machine(ssh_connection.SSHConnection):
         return allowed
 
     def get_admin_group(self) -> str:
+        """Name of the admin group on a machine"""
         if "debian" in self.image or "ubuntu" in self.image:
             return "sudo"
         else:
