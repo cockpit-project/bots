@@ -92,7 +92,7 @@ enabled=0
 gpgcheck=0
 EOF
 
-        [ -z "$UPDATES"] || cat <<EOF >> /etc/yum.repos.d/devel.repo
+        [ -z "$UPDATES" ] || cat <<EOF >> /etc/yum.repos.d/devel.repo
 
 [RHEL-BaseOS-Updates]
 name=baseos-updates
