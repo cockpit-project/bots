@@ -1,0 +1,1 @@
+audit: type=1405 audit(*): bool=sssd_use_usb val=0 old_val=1 auid=* ses=*
