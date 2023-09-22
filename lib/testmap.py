@@ -53,6 +53,7 @@ REPO_BRANCH_CONTEXT = {
             *contexts('rhel-8-9-distropkg', COCKPIT_SCENARIOS - {'networking'}),
             *contexts('centos-8-stream', COCKPIT_SCENARIOS),
             *contexts('rhel-9-3', COCKPIT_SCENARIOS),
+            *contexts('rhel-9-4', COCKPIT_SCENARIOS),
             *contexts('rhel4edge', COCKPIT_SCENARIOS),
         ],
         'rhel-7.9': [
@@ -65,7 +66,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
-            'rhel-9-4',
         ],
     },
     'cockpit-project/starter-kit': {
