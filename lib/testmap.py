@@ -87,6 +87,7 @@ REPO_BRANCH_CONTEXT = {
             'arch',
             'rhel-8-9',
             'rhel-9-3',
+            'rhel-9-4',
             'rhel4edge',
             'fedora-38',
             'fedora-39',
@@ -100,7 +101,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream',
             'fedora-rawhide',
-            'rhel-9-4',
         ],
     },
     'cockpit-project/cockpit-machines': {
