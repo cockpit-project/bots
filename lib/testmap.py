@@ -65,6 +65,7 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
+            'rhel-9-4',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -99,6 +100,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream',
             'fedora-rawhide',
+            'rhel-9-4',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -118,6 +120,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-rawhide',
+            'rhel-9-4',
         ],
     },
     'weldr/lorax': {
@@ -144,6 +147,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-rawhide',
             'fedora-39',
+            'rhel-9-4',
         ],
     },
     'candlepin/subscription-manager': {
@@ -174,6 +178,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-2',
         ],
         '_manual': [
+            'rhel-9-4',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -187,6 +192,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
             'rhel-8-9',
+            'rhel-9-4',
         ],
     },
     'cockpit-project/cockpit-certificates': {
@@ -195,10 +201,8 @@ REPO_BRANCH_CONTEXT = {
             'fedora-39',
         ],
         '_manual': [
-            'rhel-8-8',
             'rhel-8-9',
-            'rhel-9-2',
-            'rhel-9-3',
+            'rhel-9-4',
             'centos-8-stream',
             'fedora-39',
         ]
