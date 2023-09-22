@@ -94,6 +94,7 @@ libvirt-daemon-driver-storage-iscsi-direct \
 libvirt-daemon-driver-storage-logical \
 ltrace \
 netcat \
+NetworkManager-openvpn \
 nginx \
 ntfs-3g \
 ntpsec \
