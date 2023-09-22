@@ -155,6 +155,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-0',
             'rhel-9-2',
             'rhel-9-3',
+            'rhel-9-4',
             'fedora-37',
             'fedora-38',
             'fedora-39',
@@ -178,13 +179,13 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-2',
         ],
         '_manual': [
-            'rhel-9-4',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
         'main': [
             'centos-9-stream',
             'rhel-9-3',
+            'rhel-9-4',
             'fedora-37',
             'fedora-38',
             'fedora-39',
@@ -192,7 +193,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream/subscription-manager-1.28',
             'rhel-8-9',
-            'rhel-9-4',
         ],
     },
     'cockpit-project/cockpit-certificates': {
