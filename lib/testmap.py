@@ -123,6 +123,22 @@ REPO_BRANCH_CONTEXT = {
             'fedora-rawhide',
         ],
     },
+    'cockpit-project/cockpit-navigator': {
+        'main': [
+            'arch',
+            'rhel-8-9',
+            'rhel-9-4',
+            'fedora-39',
+            'debian-stable',
+            'debian-testing',
+            'ubuntu-2204',
+            'ubuntu-stable',
+        ],
+        '_manual': [
+            'centos-8-stream',
+            'fedora-rawhide',
+        ],
+    },
     'weldr/lorax': {
         'master': [
         ],
