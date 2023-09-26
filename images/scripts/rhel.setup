@@ -126,6 +126,9 @@ EOF
     fi
 fi
 
+# man-db cache update is a CPU/memory hog
+rpm -e --verbose man-db
+
 dnf --nogpgcheck -y update
 
 # unbreak rhel-9-0's default choice of 999999999 rounds

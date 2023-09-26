@@ -157,6 +157,9 @@ else
     COCKPIT_DEPS="$COCKPIT_DEPS virtiofsd"
 fi
 
+# man-db cache update is a CPU/memory hog
+rpm -e --verbose man-db
+
 dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $ABRT_PACKAGES
 
