@@ -63,9 +63,9 @@ def main():
         if entries:
             if entry == "X-RateLimit-Reset":
                 readable = datetime.datetime.utcfromtimestamp(float(entries[0][1])).isoformat()
-                sys.stdout.write("{0}: {1} ({2})\n".format(entry, entries[0][1], readable))
+                sys.stdout.write(f"{entry}: {entries[0][1]} ({readable})\n")
             else:
-                sys.stdout.write("{0}: {1}\n".format(entry, entries[0][1]))
+                sys.stdout.write(f"{entry}: {entries[0][1]}\n")
 
     return 0
 

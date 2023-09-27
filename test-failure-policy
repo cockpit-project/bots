@@ -57,11 +57,11 @@ def main():
                 update_known_issue(api, number, output, opts.image)
             except (socket.error, RuntimeError):
                 traceback.print_exc()
-                sys.stderr.write("{0}: posting update to GitHub failed\n".format(script))
+                sys.stderr.write(f"{script}: posting update to GitHub failed\n")
                 # Fall through
 
         if number:
-            print("Known issue #{0}".format(number))
+            print(f"Known issue #{number}")
             return 77
         elif opts.all:
             number, img = check_all_known_issues(api, output, opts.image)
@@ -74,7 +74,7 @@ def main():
             return 1
 
     except RuntimeError as ex:
-        sys.stderr.write("{0}: {1}\n".format(script, ex))
+        sys.stderr.write(f"{script}: {ex}\n")
 
     return 0
 
@@ -190,7 +190,7 @@ def update_known_issue(api, number, err, context):
 
     revision = os.environ.get("TEST_REVISION", None)
     if revision:
-        occ = "{0} | revision {1}".format(occ, revision)
+        occ = f"{occ} | revision {revision}"
 
     comments = issue_comments(api, number)
 
@@ -200,7 +200,7 @@ def update_known_issue(api, number, err, context):
     m = re.search("^(Traceback.*^not ok[^#\\n]*)", err_key, re.S | re.M)
     if m:
         err_key = m.group(1)
-    comment_key = "{0}\n".format(context)
+    comment_key = f"{context}\n"
     latest_occurrences = "Latest occurrences:\n\n"
     for comment in reversed(comments):
         if 'body' in comment and comment['body'].startswith(comment_key):
@@ -223,7 +223,7 @@ def update_known_issue(api, number, err, context):
                         latest[0] = "\n".join(header)
                         # list of recent occurrences
                         occurrences = [_f for _f in latest[1].split("\n") if _f]
-                        occurrences.append("- {0}\n".format(occ))
+                        occurrences.append(f"- {occ}\n")
                         # only keep the last 10
                         if len(occurrences) > 10:
                             occurrences.pop(0)
@@ -242,14 +242,14 @@ def update_known_issue(api, number, err, context):
                 while len(parts) > 10:  # maximum 10 traces
                     parts.pop()
 
-                parts.append("""
+                parts.append(f"""
 ```
-{0}
+{err.strip()}
 ```
-First occurrence: {1}
+First occurrence: {occ}
 Times recorded: 1
-{2}- {1}
-""".format(err.strip(), occ, latest_occurrences))
+{latest_occurrences}- {occ}
+""")
 
             # update comment, no need to check others
             body = "<hr>\n".join(parts)
@@ -265,15 +265,15 @@ Times recorded: 1
 
     # create a new comment, since we didn't find one to update
 
-    data = {"body": """{0}\nOoops, it happened again<hr>
+    data = {"body": f"""{context}\nOoops, it happened again<hr>
 ```
-{1}
+{err.strip()}
 ```
-First occurrence: {2}
+First occurrence: {occ}
 Times recorded: 1
-{3}- {2}
-""".format(context, err.strip(), occ, latest_occurrences)}
-    return api.post("issues/{0}/comments".format(number), data)
+{latest_occurrences}- {occ}
+"""}
+    return api.post(f"issues/{number}/comments", data)
 
 
 def issue_comments(api, number):
@@ -281,7 +281,7 @@ def issue_comments(api, number):
     page = 1
     count = 100
     while count == 100:
-        comments = api.get("issues/{0}/comments?page={1}&per_page={2}".format(number, page, count))
+        comments = api.get(f"issues/{number}/comments?page={page}&per_page={count}")
         count = 0
         page += 1
         if comments:

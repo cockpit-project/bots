@@ -115,8 +115,8 @@ def run(context, verbose=False, **kwargs):
         # once we updated the first member of a group, only consider other group members
         if group and group not in package:
             if task.verbose:
-                sys.stderr.write("Ignoring '{0}' as it does not belong to current update group {1}\n"
-                                 .format(package, group))
+                sys.stderr.write(f"Ignoring '{package}' as it does not belong to current update group {group}\n"
+                                 )
             continue
 
         # Ignore if context is specified and does not match
@@ -137,7 +137,7 @@ def run(context, verbose=False, **kwargs):
                     if g in package:
                         group = g
                         if task.verbose:
-                            sys.stderr.write("Updated package '{0}' is in group {1}\n".format(package, group))
+                            sys.stderr.write(f"Updated package '{package}' is in group {group}\n")
                         break
 
             if not group:
@@ -163,7 +163,7 @@ def run(context, verbose=False, **kwargs):
 
         # List of files that probably touch this package
         lines = output("git", "grep", "-Ew", '|'.join(updated_packages))
-        comment = "Please manually check features related to these files:\n\n```\n{0}```".format(lines)
+        comment = f"Please manually check features related to these files:\n\n```\n{lines}```"
         task.comment(pull, comment)
 
 

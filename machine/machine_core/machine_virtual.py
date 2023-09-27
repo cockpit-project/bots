@@ -172,7 +172,7 @@ class VirtNetwork:
         for port in range(start, start + (100 * step), step):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                lockpath = os.path.join(resources, "network-{0}".format(port))
+                lockpath = os.path.join(resources, f"network-{port}")
                 try:
                     lockf = os.open(lockpath, os.O_WRONLY | os.O_CREAT)
                     fcntl.flock(lockf, fcntl.LOCK_NB | fcntl.LOCK_EX)
@@ -197,10 +197,10 @@ class VirtNetwork:
         self.hostnet += 1
         result = {
             "number": self.offset + number,
-            "mac": '52:54:01:{:02x}:{:02x}:{:02x}'.format((mac >> 16) & 0xff, (mac >> 8) & 0xff, mac & 0xff),
-            "name": "m{0}.cockpit.lan".format(mac),
+            "mac": f'52:54:01:{(mac >> 16) & 0xff:02x}:{(mac >> 8) & 0xff:02x}:{mac & 0xff:02x}',
+            "name": f"m{mac}.cockpit.lan",
             "mcast": self.network,
-            "hostnet": "hostnet{0}".format(hostnet)
+            "hostnet": f"hostnet{hostnet}"
         }
         return result
 
@@ -217,7 +217,7 @@ class VirtNetwork:
         forwards = []
         for remote, local in result["forward"].items():
             local = self._lock(int(local) + result["number"])
-            result["forward"][remote] = "127.0.0.2:{}".format(local)
+            result["forward"][remote] = f"127.0.0.2:{local}"
             forwards.append("hostfwd=tcp:{}-:{}".format(result["forward"][remote], remote))
             if remote == "22":
                 result["control"] = result["forward"][remote]
@@ -357,7 +357,7 @@ class VirtMachine(Machine):
 
     # start virsh console
     def qemu_console(self, extra_message=""):
-        self.message("Started machine {0}".format(self.label))
+        self.message(f"Started machine {self.label}")
         if self.maintain:
             message = "\nWARNING: Uncontrolled shutdown can lead to a corrupted image\n"
         else:
@@ -392,12 +392,12 @@ class VirtMachine(Machine):
                 self.message("libvirt error during shutdown: %s" % (le.get_error_message()))
 
         except OSError as ex:
-            raise Failure("Failed to launch virsh command: {0}".format(ex.strerror))
+            raise Failure(f"Failed to launch virsh command: {ex.strerror}")
         finally:
             self._cleanup()
 
     def graphics_console(self):
-        self.message("Started machine {0}".format(self.label))
+        self.message(f"Started machine {self.label}")
         if self.maintain:
             message = "\nWARNING: Uncontrolled shutdown can lead to a corrupted image\n"
         else:
@@ -409,7 +409,7 @@ class VirtMachine(Machine):
             sys.stderr.write(message)
             proc.wait()
         except OSError as ex:
-            raise Failure("Failed to launch virt-viewer command: {0}".format(ex.strerror))
+            raise Failure(f"Failed to launch virt-viewer command: {ex.strerror}")
         finally:
             self._cleanup()
 
@@ -510,12 +510,12 @@ class VirtMachine(Machine):
 
         else:
             assert size is not None
-            name = "disk-{0}".format(self._domain.name())
+            name = f"disk-{self._domain.name()}"
             (unused, image) = tempfile.mkstemp(suffix='qcow2', prefix=name, dir=self.run_dir)
             subprocess.check_call(["qemu-img", "create", "-q", "-f", "raw", image, str(size)])
 
         if not serial:
-            serial = "DISK{0}".format(index)
+            serial = f"DISK{index}"
         dev = 'sd' + string.ascii_lowercase[index]
         extra = "<boot order='1'/>" if boot_disk else ""
         disk_desc = TEST_DISK_XML % {

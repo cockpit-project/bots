@@ -54,7 +54,7 @@ def prepare_install_image(base_image, install_image, resize, fresh):
         os.makedirs(install_image_dir, exist_ok=True)
         base_image = os.path.realpath(base_image)
         subprocess.check_call(["qemu-img", "create", "-q", "-f", "qcow2",
-                               "-o", "backing_file={0},backing_fmt=qcow2".format(base_image), qcow2_image])
+                               "-o", f"backing_file={base_image},backing_fmt=qcow2", qcow2_image])
         if os.path.lexists(install_image):
             os.unlink(install_image)
         os.symlink(os.path.basename(qcow2_image), install_image)

@@ -68,7 +68,7 @@ def run(image, verbose=False, **kwargs):
 
     if result.returncode == 0:
         # create branch and push it
-        branch = task.branch(image, "images: Update {0} image".format(image), pathspec="images", **kwargs)
+        branch = task.branch(image, f"images: Update {image} image", pathspec="images", **kwargs)
 
         # trigger tests if it is not a pull request
         if branch and "pull" not in kwargs:
@@ -78,7 +78,7 @@ def run(image, verbose=False, **kwargs):
             api = task.github.GitHub()
             head = pull["head"]["sha"]
             for trigger in triggers:
-                api.post("statuses/{0}".format(head), {"state": "pending", "context": trigger,
+                api.post(f"statuses/{head}", {"state": "pending", "context": trigger,
                                                        "description": task.github.NOT_TESTED_DIRECT})
 
     return (result.returncode, log_url)

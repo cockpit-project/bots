@@ -19,14 +19,14 @@ def trigger_pull(api, opts):
         pull = api.get("pulls/" + opts.target)
 
         if not pull:
-            sys.stderr.write("{0} is not a pull request.\n".format(opts.target))
+            sys.stderr.write(f"{opts.target} is not a pull request.\n")
             return 1
 
         # triggering is manual, so don't prevent triggering a user that does not have push access
         # nor isn't in the 'Contributors' group, but issue a warning in case of an oversight
         login = pull["head"]["user"]["login"]
         if not opts.allow and not api.is_user_allowed(login):
-            sys.stderr.write("Pull request author '{0}' isn't allowed. Override with --allow.\n".format(login))
+            sys.stderr.write(f"Pull request author '{login}' isn't allowed. Override with --allow.\n")
             return 1
 
         revision = pull['head']['sha']
@@ -46,7 +46,7 @@ def trigger_pull(api, opts):
                     cntx += "@bots#" + opts.bots_pr
                 contexts.add(cntx)
             else:
-                sys.stderr.write("ignoring unknown context {0}\n".format(cntx))
+                sys.stderr.write(f"ignoring unknown context {cntx}\n")
         all = False
     else:
         contexts = set(statuses.keys())

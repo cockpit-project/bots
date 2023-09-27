@@ -69,7 +69,7 @@ class Machine(ssh_connection.SSHConnection):
             browser = address
 
         if not label and image != "unknown":
-            label = "{}-{}-{}".format(image, ssh_address, ssh_port)
+            label = f"{image}-{ssh_address}-{ssh_port}"
 
         super(Machine, self).__init__(user,
                                       ssh_address,
@@ -271,7 +271,7 @@ class Machine(ssh_connection.SSHConnection):
         if self.ostree_image:
             # HACK: podman restart is broken (https://bugzilla.redhat.com/show_bug.cgi?id=1780161)
             # self.execute("podman restart `podman ps --quiet --filter ancestor=cockpit/ws`")
-            inspect_res = self.execute("podman inspect {0}".format(self.get_cockpit_container()))
+            inspect_res = self.execute(f"podman inspect {self.get_cockpit_container()}")
             tls = "--no-tls" not in inspect_res
             self.stop_cockpit()
             self.start_cockpit(tls=tls)
@@ -283,7 +283,7 @@ class Machine(ssh_connection.SSHConnection):
         """Stop Cockpit.
         """
         if self.ostree_image:
-            self.execute("echo {0} | xargs --no-run-if-empty podman rm -f".format(self.get_cockpit_container()))
+            self.execute(f"echo {self.get_cockpit_container()} | xargs --no-run-if-empty podman rm -f")
         else:
             self.execute("systemctl stop cockpit.socket cockpit.service")
 
