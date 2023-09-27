@@ -117,13 +117,13 @@ REPO_BRANCH_CONTEXT = {
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             'rhel-8-9',
+            'rhel-8-10',
             'rhel-9-3',
             'rhel-9-4',
             'centos-8-stream',
         ],
         '_manual': [
             'fedora-rawhide',
-            'rhel-8-10',
         ],
     },
     'cockpit-project/cockpit-navigator': {
