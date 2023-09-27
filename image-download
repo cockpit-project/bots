@@ -149,7 +149,7 @@ def download(dest, force, state, quiet, stores):
     if not args:
         if exists:
             return
-        raise RuntimeError("image-download: couldn't find file anywhere: {0}".format(name))
+        raise RuntimeError(f"image-download: couldn't find file anywhere: {name}")
 
     show_status(quiet, 'selected', urllib.parse.urljoin(message, name))
 
@@ -296,7 +296,7 @@ def download_images(image_list, force, quiet, state, store):
 
         except Exception as ex:
             success = False
-            sys.stderr.write("image-download: {0}\n".format(str(ex)))
+            sys.stderr.write(f"image-download: {ex!s}\n")
 
     return success
 

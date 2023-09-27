@@ -38,7 +38,7 @@ def find_pr_with_sha(api, sha):
     for pull in pulls:
         if pull["head"]["sha"] == sha:
             return pull
-    sys.stderr.write("Could not find pull with revision {0}.\n".format(sha))
+    sys.stderr.write(f"Could not find pull with revision {sha}.\n")
     sys.exit(1)
 
 

@@ -175,9 +175,9 @@ def run(context, function, **kwargs):
 
     issue = None
     if number:
-        issue = api.get("issues/{0}".format(number))
+        issue = api.get(f"issues/{number}")
         if not issue:
-            return "No such issue: {0}".format(number)
+            return f"No such issue: {number}"
         elif issue["title"].startswith("WIP:"):
             return "Issue is work in progress: {0}: {1}\n".format(number, issue["title"])
         issue["number"] = int(number)
@@ -207,7 +207,7 @@ def run(context, function, **kwargs):
 
 def issue(title, body, item, context=None, items=[], state="open", since=None):
     if context:
-        item = "{0} {1}".format(item, context).strip()
+        item = f"{item} {context}".strip()
 
     if since:
         # don't let all bots pass the deadline in the same second, to avoid many duplicates
@@ -256,7 +256,7 @@ def execute(*args):
 
 
 def push_branch(branch, force=False):
-    cmd = ["git", "push", api.remote, "+HEAD:refs/heads/{0}".format(branch)]
+    cmd = ["git", "push", api.remote, f"+HEAD:refs/heads/{branch}"]
     if force:
         cmd.insert(2, "-f")
     execute(*cmd)
@@ -276,7 +276,7 @@ def branch(context, message, pathspec=".", issue=None, push=True, branch=None, *
     except subprocess.CalledProcessError:
         raise RuntimeError("Couldn't configure git config with our API token")
 
-    clean = "https://github.com/{0}".format(api.repo)
+    clean = f"https://github.com/{api.repo}"
 
     if pathspec is not None:
         execute("git", "add", "--", pathspec)
@@ -367,7 +367,7 @@ def label(issue, labels=['bot']):
     try:
         resource = "issues/{0}/labels".format(issue["number"])
     except TypeError:
-        resource = "issues/{0}/labels".format(issue)
+        resource = f"issues/{issue}/labels"
     return api.post(resource, labels)
 
 
@@ -382,7 +382,7 @@ def comment(issue, comment):
         number = issue["number"]
     except TypeError:
         number = issue
-    return api.post("issues/{0}/comments".format(number), {"body": comment})
+    return api.post(f"issues/{number}/comments", {"body": comment})
 
 
 def comment_done(issue, name, clean, branch, context=None):

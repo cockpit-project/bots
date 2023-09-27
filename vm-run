@@ -38,7 +38,7 @@ parser.add_argument('-S', '--storage', default=[], action='append',
 parser.add_argument('-e', '--execute', metavar='COMMAND', action='append',
                     help='Execute this (shell-interpreted) command (implies -q)')
 parser.add_argument('-s', '--systemd-start', metavar='UNIT', action='append', dest='execute',
-                    type=(lambda s: "systemctl enable --now {}".format(str(s))),
+                    type=(lambda s: f"systemctl enable --now {s!s}"),
                     help='Start this systemd unit (implies -q)')
 parser.add_argument('--no-network', action='store_true', help='Do not connect the machine to the Internet')
 

@@ -51,7 +51,7 @@ def main():
 
     context = opts.context
     if "/" not in context:
-        context = "verify/{0}".format(context)
+        context = f"verify/{context}"
     prefix, _, image = context.partition("/")
     image, _, scenario = image.partition("/")
 
@@ -67,18 +67,18 @@ def main():
                 post_github(api, number, output, image)
             except (socket.error, RuntimeError):
                 traceback.print_exc()
-                sys.stderr.write("{0}: posting update to GitHub failed\n".format(script))
+                sys.stderr.write(f"{script}: posting update to GitHub failed\n")
                 # Fall through
 
         # Simple single number output
         if opts.simple:
             if number:
-                sys.stdout.write("{0}\n".format(number))
+                sys.stdout.write(f"{number}\n")
             return 0
 
         # Otherwise we filter the output and write it back
         if number:
-            output = filterSkip(output, "# SKIP Known issue #{0}".format(number))
+            output = filterSkip(output, f"# SKIP Known issue #{number}")
         elif checkRetry(output):
             output = filterRetry(output, "# RETRY due to failure of test harness or framework")
 
@@ -86,7 +86,7 @@ def main():
         return 0
 
     except RuntimeError as ex:
-        sys.stderr.write("{0}: {1}\n".format(script, ex))
+        sys.stderr.write(f"{script}: {ex}\n")
         return 1
 
 # -----------------------------------------------------------------------------
@@ -213,7 +213,7 @@ def update_known_issue(api, number, err, details, context, timestamp=None):
 
     link = timestamp
     if details:
-        link = "{0} | {1}".format(timestamp, details)
+        link = f"{timestamp} | {details}"
 
     comments = issue_comments(api, number)
 
@@ -223,7 +223,7 @@ def update_known_issue(api, number, err, details, context, timestamp=None):
     m = re.search("^(Traceback.*^not ok[^#\\n]*)", err_key, re.S | re.M)
     if m:
         err_key = m.group(1)
-    comment_key = "{0}\n".format(context)
+    comment_key = f"{context}\n"
     latest_occurrences = "Latest occurrences:\n\n"
     for comment in reversed(comments):
         if 'body' in comment and comment['body'].startswith(comment_key):
@@ -246,7 +246,7 @@ def update_known_issue(api, number, err, details, context, timestamp=None):
                         latest[0] = "\n".join(header)
                         # list of recent occurrences
                         occurrences = [_f for _f in latest[1].split("\n") if _f]
-                        occurrences.append("- {0}\n".format(link))
+                        occurrences.append(f"- {link}\n")
                         # only keep the last 10
                         if len(occurrences) > 10:
                             occurrences.pop(0)
@@ -265,14 +265,14 @@ def update_known_issue(api, number, err, details, context, timestamp=None):
                 while len(parts) > 10:  # maximum 10 traces
                     parts.pop()
 
-                parts.append("""
+                parts.append(f"""
 ```
-{0}
+{err.strip()}
 ```
-First occurrence: {1}
+First occurrence: {link}
 Times recorded: 1
-{2}- {1}
-""".format(err.strip(), link, latest_occurrences))
+{latest_occurrences}- {link}
+""")
 
             # update comment, no need to check others
             body = "<hr>\n".join(parts)
@@ -288,15 +288,15 @@ Times recorded: 1
 
     # create a new comment, since we didn't find one to update
 
-    data = {"body": """{0}\nOoops, it happened again<hr>
+    data = {"body": f"""{context}\nOoops, it happened again<hr>
 ```
-{1}
+{err.strip()}
 ```
-First occurrence: {2}
+First occurrence: {link}
 Times recorded: 1
-{3}- {2}
-""".format(context, err.strip(), link, latest_occurrences)}
-    return api.post("issues/{0}/comments".format(number), data)
+{latest_occurrences}- {link}
+"""}
+    return api.post(f"issues/{number}/comments", data)
 
 
 def issue_comments(api, number):
@@ -304,7 +304,7 @@ def issue_comments(api, number):
     page = 1
     count = 100
     while count == 100:
-        comments = api.get("issues/{0}/comments?page={1}&per_page={2}".format(number, page, count))
+        comments = api.get(f"issues/{number}/comments?page={page}&per_page={count}")
         count = 0
         page += 1
         if comments:
@@ -319,14 +319,14 @@ def post_github(api, number, output, image):
     if not api or not api.token:
         return
 
-    context = "verify/{0}".format(image)
+    context = f"verify/{image}"
 
     # Lookup the link being logged to
     link = None
     revision = os.environ.get("TEST_REVISION", None)
     if revision:
-        link = "revision {0}".format(revision)
-        statuses = api.get("commits/{0}/statuses".format(revision))
+        link = f"revision {revision}"
+        statuses = api.get(f"commits/{revision}/statuses")
         if statuses:
             for status in statuses:
                 if status["context"] == context:

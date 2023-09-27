@@ -145,12 +145,7 @@ def output_task(command, issue, repo, verbose):
         checkout += "./make-checkout --verbose --repo {repo} {repo_default_branch} && "
 
     if verbose:
-        return "issue-{issue} {name} {context}    {priority}".format(
-            issue=int(number),
-            priority=distributed_queue.MAX_PRIORITY,
-            name=name,
-            context=context
-        )
+        return f"issue-{int(number)} {name} {context}    {distributed_queue.MAX_PRIORITY}"
     else:
         if context:
             context = shlex.quote(context)

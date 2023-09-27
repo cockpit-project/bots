@@ -47,7 +47,7 @@ def main():
         api = github.GitHub(repo=opts.repo)
 
         try:
-            pull = api.get("pulls/{0}".format(opts.pull_number))
+            pull = api.get(f"pulls/{opts.pull_number}")
         except (TimeoutError, socket.gaierror, github.GitHubError) as e:
             sys.stderr.write('Warning: collision detection failed, skipping: %s\n' % e)
             # GitHub API is sometimes flaky, don't break test just because it sometimes does not respond
@@ -86,14 +86,14 @@ def main():
             # Cancel test if PR gets updated while running
             ret = detect_collisions(opts)
             if ret:
-                sys.stderr.write('Collision detected, cancelling this test run: {0}\n'.format(ret))
+                sys.stderr.write(f'Collision detected, cancelling this test run: {ret}\n')
                 ret = None
                 p.terminate()
                 p.wait(timeout=60)
             else:
                 time.sleep(int(os.getenv("TEST_INVOKE_SLEEP", "60")))
         return_code = p.returncode
-        sys.stderr.write("Test run finished, return code: {0}\n".format(return_code))
+        sys.stderr.write(f"Test run finished, return code: {return_code}\n")
         if not api.has_open_prs(opts.revision) and return_code != 0:
             test_scenario = os.getenv("TEST_SCENARIO", "")
             test_os = os.getenv("TEST_OS")
@@ -111,7 +111,7 @@ def main():
         ret = str(ex)
 
     if ret:
-        sys.stderr.write("tests-invoke: {0}\n".format(ret))
+        sys.stderr.write(f"tests-invoke: {ret}\n")
         return 1
     return 0
 

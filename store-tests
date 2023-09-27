@@ -240,7 +240,7 @@ def find_tests(fp):
         if m:
             # sometimes line breaks are missing:
             # not ok 117 test/verify/check-metrics TestMetrics.testPcp
-            testname = "{0} {1}".format(m.group(2), m.group(3)).rstrip("#")
+            testname = f"{m.group(2)} {m.group(3)}".rstrip("#")
             if "make-checkout-workdir" in testname:
                 testname = testname.split("make-checkout-workdir")[1]
             t = re_duration.match(prev_msg)

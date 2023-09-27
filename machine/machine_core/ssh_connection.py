@@ -58,7 +58,7 @@ class SSHConnection(object):
         self.ssh_master = None
         self.ssh_process = None
         self.ssh_reachable = False
-        self.label = label if label else "{}@{}:{}".format(self.ssh_user, self.ssh_address, self.ssh_port)
+        self.label = label if label else f"{self.ssh_user}@{self.ssh_address}:{self.ssh_port}"
 
     def disconnect(self):
         self.ssh_reachable = False
@@ -203,7 +203,7 @@ class SSHConnection(object):
                 time.sleep(1)
                 continue
             else:
-                raise exceptions.Failure("SSH master process exited with code: {0}".format(proc.returncode))
+                raise exceptions.Failure(f"SSH master process exited with code: {proc.returncode}")
 
         self.ssh_master = control
         self.ssh_process = proc
@@ -408,7 +408,7 @@ class SSHConnection(object):
         try:
             subprocess.check_call(cmd)
         except subprocess.CalledProcessError:
-            self.message("Error while downloading directory '{0}'".format(source))
+            self.message(f"Error while downloading directory '{source}'")
 
     def write(self, dest, content, append=False, owner=None, perm=None):
         """Write a file into the test machine

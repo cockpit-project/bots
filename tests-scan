@@ -285,7 +285,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
     if pull_data:
         pulls.append(json.loads(pull_data)['pull_request'])
     elif pull_number:
-        pull = api.get("pulls/{0}".format(pull_number))
+        pull = api.get(f"pulls/{pull_number}")
         if pull:
             pulls.append(pull)
         else:

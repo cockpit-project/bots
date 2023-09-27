@@ -115,7 +115,7 @@ def scan(api, force, verbose):
             perform = stale(days, os.path.join("images", image), "origin/main", verbose)
 
         if perform:
-            text = "Image refresh for {0}".format(image)
+            text = f"Image refresh for {image}"
             issue = task.issue(text, text, "image-refresh", image)
             sys.stderr.write("#{0}: image-refresh {1}\n".format(issue["number"], image))
 

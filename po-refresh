@@ -76,7 +76,7 @@ def run(context, verbose=False, **kwargs):
                 print(text, file=mnfst)
             git_cmd.append("pkg/shell/manifest.json")
         execute(*git_cmd, name)
-        return task.branch(context, "po: {0} '{1}' language".format(action, language),
+        return task.branch(context, f"po: {action} '{language}' language",
                            pathspec=None, branch=local_branch, push=False, **kwargs)
 
     # Build language map a read manifest
@@ -145,7 +145,7 @@ def run(context, verbose=False, **kwargs):
 
     if local_branch and not branch:  # We only introduced/dropped language but otherwise no updates
         if kwargs["issue"]:
-            clean = "https://github.com/{0}".format(api.repo)
+            clean = f"https://github.com/{api.repo}"
             task.comment_done(kwargs["issue"], "po-refresh", clean, local_branch, context)
 
         task.push_branch(local_branch)
@@ -163,7 +163,7 @@ def run(context, verbose=False, **kwargs):
 
     triggers = testmap.tests_for_po_refresh(api.repo)
     for trigger in triggers:
-        api.post("statuses/{0}".format(head), {"state": "pending", "context": trigger,
+        api.post(f"statuses/{head}", {"state": "pending", "context": trigger,
                                                "description": task.github.NOT_TESTED_DIRECT})
 
 

@@ -127,7 +127,7 @@ class MachineBuilder:
                 if args.sit:
                     sys.stderr.write(self.machine.diagnose())
                     input("Press RET to continue... ")
-                raise testvm.Failure("setup failed with code {0}\n".format(ex.returncode))
+                raise testvm.Failure(f"setup failed with code {ex.returncode}\n")
 
         finally:
             self.machine.stop(timeout_sec=500)

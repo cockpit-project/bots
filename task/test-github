@@ -114,7 +114,7 @@ class TestGitHub(unittest.TestCase):
 
         match = fnmatch.fnmatch(self.api.log.data, expect)
         if not match:
-            self.fail("'{0}' did not match '{1}'".format(self.api.log.data, expect))
+            self.fail(f"'{self.api.log.data}' did not match '{expect}'")
 
     def testIssuesSince(self):
         issues = self.api.issues(since=1499838499)

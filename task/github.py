@@ -65,7 +65,7 @@ class Logger(object):
     def __init__(self, directory):
         hostname = socket.gethostname().split(".")[0]
         month = time.strftime("%Y%m")
-        self.path = os.path.join(directory, "{0}-{1}.log".format(hostname, month))
+        self.path = os.path.join(directory, f"{hostname}-{month}.log")
 
         os.makedirs(directory, exist_ok=True)
 
@@ -186,7 +186,7 @@ class GitHub(object):
         if not self._url:
             if not self._base:
                 netloc = os.environ.get("GITHUB_API", "https://api.github.com")
-                self._base = "{0}/repos/{1}".format(netloc, self.repo)
+                self._base = f"{netloc}/repos/{self.repo}"
 
             self._url = urllib.parse.urlparse(self._base)
 
@@ -195,7 +195,7 @@ class GitHub(object):
     def qualify(self, resource):
         if resource is None:
             return self.url.path
-        return urllib.parse.urljoin("{0}/".format(self.url.path), resource)
+        return urllib.parse.urljoin(f"{self.url.path}/", resource)
 
     def request(self, method, resource, data="", headers=None):
         if headers is None:
@@ -311,7 +311,7 @@ class GitHub(object):
         page = 1
         count = 100
         while count == 100:
-            data = self.get("commits/{0}/status?page={1}&per_page={2}".format(revision, page, count))
+            data = self.get(f"commits/{revision}/status?page={page}&per_page={count}")
             count = 0
             page += 1
             if "statuses" in data:
@@ -326,7 +326,7 @@ class GitHub(object):
         page = 1
         count = 100
         while count == 100:
-            data = self.get("commits/{0}/statuses?page={1}&per_page={2}".format(revision, page, count))
+            data = self.get(f"commits/{revision}/statuses?page={page}&per_page={count}")
             count = 0
             page += 1
             result += data
@@ -338,8 +338,7 @@ class GitHub(object):
         page = 1
         count = 100
         while count == 100:
-            pulls = self.get("pulls?page={0}&per_page={1}&state={2}&sort=created&direction=desc".format(
-                page, count, state))
+            pulls = self.get(f"pulls?page={page}&per_page={count}&state={state}&sort=created&direction=desc")
             count = 0
             page += 1
             for pull in pulls or []:
@@ -368,7 +367,7 @@ class GitHub(object):
             since = ""
 
         while count == 100:
-            req = "issues?labels={0}&state={1}&page={2}&per_page={3}{4}".format(label, state, page, count, since)
+            req = f"issues?labels={label}&state={state}&page={page}&per_page={count}{since}"
             issues = self.get(req)
 
             page += 1
@@ -383,7 +382,7 @@ class GitHub(object):
         return True
 
     def getHead(self, pr):
-        pull = self.get("pulls/{0}".format(pr))
+        pull = self.get(f"pulls/{pr}")
         if pull:
             return pull.get("head", {}).get("sha")
         return None
