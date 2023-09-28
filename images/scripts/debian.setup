@@ -227,6 +227,11 @@ EOF
 
 $APT install dpkg-dev pbuilder
 
+# TEMP: until https://github.com/cockpit-project/cockpit/pull/19407 lands
+if [ "$1" = "ubuntu-2204" ]; then
+    PBUILDER_EXTRA="${PBUILDER_EXTRA} pkgconf"
+fi
+
 pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
 /usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get | pbuilder --login --save-after-login
 rm -rf /tmp/out
