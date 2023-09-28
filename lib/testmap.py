@@ -127,13 +127,16 @@ REPO_BRANCH_CONTEXT = {
         ],
     },
     'cockpit-project/cockpit-navigator': {
+        'main': [
+            'fedora-38',
+            'fedora-39',
+            'fedora-rawhide',
+        ],
         '_manual': [
             TEST_OS_DEFAULT,
             'arch',
             'rhel-9-4',
-            'fedora-39',
             'debian-testing',
-            'fedora-rawhide',
         ],
     },
     'weldr/lorax': {
