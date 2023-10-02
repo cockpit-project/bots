@@ -1,9 +1,9 @@
-*~
-*.pyc
-*.qcow2
 *.iso
 *.partial
+*.pyc
+*.qcow2
 *.xz
+*~
 /*.log
 /build-results/
 make-checkout-workdir
