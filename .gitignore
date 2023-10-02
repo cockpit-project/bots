@@ -2,6 +2,7 @@
 *.partial
 *.pyc
 *.qcow2
+*.tar.??
 *.xz
 *~
 /*.log
