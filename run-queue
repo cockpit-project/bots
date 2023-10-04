@@ -58,8 +58,9 @@ def consume_webhook_queue(channel, amqp):
         pull_request = request['pull_request']
         repo = pull_request['base']['repo']['full_name']
         action = request['action']
-        # scan for body changes (edited) and the bots label
-        if action == 'labeled' or (action == 'edited' and 'body' in request.get('changes', {})):
+        # scan for body changes (edited) and the bots label; we only use that for image refreshes in the bots repo
+        if repo.endswith('/bots') and (
+                action == 'labeled' or (action == 'edited' and 'body' in request.get('changes', {}))):
             cmd = ['./issue-scan', '--issues-data', json.dumps(request), '--amqp', amqp]
         elif action in ['opened', 'synchronize']:
             cmd = ['./tests-scan', '--pull-data', json.dumps(request), '--amqp', amqp, '--repo', repo]
