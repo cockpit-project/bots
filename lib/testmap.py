@@ -258,6 +258,10 @@ IMAGE_REFRESH_TRIGGERS = {
     "fedora-rawhide": [
         "fedora-rawhide-boot@rhinstaller/anaconda"
     ],
+    # Anaconda payload updates can affect tests
+    "fedora-rawhide-anaconda-payload": [
+        "fedora-rawhide-boot@rhinstaller/anaconda"
+    ],
 }
 
 
