@@ -37,7 +37,7 @@ deploy_to cockpit-project/bots \
 # cockpit
 deploy_to cockpit-project/cockpit \
     --deploy-from \
-        cockpit-project/cockpit/npm-update/COCKPIT_DEPLOY_KEY \
+        cockpit-project/cockpit/npm-update/SELF_DEPLOY_KEY \
         cockpit-project/cockpit/self/DEPLOY_KEY
 
 deploy_to cockpit-project/cockpit-weblate \
