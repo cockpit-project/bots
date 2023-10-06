@@ -228,6 +228,11 @@ EOF
 $APT install dpkg-dev pbuilder
 
 pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
+# our static build deps approach cannot resolve alternate build dependencies,
+# so hide systemd-dev on older releases which don't have it yet
+if [ "$1" = "debian-stable" ] || [ "$1" = "ubuntu-stable" ] || [ "$1" = "ubuntu-2204" ] ; then
+    sed -i 's/systemd-dev |.*,/systemd,/' /tmp/out/tools/debian/control
+fi
 /usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get | pbuilder --login --save-after-login
 rm -rf /tmp/out
 
