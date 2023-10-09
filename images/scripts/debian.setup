@@ -116,6 +116,18 @@ if [ "$1" = "debian-testing" ]; then
     rm --verbose -f /etc/apt/sources.list.d/*
     echo 'deb http://deb.debian.org/debian testing main' > /etc/apt/sources.list
     RELEASE=testing
+
+    # HACK: install thin-provisioning-tools from unstable https://bugs.debian.org/1041089
+    echo 'deb http://deb.debian.org/debian unstable main' >> /etc/apt/sources.list
+    cat <<EOF > /etc/apt/preferences.d/unstable
+Package: *
+Pin: release a=unstable
+Pin-Priority: -1
+
+Package: thin-provisioning-tools
+Pin: release a=unstable
+Pin-Priority: 10
+EOF
 fi
 
 # smaller and faster initrd; see https://launchpad.net/bugs/1592684
