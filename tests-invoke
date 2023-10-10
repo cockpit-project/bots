@@ -97,14 +97,19 @@ def main():
         return_code = p.returncode
         sys.stderr.write(f"Test run finished, return code: {return_code}\n")
         if not api.has_open_prs(opts.revision) and not collision_detected and return_code != 0:
+            logs_url = os.getenv("TEST_ATTACHMENTS_URL")
             test_scenario = os.getenv("TEST_SCENARIO", "")
             test_os = os.getenv("TEST_OS")
             title = f"Nightly tests did not succeed on {test_os}"
+            body = f"Tests failed on {opts.revision}"
+
+            if logs_url:
+                body += f", [logs]({logs_url}/log.html)"
             if test_scenario != "":
                 title += f"/{test_scenario}"
             data = {
                 "title": title,
-                "body": f"Tests failed on {opts.revision}",
+                "body": body,
                 "labels": ["nightly"]
             }
             api.post("issues", data)
