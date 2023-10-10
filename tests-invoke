@@ -81,12 +81,14 @@ def main():
         os.environ["TEST_REVISION"] = opts.revision
         os.environ["TEST_PULL"] = str(opts.pull_number)
 
+        collision_detected = False
         p = subprocess.Popen(cmd)
         while p.poll() is None:
             # Cancel test if PR gets updated while running
             ret = detect_collisions(opts)
             if ret:
                 sys.stderr.write(f'Collision detected, cancelling this test run: {ret}\n')
+                collision_detected = True
                 ret = None
                 p.terminate()
                 p.wait(timeout=60)
@@ -94,7 +96,7 @@ def main():
                 time.sleep(int(os.getenv("TEST_INVOKE_SLEEP", "60")))
         return_code = p.returncode
         sys.stderr.write(f"Test run finished, return code: {return_code}\n")
-        if not api.has_open_prs(opts.revision) and return_code != 0:
+        if not api.has_open_prs(opts.revision) and not collision_detected and return_code != 0:
             test_scenario = os.getenv("TEST_SCENARIO", "")
             test_os = os.getenv("TEST_OS")
             title = f"Nightly tests did not succeed on {test_os}"
