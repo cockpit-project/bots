@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "tests/test/check-machines-networks", line *, in testNetworkState
+    wait(lambda: "yes" == m.execute("virsh net-info test_network2 | grep 'Active:' | awk '{print $2}'").strip(), tries=5)
+*
+testlib.Error: Condition did not become true.
