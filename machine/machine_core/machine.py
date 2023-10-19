@@ -210,6 +210,12 @@ class Machine(ssh_connection.SSHConnection):
                            'profile=".*" name="/sys/devices/system/cpu/possible" .* ' +
                            'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
 
+        if self.image in ["debian-testing", "ubuntu-stable"]:
+            # https://bugs.debian.org/1053706
+            allowed.append(r"Process.*\(w\) .*dumped core.")
+            # yes, this ignores all crash info; we can't help it
+            allowed.append("^(Module|ELF|Stack trace|#[0-9]).*")
+
         if self.image in ["rhel-8-6", "rhel-9-0"]:
             # https://bugzilla.redhat.com/show_bug.cgi?id=2124550 / https://bugzilla.redhat.com/show_bug.cgi?id=2124549
             allowed.append(
