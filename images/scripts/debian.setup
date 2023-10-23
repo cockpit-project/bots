@@ -47,7 +47,7 @@ udisks2-lvm2 \
 "
 
 # udisks >= 2.10 depends on libblockdev-mdraid, so add it manually only for older OSes
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
     COCKPIT_DEPS="$COCKPIT_DEPS libblockdev-mdraid2"
 fi
 
@@ -87,8 +87,14 @@ tcsh \
 clevis-luks \
 tang \
 libnss-myhostname \
+virtiofsd \
 wireguard-tools \
 "
+
+# older libvirt have this builtin
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
+    TEST_PACKAGES="${TEST_PACKAGES/virtiofsd/}"
+fi
 
 DEBUG_PACKAGES=''
 
@@ -219,7 +225,7 @@ if grep -q 'ID=ubuntu' /etc/os-release; then
     (cd /tmp/
      apt-get download $EXTRAS
      for pkg in $EXTRAS; do
-        dpkg-deb --fsys-tarfile ${pkg}_*.deb | tar -C / --wildcards -xv '*/scsi_debug.ko' '*/team*.ko'
+        dpkg-deb --fsys-tarfile ${pkg}_*.deb | tar -C / --wildcards -xv '*/scsi_debug.ko*' '*/team*.ko*'
         rm ${pkg}_*.deb
         depmod "${pkg#linux-modules-extra-}"
      done
@@ -254,7 +260,7 @@ $APT install dpkg-dev pbuilder
 pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
 # our static build deps approach cannot resolve alternate build dependencies,
 # so hide systemd-dev on older releases which don't have it yet
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
     sed -i 's/systemd-dev |.*,/systemd,/' /tmp/out/tools/debian/control
 fi
 /usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get | pbuilder --login --save-after-login
@@ -324,6 +330,12 @@ fi
 # HACK: https://bugs.debian.org/1032990
 if [ "$RELEASE" = "testing" ]; then
     sed -i '/subid:.*sss/d' /etc/nsswitch.conf
+fi
+
+# HACK: https://launchpad.net/bugs/2040483
+if [ "$IMAGE" = "ubuntu-stable" ]; then
+    mkdir -p /etc/containers/containers.conf.d
+    printf '[CONTAINERS]\napparmor_profile=""\n' > /etc/containers/containers.conf.d/disable-apparmor.conf
 fi
 
 # reduce image size; don't keep old kernels

@@ -15,11 +15,4 @@ fi
 # release name is the last part of the URL
 rel=${rel##*/}
 
-# mantic has several dealbreakers which make cockpit unsupportable:
-# https://launchpad.net/bugs/2040488 https://launchpad.net/bugs/2040082 https://launchpad.net/bugs/2040483
-# until at least the first one is fixed, keep lunar aka 22.04
-if [ "$rel" = "mantic" ]; then
-    rel="lunar"
-fi
-
 exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "https://cloud-images.ubuntu.com/daily/server/$rel/current/$rel-server-cloudimg-amd64.img"
