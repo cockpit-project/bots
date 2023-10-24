@@ -107,6 +107,14 @@ def main():
                 body += f", [logs]({logs_url}/log.html)"
             if test_scenario != "":
                 title += f"/{test_scenario}"
+
+            if 'updates-testing' in test_scenario:
+                assert test_os is not None
+                if test_os.startswith("fedora-"):
+                    rel = test_os.split("-")[-1]
+                    base_url = "https://bodhi.fedoraproject.org"
+                    url = f"{base_url}/updates/?search=&status=testing&status=stable&releases=F{rel}"
+                    body += f"\n[bodhi updates]({url})"
             data = {
                 "title": title,
                 "body": body,
