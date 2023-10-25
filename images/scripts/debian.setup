@@ -2,6 +2,7 @@
 # Shared .setup between all Debian/Ubuntu flavors
 
 set -ex
+IMAGE="$1"
 
 # Enable ssh if necessary so that we get the "sshd" alias symlink that
 # everything expects.
@@ -45,7 +46,7 @@ udisks2-lvm2 \
 "
 
 # udisks >= 2.10 depends on libblockdev-mdraid, so add it manually only for older OSes
-if [ "$1" = "debian-stable" ] || [ "$1" = "ubuntu-stable" ] || [ "$1" = "ubuntu-2204" ] ; then
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
     COCKPIT_DEPS="$COCKPIT_DEPS libblockdev-mdraid2"
 fi
 
@@ -112,7 +113,7 @@ until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 RELEASE=$(. /etc/os-release; echo $VERSION_CODENAME)
 
 # debian-testing image gets bootstrapped from debian stable; upgrade
-if [ "$1" = "debian-testing" ]; then
+if [ "$IMAGE" = "debian-testing" ]; then
     rm --verbose -f /etc/apt/sources.list.d/*
     echo 'deb http://deb.debian.org/debian testing main' > /etc/apt/sources.list
     RELEASE=testing
@@ -242,7 +243,7 @@ $APT install dpkg-dev pbuilder
 pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
 # our static build deps approach cannot resolve alternate build dependencies,
 # so hide systemd-dev on older releases which don't have it yet
-if [ "$1" = "debian-stable" ] || [ "$1" = "ubuntu-stable" ] || [ "$1" = "ubuntu-2204" ] ; then
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
     sed -i 's/systemd-dev |.*,/systemd,/' /tmp/out/tools/debian/control
 fi
 /usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get | pbuilder --login --save-after-login
