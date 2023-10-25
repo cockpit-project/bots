@@ -52,7 +52,6 @@ REPO_BRANCH_CONTEXT = {
             # all skipped
             *contexts('rhel-8-9-distropkg', COCKPIT_SCENARIOS - {'networking'}),
             *contexts('centos-8-stream', COCKPIT_SCENARIOS),
-            *contexts('rhel-9-3', COCKPIT_SCENARIOS),
             *contexts('rhel-9-4', COCKPIT_SCENARIOS),
             *contexts('rhel4edge', COCKPIT_SCENARIOS),
         ],
@@ -88,7 +87,6 @@ REPO_BRANCH_CONTEXT = {
             'arch',
             'rhel-8-9',
             'rhel-8-10',
-            'rhel-9-3',
             'rhel-9-4',
             'rhel4edge',
             'fedora-38',
@@ -118,7 +116,6 @@ REPO_BRANCH_CONTEXT = {
             f'{TEST_OS_DEFAULT}/firefox',
             'rhel-8-9',
             'rhel-8-10',
-            'rhel-9-3',
             'rhel-9-4',
             'centos-8-stream',
         ],
@@ -249,10 +246,10 @@ IMAGE_REFRESH_TRIGGERS = {
         f"{TEST_OS_DEFAULT}@cockpit-project/cockpit",
         "ubuntu-stable@cockpit-project/cockpit",
         "debian-stable@cockpit-project/cockpit",
-        "rhel-9-3@cockpit-project/cockpit",
+        "rhel-9-4@cockpit-project/cockpit",
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
         "rhel-8-8@candlepin/subscription-manager/subscription-manager-1.28",
-        "rhel-9-3@candlepin/subscription-manager-cockpit",
+        "rhel-9-4@candlepin/subscription-manager-cockpit",
     ],
     # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
     "fedora-rawhide": [
