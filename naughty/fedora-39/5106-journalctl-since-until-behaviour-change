@@ -2,4 +2,4 @@ Traceback (most recent call last):
   File "*", line *, in testEvents
 *
 testlib.Error: timeout
-wait_js_cond(ph_is_present(".cockpit-log-message:contains('Created slice cockpittest.slice.')")): Uncaught (in promise) Error: condition did not become true
+wait_js_cond(ph_is_present(".cockpit-log-message:contains('Created slice cockpittest.slice.')")):* condition did not become true
