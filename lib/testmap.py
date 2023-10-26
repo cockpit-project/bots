@@ -85,7 +85,6 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-podman': {
         'main': [
             'arch',
-            'rhel-8-9',
             'rhel-8-10',
             'rhel-9-4',
             'rhel4edge',
@@ -114,7 +113,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-39',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
-            'rhel-8-9',
             'rhel-8-10',
             'rhel-9-4',
             'centos-8-stream',
