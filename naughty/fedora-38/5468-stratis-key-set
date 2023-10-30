@@ -1,0 +1,7 @@
+termios.error: (25, 'Inappropriate ioctl for device')
+*
+Traceback (most recent call last):
+  File "test/verify/check-storage-stratis", line *, in testEncrypted
+    m.execute("echo not-the-passphrase | stratis key set --capture-key pool0")
+*
+subprocess.CalledProcessError
