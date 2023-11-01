@@ -1,0 +1,42 @@
+#!/bin/sh -x
+
+# (Re-)generate all deploy keys on
+#   https://github.com/rhinstaller/anaconda-webui/settings/environments
+#
+# Your personal access token needs `public_repo` for this to work:
+#   https://github.com/settings/tokens
+#
+# You might want this first:
+#   dnf install python3-pynacl
+#
+# Note: this script doesn't delete old secrets, so if you make adjustments,
+#       please do that manually.
+
+set -eu
+cd "$(realpath -m "$0"/..)"
+
+DRY_RUN="-v"
+if test -n "${1:-}"; then
+    if test "$1" = "--dry-run" -o "$1" = "-n"; then
+        DRY_RUN="-n"
+    else
+        echo "Unrecognised argument"
+        exit 1
+    fi
+fi
+
+deploy_to() {
+    ./github-upload-secrets ${DRY_RUN} --deploy-to "$@"
+}
+
+
+# anaconda-webui
+deploy_to rhinstaller/anaconda-webui \
+    --deploy-from \
+        rhinstaller/anaconda-webui/npm-update/SELF_DEPLOY_KEY \
+        rhinstaller/anaconda-webui/self/DEPLOY_KEY
+
+
+deploy_to rhinstaller/anaconda-webui-l10n \
+    --deploy-from \
+        rhinstaller/anaconda-webui/anaconda-webui-l10n/DEPLOY_KEY
