@@ -145,28 +145,35 @@
 
             if (test) {
                 const top10 = [];
-                const rows = db.exec(`
-                        SELECT context, COUNT(*) AS failed
+                const runs_by_context_table = db.exec(`
+                        SELECT context, COUNT(*)
+                        FROM TestRuns
+                        JOIN Tests ON Tests.run = TestRuns.id
+                        WHERE time > ${since} AND Tests.testname = '${test}' AND project LIKE '${repo}'
+                        GROUP BY context`);
+                const runs_by_context = {};
+                runs_by_context_table[0].values.forEach(row => {
+                    runs_by_context[row[0]] = row[1];
+                });
+
+                const fails_by_context = db.exec(`
+                        SELECT context, COUNT(*)
                         FROM TestRuns
                         JOIN Tests ON Tests.run = TestRuns.id
                         WHERE time > ${since} AND Tests.failed = 1 AND Tests.testname = '${test}' AND project LIKE '${repo}'
                         GROUP BY context
-                        ORDER BY COUNT(*) DESC`);
-                const failed = db.exec(`
-                        SELECT COUNT(*) AS failed
-                        FROM TestRuns
-                        JOIN Tests ON Tests.run = TestRuns.id
-                        WHERE time > ${since} AND Tests.failed = 1 AND Tests.testname = '${test}' AND project LIKE '${repo}'`)[0].values[0][0];
+                        ORDER BY COUNT(*) DESC`)[0].values;
+                let total_failures = fails_by_context.reduce((acc, row) => acc + row[1], 0);
 
-                rows[0].values.forEach(row => {
+                fails_by_context.forEach(([context, failcount]) => {
                     const urls = db.exec(`
                         SELECT DISTINCT TestRuns.url
                         FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
-                        WHERE testname = '${test}' AND TestRuns.context = '${row[0]}' AND failed = 1 AND project LIKE '${repo}'
+                        WHERE testname = '${test}' AND TestRuns.context = '${context}' AND failed = 1 AND project LIKE '${repo}'
                         ORDER BY run DESC
                         LIMIT 2`);
                     const links = urls[0].values.map(u => u[0]);
-                    top10.push([row[0], ((row[1] * 100) / failed).toFixed(2), links]);
+                    top10.push([context, ((failcount * 100) / runs_by_context[context]).toFixed(2), links]);
                 });
                 if (!top10.length)
                     top10.push([`No failures in the last ${days} days`, 0, []]);
@@ -218,7 +225,7 @@
                         FROM TestRuns
                         JOIN Tests ON Tests.run = TestRuns.id
                         WHERE time > ${since} AND Tests.testname = '${test}' AND project LIKE '${repo}'`)[0].values[0][0];
-                document.getElementById("description").innerHTML = `Showing results from ${all} tests (${failed} failed).`;
+                document.getElementById("description").innerHTML = `Showing results from ${all} test runs (${total_failures} failed).`;
             } else {
                 const prs_count = db.exec(`
                     SELECT COUNT(DISTINCT(revision))
