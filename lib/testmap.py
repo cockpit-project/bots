@@ -222,6 +222,11 @@ REPO_BRANCH_CONTEXT = {
             'fedora-rawhide-boot',
         ],
     },
+    'rhinstaller/anaconda-webui': {
+        'main': [
+            'fedora-rawhide-boot',
+        ],
+    },
 }
 
 # The OSTree variants can't build their own packages, so we build in
