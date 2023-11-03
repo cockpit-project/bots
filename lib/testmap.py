@@ -240,7 +240,7 @@ OSTREE_BUILD_IMAGE = {
 IMAGE_REFRESH_TRIGGERS = {
     # some tests run against centos-7's cockpit-ws for backwards compat testing
     "centos-7": [
-        TEST_OS_DEFAULT + "@cockpit-project/cockpit",
+        f"{TEST_OS_DEFAULT}/expensive@cockpit-project/cockpit",
     ],
     "openshift": [
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
