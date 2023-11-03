@@ -275,8 +275,8 @@
                     createTable("t2", "Unexpected messages", ["Message", "Count", "Logs"], data);
 
                 // Get all failures sorted by descending fail rate
-                const top10 = [];
-                const rows = db.exec(`
+                const top_failures = [];
+                const result = db.exec(`
                         SELECT allruns.testname, project, failruns.context, (failruns.failed * 100.0) / COUNT(run) AS percent
                         FROM Tests AS allruns
                         JOIN TestRuns ON allruns.run = TestRuns.id
@@ -289,11 +289,21 @@
                         ) AS failruns ON allruns.testname = failruns.testname AND TestRuns.context = failruns.context
                         WHERE TestRuns.time > ${since} AND failruns.failed > 1 AND project LIKE '${repo}'
                         GROUP BY allruns.testname, failruns.context
-                        ORDER BY percent DESC
-                        LIMIT 10`);
+                        ORDER BY percent DESC`);
 
-                if (rows.length)
-                    rows[0].values.forEach(row => {
+                if (result.length) {
+                    const rows = result[0].values;
+                    // If we have more than 10 results, truncate below 10% failure rate
+                    if (rows.length > 10) {
+                        for (let i = 0; i < rows.length; i++) {
+                            if (rows[i][3] < 10) {
+                                rows.splice(i);
+                                break;
+                            }
+                        }
+                    }
+
+                    rows.forEach(row => {
                         const urls = db.exec(`
                             SELECT DISTINCT TestRuns.url
                             FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
@@ -301,12 +311,12 @@
                             ORDER BY run DESC
                             LIMIT 2`);
                         const links = urls[0].values.map(u => u[0]);
-                        top10.push([{name: normalize(row[0], row[1]), key_name: row[0], key: "test"}, row[2], row[3].toFixed(2), links]);
+                        top_failures.push([{name: normalize(row[0], row[1]), key_name: row[0], key: "test"}, row[2], row[3].toFixed(2), links]);
                     });
-                else
-                    top10.push([`No failures in the last ${days} days`, "", 0, []]);
+                } else
+                    top_failures.push([`No failures in the last ${days} days`, "", 0, []]);
 
-                createTable("t1", "Top failures", ["Test name", "Context", "Fail rate (%)", "Logs"], top10);
+                createTable("t1", "Top failures", ["Test name", "Context", "Fail rate (%)", "Logs"], top_failures);
 
                 // Show average waiting time in queue per day
                 const time_points = [];
