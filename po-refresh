@@ -98,7 +98,8 @@ def run(context, verbose=False, **kwargs):
         with open("po/LINGUAS", "r", encoding='utf-8') as lngs:
             current_linguas = lngs.read().strip().split()
 
-    # Remove all files that have less than 50% coverage
+    # Remove all files that have less than X% coverage
+    # By default 50% is used but can be overridden by COVERAGE_THRESHOLD env variable
     for po in glob.glob("po/*.po"):
         all_types = output_with_stderr("msgfmt", "--statistics", po).split(", ")
         translated = int(all_types[0].split(" ")[0])
@@ -106,7 +107,8 @@ def run(context, verbose=False, **kwargs):
         for u in all_types[1:]:
             untranslated += int(u.split(" ")[0])
         coverage = translated / (translated + untranslated)
-        if coverage < 0.5:
+        coverage_limit = os.getenv("COVERAGE_THRESHOLD", 0.5)
+        if coverage < float(coverage_limit):
             output("rm", po)
 
     # Remove languages that fall under 50% translated
