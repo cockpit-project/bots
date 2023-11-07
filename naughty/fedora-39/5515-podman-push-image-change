@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "test/check-application", line *, in testDownloadImage
+    dialog1.deleteImage(True, another=IMG_BUSYBOX_LATEST)
+*
+testlib.Error: timeout
+wait_js_cond(ph_is_present(".pf-v5-c-check__input[aria-label='localhost/test-busybox:latest']:not([disabled]):not([aria-disabled=true])")): Uncaught (in promise) Error: condition did not become true
