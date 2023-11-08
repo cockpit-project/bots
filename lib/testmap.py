@@ -217,11 +217,6 @@ REPO_BRANCH_CONTEXT = {
             'fedora-39',
         ]
     },
-    'rhinstaller/anaconda': {
-        'master': [
-            'fedora-rawhide-boot',
-        ],
-    },
     'rhinstaller/anaconda-webui': {
         'main': [
             'fedora-rawhide-boot',
@@ -256,11 +251,11 @@ IMAGE_REFRESH_TRIGGERS = {
     ],
     # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
     "fedora-rawhide": [
-        "fedora-rawhide-boot@rhinstaller/anaconda"
+        "fedora-rawhide-boot@rhinstaller/anaconda-webui"
     ],
     # Anaconda payload updates can affect tests
     "fedora-rawhide-anaconda-payload": [
-        "fedora-rawhide-boot@rhinstaller/anaconda"
+        "fedora-rawhide-boot@rhinstaller/anaconda-webui"
     ],
 }
 
