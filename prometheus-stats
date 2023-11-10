@@ -121,18 +121,18 @@ test_run_seconds_count {test_runs}
 
     # top failures of last 7 days
     top_failures = cursor.execute("""
-            SELECT TestRuns.project, t1.testname, (t2.failed * 100.0) / COUNT(run) AS percent
-            FROM Tests AS t1
-            JOIN TestRuns ON t1.run = TestRuns.id
+            SELECT project, allruns.testname, failruns.context, (failruns.failed * 100.0) / COUNT(run) AS percent
+            FROM Tests AS allruns
+            JOIN TestRuns ON allruns.run = TestRuns.id
             JOIN (
-                SELECT testname, COUNT(run) as failed
-                FROM Tests
-                JOIN TestRuns ON Tests.run = TestRuns.id
-                WHERE TestRuns.time > strftime('%s', 'now', '-7 days') AND Tests.failed = 1
-                GROUP BY testname
-            ) AS t2 ON t1.testname = t2.testname
-            WHERE TestRuns.time > strftime('%s', 'now', '-7 days') AND t2.failed > 1
-            GROUP BY t1.testname
+                    SELECT testname, context, COUNT(run) as failed
+                    FROM Tests
+                    JOIN TestRuns ON Tests.run = TestRuns.id
+                    WHERE TestRuns.time > strftime('%s', 'now', '-7 days') AND Tests.failed = 1
+                    GROUP BY testname, context
+            ) AS failruns ON allruns.testname = failruns.testname AND TestRuns.context = failruns.context
+            WHERE TestRuns.time > strftime('%s', 'now', '-7 days') AND failruns.failed > 1
+            GROUP BY allruns.testname, failruns.context
             ORDER BY percent DESC
             LIMIT 50""").fetchall()
 
@@ -140,9 +140,9 @@ test_run_seconds_count {test_runs}
 # HELP top_failures_pct Most unstable tests in the last 7 days (more than 10% failure rate)
 # TYPE top_failures_pct gauge
 """
-    for (project, test, fail_pct) in top_failures:
+    for (project, test, context, fail_pct) in top_failures:
         if fail_pct > 10:
-            output += f'top_failures_pct{{project="{project}",test="{test}"}} {fail_pct}\n'
+            output += f'top_failures_pct{{project="{project}",test="{test}",context="{context}"}} {fail_pct}\n'
 
     # PR retries
     pr_retries = cursor.execute("""
