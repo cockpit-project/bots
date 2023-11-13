@@ -177,7 +177,7 @@ class S3ImageStore(ImageCache):
 
     def delete_file(self, filename):
         try:
-            with s3.urlopen(self.url._replace(path='/' + filename), method='DELETE'):
+            with s3.urlopen(self.url._replace(path=os.path.join(self.url.path, filename)), method='DELETE'):
                 pass
         except urllib.error.HTTPError as e:
             # 404 → already gone? *shrug* eventual consistency or parallel image-prune run
