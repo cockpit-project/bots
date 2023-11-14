@@ -66,44 +66,37 @@ poweroff
 #
 #############
 
-# See https://github.com/Fmstrat/samba-domain
-# image on dockerhub is too old, and not published on quay or anywhere else
-git clone --depth=1 https://github.com/Fmstrat/samba-domain /tmp/samba-domain
-# avoid pulling ubuntu base image from dockerhub
-sed -i '/^FROM/ s|ubuntu|ghcr.io/linuxserver/baseimage-ubuntu|' /tmp/samba-domain/Dockerfile
-podman build -t samba-domain /tmp/samba-domain
+cat <<EOF > /root/samba-ad.json
+{
+  "samba-container-config": "v0",
+  "configs": {
+    "demo": {
+      "instance_features": ["addc"],
+      "domain_settings": "sink",
+      "instance_name": "f0"
+    }
+  },
+  "domain_settings": {
+    "sink": {
+      "realm": "COCKPIT.LAN",
+      "short_domain": "COCKPIT",
+      "admin_password": "foobarFoo123"
+    }
+  }
+}
+EOF
 
-mkdir -p /var/lib/samba-data/config /var/lib/samba-data/data
+# See https://github.com/samba-in-kubernetes/samba-container#ad-dc
+podman pull quay.io/samba.org/samba-ad-server
 
-# "foobarfoo" password is not accepted:
-# 0000052D: Constraint violation - check_password_restrictions: the password does not meet the complexity criteria!
-# supposed to be disabled with -e NOCOMPLEXITY=true, but that doesn't work
 cat <<EOF > /root/run-samba-domain
+# conflicts with samba's DNS
+systemctl stop systemd-resolved
 podman run -d -it --rm --name samba \
-    -e "DOMAIN=COCKPIT.LAN" \
-    -e "DOMAINPASS=foobarFoo123" \
-    -e "DNSFORWARDER=172.27.0.3" \
-    -e "HOSTIP=$SERVER_IP" \
-    -p $SERVER_IP:53:53 \
-    -p $SERVER_IP:53:53/udp \
-    -p 88:88 \
-    -p 88:88/udp \
-    -p 135:135 \
-    -p 137-138:137-138/udp \
-    -p 139:139 \
-    -p 389:389 \
-    -p 389:389/udp \
-    -p 445:445 \
-    -p 464:464 \
-    -p 464:464/udp \
-    -p 636:636 \
-    -p 1024-1044:1024-1044 \
-    -p 3268-3269:3268-3269 \
-    -v /var/lib/samba-data/data/:/var/lib/samba:z \
-    -v /var/lib/samba-data/config:/etc/samba/external:z \
-    --add-host services.cockpit.lan:$SERVER_IP \
+    --privileged --network=host \
+    -v /root/samba-ad.json:/etc/samba/container.json \
     -h f0.cockpit.lan \
-    localhost/samba-domain
+    quay.io/samba.org/samba-ad-server
 EOF
 chmod 755 /root/run-samba-domain
 
