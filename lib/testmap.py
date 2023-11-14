@@ -17,15 +17,16 @@
 
 import itertools
 import os.path
-from typing import Iterable
+from typing import Iterable, Optional
 
 from lib.constants import TEST_OS_DEFAULT
 
 COCKPIT_SCENARIOS = {'networking', 'storage', 'expensive', 'other'}
 
 
-def contexts(image, *scenarios: Iterable[str]):
-    return [image + '/' + '-'.join(i) for i in itertools.product(*scenarios)]
+def contexts(image, *scenarios: Iterable[str], repo: Optional[str] = None):
+    return [image + '/' + '-'.join(i) + (('@' + repo) if repo else '')
+            for i in itertools.product(*scenarios)]
 
 
 REPO_BRANCH_CONTEXT = {
@@ -243,10 +244,10 @@ IMAGE_REFRESH_TRIGGERS = {
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
     ],
     "services": [
-        f"{TEST_OS_DEFAULT}@cockpit-project/cockpit",
-        "ubuntu-stable@cockpit-project/cockpit",
-        "debian-stable@cockpit-project/cockpit",
-        "rhel-9-4@cockpit-project/cockpit",
+        *contexts(TEST_OS_DEFAULT, COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *contexts('debian-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *contexts('rhel-9-4', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
         "rhel-8-8@candlepin/subscription-manager/subscription-manager-1.28",
         "rhel-9-4@candlepin/subscription-manager-cockpit",
