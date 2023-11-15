@@ -135,7 +135,7 @@ EOF
 sleep 5
 
 # validate that it works
-until curl --insecure --head https://localhost:8443/candlepin/; do sleep 5; done
+until curl --insecure --fail --head https://localhost:8443/candlepin/status; do sleep 5; done
 
 # copy the certificate to where the tests expect them
 mkdir -p /home/admin/candlepin
