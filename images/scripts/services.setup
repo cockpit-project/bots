@@ -110,10 +110,12 @@ chmod 755 /root/run-samba-domain
 #############################
 
 # run the candlepin container to copy the certificates out of it
+# HACK: Later versions change/break something with certificates, to be debugged
+# https://github.com/cockpit-project/bots/issues/5551
 podman run -d --name candlepin \
     --uts=host \
     -p 8443:8443 \
-    ghcr.io/ptoscano/candlepin-unofficial:latest
+    ghcr.io/ptoscano/candlepin-unofficial:4.2.15-1
 
 # give systemd the time to start in the container
 sleep 5
