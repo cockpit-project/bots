@@ -59,9 +59,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-7-9',
             'centos-7',
         ],
-        'rhel-9.3': [
-            *contexts('rhel-9-3', COCKPIT_SCENARIOS),
-        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
