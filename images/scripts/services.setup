@@ -158,23 +158,29 @@ chmod 755 /root/run-candlepin
 # grafana setup
 #
 #############################
-# HACK: Due to unsigned grafana-pcp plugin we have to use development mode
-# See https://github.com/performancecopilot/grafana-pcp/issues/94
+
+# This does not actually prevent the "Failed to fetch plugins from catalog" error, but at least we try..
 cat <<EOF > /root/grafana.ini
-app_mode = development
+[analytics]
+enabled = false
+reporting_enabled = false
+check_for_updates = false
+check_for_plugin_updates = false
 EOF
 chmod 644 /root/grafana.ini
 
-# determine latest release of PCP plugin
-url_base=https://github.com/performancecopilot/grafana-pcp/releases
-latest_ver=$(basename $(curl -Ls -o /dev/null -w '%{url_effective}' ${url_base}/latest))
+# enable PCP plugin
+cat <<EOF > /root/pcp.yaml
+apiVersion: 1
+apps:
+  - type: performancecopilot-pcp-app
+EOF
 
 podman run -d --rm --name grafana -p 3000:3000 \
-    -v /root/grafana.ini:/opt/bitnami/grafana/conf/grafana.ini:z \
+    -v /root/grafana.ini:/opt/bitnami/grafana/conf/grafana.ini:ro,z \
     -v grafana-data-plugins:/opt/bitnami/grafana/data/plugins \
     -e GF_SECURITY_ADMIN_PASSWORD=foobar \
-    -e GF_INSTALL_PLUGINS="redis-datasource,performancecopilot-pcp-app=https://github.com/performancecopilot/grafana-pcp/releases/download/${latest_ver}/performancecopilot-pcp-app-${latest_ver#v}.zip" \
-    -e GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS="performancecopilot-pcp-app,redis-datasource" \
+    -e GF_INSTALL_PLUGINS="redis-datasource,performancecopilot-pcp-app" \
     docker.io/bitnami/grafana
 
 # wait until set up completed
@@ -185,9 +191,9 @@ cat <<EOF > /root/run-grafana
 #!/bin/sh
 podman run -d --rm --name grafana -p 3000:3000 \
     -v /root/grafana.ini:/opt/bitnami/grafana/conf/grafana.ini:z \
+    -v /root/pcp.yaml:/opt/bitnami/grafana/conf/provisioning/plugins/pcp.yaml:ro,z \
     -v grafana-data-plugins:/opt/bitnami/grafana/data/plugins \
     -e GF_SECURITY_ADMIN_PASSWORD=foobar \
-    -e GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS="performancecopilot-pcp-app,redis-datasource" \
     docker.io/bitnami/grafana
 EOF
 chmod 755 /root/run-grafana
