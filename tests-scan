@@ -278,8 +278,8 @@ def update_status(api, revision, context, last, changes):
     return True
 
 
-def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp):
-    results = []
+def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp) -> 'list[tuple]':
+    results: 'list[tuple]' = []
     pulls = []
 
     if pull_data:
@@ -289,8 +289,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
         if pull:
             pulls.append(pull)
         else:
-            logging.error("Can't find pull request %s", pull_number)
-            return 1
+            sys.exit(f"Can't find pull request {pull_number}")
     elif sha and not api.has_open_prs(sha):
         logging.info("Processing revision %s without pull request", sha)
         pulls.append({
