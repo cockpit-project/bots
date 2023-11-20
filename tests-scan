@@ -24,7 +24,7 @@ import shlex
 import sys
 import time
 
-from lib import testmap
+from lib import ALLOWLIST, testmap
 from task import distributed_queue, github, labels_of_pull
 
 sys.dont_write_bytecode = True
@@ -318,7 +318,7 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
         login = pull["head"]["user"]["login"]
         base = pull["base"]["ref"]  # The branch this pull request targets
 
-        allowed = api.is_user_allowed(login)
+        allowed = login in ALLOWLIST
 
         logging.info("Processing #%s titled '%s' on revision %s", number, title, revision)
 

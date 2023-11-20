@@ -1,6 +1,12 @@
 # bots and organizations which are allowed to use our CI
 
 ALLOWLIST = {
+    # orgs
+    'candlepin',
+    'cockpit-project',
+    'osbuild',
+    'rhinstaller',
+
     # humans
     'AdamWill',
     'KKoukiou',
@@ -34,5 +40,5 @@ ALLOWLIST = {
 
     # bots
     'cockpituous',
-
+    'github-actions[bot]',
 }
