@@ -30,7 +30,6 @@ import urllib.parse
 from http import HTTPStatus
 from ssl import SSLEOFError
 
-from lib.allowlist import ALLOWLIST
 from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
 
@@ -387,15 +386,6 @@ class GitHub(object):
         if pull:
             return pull.get("head", {}).get("sha")
         return None
-
-    def allowlist(self):
-        # bots and organizations which are allowed to use our CI (these use branches within the main repo for PRs)
-        users = {"github-actions[bot]", "candlepin", "cockpit-project", "osbuild", "rhinstaller"}
-        users.update(ALLOWLIST)
-        return users
-
-    def is_user_allowed(self, user):
-        return user in self.allowlist()
 
 
 class Checklist(object):

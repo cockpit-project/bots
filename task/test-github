@@ -115,14 +115,6 @@ class TestGitHub(unittest.TestCase):
         self.assertEqual(len(issues), 1)
         self.assertEqual(issues[0]["number"], "7")
 
-    def testAllowlist(self):
-        allowlist = self.api.allowlist()
-        self.assertGreater(len(allowlist), 0)
-        self.assertEqual(allowlist, {"one", "two", "three", "github-actions[bot]", "candlepin",
-                                     "cockpit-project", "osbuild", "rhinstaller"})
-        self.assertNotIn("four", allowlist)
-        self.assertNotIn("", allowlist)
-
     def testLastIssueDelete(self):
         self.assertEqual(len(self.api.issues()), 2)
         self.api.delete("/issues/7")
