@@ -30,6 +30,7 @@ import urllib.parse
 from http import HTTPStatus
 from ssl import SSLEOFError
 
+from lib.allowlist import ALLOWLIST
 from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
 
@@ -390,25 +391,7 @@ class GitHub(object):
     def allowlist(self):
         # bots and organizations which are allowed to use our CI (these use branches within the main repo for PRs)
         users = {"github-actions[bot]", "candlepin", "cockpit-project", "osbuild", "rhinstaller"}
-
-        # individual persons from https://github.com/orgs/cockpit-project/teams/contributors/members
-        # this requires a token with read:org permissions
-        page = 1
-        count = 100
-        while count == 100:
-            try:
-                data = self.get(
-                    f"/orgs/cockpit-project/teams/contributors/members?page={page}&per_page={count}"
-                ) or []
-            except GitHubError as e:
-                if e.status == 403:
-                    logging.warning("Insufficient token permissions to list team members: %s", e)
-                    break
-                else:
-                    raise
-            users.update(user.get("login") for user in data)
-            count = len(data)
-            page += 1
+        users.update(ALLOWLIST)
         return users
 
     def is_user_allowed(self, user):

@@ -56,12 +56,6 @@ class Handler(MockHandler):
                 self.replyData("", status=304)
             else:
                 self.replyJson({"user": "blah"}, headers={"Last-Modified": "Thu, 05 Jul 2012 15:31:30 GMT"})
-        elif parsed.path == "/orgs/cockpit-project/teams/contributors/members":
-            self.replyJson([
-                {"login": "one"},
-                {"login": "two"},
-                {"login": "three"}
-            ])
         else:
             self.send_error(404, 'Mock Not Found: ' + parsed.path)
 
