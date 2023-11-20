@@ -4,7 +4,7 @@ import argparse
 import subprocess
 import sys
 
-from lib import testmap
+from lib import ALLOWLIST, testmap
 from task import github
 
 sys.dont_write_bytecode = True
@@ -25,7 +25,7 @@ def trigger_pull(api, opts):
         # triggering is manual, so don't prevent triggering a user that does not have push access
         # nor isn't in the 'Contributors' group, but issue a warning in case of an oversight
         login = pull["head"]["user"]["login"]
-        if not opts.allow and not api.is_user_allowed(login):
+        if not opts.allow and login not in ALLOWLIST:
             sys.stderr.write(f"Pull request author '{login}' isn't allowed. Override with --allow.\n")
             return 1
 

@@ -23,7 +23,7 @@ import logging
 import shlex
 import sys
 
-from lib import testmap
+from lib import ALLOWLIST, testmap
 from task import distributed_queue, github, labels_of_pull
 
 NAMES = [
@@ -100,7 +100,7 @@ def tasks_for_issues(issues_data, opts_repo):
         if issue["title"].strip().startswith("WIP"):
             continue
         login = issue.get("user", {}).get("login", {})
-        if not api.is_user_allowed(login):
+        if login not in ALLOWLIST:
             continue
 
         #
