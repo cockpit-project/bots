@@ -1,5 +1,5 @@
 Traceback (most recent call last):
   File "test/check-machines-snapshots", line *, in testSnapshotRevert
+    b.wait_not_present("#vm-subVmTest1-snapshot-1-current")
 *
 testlib.Error: timeout
-wait_js_cond(!ph_is_present("#vm-subVmTest1-snapshot-1-current")): condition did not become true
