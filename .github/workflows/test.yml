@@ -50,6 +50,7 @@ jobs:
               ':!image-trigger' \
               ':!naughty' \
               ':!machine/machine_core' \
+              ':!lib/allowlist.py' \
               ':!lib/testmap.py' \
               ':!vm-run' \
           >&2 || echo "::set-output name=changed::true"
