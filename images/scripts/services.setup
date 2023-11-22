@@ -66,37 +66,37 @@ poweroff
 #
 #############
 
-cat <<EOF > /root/samba-ad.json
-{
-  "samba-container-config": "v0",
-  "configs": {
-    "demo": {
-      "instance_features": ["addc"],
-      "domain_settings": "sink",
-      "instance_name": "f0"
-    }
-  },
-  "domain_settings": {
-    "sink": {
-      "realm": "COCKPIT.LAN",
-      "short_domain": "COCKPIT",
-      "admin_password": "foobarFoo123"
-    }
-  }
-}
-EOF
-
-# See https://github.com/samba-in-kubernetes/samba-container#ad-dc
-podman pull quay.io/samba.org/samba-ad-server
+# See https://github.com/Fmstrat/samba-domain ; docker.io/nowsci/samba-domain works fine
+# but we have to build ourselves due to docker pull rate limits
+git clone --depth=1 https://github.com/Fmstrat/samba-domain /var/tmp/samba-domain
+# avoid pulling ubuntu base image from dockerhub
+sed -i '/^FROM/ s|ubuntu:22.04|quay.io/bedrock/ubuntu:jammy|' /var/tmp/samba-domain/Dockerfile
+podman build -t localhost/samba-domain /var/tmp/samba-domain
 
 cat <<EOF > /root/run-samba-domain
-# conflicts with samba's DNS
-systemctl stop systemd-resolved
-podman run -d -it --rm --name samba \
-    --privileged --network=host \
-    -v /root/samba-ad.json:/etc/samba/container.json \
+podman run -d -it --rm --privileged --name samba \
+    -e "DOMAIN=COCKPIT.LAN" \
+    -e "DOMAINPASS=foobarFoo123" \
+    -e "DNSFORWARDER=172.27.0.3" \
+    -e "HOSTIP=$SERVER_IP" \
+    -p $SERVER_IP:53:53 \
+    -p $SERVER_IP:53:53/udp \
+    -p 88:88 \
+    -p 88:88/udp \
+    -p 135:135 \
+    -p 137-138:137-138/udp \
+    -p 139:139 \
+    -p 389:389 \
+    -p 389:389/udp \
+    -p 445:445 \
+    -p 464:464 \
+    -p 464:464/udp \
+    -p 636:636 \
+    -p 1024-1044:1024-1044 \
+    -p 3268-3269:3268-3269 \
+    --add-host services.cockpit.lan:$SERVER_IP \
     -h f0.cockpit.lan \
-    quay.io/samba.org/samba-ad-server
+    localhost/samba-domain
 EOF
 chmod 755 /root/run-samba-domain
 
