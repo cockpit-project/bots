@@ -217,6 +217,9 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             'fedora-rawhide-boot',
         ],
+        '_manual': [
+            'fedora-eln-boot',
+        ],
     },
 }
 
