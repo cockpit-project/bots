@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eux
+
+OUTPUT="$1"
+
+# Read the boot.iso file name from the MD5SUM file
+MD5SUM=http://download.devel.redhat.com/nightly/rhel-9/RHEL-9/latest-RHEL-9/compose/BaseOS/x86_64/iso/MD5SUM
+BOOTISO=$(curl -L --silent $MD5SUM | grep -Eo RHEL.*boot.iso | head -1)
+URL=http://download.devel.redhat.com/nightly/rhel-9/RHEL-9/latest-RHEL-9/compose/BaseOS/x86_64/iso/$BOOTISO
+
+curl -L "$URL" -o "$OUTPUT"
