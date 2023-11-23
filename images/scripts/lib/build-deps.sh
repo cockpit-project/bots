@@ -10,6 +10,8 @@ set -o pipefail
 GET="curl --silent --show-error --fail"
 COCKPIT_GIT="https://raw.githubusercontent.com/cockpit-project/cockpit"
 OS_VER="$1"
+# Remove variant information from OS_VER (e.g. fedora 40 eln -> fedora 40)
+OS_VER_NO_VARIANT="$(echo $OS_VER | cut -d' ' -f 1,2)"
 
 # most images use cockpit.spec from main branch, but there's a RHEL 7 stable branch with a completely different layout
 case "$OS_VER" in
@@ -23,7 +25,7 @@ case "$OS_VER" in
         ;;
 esac
 
-echo "$spec" | rpmspec -D "$OS_VER" -D 'version 0' -D 'enable_old_bridge 0' --buildrequires --query /dev/stdin | sed 's/.*/"&"/' | tr '\n' ' '
+echo "$spec" | rpmspec -D "$OS_VER_NO_VARIANT" -D 'version 0' -D 'enable_old_bridge 0' --buildrequires --query /dev/stdin | sed 's/.*/"&"/' | tr '\n' ' '
 
 # some extra build dependencies:
 # - libappstream-glib for validating appstream metadata in starter-kit and derivatives
@@ -47,6 +49,7 @@ esac
 # pull nodejs-devel on Fedora for compliance with the guidelines on using nodejs modules:
 # https://docs.fedoraproject.org/en-US/packaging-guidelines/Node.js/#_buildrequires
 case "$OS_VER" in
+    fedora*eln) ;;
     fedora*) EXTRA_DEPS="$EXTRA_DEPS nodejs-devel" ;;
     *) ;;
 esac

@@ -21,16 +21,7 @@ echo foobar | passwd --stdin root
 # them to not spontaneously change from one test run to the next when
 # the distribution repository is updated.
 #
-COCKPIT_DEPS="\
-criu-libs \
-device-mapper-multipath \
-glibc-langpack-de \
-glibc-langpack-pt \
-glib-networking \
-grubby \
-json-glib \
-kexec-tools \
-libssh \
+COCKPIT_MACHINES_DEPS="
 libvirt-daemon-config-network \
 libvirt-daemon-driver-qemu \
 libvirt-daemon-driver-network \
@@ -40,6 +31,31 @@ libvirt-daemon-driver-interface \
 libvirt-daemon-driver-storage-disk \
 libvirt-client \
 libvirt-dbus \
+qemu-block-curl \
+qemu-audio-spice \
+qemu-char-spice \
+qemu-device-usb-host \
+qemu-device-usb-redirect \
+qemu-kvm-core \
+virt-install \
+"
+COCKPIT_STORAGE_DEPS="
+device-mapper-multipath \
+udisks2 \
+udisks2-btrfs \
+udisks2-lvm2 \
+udisks2-iscsi \
+"
+
+COCKPIT_DEPS="\
+criu-libs \
+glibc-langpack-de \
+glibc-langpack-pt \
+glib-networking \
+grubby \
+json-glib \
+kexec-tools \
+libssh \
 NetworkManager-team \
 openssl \
 PackageKit \
@@ -47,12 +63,6 @@ pcp \
 pcp-libs \
 python3-pip \
 python3-tracer \
-qemu-block-curl \
-qemu-audio-spice \
-qemu-char-spice \
-qemu-device-usb-host \
-qemu-device-usb-redirect \
-qemu-kvm-core \
 realmd \
 selinux-policy-targeted \
 setroubleshoot-server \
@@ -61,11 +71,6 @@ sscg \
 system-logos \
 subscription-manager \
 tuned \
-virt-install \
-udisks2 \
-udisks2-btrfs \
-udisks2-lvm2 \
-udisks2-iscsi \
 "
 
 # We also install the packages necessary to join a FreeIPA domain so
@@ -161,8 +166,14 @@ fi
 # man-db cache update is a CPU/memory hog
 rpm -e --verbose man-db
 
+# fedora-eln image is just used for building/fetching the anaconda-webui RPM dependencies
+# no need to install all dependencies there
+ALL_DEPS="$COCKPIT_DEPS"
+if [ "fedora-eln" != "$IMAGE" ]; then
+    ALL_DEPS="$COCKPIT_MACHINES_DEPS $COCKPIT_STORAGE_DEPS $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $TEST_PACKAGES $ABRT_PACKAGES"
+fi
 dnf $DNF_OPTS -y upgrade
-dnf $DNF_OPTS -y install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $ABRT_PACKAGES
+dnf $DNF_OPTS -y install $ALL_DEPS
 
 mkdir -p /var/lib/package-sets/clevis
 dnf $DNF_OPTS download --destdir=/var/lib/package-sets/clevis $PACKAGE_SET_CLEVIS
@@ -190,22 +201,31 @@ fi
 
 # don't use a bootstrap chroot to save time and space; everything is offline, and we always just do exactly one build
 echo "config_opts['use_bootstrap'] = False" >>/etc/mock/site-defaults.cfg
-su builder -c "/usr/bin/mock --no-bootstrap-chroot --verbose -i $(/var/lib/testvm/build-deps.sh "${ID} ${VERSION_ID}")"
+su builder -c "/usr/bin/mock --no-bootstrap-chroot --verbose -i $(/var/lib/testvm/build-deps.sh "${ID} ${VERSION_ID} ${VARIANT_ID}")"
 
 # we need to ensure that mock's selinux-policy is older than the host:
 # disabling the updates repository will surely get us a very old version
 mkdir /tmp/selinux-policy-rpms
 selinux_pkgs="selinux-policy selinux-policy-devel selinux-policy-targeted"
-dnf download --destdir /tmp/selinux-policy-rpms --repo=fedora $selinux_pkgs
+if [ "${VARIANT_ID}" != "eln" ]; then
+    dnf download --destdir /tmp/selinux-policy-rpms --repo=fedora $selinux_pkgs
+else
+    dnf download --destdir /tmp/selinux-policy-rpms $selinux_pkgs
+fi
 su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
 # host system gets the versions with fedora-updates enabled
 dnf install -y $selinux_pkgs
 
-# for containers.install and cockpit's container/* tests
-podman build --tag cockpit/base --build-arg VERSION=${VERSION_ID} /var/tmp/cockpit-base
+# eln image fails on running podman with:
+# error running container: did not get container start message from parent: EOF
+# fedora-eln is not used in podman tests, so we can just skip this section
+if [ "$VARIANT_ID" != "eln" ]; then
+    # for containers.install and cockpit's container/* tests
+    podman build --tag cockpit/base --build-arg VERSION=${VERSION_ID} /var/tmp/cockpit-base
 
-# for c-podman tests
-/var/lib/testvm/podman-images.setup
+    # for c-podman tests
+    /var/lib/testvm/podman-images.setup
+fi
 
 ln -sf ../selinux/config /etc/sysconfig/selinux
 printf "SELINUX=enforcing\nSELINUXTYPE=targeted\n" > /etc/selinux/config
