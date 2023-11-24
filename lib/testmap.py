@@ -77,6 +77,7 @@ REPO_BRANCH_CONTEXT = {
     'cockpit-project/cockpit-ostree': {
         'main': [
             'fedora-coreos',
+            'fedora-coreos/devel',
             'rhel4edge',
         ],
     },
