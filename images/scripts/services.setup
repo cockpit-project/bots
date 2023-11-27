@@ -110,12 +110,10 @@ chmod 755 /root/run-samba-domain
 #############################
 
 # run the candlepin container to copy the certificates out of it
-# HACK: Later versions change/break something with certificates, to be debugged
-# https://github.com/cockpit-project/bots/issues/5551
 podman run -d --name candlepin \
     --uts=host \
     -p 8443:8443 \
-    ghcr.io/ptoscano/candlepin-unofficial:4.2.15-1
+    ghcr.io/ptoscano/candlepin-unofficial
 
 # give systemd the time to start in the container
 sleep 5
@@ -128,7 +126,7 @@ systemctl stop tomcat
 # regenerate the certs used by Candlepin; this is done so the hostname
 # of the certificate is actually this container's hostname (which actually
 # is the hostname of the system, because of --uts=host)
-~candlepin/devel/candlepin/bin/deployment/gen_certs.sh -f
+~candlepin/devel/candlepin/bin/deployment/gen_certs.sh --force --trust --hostname `hostname -f`
 # restart tomcat
 systemctl start tomcat
 EOF
@@ -144,7 +142,7 @@ mkdir -p /home/admin/candlepin
 podman cp candlepin:/home/candlepin/devel/candlepin/generated_certs /home/admin/candlepin/
 mkdir -p /home/admin/candlepin/certs
 podman cp candlepin:/etc/candlepin/certs/candlepin-ca.crt /home/admin/candlepin/certs/
-podman cp candlepin:/etc/candlepin/certs/candlepin-ca-pub.key /home/admin/candlepin/certs/
+podman cp candlepin:/etc/candlepin/certs/candlepin-ca.key /home/admin/candlepin/certs/
 chown -R admin:admin /home/admin/candlepin/
 
 podman stop candlepin
