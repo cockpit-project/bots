@@ -220,10 +220,9 @@ class TestTestsScan(unittest.TestCase):
         self.assertEqual(output.strip(), expected_output)
         self.assertIsNone(stderr)
 
-    def test_tests_invoke(self):
+    def do_test_tests_invoke(self, attachments_url, expected_logs_url):
         repo = "cockpit-project/cockpit"
         args = ["--revision", self.revision, "--repo", repo]
-        attachments_url = "https://example.org/dir"
         script = os.path.join(BOTS_DIR, "tests-invoke")
         with tempfile.TemporaryDirectory() as tempdir:
             testdir = f"{tempdir}/.cockpit-ci"
@@ -245,9 +244,15 @@ class TestTestsScan(unittest.TestCase):
             self.assertEqual(len(issues), 1)
             self.assertEqual(issues[0]['title'], "Nightly tests did not succeed on fedora-38")
             self.assertEqual(issues[0]['body'],
-                             f"Tests failed on {self.revision}, [logs]({attachments_url}/log.html)")
+                             f"Tests failed on {self.revision}, [logs]({expected_logs_url})")
             self.assertEqual(issues[0]['labels'], ["nightly"])
             self.assertIsNone(stderr)
+
+    def test_tests_invoke_noslash(self):
+        self.do_test_tests_invoke("https://example.org/dir", "https://example.org/dir/log.html")
+
+    def test_tests_invoke_slash(self):
+        self.do_test_tests_invoke("https://example.org/dir/", "https://example.org/dir/log.html")
 
     def disabled_test_tests_invoke_no_issue(self):
         repo = "cockpit-project/cockpit"

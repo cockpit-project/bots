@@ -104,7 +104,7 @@ def main():
             body = f"Tests failed on {opts.revision}"
 
             if logs_url:
-                body += f", [logs]({logs_url}/log.html)"
+                body += f", [logs]({os.path.join(logs_url, 'log.html')})"
             if test_scenario != "":
                 title += f"/{test_scenario}"
 
