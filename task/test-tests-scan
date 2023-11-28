@@ -122,8 +122,8 @@ class TestTestsScan(unittest.TestCase):
     def expected_human_output(self, pull_number=None):
         if pull_number is None:
             pull_number = self.pull_number
-        return f"pull-{pull_number}      {self.context}            {self.revision}" \
-               + f"     5.99999  ({self.repo}) [bots@main]"
+        return (f"pull-{pull_number}      {self.context}            {self.revision}"
+                f"     5.99999  ({self.repo}) [bots@main]")
 
     def test_pull_number(self):
         args = ["--dry", "--repo", self.repo, "--pull-number", self.pull_number,
