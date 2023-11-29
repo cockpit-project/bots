@@ -41,6 +41,8 @@ REFRESH = {
     "fedora-38": {},
     "fedora-39": {},
     "fedora-coreos": {},
+    "fedora-eln": {},
+    "fedora-eln-boot": {},
     "fedora-rawhide": {},
     "fedora-rawhide-boot": {},
     "fedora-rawhide-anaconda-payload": {"refresh-days": 30},
