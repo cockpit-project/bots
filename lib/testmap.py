@@ -236,9 +236,6 @@ IMAGE_REFRESH_TRIGGERS = {
     "centos-7": [
         f"{TEST_OS_DEFAULT}/expensive@cockpit-project/cockpit",
     ],
-    "openshift": [
-        "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
-    ],
     "services": [
         *contexts(TEST_OS_DEFAULT, COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
