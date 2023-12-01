@@ -376,14 +376,6 @@ sed -i s/DefaultLimitCORE=.*/DefaultLimitCORE=infinity:infinity/ /etc/systemd/sy
 # Prevent SSH from hanging for a long time when no external network access
 echo 'UseDNS no' >> /etc/ssh/sshd_config
 
-# Audit events to the journal
-if [ ! -f /root/.keep-audit ]; then
-    rm -f '/etc/systemd/system/multi-user.target.wants/auditd.service'
-    rm -rf /var/log/audit/
-else
-    echo "Keeping audit enabled as /root/.keep-audit exists"
-fi
-
 # clean up old kernels after upgrading
 dnf repoquery --installonly --latest-limit=-1 -q | xargs --no-run-if-empty rpm -e --verbose
 
