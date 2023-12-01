@@ -55,16 +55,6 @@ try:
                                  networking=network.host(restrict=args.no_network),
                                  memory_mb=args.memory, cpus=args.cpus, graphics=args.graphics)
 
-    # Hack to make things easier for users who don't know about kubeconfig
-    if 'openshift' in args.image:
-        kubeconfig = os.path.join(os.path.expanduser("~"), ".kube", "config")
-        if not os.path.lexists(kubeconfig):
-            d = os.path.dirname(kubeconfig)
-            src = os.path.abspath(os.path.join(BOTS_DIR, "images", "files", "openshift.kubeconfig"))
-            os.makedirs(d, exist_ok=True)
-            sys.stderr.write("image-run: linking kubeconfig into ~/.kube/config\n")
-            os.symlink(src, kubeconfig)
-
     # Check that image is downloaded
     if not os.path.exists(machine.image_file):
         try:
