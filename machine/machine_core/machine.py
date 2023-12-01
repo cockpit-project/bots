@@ -184,6 +184,17 @@ class Machine(ssh_connection.SSHConnection):
         messages = self.execute(cmd).splitlines()
         if len(messages) == 1 and "Cannot assign requested address" in messages[0]:
             messages = []
+
+        # SELinux full auditing; https://fedoraproject.org/wiki/SELinux/Debugging#Enable_full_auditing
+        if any("avc:  denied" in m for m in messages):
+            try:
+                audit = self.execute("ausearch -i -m avc,user_avc,selinux_err,user_selinux_err "
+                                     "--checkpoint /run/cockpit.ausearch.checkpoint --start checkpoint "
+                                     "--input-logs")
+                messages.extend(audit.strip().splitlines())
+            except subprocess.CalledProcessError:
+                pass  # opportunistic, and error message is in the log
+
         return messages
 
     def allowed_messages(self):
