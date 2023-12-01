@@ -1,2 +1,0 @@
-  File "check-storage-lvm2", line *, in testLvmOnLuks
-    self.content_tab_wait_in_info(1, 1, "Physical volumes", bn(disk))
