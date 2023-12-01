@@ -204,6 +204,10 @@ class Machine(ssh_connection.SSHConnection):
             # https://bugzilla.redhat.com/show_bug.cgi?id=2122888
             allowed.append('audit.*denied  { sys_admin } .* comm="mv" .*NetworkManager_dispatcher_console_t.*')
 
+        if self.image in ["fedora-rawhide"]:
+            # https://bugzilla.redhat.com/show_bug.cgi?id=2250930
+            allowed.append('audit.*denied  { map_read map_write } for .* tclass=bpf.*')
+
         if self.image in ["debian-testing", "ubuntu-stable"]:
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
             allowed.append('audit.* apparmor="DENIED" operation="open" class="file" ' +
