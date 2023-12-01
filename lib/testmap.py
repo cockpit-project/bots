@@ -145,7 +145,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'osbuild/cockpit-composer': {
         'main': [
-            'fedora-37',
             'fedora-38',
             'fedora-38/firefox',
             'centos-8-stream',
@@ -167,7 +166,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-2',
             'rhel-9-3',
             'rhel-9-4',
-            'fedora-37',
             'fedora-38',
             'fedora-39',
         ],
@@ -198,7 +196,6 @@ REPO_BRANCH_CONTEXT = {
             'centos-9-stream',
             'rhel-9-3',
             'rhel-9-4',
-            'fedora-37',
             'fedora-38',
             'fedora-39',
         ],
