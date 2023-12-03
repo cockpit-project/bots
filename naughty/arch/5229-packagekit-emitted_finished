@@ -1,3 +1,0 @@
-Process * (packagekitd) of user 0 dumped core.
-*g_assertion_message_expr*
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
