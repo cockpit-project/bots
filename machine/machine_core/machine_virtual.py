@@ -315,10 +315,12 @@ class VirtMachine(Machine):
         if not self.maintain:
             self._transient_image = tempfile.NamedTemporaryFile(suffix='.qcow2', prefix='cockpit-', dir=self.run_dir)
             cmd = ['qemu-img', 'create', '-q', '-f', 'qcow2', '-b', self.image_file]
-            # check if it is qcow2 (libvirt complains otherwise)
+            # specify the backing format (libvirt complains otherwise)
             with open(self.image_file, "rb") as f:
                 if f.read(3) == b"QFI":
                     cmd.extend(['-F', 'qcow2'])
+                else:
+                    cmd.extend(['-F', 'raw'])
             image_to_use = self._transient_image.name
             cmd.append(image_to_use)
             self.message(shlex.join(cmd))
