@@ -216,8 +216,6 @@ REPO_BRANCH_CONTEXT = {
     'rhinstaller/anaconda-webui': {
         'main': [
             'fedora-rawhide-boot',
-        ],
-        '_manual': [
             'fedora-eln-boot',
         ],
     },
@@ -249,9 +247,13 @@ IMAGE_REFRESH_TRIGGERS = {
     "fedora-rawhide": [
         "fedora-rawhide-boot@rhinstaller/anaconda-webui"
     ],
+    "fedora-eln": [
+        "fedora-eln-boot@rhinstaller/anaconda-webui"
+    ],
     # Anaconda payload updates can affect tests
     "fedora-rawhide-anaconda-payload": [
         "fedora-rawhide-boot@rhinstaller/anaconda-webui"
+        "fedora-eln-boot@rhinstaller/anaconda-webui"
     ],
 }
 
