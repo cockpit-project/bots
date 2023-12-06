@@ -42,6 +42,7 @@ unattended-upgrades \
 tuned \
 xdg-utils \
 udisks2 \
+udisks2-btrfs \
 udisks2-lvm2 \
 "
 
