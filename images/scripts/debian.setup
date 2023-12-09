@@ -132,6 +132,15 @@ Pin-Priority: 10
 EOF
 fi
 
+if [ "${IMAGE#ubuntu}" != "$IMAGE" ]; then
+    echo "deb http://archive.ubuntu.com/ubuntu ${RELEASE}-proposed main restricted universe" > /etc/apt/sources.list.d/proposed.list
+    cat <<EOF > /etc/apt/preferences.d/all-proposed
+Package: *
+Pin: release a=*-proposed
+Pin-Priority: 600
+EOF
+fi
+
 # smaller and faster initrd; see https://launchpad.net/bugs/1592684
 echo 'MODULES=dep' > /etc/initramfs-tools/conf.d/modules-dep.conf
 
