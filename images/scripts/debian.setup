@@ -206,14 +206,15 @@ $APT --no-install-recommends install cockpit
 if grep -q 'ID=ubuntu' /etc/os-release; then
     # Extract scsi_debug and team modules from full kernel; let's not install linux-image-generic
     # just for that, it increases boot time by over 10s and image size by > 600 MB
-    EXTRA=$(apt-cache show linux-image-generic | grep Depends: | grep -o 'linux-modules-extra[^,]*' | sort -n | tail -n1)
+    EXTRAS=$(apt-cache show linux-image-generic | grep Depends: | grep -o 'linux-modules-extra[^,]*')
     (cd /tmp/
-     apt-get download "$EXTRA"
-     dpkg-deb --fsys-tarfile ${EXTRA}_*.deb | tar -C / --wildcards -xv '*/scsi_debug.ko' '*/team*.ko'
-     rm $EXTRA_*.deb
+     apt-get download $EXTRAS
+     for pkg in $EXTRAS; do
+        dpkg-deb --fsys-tarfile ${pkg}_*.deb | tar -C / --wildcards -xv '*/scsi_debug.ko' '*/team*.ko'
+        rm ${pkg}_*.deb
+        depmod "${pkg#linux-modules-extra-}"
+     done
     )
-    # call for the updated kernel, not the currently running one
-    depmod "${EXTRA#linux-modules-extra-}"
 fi
 
 # Prepare for building
