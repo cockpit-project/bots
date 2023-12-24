@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-storage-scaling", line *, in testScaling
-    b.click("#drives button:contains(Show all 202 drives)")
-*
-testlib.Error: timeout
