@@ -1,1 +1,0 @@
-audit: type=1400 audit*: avc:  denied * scontext=system_u:system_r:insights_client_t:*
