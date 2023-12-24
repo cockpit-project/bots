@@ -1,7 +1,0 @@
-*Error synchronizing after initial wipe: Timed out waiting for object
-*
-Traceback (most recent call last):
-  File "test/verify/check-storage-mounting", line *, in testOverMounting
-    self.content_row_wait_in_col(1, 0, "Free space")
-*
-testlib.Error: Condition did not become true.
