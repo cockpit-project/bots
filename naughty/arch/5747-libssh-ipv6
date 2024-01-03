@@ -1,0 +1,8 @@
+*cockpit_ssh_connect: runtime check failed: (ssh_options_set (data->session, SSH_OPTIONS_HOST, host) == 0)
+*cockpit-ssh ::1: -1 couldn't connect: Hostname required '::1' '22'
+*
+Traceback (most recent call last):
+  File "test/verify/check-static-login", line *, in testServer
+    check_server("::1", expect_fp_ack=True)
+*
+testlib.Error: timeout
