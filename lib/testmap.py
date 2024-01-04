@@ -239,6 +239,7 @@ IMAGE_REFRESH_TRIGGERS = {
     ],
     "services": [
         *contexts(TEST_OS_DEFAULT, COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('debian-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('rhel-9-4', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
