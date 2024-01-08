@@ -230,6 +230,10 @@ class Machine(ssh_connection.SSHConnection):
             )
             allowed.append("Error importing insights.client.*newest.egg: No module named 'insights'")
 
+        if self.image == "ubuntu-stable":
+            # https://launchpad.net/bugs/2056739
+            allowed.append('audit.* apparmor="DENIED".* name="/etc/gnutls/config".*')
+
         return allowed
 
     def get_admin_group(self):
