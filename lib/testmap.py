@@ -122,6 +122,7 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-navigator': {
         'main': [
+            'arch',
             'debian-testing',
             'fedora-38',
             'fedora-39',
@@ -129,7 +130,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             TEST_OS_DEFAULT,
-            'arch',
             'rhel-9-4',
         ],
     },
