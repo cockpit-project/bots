@@ -2,7 +2,7 @@
 set -eux
 
 BASE=$(dirname $0)
-
+SSH_KEY_PUB=$(cat $BASE/../../machine/identity.pub)
 # Names need to be unique
 timestamp=$(date +%s)
 
@@ -31,7 +31,7 @@ cat > edge-request.json <<EOF
   },
   "installer": {
     "username": "admin",
-    "sshkey": "$(cat $BASE/../../machine/identity.pub)"
+    "sshkey": "$SSH_KEY_PUB"
   }
 }
 EOF
@@ -55,8 +55,33 @@ if [ "$STATUS" != "SUCCESS" ]; then
     echo "Failed to build rhel4edge-$timestamp"
     exit 1
 fi
+ISO_FILE="rhel4edge-$timestamp.iso"
+curl --netrc-file /secrets/crc_passwd -L "https://console.redhat.com/api/edge/v1/storage/isos/$ID" -o "$ISO_FILE"
 
-curl --netrc-file /secrets/crc_passwd -L "https://console.redhat.com/api/edge/v1/storage/isos/$ID" -o "rhel4edge-$timestamp.iso"
-$BASE/virt-install-rhel4edge "$1" x86_64 "rhel4edge-$timestamp.iso"
+# ==========================================
+# customize fleet.ks file inside ISO, to be able to do installation without user interaction
+DIR_NAME=$(mktemp -d -p $BASE)
+FLEET_FILE="$DIR_NAME/fleet.ks"
 
-rm edge-request.json "rhel4edge-$timestamp.iso"
+mv "$ISO_FILE" "$DIR_NAME/fleet_source.iso"
+chmod 775 "$DIR_NAME"
+# extract fleet.ks to directory
+xorriso -osirrox on -indev "$DIR_NAME/fleet_source.iso" -extract /fleet.ks "$DIR_NAME/fleet.ks"
+# this is important to do for automatic installation
+sed -i "/network --boot/a rootpw --lock" "$DIR_NAME/fleet.ks"
+
+curl -L "https://raw.githubusercontent.com/loadtheaccumulator/fleet-iso-util/main/fleetkick.sh" -o "$DIR_NAME/fleetkick.sh"
+chmod a+x "$DIR_NAME/fleetkick.sh"
+# change workdir in script (it is used inside podman, so it expects specific path)
+sed -i "s@BASEDIR=.*@BASEDIR='$DIR_NAME'@" "$DIR_NAME/fleetkick.sh"
+mkdir "$DIR_NAME/workdir"
+
+$DIR_NAME/fleetkick.sh -w "$DIR_NAME/workdir"
+
+mv -f "$DIR_NAME/fleet_out.iso" "$ISO_FILE"
+rm -rf "$DIR_NAME"
+# ==========================================
+
+$BASE/virt-install-rhel4edge "$1" x86_64 "$ISO_FILE"
+
+rm -f edge-request.json "$ISO_FILE"
