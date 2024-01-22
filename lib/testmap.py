@@ -126,6 +126,7 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'fedora-38',
             'fedora-39',
+            f'{TEST_OS_DEFAULT}/devel',
             'fedora-rawhide',
         ],
         '_manual': [
