@@ -20,6 +20,7 @@ ALLOWLIST = {
     'garrett',
     'henrywang',
     'jelly',
+    'jexposit',
     'jkonecny12',
     'jkozol',
     'jscotka',
