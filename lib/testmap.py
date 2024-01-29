@@ -216,8 +216,10 @@ REPO_BRANCH_CONTEXT = {
     'rhinstaller/anaconda-webui': {
         'main': [
             'fedora-rawhide-boot',
-            'fedora-eln-boot',
         ],
+        '_manual': [
+            'fedora-eln-boot',
+        ]
     },
 }
 
