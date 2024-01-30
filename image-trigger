@@ -29,11 +29,15 @@ from lib.constants import BASE_DIR
 
 sys.dont_write_bytecode = True
 
+# default for refresh-days
 DAYS = 7
 
+REFRESH_30 = {"refresh-days": 30}
+
+# stable/old OSes don't need to be refreshed as often
 REFRESH = {
     "arch": {},
-    "centos-7": {},
+    "centos-7": REFRESH_30,
     "centos-8-stream": {},
     "centos-9-stream": {},
     "debian-testing": {},
@@ -45,22 +49,22 @@ REFRESH = {
     "fedora-eln-boot": {},
     "fedora-rawhide": {},
     "fedora-rawhide-boot": {},
-    "fedora-rawhide-anaconda-payload": {"refresh-days": 30},
-    "fedora-rawhide-live-boot": {"refresh-days": 30},
+    "fedora-rawhide-anaconda-payload": REFRESH_30,
+    "fedora-rawhide-live-boot": REFRESH_30,
     "ubuntu-2204": {},
     "ubuntu-stable": {},
-    "rhel-7-9": {},
-    "rhel-8-4": {},
-    "rhel-8-6": {},
-    "rhel-8-8": {},
+    "rhel-7-9": REFRESH_30,
+    "rhel-8-4": REFRESH_30,
+    "rhel-8-6": REFRESH_30,
+    "rhel-8-8": REFRESH_30,
     "rhel-8-9": {},
     "rhel-8-10": {},
-    "rhel-9-0": {},
-    "rhel-9-2": {},
+    "rhel-9-0": REFRESH_30,
+    "rhel-9-2": REFRESH_30,
     "rhel-9-3": {},
     "rhel-9-4": {},
     "rhel4edge": {},
-    "services": {"refresh-days": 30},
+    "services": REFRESH_30,
 }
 
 
