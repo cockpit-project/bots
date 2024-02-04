@@ -1,4 +1,0 @@
-  File "test/check-application", line *, in _testHealthcheck
-    b.wait_visible(".ct-listing-panel-body tbody tr:nth-child(2)")
-*
-testlib.Error: timeout
