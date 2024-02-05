@@ -25,6 +25,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from typing import Dict, List, Optional, Union
 
 from . import exceptions
 from . import timeout as timeoutlib
@@ -35,7 +36,7 @@ sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realp
 from lib.constants import TEST_DIR  # noqa: E402
 
 
-def write_all(fd, data):
+def write_all(fd: int, data: bytes) -> None:
     while len(data) > 0:
         select.select([], [fd], [])
         written = os.write(fd, data)
@@ -45,8 +46,12 @@ def write_all(fd, data):
 class SSHConnection(object):
     ssh_default_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null",
                         "-o", "IdentitiesOnly=yes", "-o", "BatchMode=yes", "-o", "PKCS11Provider=none"]
+    ssh_master: Optional[str] = None
+    ssh_process: Optional[subprocess.Popen[bytes]] = None
+    ssh_reachable = False
 
-    def __init__(self, user, address, ssh_port, identity_file, verbose=False, label=None):
+    def __init__(self, user: str, address: str, ssh_port: int, identity_file: str,
+                 verbose: bool = False, label: Optional[str] = None) -> None:
         self.verbose = verbose
 
         # Currently all images are x86_64. When that changes we will have
@@ -55,22 +60,19 @@ class SSHConnection(object):
         self.identity_file = identity_file
         self.ssh_address = address
         self.ssh_port = ssh_port
-        self.ssh_master = None
-        self.ssh_process = None
-        self.ssh_reachable = False
         self.label = label if label else f"{self.ssh_user}@{self.ssh_address}:{self.ssh_port}"
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         self.ssh_reachable = False
         self._kill_ssh_master()
 
-    def message(self, *args):
+    def message(self, *args: str) -> None:
         """Prints args if in verbose mode"""
         if self.verbose:
             sys.stderr.write(" ".join(args) + '\n')
 
     # wait until we can execute something on the machine. ie: wait for ssh
-    def wait_execute(self, timeout_sec=120):
+    def wait_execute(self, timeout_sec: int = 120) -> bool:
         """Try to connect to self.address on ssh port"""
 
         # If connected to machine, kill master connection
@@ -92,7 +94,7 @@ class SSHConnection(object):
                     time.sleep(0.5)
         return False
 
-    def wait_user_login(self):
+    def wait_user_login(self) -> Optional[str]:
         """Wait until logging in as non-root works.
 
            Most tests run as the "admin" user, so we make sure that
@@ -119,10 +121,10 @@ class SSHConnection(object):
             time.sleep(1)
         raise exceptions.Failure("Timed out waiting for /run/nologin to disappear")
 
-    def print_console_log(self):
+    def print_console_log(self) -> None:
         pass
 
-    def wait_boot(self, timeout_sec=120):
+    def wait_boot(self, timeout_sec: int = 120) -> None:
         """Wait for a machine to boot"""
         start_time = time.time()
         boot_id = None
@@ -137,7 +139,7 @@ class SSHConnection(object):
                 self.label, self.ssh_address, self.ssh_port))
         self.boot_id = boot_id
 
-    def wait_reboot(self, timeout_sec=180):
+    def wait_reboot(self, timeout_sec: int = 180) -> None:
         self.disconnect()
         assert self.boot_id, "Before using wait_reboot() use wait_boot() successfully"
         boot_id = self.boot_id
@@ -152,35 +154,19 @@ class SSHConnection(object):
         else:
             raise exceptions.Failure("Timeout waiting for system to reboot properly")
 
-    def reboot(self, timeout_sec=180):
+    def reboot(self, timeout_sec: int = 180) -> None:
         self.spawn("reboot", "reboot", check=False)
         if timeout_sec:
             self.wait_reboot(timeout_sec)
 
-    def _start_ssh_master(self):
-        self._kill_ssh_master()
-
-        control = os.path.join(tempfile.gettempdir(), ".cockpit-test-resources", "ssh-%h-%p-%r-" + str(os.getpid()))
-        os.makedirs(os.path.dirname(control), exist_ok=True)
-
-        cmd = [
-            "ssh",
-            "-p", str(self.ssh_port),
-            "-i", self.identity_file,
-            *self.ssh_default_opts,
-            "-M",  # ControlMaster, no stdin
-            "-o", "ControlPath=" + control,
-            "-o", "LogLevel=ERROR",
-            "-l", self.ssh_user,
-            self.ssh_address,
-            "/bin/bash -c 'echo READY; read a'"
-        ]
-
+    def _open_ssh_master(self, cmd: List[str]) -> subprocess.Popen[bytes]:
         # Connection might be refused, so try this 10 times
         tries_left = 10
+        proc = None
         while tries_left > 0:
             tries_left = tries_left - 1
             proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            assert proc.stdout is not None
             stdout_fd = proc.stdout.fileno()
             output = ""
             while stdout_fd > -1 and "READY" not in output:
@@ -205,13 +191,35 @@ class SSHConnection(object):
             else:
                 raise exceptions.Failure(f"SSH master process exited with code: {proc.returncode}")
 
+        assert proc is not None
+        return proc
+
+    def _start_ssh_master(self) -> None:
+        self._kill_ssh_master()
+
+        control = os.path.join(tempfile.gettempdir(), ".cockpit-test-resources", "ssh-%h-%p-%r-" + str(os.getpid()))
+        os.makedirs(os.path.dirname(control), exist_ok=True)
+
+        cmd = [
+            "ssh",
+            "-p", str(self.ssh_port),
+            "-i", self.identity_file,
+            *self.ssh_default_opts,
+            "-M",  # ControlMaster, no stdin
+            "-o", "ControlPath=" + control,
+            "-o", "LogLevel=ERROR",
+            "-l", self.ssh_user,
+            self.ssh_address,
+            "/bin/bash -c 'echo READY; read a'"
+        ]
+
         self.ssh_master = control
-        self.ssh_process = proc
+        self.ssh_process = self._open_ssh_master(cmd)
 
         if not self._check_ssh_master():
             raise exceptions.Failure("Couldn't launch an SSH master process")
 
-    def _kill_ssh_master(self):
+    def _kill_ssh_master(self) -> None:
         if self.ssh_master:
             try:
                 os.unlink(self.ssh_master)
@@ -221,14 +229,16 @@ class SSHConnection(object):
             self.ssh_master = None
         if self.ssh_process:
             self.message("killing ssh master process", str(self.ssh_process.pid))
+            assert self.ssh_process.stdin is not None
             self.ssh_process.stdin.close()
             self.ssh_process.terminate()
+            assert self.ssh_process.stdout is not None
             self.ssh_process.stdout.close()
             with timeoutlib.Timeout(seconds=90, error_message="Timeout while waiting for ssh master to shut down"):
                 self.ssh_process.wait()
             self.ssh_process = None
 
-    def _check_ssh_master(self):
+    def _check_ssh_master(self) -> bool:
         if not self.ssh_master:
             return False
         cmd = [
@@ -248,23 +258,26 @@ class SSHConnection(object):
                 return True
         return False
 
-    def _ensure_ssh_master(self):
+    def _ensure_ssh_master(self) -> None:
         if not self._check_ssh_master():
             self._start_ssh_master()
 
-    def __ssh_direct_opt_var(self, direct=False):
+    def __ssh_direct_opt_var(self, direct: bool = False) -> bool:
         return bool(os.getenv("TEST_SSH_DIRECT", direct))
 
-    def __execution_opts(self, direct=False):
+    def __execution_opts(self, direct: bool = False) -> List[str]:
         direct = self.__ssh_direct_opt_var(direct=direct)
         if direct:
             return ["-i", self.identity_file]
-        else:
+        elif self.ssh_master:
             return ["-o", "ControlPath=" + self.ssh_master]
+        else:
+            raise exceptions.Failure("ssh_master is None")
 
-    def execute(self, command, input=None, environment={},
-                stdout=subprocess.PIPE, quiet=False, direct=False, timeout=120,
-                ssh_env=["env", "-u", "LANGUAGE", "LC_ALL=C"], check=True):
+    def execute(self, command: Union[List[str], str], input: Optional[str] = None, environment: Dict[str, str] = {},
+                stdout: int = subprocess.PIPE, quiet: bool = False, direct: bool = False,
+                timeout: int = 120, ssh_env: List[str] = ["env", "-u", "LANGUAGE", "LC_ALL=C"],
+                check: bool = True) -> Optional[str]:
         """Execute a shell command in the test machine and return its output.
 
             command: The string or argument list to execute by /bin/sh (still with shell interpretation)
@@ -313,7 +326,7 @@ class SSHConnection(object):
 
         return None if res.stdout is None else res.stdout.decode("UTF-8", "replace")
 
-    def upload(self, sources, dest, relative_dir=TEST_DIR, use_scp=False):
+    def upload(self, sources: List[str], dest: str, relative_dir: str = TEST_DIR, use_scp: bool = False) -> None:
         """Upload a file into the test machine
 
         Arguments:
@@ -345,7 +358,7 @@ class SSHConnection(object):
             if self.verbose:
                 cmd += ["--verbose"]
 
-        def relative_to_test_dir(path):
+        def relative_to_test_dir(path: str) -> str:
             return os.path.join(relative_dir, path)
         cmd += map(relative_to_test_dir, sources)
 
@@ -362,7 +375,7 @@ class SSHConnection(object):
             else:
                 raise
 
-    def download(self, source, dest, relative_dir=TEST_DIR):
+    def download(self, source: str, dest: str, relative_dir: str = TEST_DIR) -> None:
         """Download a file from the test machine.
         """
         assert source and dest
@@ -384,7 +397,7 @@ class SSHConnection(object):
         self.message(" ".join(cmd))
         subprocess.check_call(cmd)
 
-    def download_dir(self, source, dest, relative_dir=TEST_DIR):
+    def download_dir(self, source: str, dest: str, relative_dir: str = TEST_DIR) -> None:
         """Download a directory from the test machine, recursively.
         """
         assert source and dest
@@ -410,7 +423,8 @@ class SSHConnection(object):
         except subprocess.CalledProcessError:
             self.message(f"Error while downloading directory '{source}'")
 
-    def write(self, dest, content, append=False, owner=None, perm=None):
+    def write(self, dest: str, content: str, append: bool = False,
+              owner: Optional[str] = None, perm: Optional[str] = None) -> None:
         """Write a file into the test machine
 
         Arguments:
@@ -432,7 +446,7 @@ class SSHConnection(object):
         if perm:
             self.execute(["chmod", perm, dest])
 
-    def spawn(self, shell_cmd, log_id, check=True):
+    def spawn(self, shell_cmd: str, log_id: str, check: bool = True) -> Optional[int]:
         """Spawn a process in the test machine.
 
         Arguments:
@@ -444,6 +458,6 @@ class SSHConnection(object):
         """
         res = self.execute(f"{{ ({shell_cmd}) >/var/log/{log_id} 2>&1 & }}; echo $!",
                            check=check)
-        if not check:
+        if not check or not res:
             return None
         return int(res)

@@ -16,13 +16,19 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import signal
+from types import FrameType
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from machine_core import ssh_connection
 
 
 class Timeout:
     """ Add a timeout to an operation
         Specify machine to ensure that a machine's ssh operations are canceled when the timer expires.
     """
-    def __init__(self, seconds=1, error_message='Timeout', machine=None):
+    def __init__(self, seconds: int = 1, error_message: str = 'Timeout',
+                 machine: Optional['ssh_connection.SSHConnection'] = None) -> None:
         if signal.getsignal(signal.SIGALRM) != signal.SIG_DFL:
             # there is already a different Timeout active
             self.seconds = None
@@ -32,7 +38,7 @@ class Timeout:
         self.error_message = error_message
         self.machine = machine
 
-    def handle_timeout(self, signum, frame):
+    def handle_timeout(self, signum: int, frame: Optional[FrameType]) -> None:
         if self.machine:
             if self.machine.ssh_process:
                 self.machine.ssh_process.terminate()
@@ -40,12 +46,12 @@ class Timeout:
 
         raise RuntimeError(self.error_message)
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         if self.seconds:
             signal.signal(signal.SIGALRM, self.handle_timeout)
             signal.alarm(self.seconds)
 
-    def __exit__(self, _type, value, traceback):
+    def __exit__(self, *_args: object) -> None:
         if self.seconds:
             signal.alarm(0)
             signal.signal(signal.SIGALRM, signal.SIG_DFL)
