@@ -12,7 +12,6 @@ ALLOWLIST = {
     'KKoukiou',
     'M4rtinK',
     'OndrejZobal',
-    'VladimirSlavik',
     'acruzgon',
     'adamkankovsky',
     'allisonkarlitskaya',
