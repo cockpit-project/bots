@@ -229,6 +229,10 @@ if [ "${IMAGE#rhel-8*}" != "$IMAGE" ] || [ "$IMAGE" = "centos-8-stream" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/wireguard-tools /}"
 fi
 
+if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES} zram-generator"
+fi
+
 # These packages are downloaded to the image so that the tests can
 # install them on-demand.
 
