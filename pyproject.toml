@@ -1,4 +1,10 @@
 [tool.ruff]
+exclude = [
+    ".git/",
+]
+line-length = 118
+
+[tool.ruff.lint]
 select = [
     "C4",      # flake8-comprehensions
     "D300",    # pydocstyle: Forbid ''' in docstrings
@@ -17,11 +23,7 @@ select = [
     "W",       # warnings (mostly whitespace)
     "YTT",     # flake8-2020
 ]
-exclude = [
-    ".git/",
-]
 ignore = [
     "E731",  # Do not assign a `lambda` expression, use a `def`
     "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
 ]
-line-length = 118
