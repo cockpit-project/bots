@@ -43,6 +43,8 @@ response=$(curl --netrc-file /secrets/crc_passwd --json @edge-request.json https
 
 ID=$( echo "$response" | jq -r ".ID" )
 STATUS=$( echo "$response" | jq -r ".Status" )
+# this is ID of artifact for built image for download.
+InstallerID=$( echo "$response" | jq -r ".InstallerID" )
 
 # Building takes around 30 minutes, just do long sleeps
 while [ "$STATUS" == "BUILDING" ]
@@ -56,7 +58,7 @@ if [ "$STATUS" != "SUCCESS" ]; then
     exit 1
 fi
 
-curl --netrc-file /secrets/crc_passwd -L "https://console.redhat.com/api/edge/v1/storage/isos/$ID" -o "rhel4edge-$timestamp.iso"
+curl --netrc-file /secrets/crc_passwd -L "https://console.redhat.com/api/edge/v1/storage/isos/$InstallerID" -o "rhel4edge-$timestamp.iso"
 $BASE/virt-install-rhel4edge "$1" x86_64 "rhel4edge-$timestamp.iso"
 
 rm edge-request.json "rhel4edge-$timestamp.iso"
