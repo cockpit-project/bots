@@ -1,0 +1,4 @@
+> error: spawn 'vm creation' *CURL: Error opening file: OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 0*
+Traceback (most recent call last):
+  File "*/check-machines-create", line *, in testCreateUrlSource
+    runner.createTest(TestMachinesCreate.VmDialog(self, sourceType='url',
