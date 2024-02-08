@@ -1,0 +1,6 @@
+[<0>] md_stop+*
+*
+[<0>] dev_suspend+*
+*
+  File "check-storage-lvm2", line *, in testRaidRepair
+    self.dialog_wait_close()  # wait for repair to finish
