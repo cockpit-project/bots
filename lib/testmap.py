@@ -46,13 +46,8 @@ REPO_BRANCH_CONTEXT = {
             # this runs coverage, reports need the whole test suite
             *contexts(TEST_OS_DEFAULT, ['devel']),
             *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
-            *contexts('centos-8-stream', ['pybridge'], COCKPIT_SCENARIOS),
             # no udisks on CoreOS → skip storage
             *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
-            *contexts('rhel-8-10', COCKPIT_SCENARIOS),
-            # all skipped
-            *contexts('rhel-8-10-distropkg', COCKPIT_SCENARIOS - {'networking'}),
-            *contexts('centos-8-stream', COCKPIT_SCENARIOS),
             *contexts('rhel-9-4', COCKPIT_SCENARIOS),
             *contexts('rhel4edge', COCKPIT_SCENARIOS),
         ],
