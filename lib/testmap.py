@@ -56,6 +56,12 @@ REPO_BRANCH_CONTEXT = {
             *contexts('rhel-9-4', COCKPIT_SCENARIOS),
             *contexts('rhel4edge', COCKPIT_SCENARIOS),
         ],
+        'rhel-8': [
+            *contexts('rhel-8-10', COCKPIT_SCENARIOS),
+            # all skipped
+            *contexts('rhel-8-10-distropkg', COCKPIT_SCENARIOS - {'networking'}),
+            *contexts('centos-8-stream', COCKPIT_SCENARIOS),
+        ],
         'rhel-7.9': [
             'rhel-7-9',
             'centos-7',
