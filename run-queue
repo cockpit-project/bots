@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import random
+import signal
 import smtplib
 import socket
 import subprocess
@@ -142,49 +143,70 @@ Subject: cockpituous: run-queue crash on %s
 # Consume from the webhook queue and republish to the task queue via *-scan
 # Consume from the task queue (endpoint)
 def main():
-    parser = argparse.ArgumentParser(description='Bot: read a single test command from the queue and execute it')
+    parser = argparse.ArgumentParser(description='Bot: read and execute task command(s) from the queue')
     parser.add_argument('--amqp', default=distributed_queue.DEFAULT_AMQP_SERVER,
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
+    parser.add_argument('--loop', action='store_true',
+                        help='Run forever until SIGTERM; by default, run a single task or exit '
+                             'immediately if queue is empty')
     opts = parser.parse_args()
 
-    with distributed_queue.DistributedQueue(opts.amqp, ['webhook', 'rhel', 'public', 'statistics']) as q:
-        channel = q.channel
+    # gracefully handle SIGTERM -- don't interrupt a running task, but stop the main loop
+    pending_stop = False
+    if opts.loop:
+        def handle_term(_sig, _frame):
+            nonlocal pending_stop
+            logging.info("Received SIGTERM, stopping after the current task")
+            pending_stop = True
 
-        cmd, delivery_tag = consume_webhook_queue(channel, opts.amqp)
-        if not cmd and delivery_tag:
-            logging.info("Webhook message interpretation generated no command")
+        signal.signal(signal.SIGTERM, handle_term)
+
+        loop_sleep = int(os.getenv('LOOP_SLEEP', '60'))
+
+    while not pending_stop:
+        with distributed_queue.DistributedQueue(opts.amqp, ['webhook', 'rhel', 'public', 'statistics']) as q:
+            channel = q.channel
+
+            cmd, delivery_tag = consume_webhook_queue(channel, opts.amqp)
+            if not cmd and delivery_tag:
+                logging.info("Webhook message interpretation generated no command")
+                channel.basic_ack(delivery_tag)
+                continue
+
+            if not cmd:
+                cmd, delivery_tag = consume_task_queue(
+                    channel,
+                    opts.amqp,
+                    q.declare_results['public'],
+                    q.declare_results['rhel'],
+                    q.declare_results['statistics'])
+            if not cmd:
+                if opts.loop:
+                    logging.info("All queues are empty, sleeping")
+                    time.sleep(loop_sleep)
+                    continue
+                else:
+                    logging.info("All queues are empty")
+                    return 1
+
+            if isinstance(cmd, list):
+                cmd_str = ' '.join(cmd)
+            else:
+                cmd_str = cmd
+            logging.info("Consuming message with command: %s", cmd_str)
+            p = subprocess.Popen(cmd, shell=isinstance(cmd, str))
+            while p.poll() is None:
+                q.connection.process_data_events()
+                time.sleep(3)
+            if p.returncode != 0:
+                logging.error("%s failed with exit code %i", cmd_str, p.returncode)
+                mail_notification(f"""The queue command
+
+  {cmd_str}
+
+failed with exit code {p.returncode}. Please check the container logs for details.""")
+
             channel.basic_ack(delivery_tag)
-            return 0
-
-        if not cmd:
-            cmd, delivery_tag = consume_task_queue(
-                channel,
-                opts.amqp,
-                q.declare_results['public'],
-                q.declare_results['rhel'],
-                q.declare_results['statistics'])
-        if not cmd:
-            logging.info("All queues are empty")
-            return 1
-
-        if isinstance(cmd, list):
-            cmd_str = ' '.join(cmd)
-        else:
-            cmd_str = cmd
-        logging.info("Consuming message with command: %s", cmd_str)
-        p = subprocess.Popen(cmd, shell=isinstance(cmd, str))
-        while p.poll() is None:
-            q.connection.process_data_events()
-            time.sleep(3)
-        if p.returncode != 0:
-            logging.error("%s failed with exit code %i", cmd_str, p.returncode)
-            mail_notification("""The queue command
-
-  %s
-
-failed with exit code %i. Please check the container logs for details.""" % (cmd_str, p.returncode))
-
-        channel.basic_ack(delivery_tag)
 
     return 0
 
