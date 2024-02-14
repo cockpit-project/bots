@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import random
+import shlex
 import signal
 import smtplib
 import socket
@@ -40,10 +41,9 @@ logging.basicConfig(level=logging.INFO)
 
 statistics_queue = os.environ.get("RUN_STATISTICS_QUEUE")
 
-# Returns a command to execute and the delivery tag needed to ack the message
-
 
 def consume_webhook_queue(channel, amqp):
+    """Return a command to execute and the delivery tag needed to ack the message"""
     # interpret payload
     # call tests-scan or issue-scan appropriately
     method_frame, header_frame, body = channel.basic_get(queue='webhook')
@@ -94,10 +94,10 @@ def consume_webhook_queue(channel, amqp):
 
     return cmd, method_frame.delivery_tag
 
-# Returns a command to execute and the delivery tag needed to ack the message
-
 
 def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result, declare_stats_result):
+    """Return (JSON body, delivery tag needed to ack the message, queue name)"""
+
     if statistics_queue and declare_stats_result.method.message_count > 0:
         # statistics queue is quick to process, always do that first
         queue = 'statistics'
@@ -113,14 +113,14 @@ def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result
                 queue = ['public', 'rhel'][random.randrange(2)]
     else:
         # nothing to do
-        return None, None
+        return None, None, None
 
     method_frame, header_frame, body = channel.basic_get(queue=queue)
     if not method_frame:
-        return None, None
+        return None, None, None
 
     body = json.loads(body)
-    return body['command'], method_frame.delivery_tag
+    return body, method_frame.delivery_tag, queue
 
 
 def mail_notification(body):
@@ -149,6 +149,9 @@ def main():
     parser.add_argument('--loop', action='store_true',
                         help='Run forever until SIGTERM; by default, run a single task or exit '
                              'immediately if queue is empty')
+    parser.add_argument('--wrapper', metavar='PATH',
+                        help='Run the task command through the given executable, with the command as '
+                             'arguments, and $TASK_QUEUE and $TASK_CONTAINER')
     opts = parser.parse_args()
 
     # gracefully handle SIGTERM -- don't interrupt a running task, but stop the main loop
@@ -174,12 +177,14 @@ def main():
                 continue
 
             if not cmd:
-                cmd, delivery_tag = consume_task_queue(
+                body, delivery_tag, queue_name = consume_task_queue(
                     channel,
                     opts.amqp,
                     q.declare_results['public'],
                     q.declare_results['rhel'],
                     q.declare_results['statistics'])
+                if body:
+                    cmd = body['command']
             if not cmd:
                 if opts.loop:
                     logging.info("All queues are empty, sleeping")
@@ -190,11 +195,20 @@ def main():
                     return 1
 
             if isinstance(cmd, list):
-                cmd_str = ' '.join(cmd)
+                cmd_str = shlex.join(cmd)
             else:
                 cmd_str = cmd
+                cmd = ['sh', '-ec', cmd_str]
+            env = os.environ.copy()
             logging.info("Consuming message with command: %s", cmd_str)
-            p = subprocess.Popen(cmd, shell=isinstance(cmd, str))
+
+            if opts.wrapper:
+                cmd.insert(0, opts.wrapper)
+                env['TASK_QUEUE'] = queue_name
+                container = body.get('container')
+                if isinstance(container, str):
+                    env['TASK_CONTAINER'] = container
+            p = subprocess.Popen(cmd, env=env)
             while p.poll() is None:
                 q.connection.process_data_events()
                 time.sleep(3)
