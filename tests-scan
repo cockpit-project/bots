@@ -195,6 +195,8 @@ def queue_test(priority, name, number, revision, ref, context, base,
         body = {
             "command": command,
             "type": "test",
+            "repo": repo,
+            "base": base,
             "sha": revision,
             "ref": ref,
             "name": name,
