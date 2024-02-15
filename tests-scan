@@ -119,6 +119,7 @@ class Job(NamedTuple):
     repo: str
     bots_ref: 'str | None'
     github_context: str
+    container: 'str | None'
 
 
 # Prepare a human readable output
@@ -209,6 +210,7 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
             "sha": job.revision,
             "ref": job.ref,
             "name": job.name,
+            "container": job.container,
         }
         queue = 'rhel' if is_internal_context(job.context) else 'public'
         channel.basic_publish('', queue, json.dumps(body), properties=pika.BasicProperties(priority=priority))
@@ -326,6 +328,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
         statuses = api.statuses(revision)
         login = pull["head"]["user"]["login"]
         base = pull["base"]["ref"]  # The branch this pull request targets
+        merge_sha = pull.get("merge_commit_sha", revision)
 
         allowed = login in ALLOWLIST
 
@@ -354,6 +357,8 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
         if not statuses:  # If none defined in github add basic set of contexts
             for context in build_policy(repo, contexts).get(base, []):
                 todos[context] = {}
+
+        container = api.fetch_file(merge_sha, '.cockpit-ci/container')
 
         # there are 3 different HEADs
         # ref:    the PR that we are testing
@@ -416,6 +421,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                     project,
                     bots_ref,
                     context,
+                    container,
                 )
 
 
