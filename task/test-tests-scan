@@ -59,6 +59,9 @@ GITHUB_DATA = {
         "sha": "abcdef",
     },
     "/users/user/repos": [{"full_name": "project/repo"}],
+
+    # This is accessed via fetch_file()
+    "/project/repo/abcdef/.cockpit-ci/container": "supertasks",
 }
 
 
