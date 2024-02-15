@@ -23,6 +23,7 @@ import logging
 import shlex
 import sys
 import time
+from typing import Iterable, NamedTuple
 
 from lib import ALLOWLIST, testmap
 from task import distributed_queue, github, labels_of_pull
@@ -107,18 +108,31 @@ def main():
     return 0
 
 
+class Job(NamedTuple):
+    priority: str
+    name: str
+    number: int
+    revision: str
+    ref: str
+    context: str
+    base: str
+    repo: str
+    bots_ref: 'str | None'
+    github_context: str
+
+
 # Prepare a human readable output
-def tests_human(priority, name, number, revision, ref, context, base, repo, bots_ref, github_context, options):
-    if not priority and not options.force:
+def tests_human(job: Job, options: argparse.Namespace) -> str:
+    if not job.priority and not options.force:
         return ""
     return "{name:11} {context:25} {revision:10} {priority:2}{repo}{bots_ref}{branches}".format(
-        priority=priority,
-        revision=revision[0:7],
-        context=context,
-        name=name,
-        repo=repo and "  (%s)" % repo or "",
-        bots_ref=bots_ref and (" [bots@%s]" % bots_ref) or "",
-        branches=base != ref and ("   {%s}" % base) or ""
+        priority=job.priority,
+        revision=job.revision[0:7],
+        context=job.context,
+        name=job.name,
+        repo=job.repo and "  (%s)" % job.repo or "",
+        bots_ref=job.bots_ref and (" [bots@%s]" % job.bots_ref) or "",
+        branches=job.base != job.ref and ("   {%s}" % job.base) or ""
     )
 
 
@@ -131,20 +145,19 @@ def is_internal_context(context):
 
 
 # Prepare a test invocation command
-def tests_invoke(priority, name, number, revision, ref, context, base,
-                 repo, bots_ref, github_context, options):
+def tests_invoke(job: Job, options: argparse.Namespace) -> str:
     try:
-        priority = int(priority)
+        priority = int(job.priority)
     except (ValueError, TypeError):
         priority = 0
     if priority <= 0 and not options.force:
         return ""
     current = time.strftime('%Y%m%d-%H%M%S')
-    (image, _, scenario) = context.partition("/")
+    (image, _, scenario) = job.context.partition("/")
 
     checkout = "PRIORITY={priority:04d} ./make-checkout --verbose --repo={repo}"
     # Special case for when running tests without a PR
-    if number == 0:
+    if job.number == 0:
         invoke = "../tests-invoke --revision {revision} --repo {github_base}"
     else:
         invoke = "../tests-invoke --pull-number {pull_number} --revision {revision} --repo {github_base}"
@@ -152,10 +165,10 @@ def tests_invoke(priority, name, number, revision, ref, context, base,
     wrapper = "./s3-streamer --repo {github_base} --test-name {name}-{current} " \
               "--github-context {github_context} --revision {revision}"
 
-    if base != ref:
+    if job.base != job.ref:
         checkout += " --rebase={base}"
 
-    if bots_ref:
+    if job.bots_ref:
         # we are checking the external repo on a cockpit PR, so stay on the project's main branch
         checkout += " {ref}"
         test_env += " COCKPIT_BOTS_REF={bots_ref}"
@@ -169,39 +182,37 @@ def tests_invoke(priority, name, number, revision, ref, context, base,
     cmd = " ".join([checkout, "&& cd make-checkout-workdir &&", test_env, invoke])
     return (wrapper + ' -- /bin/sh -c "' + cmd + '"').format(
         priority=priority,
-        name=shlex.quote(name),
-        revision=shlex.quote(revision),
-        base=shlex.quote(str(base)),
-        ref=shlex.quote(ref),
-        bots_ref=shlex.quote(bots_ref),
+        name=shlex.quote(job.name),
+        revision=shlex.quote(job.revision),
+        base=shlex.quote(str(job.base)),
+        ref=shlex.quote(job.ref),
+        bots_ref=shlex.quote(job.bots_ref or ''),
         image=shlex.quote(image),
         scenario=(shlex.quote(scenario)),
-        github_context=github_context,
+        github_context=job.github_context,
         current=current,
-        pull_number=number,
-        repo=shlex.quote(repo),
+        pull_number=job.number,
+        repo=shlex.quote(job.repo),
         github_base=shlex.quote(options.repo),
     )
 
 
-def queue_test(priority, name, number, revision, ref, context, base,
-               repo, bots_ref, github_context, channel, options):
-    command = tests_invoke(priority, name, number, revision, ref, context, base,
-                           repo, bots_ref, github_context, options)
+def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
+    command = tests_invoke(job, options)
+
     if command:
-        if priority > distributed_queue.MAX_PRIORITY:
-            priority = distributed_queue.MAX_PRIORITY
+        priority = min(job.priority, distributed_queue.MAX_PRIORITY)
 
         body = {
             "command": command,
             "type": "test",
-            "sha": revision,
-            "ref": ref,
-            "name": name,
+            "sha": job.revision,
+            "ref": job.ref,
+            "name": job.name,
         }
-        queue = 'rhel' if is_internal_context(context) else 'public'
+        queue = 'rhel' if is_internal_context(job.context) else 'public'
         channel.basic_publish('', queue, json.dumps(body), properties=pika.BasicProperties(priority=priority))
-        logging.info("Published '%s' on '%s' with command: '%s'", name, revision, command)
+        logging.info("Published '%s' on '%s' with command: '%s'", job.name, job.revision, command)
 
 
 def prioritize(status, title, labels, priority, context, number, direct):
@@ -278,25 +289,24 @@ def update_status(api, revision, context, last, changes):
     return True
 
 
-def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp) -> 'list[tuple]':
-    results: 'list[tuple]' = []
+def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: str) -> 'Iterable[Job]':
     pulls = []
 
-    if pull_data:
-        pulls.append(json.loads(pull_data)['pull_request'])
-    elif pull_number:
-        pull = api.get(f"pulls/{pull_number}")
+    if opts.pull_data:
+        pulls.append(json.loads(opts.pull_data)['pull_request'])
+    elif opts.pull_number:
+        pull = api.get(f"pulls/{opts.pull_number}")
         if pull:
             pulls.append(pull)
         else:
-            sys.exit(f"Can't find pull request {pull_number}")
-    elif sha and not api.has_open_prs(sha):
-        logging.info("Processing revision %s without pull request", sha)
+            sys.exit(f"Can't find pull request {opts.pull_number}")
+    elif opts.sha and not api.has_open_prs(opts.sha):
+        logging.info("Processing revision %s without pull request", opts.sha)
         pulls.append({
-            "title": f"{sha}",
+            "title": f"{opts.sha}",
             "number": 0,
             "head": {
-                "sha": sha,
+                "sha": opts.sha,
                 "user": {
                     "login": "cockpit-project"
                 }
@@ -322,20 +332,20 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
         logging.info("Processing #%s titled '%s' on revision %s", number, title, revision)
 
         # If sha is present only scan PR with selected sha
-        if sha and revision != sha and not revision.startswith(sha):
+        if opts.sha and revision != opts.sha and not revision.startswith(opts.sha):
             continue
 
         labels = labels_of_pull(pull)
 
-        baseline = distributed_queue.BASELINE_PRIORITY
+        baseline: float = distributed_queue.BASELINE_PRIORITY
         # amqp automatically prioritizes on age
-        if not amqp:
+        if not opts.amqp:
             # modify the baseline slightly to favor older pull requests, so that we don't
             # end up with a bunch of half tested pull requests
             baseline += 1.0 - (min(100000, float(number)) / 100000)
 
         # Create list of statuses to process: always process the requested contexts, if given
-        todos = {context: {} for context in contexts}
+        todos: dict[str, dict[str, object]] = {context: {} for context in contexts}
         for status in statuses:  # Firstly add all valid contexts that already exist in github
             if contexts and status not in contexts:
                 continue
@@ -373,8 +383,10 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                 # with --amqp (as called from run-queue), trigger tests as NOT_TESTED, as they already get queued;
                 # without --amqp (as called manually or from workflows), trigger tests as NOT_TESTED_DIRECT,
                 # so that the webhook queues them
-                (priority, changes) = prioritize(status, title, labels, baseline, context, number, direct=not amqp)
-            if not update or update_status(api, revision, context, status, changes):
+                (priority, changes) = prioritize(
+                    status, title, labels, baseline, context, number, direct=not opts.amqp
+                )
+            if opts.dry or update_status(api, revision, context, status, changes):
                 checkout_ref = ref
                 if project != repo:
                     checkout_ref = testmap.get_default_branch(project)
@@ -393,31 +405,30 @@ def cockpit_tasks(api, update, contexts, repo, pull_data, pull_number, sha, amqp
                     else:
                         bots_ref = "main"
 
-                results.append((priority,
-                                "pull-%d" % number,
-                                number,
-                                revision,
-                                checkout_ref,
-                                image_scenario,
-                                branch,
-                                project,
-                                bots_ref,
-                                context
-                                ))
-
-    return results
+                yield Job(
+                    priority,
+                    "pull-%d" % number,
+                    number,
+                    revision,
+                    checkout_ref,
+                    image_scenario,
+                    branch,
+                    project,
+                    bots_ref,
+                    context,
+                )
 
 
 def scan_for_pull_tasks(api, contexts, opts, repo):
-    results = cockpit_tasks(api, not opts.dry, contexts, repo, opts.pull_data, opts.pull_number, opts.sha, opts.amqp)
+    results = list(cockpit_tasks(api, contexts, opts, repo))
 
     if opts.human_readable:
         results.sort(reverse=True, key=str)
-        return [tests_human(*x, options=opts) for x in results]
+        return [tests_human(job, options=opts) for job in results]
     if not opts.amqp:
-        return [tests_invoke(*x, options=opts) for x in results]
+        return [tests_invoke(job, options=opts) for job in results]
     with distributed_queue.DistributedQueue(opts.amqp, ['rhel', 'public']) as q:
-        return [queue_test(*x, channel=q.channel, options=opts) for x in results]
+        return [queue_test(job, channel=q.channel, options=opts) for job in results]
 
 
 if __name__ == '__main__':
