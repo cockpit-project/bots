@@ -211,7 +211,7 @@ class GitHub(object):
             try:
                 req = urllib.request.Request(url)
                 with urllib.request.urlopen(req) as response:
-                    return response.read().strip()
+                    return response.read().decode().strip()
             except urllib.error.HTTPError as exc:
                 if exc.code == 404:
                     return None
