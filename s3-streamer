@@ -32,6 +32,7 @@ import tempfile
 import textwrap
 import time
 import urllib.parse
+from typing import ClassVar, Collection
 
 from lib import s3
 from lib.constants import LIB_DIR
@@ -42,49 +43,51 @@ logger = logging.getLogger('s3-streamer')
 
 
 class Destination:
-    def has(self, filename):
+    directory: str
+
+    def has(self, filename: str) -> bool:
         raise NotImplementedError
 
-    def write(self, filename, data):
+    def write(self, filename: str, data: bytes) -> None:
         raise NotImplementedError
 
-    def delete(self, filenames):
+    def delete(self, filenames: Collection[str]) -> None:
         raise NotImplementedError
 
 
 class LocalDestination(Destination):
-    def __init__(self, directory):
+    def __init__(self, directory: str) -> None:
         self.directory = directory
         os.makedirs(self.directory)
 
-    def path(self, filename):
+    def path(self, filename: str) -> str:
         return os.path.join(self.directory, filename)
 
-    def has(self, filename):
+    def has(self, filename: str) -> bool:
         return os.path.exists(self.path(filename))
 
-    def write(self, filename, data):
+    def write(self, filename: str, data: bytes) -> None:
         print(f'Write {self.path(filename)}')
         with open(self.path(filename), 'wb+') as file:
             file.write(data)
 
-    def delete(self, filenames):
+    def delete(self, filenames: Collection[str]) -> None:
         for filename in filenames:
             print(f'Delete {self.path(filename)}')
             os.unlink(self.path(filename))
 
 
 class S3Destination(Destination):
-    def __init__(self, directory):
+    def __init__(self, directory: str) -> None:
         self.directory = directory.rstrip('/') + '/'
 
-    def url(self, filename):
+    def url(self, filename: str) -> urllib.parse.ParseResult:
         return urllib.parse.urlparse(self.directory + filename)
 
-    def has(self, filename):
+    def has(self, filename: str) -> bool:
         raise NotImplementedError('use Index')
 
-    def write(self, filename, data):
+    def write(self, filename: str, data: bytes) -> None:
         content_type, content_encoding = mimetypes.guess_type(filename)
         headers = {
             'Content-Type': content_type or 'text/plain',
@@ -96,7 +99,7 @@ class S3Destination(Destination):
         with s3.urlopen(self.url(filename), data=data, method='PUT', headers=headers) as _:
             pass
 
-    def delete(self, filenames):
+    def delete(self, filenames: Collection[str]) -> None:
         # to do: multi-object delete API
         for filename in filenames:
             with s3.urlopen(self.url(filename), method='DELETE') as _:
@@ -104,16 +107,18 @@ class S3Destination(Destination):
 
 
 class Index(Destination):
-    def __init__(self, destination, filename='index.html'):
+    files: set[str]
+
+    def __init__(self, destination: Destination, filename: str = 'index.html') -> None:
         self.destination = destination
         self.filename = filename
         self.files = set()
         self.dirty = True
 
-    def has(self, filename):
+    def has(self, filename: str) -> bool:
         return filename in self.files
 
-    def write(self, filename, data):
+    def write(self, filename: str, data: bytes) -> None:
         self.destination.write(filename, data)
         self.files.add(filename)
         self.dirty = True
@@ -121,7 +126,7 @@ class Index(Destination):
     def delete(self, filenames: Collection[str]) -> None:
         raise NotImplementedError
 
-    def sync(self):
+    def sync(self) -> None:
         if self.dirty:
             self.destination.write(self.filename, textwrap.dedent('''
                 <html>
@@ -138,11 +143,11 @@ class Index(Destination):
 
 
 class AttachmentsDirectory:
-    def __init__(self, destination, local_directory):
+    def __init__(self, destination: Destination, local_directory: str) -> None:
         self.destination = destination
         self.path = local_directory
 
-    def scan(self):
+    def scan(self) -> None:
         for subdir, _dirs, files in os.walk(self.path):
             for filename in files:
                 path = os.path.join(subdir, filename)
@@ -156,10 +161,14 @@ class AttachmentsDirectory:
 
 
 class ChunkedUploader:
-    SIZE_LIMIT = 1000000  # 1MB
-    TIME_LIMIT = 30       # 30s
+    SIZE_LIMIT: ClassVar[int] = 1000000  # 1MB
+    TIME_LIMIT: ClassVar[int] = 30       # 30s
 
-    def __init__(self, index, filename):
+    chunks: list[list[bytes]]
+    suffixes: set[str]
+    send_at: float | None
+
+    def __init__(self, index: Index, filename: str):
         assert locale.getpreferredencoding() == 'UTF-8'
         self.input_decoder = codecs.getincrementaldecoder('UTF-8')(errors='replace')
         self.suffixes = {'chunks'}
@@ -170,12 +179,12 @@ class ChunkedUploader:
         self.pending = b''
         self.send_at = 0  # Send the first write immediately
 
-    def start(self, data):
+    def start(self, data: str) -> None:
         # Send the initial data immediately, to get the chunks file written out.
         self.append_block(data.encode('utf-8'))
         AttachmentsDirectory(self.index, f'{LIB_DIR}/s3-html').scan()
 
-    def append_block(self, block):
+    def append_block(self, block: bytes) -> None:
         self.chunks.append([block])
 
         # 2048 algorithm.
@@ -201,7 +210,7 @@ class ChunkedUploader:
 
         self.destination.write(f'{self.filename}.chunks', json.dumps(chunk_sizes).encode('ascii'))
 
-    def write(self, data, final=False):
+    def write(self, data: bytes, *, final: bool = False) -> None:
         # Transcode the data (if necessary), and ensure that it's complete characters
         self.pending += self.input_decoder.decode(data, final=final).encode('utf-8')
 
@@ -225,31 +234,31 @@ class ChunkedUploader:
 
 
 class Status:
-    def post(self, state, description):
+    def post(self, state: str, description: str) -> None:
         raise NotImplementedError
 
 
 class GitHubStatus(Status):
-    def __init__(self, repo, revision, context, link):
+    def __init__(self, repo: str, revision: str, context: str, link: str) -> None:
         logger.debug('GitHub repo %s context %s link %s', repo, context, link)
         self.github = github.GitHub(repo=repo)
         self.status = {'context': context, 'target_url': link}
         self.revision = revision
 
-    def post(self, state, description):
+    def post(self, state: str, description: str) -> None:
         logger.debug('POST statuses/%s %s %s', self.revision, state, description)
         self.github.post(f'statuses/{self.revision}', dict(self.status, state=state, description=description))
 
 
 class LocalStatus(Status):
-    def __init__(self, directory):
+    def __init__(self, directory: str) -> None:
         print(f'Writing logs to {directory}')
 
-    def post(self, state, description):
+    def post(self, state: str, description: str) -> None:
         print(f'Status [{state}] {description}')
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
 
     group = parser.add_mutually_exclusive_group()
@@ -267,6 +276,8 @@ def main():
     subdir = f'{args.test_name}-{args.revision[:8]}-{args.github_context}'
     subdir = subdir.replace('@', '-').replace('#', '-').replace('/', '-')
 
+    destination: Destination
+    status: Status
     if args.directory:
         destination = LocalDestination(os.path.join(args.directory, subdir))
         status = LocalStatus(destination.directory)
@@ -299,6 +310,7 @@ def main():
                               stdin=subprocess.DEVNULL, pipesize=max_pipe_size) as process:  # lgtm
             # We want non-blocking reads so that we can send attachments and
             # flush pending chunked data in case the output stalls.
+            assert process.stdout is not None
             os.set_blocking(process.stdout.fileno(), False)
 
             # Send the static files to start
