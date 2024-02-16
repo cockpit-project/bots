@@ -304,7 +304,7 @@ def main():
             # Send the static files to start
             pretty_name = re.sub(r'^pull-(\d+)-\d+-\d+$', r'PR #\1', args.test_name)
             log_uploader.start(textwrap.dedent(f"""
-                {status.github.repo} {pretty_name}: {args.github_context} on {platform.node()}
+                {args.repo} {pretty_name}: {args.github_context} on {platform.node()}
 
                 Running on:    {platform.node()}
                 Current time:  {time.strftime('%c UTC', time.gmtime())}
