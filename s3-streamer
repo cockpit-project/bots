@@ -118,10 +118,8 @@ class Index(Destination):
         self.files.add(filename)
         self.dirty = True
 
-    def delete(self, filenames):
-        self.destination.delete(self.destination, filenames)
-        self.files.difference_update(filenames)
-        self.dirty = True
+    def delete(self, filenames: Collection[str]) -> None:
+        raise NotImplementedError
 
     def sync(self):
         if self.dirty:
