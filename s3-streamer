@@ -144,8 +144,8 @@ class AttachmentsDirectory:
 
     def scan(self):
         for subdir, _dirs, files in os.walk(self.path):
-            for file in files:
-                path = os.path.join(subdir, file)
+            for filename in files:
+                path = os.path.join(subdir, filename)
                 name = os.path.relpath(path, start=self.path)
 
                 if not self.destination.has(name):
