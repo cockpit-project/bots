@@ -1,1 +1,0 @@
-avc:  denied  { sqpoll } for * comm="pmproxy" scontext=system_u:system_r:pcp_pmproxy_t:s0 tcontext=system_u:system_r:pcp_pmproxy_t:s0 tclass=io_uring permissive=0
