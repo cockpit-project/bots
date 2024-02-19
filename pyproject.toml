@@ -31,9 +31,11 @@ ignore = [
 [tool.pytest.ini_options]
 addopts = ["--cov-config=pyproject.toml"]  # for subprocesses
 pythonpath = ["."]
+required_plugins = ["pytest-asyncio"]
+asyncio_mode = 'auto'
 
 [tool.coverage.run]
-branch=true
+branch = true
 
 [tool.coverage.report]
 show_missing = true

@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2024 Red Hat, Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import asyncio
+import logging
+import sys
+from pathlib import Path
+from typing import assert_never
+
+from lib.aio.job import Job, run_job
+from lib.aio.jobcontext import JobContext
+from lib.aio.jsonutil import JsonError
+from lib.aio.util import JsonObjectAction, KeyValueAction
+
+logger = logging.getLogger(__name__)
+
+BOTS_DIR = Path(__file__).parent
+
+
+async def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--debug', action='store_true', help="Enable debugging output")
+    parser.add_argument('--config-file', '-F', metavar='FILENAME',
+                        help="Config file [default JOB_RUNNER_CONFIG or ~/.config/cockpit-dev/job-runner.toml]")
+    subprograms = parser.add_subparsers(dest='cmd', required=True, title="Subcommands")
+
+    run_parser = subprograms.add_parser("run", help="Run a single job provided on the command line")
+    run_parser.add_argument('repo', help="The repository (like `cockpit-project/cockpit`)")
+    run_parser.add_argument('--pull', type=int, help="The pull request number to run tests on")
+    run_parser.add_argument('--sha', help="The revision sha, exactly 40 hex digits")
+    run_parser.add_argument('--context', help="The status we're reporting against the sha")
+    run_parser.add_argument('--target', help="The target branch")
+    run_parser.add_argument('--report', action=JsonObjectAction, help="Open an issue on failures")
+    run_parser.add_argument('--slug', help="The URL slug (used for logging)")
+    run_parser.add_argument('--title', help="The title for the log page")
+    run_parser.add_argument('--container', help="The container image to use (like `quay.io/cockpit/tasks:latest`)")
+    run_parser.add_argument('--env', help="Environment variables for the test run", action=KeyValueAction)
+    run_parser.add_argument('--timeout', type=int, help="Timeout of the job, in minutes", default=120)
+    run_parser.add_argument('--secret', dest='secrets', default=[], action='append', help="Provide the named secret")
+    run_parser.add_argument('command', nargs='*', help="Command to run [default: .cockpit-ci/run]")
+
+    run_parser = subprograms.add_parser("json", help="Run a single given as a JSON blob")
+    run_parser.add_argument('json', action=JsonObjectAction, help="The job, in JSON format")
+
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+
+    match args.cmd:
+        case 'run':
+            # if this throws, it's an error in the parser setup, above
+            job = Job(vars(args))
+
+        case 'json':
+            try:
+                job = Job(args.json)
+            except JsonError as exc:
+                sys.exit(f'Poorly formed job: {exc}')
+
+        case other:
+            assert_never(other)
+
+    async with JobContext(args.config_file, debug=args.debug) as ctx:
+        await run_job(job, ctx)
+
+if __name__ == '__main__':
+    asyncio.run(main())

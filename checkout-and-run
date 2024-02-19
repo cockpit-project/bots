@@ -1,0 +1,113 @@
+#!/usr/bin/python3
+
+# NB: This file gets run inside of a container with nothing else present.  It
+# needs to depend on only the Python standard library.
+
+import argparse
+import os
+import shlex
+import subprocess
+import sys
+import time
+from typing import Sequence
+
+
+def log(*parts: object) -> None:
+    print(*parts, file=sys.stderr)
+
+
+def run(*cmd: str, tries: int = 1) -> None:
+    joined = shlex.join(cmd)
+
+    for attempt in range(1, tries + 1):
+        try:
+            log('\n+', joined)
+            subprocess.check_call(cmd)
+            return
+        except subprocess.CalledProcessError as exc:
+            log(f'\n> Attempt {attempt} failed with code {exc.returncode}.')
+            time.sleep(2 ** attempt)
+
+    sys.exit(f'\n*** Failed to run command {joined}.  Aborting.')
+
+
+def output(*cmd: str) -> str:
+    try:
+        return subprocess.check_output(cmd, text=True).strip()
+    except subprocess.CalledProcessError as exc:
+        sys.exit(f'\n*** Failed to run command {shlex.join(cmd)} (code {exc.returncode}).  Aborting.')
+
+
+def git(*cmd: str, tries: int = 1) -> None:
+    run('git', *cmd, tries=tries)
+
+
+def git_output(*cmd: str) -> str:
+    return output('git', *cmd)
+
+
+def checkout_and_run(repository: str, revision: str | None, rebase: str | None, command: Sequence[str]) -> None:
+    run('cat', '/run/.containerenv')
+    run('uname', '-a')
+    run('mkdir', '-p', os.environ['TEST_ATTACHMENTS'])
+
+    git('clone', '--', repository, 'make-checkout-workdir', tries=5)
+
+    print('\n+ cd make-checkout-workdir', file=sys.stderr)
+    os.chdir('make-checkout-workdir')
+
+    if revision:
+        git('fetch', '--', 'origin', revision, tries=5)
+        git('checkout', '--detach', 'FETCH_HEAD')
+
+    if rebase:
+        git('fetch', '--', 'origin', rebase, tries=5)
+        # Do it this way to get the commit ID in the log
+        base = git_output('rev-parse', 'FETCH_HEAD')
+        git('rebase', '--', base)
+
+        git('log', 'HEAD', f'^{base}')
+        git('log', '-n1', base)
+    else:
+        git('log', '-n1')
+
+    commands: Sequence[Sequence[str]]
+    if command:
+        commands = (command,)
+    else:
+        commands = (
+            ('.cockpit-ci/run',),
+            ('test/run',)
+        )
+
+    for cmd in commands:
+        try:
+            log('\n+', shlex.join(cmd))
+            os.execv(cmd[0], tuple(cmd))
+        except FileNotFoundError as exc:
+            log(exc)
+        except OSError as exc:
+            log(exc)
+            break
+
+    sys.exit('\n*** Failed to execute entry point.')
+
+
+def main() -> None:
+    # All output to stdout — otherwise podman reorders things
+    os.dup2(1, 2)
+
+    parser = argparse.ArgumentParser(description="Check out a git repo and run a command; mainly used by job-runner")
+    parser.add_argument('--revision', help="The revision to checkout")
+    parser.add_argument('--rebase', help="Target branch to rebase onto")
+    parser.add_argument('repository', help="The git repository to clone")
+    parser.add_argument('command', nargs='*', help="The command to run [default: .cockpit-ci/run]")
+
+    args = parser.parse_args()
+    log('\n+ [checkout-and-run]', shlex.join(sys.argv[1:]))
+
+    checkout_and_run(args.repository, args.revision, args.rebase, args.command)
+
+
+if __name__ == '__main__':
+    main()

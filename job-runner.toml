@@ -1,0 +1,56 @@
+# Default configuration for job-runner
+
+# This file contains the default settings for job-runner and will always be
+# read in order to get the defaults.  It is also meant to act as a rudimentary
+# form of documentation for the options which are available.
+
+# Anything in this file can be overridden by installing a file with a similar
+# format in one of the following locations (in order of precedence):
+#   - the path specified via `--config-file`
+#   - the path specified via the `JOB_RUNNER_CONFIG` environment variable
+#   - XDG_CONFIG_HOME/cockpit-dev/job-runner.toml
+
+# The defaults from this file are merged with overrides from the first such
+# file found.
+
+# The default configuration is intentionally broken.  You'll need to provide a
+# configuration which (at least) does one of:
+#  - provides a valid GitHub API token; and/or
+#  - sets forge.github.post to false
+
+[container]
+command = ['podman']
+run-args = [
+  # '--device=/dev/kvm'
+]
+default-image = 'quay.io/cockpit/tasks:latest'
+
+[container.secrets]
+# see podman-secret(1)
+# github-token = ['--secret=github-token']
+
+[logs]
+driver='local'   # 's3' or 'local'
+
+[logs.s3]
+# hint: podman run --rm --net=host quay.io/minio/minio server /var
+url = 'http://127.0.0.1:9000/tmp/'
+key = {access='minioadmin', secret='minioadmin'}
+user-agent = 'job-runner (cockpit-project/bots)'
+acl = 'public-read'
+
+[logs.local]
+# hint: python -m http.server -b 127.0.0.1 -d ~/.cache/cockpit-dev/job-runner-logs
+dir = '~/.cache/cockpit-dev/job-runner-logs'
+link = 'http://127.0.0.1:8000/'
+
+[forge]
+driver='github'
+
+[forge.github]
+clone-url = 'https://github.com/'
+api-url = 'https://api.github.com/'
+post = true  # whether to post statuses, open issues, etc.
+user-agent = 'job-runner (cockpit-project/bots)'
+# (at least) one of `token` or `post = false` must be set
+# token = 'ghp_XXX'
