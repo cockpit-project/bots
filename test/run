@@ -12,10 +12,13 @@ test_ruff() {
 test_mypy() {
     command -v mypy >/dev/null || { echo 'no mypy installed'; return 0; }
     mypy_strict_files='
+      lib/aio
       lib/directories.py
       lib/network.py
+      checkout-and-run
+      job-runner
     '
-    mypy --no-error-summary --strict $mypy_strict_files
+    mypy  --scripts-are-modules --no-error-summary --strict $mypy_strict_files
 }
 
 test_ruff
