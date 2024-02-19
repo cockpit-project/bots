@@ -13,11 +13,15 @@ OS_VER="$1"
 # Remove variant information from OS_VER (e.g. fedora 40 eln -> fedora 40)
 OS_VER_NO_VARIANT="$(echo $OS_VER | cut -d' ' -f 1,2)"
 
-# most images use cockpit.spec from main branch, but there's a RHEL 7 stable branch with a completely different layout
+# most images use cockpit.spec from main branch, but stable RHEL branches diverge
 case "$OS_VER" in
     rhel*7|centos*7)
         spec=$($GET "$COCKPIT_GIT/rhel-7.9/tools/cockpit.spec" |
             sed 's/%{npm-version:.*}/0/; /Recommends:/d; s/build_optional 0/build_optional 1/')
+        ;;
+
+    rhel*8|centos*8)
+        spec=$($GET "$COCKPIT_GIT/rhel-8/tools/cockpit.spec")
         ;;
 
     *)
