@@ -64,6 +64,7 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
+            'fedora-40',
             'rhel-8-10',
         ],
     },
@@ -71,6 +72,7 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             TEST_OS_DEFAULT,
             'fedora-39',
+            'fedora-40',
             'centos-8-stream',
             'fedora-rawhide',
         ],
@@ -100,6 +102,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream',
             'fedora-rawhide',
+            'fedora-40',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -119,6 +122,7 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-rawhide',
+            'fedora-40',
         ],
     },
     'cockpit-project/cockpit-navigator': {
@@ -133,6 +137,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             TEST_OS_DEFAULT,
             'rhel-9-4',
+            'fedora-40',
         ],
     },
     'weldr/lorax': {
@@ -158,6 +163,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'fedora-rawhide',
             'fedora-39',
+            'fedora-40',
             'rhel-8-10',
             'rhel-9-4',
         ],

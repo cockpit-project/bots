@@ -44,6 +44,7 @@ REFRESH = {
     "debian-stable": {},
     "fedora-38": {},
     "fedora-39": {},
+    "fedora-40": {},
     "fedora-coreos": {},
     "fedora-eln": {},
     "fedora-eln-boot": {},
