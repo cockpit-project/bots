@@ -205,14 +205,49 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
     if command:
         priority = min(job.priority, distributed_queue.MAX_PRIORITY)
 
+        slug = f"{job.name}-{job.revision[:8]}-{time.strftime('%Y%m%d-%H%M%S')}-{job.context.replace('/', '-')}"
+        (image, _, scenario) = job.context.partition("/")
+
+        env = {
+            "TEST_OS": image,
+        }
+        if scenario:
+            env["TEST_SCENARIO"] = scenario
+        if job.bots_ref:
+            env["COCKPIT_BOTS_REF"] = job.bots_ref
+        if job.base:
+            env["BASE_BRANCH"] = job.base
+
         body = {
+            # old-style command line jobs
             "command": command,
             "type": "test",
             "sha": job.revision,
             "ref": job.ref,
             "name": job.name,
-            "container": job.container,
+            # future job-runner format; once everything moved over, remove the stuff above
+            "job": {
+                "repo": job.repo,
+                "sha": job.revision,
+                "context": job.context,
+                "target": job.base,
+                "slug": slug,
+                "env": env,
+                "container": job.container,
+                # for updating naughty trackers
+                "secrets": ["github-token"],
+            }
         }
+
+        # report issue for nightly runs
+        if job.number == 0:
+            body["job"]["report"] = {
+                "title": f"Tests failed on {job.revision}",
+                "labels": ["nightly"],
+            }
+        else:
+            body["job"]["pull"] = job.number
+
         queue = 'rhel' if is_internal_context(job.context) else 'public'
         channel.basic_publish('', queue, json.dumps(body), properties=pika.BasicProperties(priority=priority))
         logging.info("Published '%s' on '%s' with command: '%s'", job.name, job.revision, command)

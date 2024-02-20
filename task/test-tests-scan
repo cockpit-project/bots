@@ -273,8 +273,23 @@ class TestTestsScan(unittest.TestCase):
             "type": "test",
             "sha": "abcdef",
             "ref": "abcdef",
-            "name": "pull-1",
-            "container": "supertasks",
+            "name": f"pull-{self.pull_number}",
+            "job": {
+                "context": "fedora/nightly",
+                "repo": "project/repo",
+                "pull": int(self.pull_number),
+                "sha": "abcdef",
+                "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
+                "target": "stable-1.0",
+                "container": "supertasks",
+                "secrets": ["github-token"],
+                "env": {
+                    "BASE_BRANCH": "stable-1.0",
+                    "COCKPIT_BOTS_REF": "main",
+                    "TEST_OS": "fedora",
+                    "TEST_SCENARIO": "nightly",
+                }
+            }
         })
 
     # mock time for predictable test name
@@ -304,14 +319,32 @@ class TestTestsScan(unittest.TestCase):
             './make-checkout --verbose --repo=project/repo 9988aa && '
             'cd make-checkout-workdir && TEST_OS=fedora COCKPIT_BOTS_REF=main '
             'TEST_SCENARIO=nightly ../tests-invoke --revision 9988aa --repo project/repo"')
+        self.maxDiff = None
         self.assertEqual(request, {
             "command": expected_command,
             "type": "test",
             "sha": "9988aa",
             "ref": "9988aa",
             "name": "pull-0",
-            # project/repo doesn't have a custom container name file
-            "container": None,
+            "job": {
+                "context": "fedora/nightly",
+                "repo": "project/repo",
+                "sha": "9988aa",
+                "slug": "pull-0-9988aa-20240102-030405-fedora-nightly",
+                "target": None,
+                "report": {
+                    "title": "Tests failed on 9988aa",
+                    "labels": ["nightly"],
+                },
+                # project/repo doesn't have a custom container name file
+                "container": None,
+                "secrets": ["github-token"],
+                "env": {
+                    "COCKPIT_BOTS_REF": "main",
+                    "TEST_OS": "fedora",
+                    "TEST_SCENARIO": "nightly",
+                }
+            }
         })
 
     # mock time for predictable test name
@@ -347,8 +380,23 @@ class TestTestsScan(unittest.TestCase):
             "type": "test",
             "sha": "abcdef",
             "ref": "abcdef",
-            "name": "pull-1",
-            "container": "supertasks",
+            "name": f"pull-{self.pull_number}",
+            "job": {
+                "context": "fedora/nightly",
+                "repo": "project/repo",
+                "pull": int(self.pull_number),
+                "sha": "abcdef",
+                "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
+                "target": "stable-1.0",
+                "container": "supertasks",
+                "secrets": ["github-token"],
+                "env": {
+                    "BASE_BRANCH": "stable-1.0",
+                    "COCKPIT_BOTS_REF": "main",
+                    "TEST_OS": "fedora",
+                    "TEST_SCENARIO": "nightly",
+                }
+            }
         })
 
     def do_test_tests_invoke(self, attachments_url, expected_logs_url):
