@@ -135,6 +135,11 @@ def download(dest, force, state, quiet, stores):
         stores = PUBLIC_STORES
         if redhat_network():
             stores += REDHAT_STORES
+        if image_upload_store := os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE'):
+            # NB: This is an *addition* to the built-in stores, used for
+            # testing.  Compare with image-upload which *only* uploads to this
+            # store, if it's present.
+            stores += image_upload_store
 
     # The time condition for If-Modified-Since
     exists = not force and os.path.exists(dest)
