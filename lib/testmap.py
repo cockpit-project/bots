@@ -114,6 +114,7 @@ REPO_BRANCH_CONTEXT = {
             'ubuntu-stable',
             'fedora-38',
             'fedora-39',
+            'fedora-40',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             'rhel-8-10',
@@ -122,7 +123,6 @@ REPO_BRANCH_CONTEXT = {
         ],
         '_manual': [
             'fedora-rawhide',
-            'fedora-40',
         ],
     },
     'cockpit-project/cockpit-navigator': {
