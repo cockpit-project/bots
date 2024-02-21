@@ -98,6 +98,12 @@ def main():
 
         stores = args.store
         if not stores:
+            if image_upload_store := os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE'):
+                # NB: This is a *complete replacement* of the built-in stores,
+                # used for testing.  Compare with image-download which only
+                # adds this to the list, if it's present.
+                stores = [image_upload_store]
+        if not stores:
             stores = PUBLIC_STORES
             if redhat_network():
                 stores += REDHAT_STORES
