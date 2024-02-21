@@ -17,12 +17,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import importlib
 import json
 import os
 import shutil
 import subprocess
 import tempfile
 import unittest
+import unittest.mock
 
 from lib.constants import BOTS_DIR
 from task import github
@@ -57,6 +59,13 @@ GITHUB_DATA = {
         "state": "pending",
         "statuses": [],
         "sha": "abcdef",
+    },
+    # SHA without a PR
+    "/repos/project/repo/commits/9988aa/pulls": [],
+    "/repos/project/repo/commits/9988aa/status?page=1&per_page=100": {
+        "state": "pending",
+        "statuses": [],
+        "sha": "9988aa",
     },
     "/users/user/repos": [{"full_name": "project/repo"}],
 }
@@ -221,6 +230,93 @@ class TestTestsScan(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(output.strip(), expected_output)
         self.assertIsNone(stderr)
+
+    @staticmethod
+    def get_tests_scan_module():
+        """in-process version of tests-scan
+
+        This is useful for mocking.
+        """
+        os.environ["GITHUB_API"] = f"http://{ADDRESS[0]}:{ADDRESS[1]}"
+        loader = importlib.machinery.SourceFileLoader("tests_scan", os.path.join(BOTS_DIR, "tests-scan"))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        loader.exec_module(module)
+        return module
+
+    # mock time for predictable test name
+    @unittest.mock.patch("time.strftime", return_value="20240102-030405")
+    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    def test_amqp_pr(self, mock_queue, _mock_strftime):
+        args = ["tests-scan", "--dry", "--repo", self.repo, "--context", self.context,
+                "--amqp", "amqp.example.com:1234"]
+
+        with unittest.mock.patch("sys.argv", args):
+            # needs to be in-process for mocking
+            self.get_tests_scan_module().main()
+
+        mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
+        channel = mock_queue.return_value.__enter__.return_value.channel
+
+        channel.basic_publish.assert_called_once()
+        self.assertEqual(channel.basic_publish.call_args[0][0], "")
+        self.assertEqual(channel.basic_publish.call_args[0][1], "public")
+        request = json.loads(channel.basic_publish.call_args[0][2])
+
+        expected_command = (
+            f"./s3-streamer --repo {self.repo} --test-name pull-{self.pull_number}-20240102-030405"
+            f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
+            f" \"PRIORITY=0005 ./make-checkout --verbose --repo={self.repo} --rebase=stable-1.0 {self.revision}"
+            f" && cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=stable-1.0"
+            " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke --pull-number"
+            f" {self.pull_number} --revision {self.revision} --repo {self.repo}\"")
+
+        self.assertEqual(request, {
+            "command": expected_command,
+            "type": "test",
+            "sha": "abcdef",
+            "ref": "abcdef",
+            "name": "pull-1",
+            "container": "supertasks",
+        })
+
+    # mock time for predictable test name
+    @unittest.mock.patch("time.strftime", return_value="20240102-030405")
+    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    def test_amqp_sha(self, mock_queue, _mock_strftime):
+        """Simulate nightly test on main branch"""
+
+        # SHA without PR
+        args = ["tests-scan", "--dry", "--repo", self.repo, "--context", self.context,
+                "--sha", "9988aa", "--amqp", "amqp.example.com:1234"]
+
+        with unittest.mock.patch("sys.argv", args):
+            # needs to be in-process for mocking
+            self.get_tests_scan_module().main()
+
+        mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
+        channel = mock_queue.return_value.__enter__.return_value.channel
+
+        channel.basic_publish.assert_called_once()
+        self.assertEqual(channel.basic_publish.call_args[0][0], "")
+        self.assertEqual(channel.basic_publish.call_args[0][1], "public")
+        request = json.loads(channel.basic_publish.call_args[0][2])
+
+        expected_command = (
+            './s3-streamer --repo project/repo --test-name pull-0-20240102-030405 '
+            '--github-context fedora/nightly --revision 9988aa -- /bin/sh -c "PRIORITY=0005 '
+            './make-checkout --verbose --repo=project/repo 9988aa && '
+            'cd make-checkout-workdir && TEST_OS=fedora COCKPIT_BOTS_REF=main '
+            'TEST_SCENARIO=nightly ../tests-invoke --revision 9988aa --repo project/repo"')
+        self.assertEqual(request, {
+            "command": expected_command,
+            "type": "test",
+            "sha": "9988aa",
+            "ref": "9988aa",
+            "name": "pull-0",
+            # project/repo doesn't have a custom container name file
+            "container": None,
+        })
 
     def do_test_tests_invoke(self, attachments_url, expected_logs_url):
         repo = "cockpit-project/cockpit"
