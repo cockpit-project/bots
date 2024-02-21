@@ -157,15 +157,13 @@ REPO_BRANCH_CONTEXT = {
             'fedora-39/firefox',
             'centos-8-stream',
             'centos-9-stream',
-            'rhel-8-9',
-            'rhel-9-3',
+            'rhel-8-10',
+            'rhel-9-4',
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
             'fedora-40',
-            'rhel-8-10',
-            'rhel-9-4',
         ],
     },
     'candlepin/subscription-manager': {
