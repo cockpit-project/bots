@@ -19,9 +19,11 @@
 # our GitHub interacition.
 
 import argparse
+import json
 import os
 import random
 import re
+import shlex
 import shutil
 import socket
 import subprocess
@@ -121,6 +123,10 @@ def named(task):
         return os.path.basename(os.path.realpath(sys.argv[0]))
 
 
+def would(*args: object) -> None:
+    print('\n** Would', *args)
+
+
 def report_begin(name, context, issue, dry=False):
     if dry:
         return
@@ -205,7 +211,7 @@ def run(context, function, **kwargs):
     return ret or 0
 
 
-def issue(title, body, item, context=None, items=[], state="open", since=None):
+def issue(title, body, item, context=None, items=[], state="open", since=None, dry: bool = False) -> dict:
     if context:
         item = f"{item} {context}".strip()
 
@@ -228,7 +234,12 @@ def issue(title, body, item, context=None, items=[], state="open", since=None):
         "body": checklist.body,
         "labels": ["bot"]
     }
-    return api.post("issues", data)
+
+    if dry:
+        would(f'open issue on {api.repo}', json.dumps(data, indent=4))
+        return data
+    else:
+        return api.post("issues", data)
 
 
 def execute(*args):
@@ -255,14 +266,17 @@ def execute(*args):
     return output
 
 
-def push_branch(branch, force=False):
+def push_branch(branch: str, force: bool = False, dry: bool = False) -> None:
     cmd = ["git", "push", api.remote, f"+HEAD:refs/heads/{branch}"]
     if force:
         cmd.insert(2, "-f")
-    execute(*cmd)
+    if dry:
+        would(shlex.join(cmd))
+    else:
+        execute(*cmd)
 
 
-def branch(context, message, pathspec=".", issue=None, push=True, branch=None, **kwargs):
+def branch(context, message, pathspec=".", issue=None, push=True, branch=None, dry=False, **kwargs):
     name = named(kwargs)
 
     if not branch:
@@ -289,16 +303,16 @@ def branch(context, message, pathspec=".", issue=None, push=True, branch=None, *
 
     # No need to push if we want to add another commits into the same branch
     if push:
-        push_branch(branch)
+        push_branch(branch, dry=dry)
 
     # Comment on the issue if present and we pushed the branch
     if issue and push:
-        comment_done(issue, name, clean, branch, context)
+        comment_done(issue, name, clean, branch, context, dry=dry)
 
     return branch
 
 
-def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=True, **kwargs):
+def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=True, dry: bool = False, **kwargs):
     if "pull" in kwargs:
         return kwargs["pull"]
 
@@ -320,6 +334,10 @@ def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=Tru
         data["title"] = "[no-test] " + kwargs["title"]
         if body:
             data["body"] = body
+
+    if dry:
+        would(f'open PR on {api.repo}:', json.dumps(data, indent=4))
+        return data
 
     try:
         pull = api.post("pulls", data)
@@ -377,17 +395,22 @@ def labels_of_pull(pull):
     return [label["name"] for label in pull["labels"]]
 
 
-def comment(issue, comment):
+def comment(issue, comment, dry: bool = False) -> dict[str, object]:
     try:
         number = issue["number"]
     except TypeError:
         number = issue
-    return api.post(f"issues/{number}/comments", {"body": comment})
+
+    if dry:
+        would(f'comment on {api.repo}#{number}:', comment)
+        return {"body": comment}
+    else:
+        return api.post(f"issues/{number}/comments", {"body": comment})
 
 
-def comment_done(issue, name, clean, branch, context=None):
+def comment_done(issue, name, clean, branch, context=None, dry: bool = False) -> None:
     message = "{0} {1} done: {2}/commits/{3}".format(name, context or "", clean, branch)
-    comment(issue, message)
+    comment(issue, message, dry=dry)
 
 
 def attach(filename):
