@@ -59,9 +59,6 @@ GITHUB_DATA = {
         "sha": "abcdef",
     },
     "/users/user/repos": [{"full_name": "project/repo"}],
-
-    # This is accessed via fetch_file()
-    "/project/repo/abcdef/.cockpit-ci/container": "supertasks",
 }
 
 
@@ -80,6 +77,8 @@ class Handler(MockHandler):
         elif self.path.endswith("/issues"):
             issues = self.server.data.get('issues', [])
             self.replyJson(issues)
+        elif self.path == "/project/repo/abcdef/.cockpit-ci/container":
+            self.replyData("supertasks")
         else:
             self.send_error(404, 'Mock Not Found: ' + self.path)
 
