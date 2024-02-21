@@ -26,10 +26,6 @@ import sys
 from lib import ALLOWLIST, testmap
 from task import distributed_queue, github, labels_of_pull
 
-NAMES = [
-    "image-refresh",
-]
-
 # RHEL tasks have to be done inside Red Hat network
 REDHAT_TASKS = [
     "rhel",
@@ -47,7 +43,7 @@ except ImportError:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Scan issues for tasks")
+    parser = argparse.ArgumentParser(description="Scan issues for image-refresh tasks")
     parser.add_argument("-v", "--human-readable", "--verbose", action="store_true", default=False,
                         dest="verbose", help="Print verbose information")
     parser.add_argument('--amqp', default=None,
@@ -121,7 +117,7 @@ def tasks_for_issues(issues_data, opts_repo):
 
 def output_task(command, issue, repo, verbose):
     name, unused, context = command.partition(" ")
-    if name not in NAMES:
+    if name != "image-refresh" or not repo.endswith("/bots"):
         return None
     number = issue.get("number", None)
     if number is None:
@@ -130,12 +126,7 @@ def output_task(command, issue, repo, verbose):
     context = context.strip()
     checkout = "PRIORITY={priority:04d} "
 
-    if repo == "cockpit-project/bots":
-        # when working on bots run from project root
-        cmd = "./{name} --verbose --issue='{issue}' {context}"
-    else:
-        # for external projects, nothing checks out bots/ subdir for them, so do it here
-        cmd = "git clone .. bots && bots/{name} --verbose --issue='{issue}' {context}"
+    cmd = "./{name} --verbose --issue='{issue}' {context}"
 
     # `--issues-data` should also be able to receive pull_request events, in that
     # case pull_request won't be present in the object, but commits will be
