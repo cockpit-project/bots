@@ -131,13 +131,13 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'fedora-38',
             'fedora-39',
+            'fedora-40',
             f'{TEST_OS_DEFAULT}/devel',
             'fedora-rawhide',
         ],
         '_manual': [
             TEST_OS_DEFAULT,
             'rhel-9-4',
-            'fedora-40',
         ],
     },
     'weldr/lorax': {
