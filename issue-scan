@@ -122,30 +122,25 @@ def output_task(command, issue, repo, verbose):
     number = issue.get("number", None)
     if number is None:
         return None
+    number = int(number)
 
-    context = context.strip()
-
-    cmd = "./{name} --verbose --issue='{issue}' {context}"
+    context = shlex.quote(context.strip())
 
     # `--issues-data` should also be able to receive pull_request events, in that
     # case pull_request won't be present in the object, but commits will be
     if "pull_request" in issue or "commits" in issue:
-        checkout = "./make-checkout --verbose --repo {repo} pull/{issue}/head && "
+        ref = f"pull/{number}/head"
     else:
-        checkout = "./make-checkout --verbose --repo {repo} {repo_default_branch} && "
+        ref = testmap.get_default_branch(repo)
 
     if verbose:
-        return f"issue-{int(number)} {name} {context}"
-    else:
-        if context:
-            context = shlex.quote(context)
-        return (checkout + "cd make-checkout-workdir && " + cmd + " ; cd ..").format(
-            issue=int(number),
-            name=name,
-            context=context,
-            repo=repo,
-            repo_default_branch=testmap.get_default_branch(repo),
-        )
+        return f"issue-{number} {name} {context} {ref}"
+
+    cmd = f"./make-checkout --verbose --repo {repo} {ref} && cd make-checkout-workdir && "
+    cmd += f"./{name} --verbose --issue={number} {context}; "
+    cmd += "cd .."
+
+    return cmd
 
 
 def queue_task(channel, result):
