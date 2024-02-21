@@ -1,0 +1,8 @@
+  File "test/verify/check-system-info", line *, in test*CryptoPolic*
+    self.login_and_go("/system")
+*
+testlib.Error: timeout
+*
+Process * (cockpit-certifi) of user 0 dumped core.
+*
+#*cockpit-certificate-ensure*

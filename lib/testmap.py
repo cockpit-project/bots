@@ -43,6 +43,7 @@ REPO_BRANCH_CONTEXT = {
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
             *contexts('fedora-38', COCKPIT_SCENARIOS),
             *contexts('fedora-39', COCKPIT_SCENARIOS),
+            *contexts('fedora-40', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
             *contexts(TEST_OS_DEFAULT, ['devel']),
             *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
@@ -64,7 +65,6 @@ REPO_BRANCH_CONTEXT = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
-            'fedora-40',
             'rhel-8-10',
         ],
     },
