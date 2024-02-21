@@ -92,6 +92,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel4edge',
             'fedora-38',
             'fedora-39',
+            'fedora-40',
             f'{TEST_OS_DEFAULT}/devel',
             'fedora-coreos',
             'debian-stable',
@@ -102,7 +103,6 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'centos-8-stream',
             'fedora-rawhide',
-            'fedora-40',
         ],
     },
     'cockpit-project/cockpit-machines': {
