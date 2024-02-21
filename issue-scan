@@ -124,25 +124,23 @@ def output_task(command, issue, repo, verbose):
         return None
 
     context = context.strip()
-    checkout = "PRIORITY={priority:04d} "
 
     cmd = "./{name} --verbose --issue='{issue}' {context}"
 
     # `--issues-data` should also be able to receive pull_request events, in that
     # case pull_request won't be present in the object, but commits will be
     if "pull_request" in issue or "commits" in issue:
-        checkout += "./make-checkout --verbose --repo {repo} pull/{issue}/head && "
+        checkout = "./make-checkout --verbose --repo {repo} pull/{issue}/head && "
     else:
-        checkout += "./make-checkout --verbose --repo {repo} {repo_default_branch} && "
+        checkout = "./make-checkout --verbose --repo {repo} {repo_default_branch} && "
 
     if verbose:
-        return f"issue-{int(number)} {name} {context}    {distributed_queue.MAX_PRIORITY}"
+        return f"issue-{int(number)} {name} {context}"
     else:
         if context:
             context = shlex.quote(context)
         return (checkout + "cd make-checkout-workdir && " + cmd + " ; cd ..").format(
             issue=int(number),
-            priority=distributed_queue.MAX_PRIORITY,
             name=name,
             context=context,
             repo=repo,
