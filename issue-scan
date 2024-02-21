@@ -22,6 +22,7 @@ import json
 import logging
 import shlex
 import sys
+import time
 
 from lib import ALLOWLIST, testmap
 from task import distributed_queue, github, labels_of_pull
@@ -126,19 +127,25 @@ def output_task(command, issue, repo, verbose):
 
     context = shlex.quote(context.strip())
 
+    api = github.GitHub(repo=repo)
+
     # `--issues-data` should also be able to receive pull_request events, in that
     # case pull_request won't be present in the object, but commits will be
     if "pull_request" in issue or "commits" in issue:
         ref = f"pull/{number}/head"
+        sha = api.get(f"git/ref/{ref}")["object"]["sha"]
     else:
         ref = testmap.get_default_branch(repo)
+        sha = api.get(f"git/ref/heads/{ref}")["object"]["sha"]
 
     if verbose:
         return f"issue-{number} {name} {context} {ref}"
 
-    cmd = f"./make-checkout --verbose --repo {repo} {ref} && cd make-checkout-workdir && "
-    cmd += f"./{name} --verbose --issue={number} {context}; "
-    cmd += "cd .."
+    current = time.strftime('%Y%m%d-%H%M%S')
+    cmd = f"./s3-streamer --repo {repo} --test-name {name}-{context}-{current} " \
+        f"--github-context {name}/{context} --revision {sha} -- sh -exc '"
+    cmd += f"./make-checkout --verbose --repo {repo} {ref}; cd make-checkout-workdir; "
+    cmd += f"./{name} --verbose --issue={number} {context}'"
 
     return cmd
 

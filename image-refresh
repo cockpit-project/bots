@@ -2,7 +2,7 @@
 
 # This file is part of Cockpit.
 #
-# Copyright (C) 2016 Red Hat, Inc.
+# Copyright (C) 2016-2024 Red Hat, Inc.
 #
 # Cockpit is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
@@ -17,56 +17,62 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import json
 import os
+import shlex
 import subprocess
 import sys
-import time
-import urllib.parse
+from typing import Any
 
 import task
-from lib import s3, stores, testmap
+from lib import testmap
 from lib.constants import BOTS_DIR, SCRIPTS_DIR
 
 sys.dont_write_bytecode = True
 
 
-def run(image, verbose=False, **kwargs):
-    if not image:
-        raise RuntimeError("no image specified")
+def run(*cmd, check: bool = True, **kwargs) -> int:
+    print('\n+', shlex.join(cmd), file=sys.stderr)
+    result = subprocess.run(cmd, **kwargs, check=check)
+    return result.returncode
 
-    triggers = testmap.tests_for_image(image)
 
-    # Cleanup any extraneous disk usage elsewhere
-    subprocess.check_call([os.path.join(BOTS_DIR, "vm-reset")])
+def with_logs(n: int, log_url: str | None) -> int | tuple[int, str]:
+    if log_url:
+        return n, log_url
+    return n
 
-    # download the current image, for comparing them; that may not exist yet for newly introduced images
-    if subprocess.call([os.path.join(BOTS_DIR, "image-download"), image]) == 0:
-        old_image = os.path.realpath(os.path.join(BOTS_DIR, "images", image))
-    else:
-        old_image = None
 
-    # create the new image
-    cmd = [os.path.join(BOTS_DIR, "image-create"), "--verbose", "--capture-console", "--upload", image]
-    os.environ['VIRT_BUILDER_NO_CACHE'] = "yes"
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    log = result.stdout
-    if result.returncode == 0:
+def image_refresh(image: str, **kwargs: Any):
+    try:
+        log_url = os.environ.get('COCKPIT_CI_LOG_URL')
+
+        dry_run: bool = kwargs['dry']
+        triggers = testmap.tests_for_image(image)
+
+        # Cleanup any extraneous disk usage elsewhere
+        run('./vm-reset')
+
+        # download the current image, for comparing them; that may not exist yet for newly introduced images
+        if run('./image-download', image, check=False) == 0:
+            old_image = f'{BOTS_DIR}/images/{image}'
+        else:
+            old_image = None
+
+        # create the new image
+        run('./image-create', '--verbose', '--capture-console', image,
+            env={**os.environ, 'VIRT_BUILDER_NO_CACHE': "yes"})
+
+        # upload the new image
+        if dry_run:
+            task.would('./image-upload', '--prune-s3', image)
+        else:
+            run('./image-upload', '--prune-s3', image)
+
         # compare it to the previous one (on hosts we can ssh to)
-        if old_image and os.path.exists(os.path.join(SCRIPTS_DIR, image + '.setup')):
-            result = subprocess.run([os.path.join(BOTS_DIR, "image-diff"), old_image, image],
-                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            log += result.stdout
+        if old_image and os.path.exists(f'{SCRIPTS_DIR}/{image}.setup'):
+            run('./image-diff', old_image, image)
 
-    # upload the log to S3
-    log_url = os.path.join(
-        os.getenv('S3_LOGS_URL', stores.LOG_STORE),
-        f"image-refresh-logs/{image}-{time.strftime('%Y%m%d-%H%M%M')}.log"
-    )
-    with s3.urlopen(urllib.parse.urlparse(log_url), data=log, method="PUT",
-                    headers={"Content-Type": "text/plain", s3.ACL: s3.PUBLIC}):
-        pass
-
-    if result.returncode == 0:
         # create branch and push it
         branch = task.branch(image, f"images: Update {image} image", pathspec="images", **kwargs)
 
@@ -74,15 +80,36 @@ def run(image, verbose=False, **kwargs):
         if branch and "pull" not in kwargs:
             pull = task.pull(branch, labels=['bot', 'no-test'], run_tests=False, **kwargs)
 
-            # Trigger this pull request
-            api = task.github.GitHub()
-            head = pull["head"]["sha"]
-            for trigger in triggers:
-                api.post(f"statuses/{head}", {"state": "pending", "context": trigger,
-                                                       "description": task.github.NOT_TESTED_DIRECT})
+            if log_url:
+                # Create a synthetic status for the log URL
+                log_status = {
+                    'state': 'success',
+                    'context': f'image-refresh/{image}',
+                    'description': 'Forwarded status',
+                    'target_url': log_url
+                }
+                if dry_run:
+                    task.would('add status', json.dumps(log_status, indent=4))
+                else:
+                    task.api.post(f"statuses/{pull['head']['sha']}", log_status)
 
-    return (result.returncode, log_url)
+            # Trigger this pull request
+            if dry_run:
+                task.would('trigger tests:', json.dumps(triggers, indent=4))
+            else:
+                head = pull["head"]["sha"]
+                for trigger in triggers:
+                    task.api.post(f"statuses/{head}", {
+                        "state": "pending",
+                        "context": trigger,
+                        "description": task.github.NOT_TESTED_DIRECT
+                    })
+
+    except subprocess.CalledProcessError as exc:
+        return with_logs(exc.returncode, log_url)
+    else:
+        return with_logs(0, log_url)
 
 
 if __name__ == '__main__':
-    task.main(function=run, title="Refresh image")
+    task.main(function=image_refresh, title="Refresh image")
