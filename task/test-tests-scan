@@ -43,7 +43,7 @@ GITHUB_DATA = {
         "title": "PR title",
         "number": 1,
         "body": "This is the body",
-        "base": {"ref": "abcdef"},
+        "base": {"ref": "stable-1.0"},
         "head": {"sha": "abcdef", "user": {"login": "cockpit-project"}},
         "labels": [],
     },
@@ -116,8 +116,8 @@ class TestTestsScan(unittest.TestCase):
     def expected_command(self):
         return (f"./s3-streamer --repo {self.repo} --test-name pull-{self.pull_number}-\\d+-\\d+"
                 f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
-                f" \"PRIORITY=0005 ./make-checkout --verbose --repo={self.repo} {self.revision}"
-                f" && cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH={self.revision}"
+                f" \"PRIORITY=0005 ./make-checkout --verbose --repo={self.repo} --rebase=stable-1.0 {self.revision}"
+                f" && cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=stable-1.0"
                 " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke --pull-number"
                 f" {self.pull_number} --revision {self.revision} --repo {self.repo}\"")
 
@@ -125,7 +125,7 @@ class TestTestsScan(unittest.TestCase):
         if pull_number is None:
             pull_number = self.pull_number
         return (f"pull-{pull_number}      {self.context}            {self.revision}"
-                f"     5.99999  ({self.repo}) [bots@main]")
+                f"     5.99999  ({self.repo}) [bots@main]   {{stable-1.0}}")
 
     def test_pull_number(self):
         args = ["--dry", "--repo", self.repo, "--pull-number", self.pull_number,
