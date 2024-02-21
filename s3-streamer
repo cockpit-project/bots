@@ -302,7 +302,12 @@ def main() -> None:
         index = Index(destination)
         attachments_directory = AttachmentsDirectory(index, tmpdir)
         log_uploader = ChunkedUploader(index, 'log')
-        env = dict(os.environ, TEST_ATTACHMENTS=tmpdir, TEST_ATTACHMENTS_URL=destination.directory)
+        env = {
+            **os.environ,
+            'TEST_ATTACHMENTS': tmpdir,
+            'TEST_ATTACHMENTS_URL': destination.directory,
+            'COCKPIT_CI_LOG_URL': destination.directory + 'log.html'
+        }
 
         with subprocess.Popen(args.cmd, env=env,
                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
