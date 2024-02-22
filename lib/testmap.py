@@ -218,7 +218,7 @@ REPO_BRANCH_CONTEXT = {
         '_manual': [
             'rhel-9-4',
             'centos-8-stream',
-            'fedora-39',
+            'fedora-40',
         ]
     },
     'rhinstaller/anaconda-webui': {
