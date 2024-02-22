@@ -398,12 +398,6 @@ class GitHub(object):
             result = result + issues
         return result
 
-    def has_open_prs(self, sha):
-        pulls = self.get(f"commits/{sha}/pulls")
-        if pulls:
-            return any((pull['state'] == 'open' for pull in pulls))
-        return True
-
     def getHead(self, pr):
         pull = self.get(f"pulls/{pr}")
         if pull:
