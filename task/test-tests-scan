@@ -201,8 +201,8 @@ class TestTestsScan(unittest.TestCase):
         proc, output, stderr = self.run_tests_scan(args)
         expected_output = (f"./s3-streamer --repo {repo} --test-name pull-\\d+-\\d+-\\d+"
                            f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
-                           f" \"PRIORITY=0006 ./make-checkout --verbose --repo={repo} --rebase=main {self.revision}"
-                           f" && cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=main"
+                           f" \"PRIORITY=0006 ./make-checkout --verbose --repo={repo} {self.revision}"
+                           f" && cd make-checkout-workdir && TEST_OS=fedora"
                            " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke"
                            f" --revision {self.revision} --repo {repo}\"")
 
@@ -216,7 +216,7 @@ class TestTestsScan(unittest.TestCase):
                 "--context", self.context, "-v"]
         proc, output, stderr = self.run_tests_scan(args)
         expected_output = (f"pull-0      {self.context}            {self.revision}"
-                           f"     6.0  ({repo}) [bots@main]   {{main}}")
+                           f"     6.0  ({repo}) [bots@main]")
 
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(output.strip(), expected_output)
