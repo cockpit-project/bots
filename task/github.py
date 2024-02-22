@@ -402,7 +402,7 @@ class GitHub(object):
         pulls = self.get(f"commits/{sha}/pulls")
         if pulls:
             return any((pull['state'] == 'open' for pull in pulls))
-        return True
+        return False
 
     def getHead(self, pr):
         pull = self.get(f"pulls/{pr}")
