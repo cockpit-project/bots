@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eux
+
+URL='https://download.opensuse.org/tumbleweed/appliances/'
+IMAGE="openSUSE-Tumbleweed-Minimal-VM.x86_64-Cloud.qcow2"
+
+exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL/$IMAGE"
