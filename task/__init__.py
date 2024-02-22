@@ -395,7 +395,7 @@ def labels_of_pull(pull):
     return [label["name"] for label in pull["labels"]]
 
 
-def comment(issue, comment, dry: bool = False) -> dict[str, object]:
+def comment(issue, comment, dry: bool = False) -> 'dict[str, object]':
     try:
         number = issue["number"]
     except TypeError:
