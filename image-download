@@ -135,7 +135,8 @@ def download(dest, force, state, quiet, stores):
         stores = PUBLIC_STORES
         if redhat_network():
             stores += REDHAT_STORES
-        if image_upload_store := os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE'):
+        image_upload_store = os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE')
+        if image_upload_store:
             # NB: This is an *addition* to the built-in stores, used for
             # testing.  Compare with image-upload which *only* uploads to this
             # store, if it's present.
