@@ -73,7 +73,7 @@ def main():
     parser.add_argument('--pull-data', default=None,
                         help='pull_request event GitHub JSON data to evaluate; mutualy exclusive with -p and -s')
     parser.add_argument('-s', '--sha', default=None,
-                        help='SHA to scan for tasks')
+                        help='Trigger for a specific SHA; file issue on failure if SHA is not on a PR')
     parser.add_argument('--amqp', default=None,
                         help='The host:port of the AMQP server to publish to (format host:port)')
 
@@ -303,21 +303,28 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             pulls.append(pull)
         else:
             sys.exit(f"Can't find pull request {opts.pull_number}")
-    elif opts.sha and not api.has_open_prs(opts.sha):
-        logging.info("Processing revision %s without pull request", opts.sha)
-        pulls.append({
-            "title": f"{opts.sha}",
-            "number": 0,
-            "head": {
-                "sha": opts.sha,
-                "user": {
-                    "login": "cockpit-project"
-                }
-            },
-            "labels": [],
-        })
     else:
         pulls = api.pulls()
+
+    # Find matching PR for --sha
+    if opts.sha:
+        for pull in pulls:
+            if pull["head"]["sha"].startswith(opts.sha):
+                pulls = [pull]
+                break
+        else:
+            logging.info("Processing revision %s without pull request", opts.sha)
+            pulls = [{
+                "title": f"{opts.sha}",
+                "number": 0,
+                "head": {
+                    "sha": opts.sha,
+                    "user": {
+                        "login": "cockpit-project"
+                    }
+                },
+                "labels": [],
+            }]
 
     for pull in pulls:
         title = pull["title"]
@@ -331,10 +338,6 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
         allowed = login in ALLOWLIST
 
         logging.info("Processing #%s titled '%s' on revision %s", number, title, revision)
-
-        # If sha is present only scan PR with selected sha
-        if opts.sha and revision != opts.sha and not revision.startswith(opts.sha):
-            continue
 
         labels = labels_of_pull(pull)
 
