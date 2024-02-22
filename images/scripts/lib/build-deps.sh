@@ -23,7 +23,11 @@ case "$OS_VER" in
     rhel*8|centos*8)
         spec=$($GET "$COCKPIT_GIT/rhel-8/tools/cockpit.spec")
         ;;
-
+    *suse*)
+        # macro for determining suse version is %suse_version
+        spec=$($GET "$COCKPIT_GIT/main/tools/cockpit.spec")
+        OS_VER_NO_VARIANT="suse_version $(awk '/%suse_version/{ print $2 }' /usr/lib/rpm/suse/macros)"
+        ;;
     *)
         spec=$($GET "$COCKPIT_GIT/main/tools/cockpit.spec")
         ;;
@@ -37,7 +41,14 @@ echo "$spec" | rpmspec -D "$OS_VER_NO_VARIANT" -D 'version 0' -D 'enable_old_bri
 # - gettext to build/merge GNU gettext translations
 # - desktop-file-utils for validating desktop files
 # - nodejs for starter-kit and other projects which rebuild webpack during RPM build
-EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs"
+case "$OS_VER" in
+    *suse*)
+        EXTRA_DEPS="appstream-glib rpmlint gettext-runtime desktop-file-utils nodejs"
+        ;;
+    *)
+        EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs-default"
+        ;;
+esac
 
 # TEMP: cockpit needs python3-devel to select the default Python version
 EXTRA_DEPS="$EXTRA_DEPS python3-devel"

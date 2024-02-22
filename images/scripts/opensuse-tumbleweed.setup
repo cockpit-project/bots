@@ -1,0 +1,131 @@
+#!/bin/bash
+
+set -ex
+IMAGE="$1"
+
+. /etc/os-release
+
+# avoid failures when running image builds in a non-English locale (ssh transfers the host environment)
+unset LANGUAGE
+unset LANG
+export LC_ALL=C.utf8
+
+# make libpwquality less aggressive, so that our "foobar" password works
+printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
+
+. /etc/os-release
+# We install all dependencies of the cockpit packages since we want
+# them to not spontaneously change from one test run to the next when
+# the distribution repository is updated.
+#
+COCKPIT_DEPS="\
+criu \
+device-mapper \
+glibc-locale \
+glib-networking \
+json-glib \
+kexec-tools \
+libssh2-1 \
+libvirt-daemon-config-network \
+libvirt-daemon-driver-qemu \
+libvirt-daemon-driver-network \
+libvirt-daemon-driver-nodedev \
+libvirt-daemon-driver-storage-core \
+libvirt-daemon-driver-interface \
+libvirt-daemon-driver-storage-disk \
+libvirt-client \
+libvirt-dbus \
+openssl \
+PackageKit \
+pcp \
+pcp-devel \
+python3-pip \
+qemu-block-curl \
+qemu-chardev-spice \
+qemu-hw-usb-host \
+qemu-hw-usb-redirect \
+qemu-kvm \
+realmd \
+tuned \
+virt-install \
+udisks2 \
+libudisks2-0_lvm2 \
+"
+
+TEST_PACKAGES="\
+acl \
+ansible-core \
+clevis-luks \
+cryptsetup \
+firewalld \
+gdb \
+gettext \
+libvirt-daemon-driver-storage-iscsi \
+libvirt-daemon-driver-storage-iscsi-direct \
+libvirt-daemon-driver-storage-logical \
+ltrace \
+nginx \
+podman \
+redis \
+socat \
+strace \
+targetcli \
+tcsh \
+bzip2 \
+rpm-build \
+rpm-config-SUSE \
+"
+
+NETWORK_PACKAGES="\
+systemd-network \
+"
+
+# avoid NM-wait-online hanging on disconnected interfaces
+mkdir -p /etc/NetworkManager/conf.d/
+printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
+
+# our cloud-init.iso does not set up the host name
+
+echo "127.0.1.1 $(hostname)" >> /etc/hosts
+
+if ! getent passwd admin >/dev/null; then
+    useradd -c Administrator admin
+    echo admin:foobar | chpasswd
+fi
+
+if [ "${IMAGE%-i386}" != "$IMAGE" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES/podman /}"
+fi
+
+
+zypper dup -y
+zypper install -y $TEST_PACKAGES $COCKPIT_DEPS $BUILD_PACKAGES $NETWORK_PACKAGES
+
+
+# Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
+zypper install -y cockpit
+
+zypper addrepo https://download.opensuse.org/repositories/system:packagemanager/openSUSE_Tumbleweed/system:packagemanager.repo
+zypper --non-interactive --gpg-auto-import-keys  refresh
+zypper install -y mock mock-core-configs sudo
+
+echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/90-cockpit-wheel
+echo "builder ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-susebuild
+useradd -c Builder -G mock builder
+
+su builder -c "sudo mock --verbose -i $(/var/lib/testvm/build-deps.sh "${ID} ${VERSION_ID}")"
+
+# Prevent SSH from hanging for a long time when no external network access
+echo 'UseDNS no' >> /etc/ssh/sshd_config
+
+# Audit events to the journal
+rm -f '/etc/systemd/system/multi-user.target.wants/auditd.service'
+rm -rf /var/log/audit/
+
+systemctl enable --now systemd-networkd.service
+
+echo root:foobar | chpasswd
+
+# reduce image size
+zypper clean
+/var/lib/testvm/zero-disk.setup
