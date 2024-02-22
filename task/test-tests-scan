@@ -44,10 +44,12 @@ GITHUB_DATA = {
     "/repos/project/repo/pulls/1": {
         "title": "PR title",
         "number": 1,
+        "state": "open",
         "body": "This is the body",
         "base": {"ref": "stable-1.0"},
         "head": {"sha": "abcdef", "user": {"login": "cockpit-project"}},
         "labels": [],
+        "updated_at": 0,
     },
     "/repos/project/repo/commits/abcdef/status?page=1&per_page=100": {
         "state": "pending",
@@ -55,7 +57,6 @@ GITHUB_DATA = {
         "sha": "abcdef",
     },
     "/repos/cockpit-project/cockpit/commits/abcdef/pulls": [{"state": "closed"}],
-    "/repos/cockpit-project/cockpit/commits/abcdef2/pulls": [{"state": "open"}],
     # HACK: we can't change the test map dynamically when invoked via test-scan
     "/repos/cockpit-project/cockpit/commits/abcdef/status?page=1&per_page=100": {
         "state": "pending",
@@ -63,7 +64,6 @@ GITHUB_DATA = {
         "sha": "abcdef",
     },
     # SHA without a PR
-    "/repos/project/repo/commits/9988aa/pulls": [],
     "/repos/project/repo/commits/9988aa/status?page=1&per_page=100": {
         "state": "pending",
         "statuses": [],
@@ -387,33 +387,8 @@ class TestTestsScan(unittest.TestCase):
     def test_tests_invoke_slash(self):
         self.do_test_tests_invoke("https://example.org/dir/", "https://example.org/dir/log.html")
 
-    def test_tests_invoke_no_issue_for_nonexisting_sha(self):
-        repo = "cockpit-project/cockpit"
-        # sha/pulls API fails for this SHA (404), which happens if the PR is for a fork
-        revision = "abcdef1"
-        args = ["--revision", revision, "--repo", repo]
-        script = os.path.join(BOTS_DIR, "tests-invoke")
-        with tempfile.TemporaryDirectory() as tempdir:
-            testdir = f"{tempdir}/.cockpit-ci"
-            os.makedirs(testdir)
-            with open(f"{testdir}/run", "w") as fp:
-                fp.write("#!/bin/bash\nexit 1")
-            os.system(f"chmod +x {testdir}/run")
-            proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
-                                    env={**os.environ, "TEST_INVOKE_SLEEP": "1"},
-                                    cwd=tempdir)
-            output, stderr = proc.communicate()
-            api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/")
-            issues = api.get("issues")
-            self.assertEqual(output, "")
-            self.assertEqual(proc.returncode, 1)
-            self.assertEqual(len(issues), 0)
-            self.assertIsNone(stderr)
-
-    def test_tests_invoke_no_issue_for_open_pr(self):
-        repo = "cockpit-project/cockpit"
-        revision = "abcdef2"
-        args = ["--revision", revision, "--repo", repo]
+    def test_tests_invoke_no_issue_for_pr(self):
+        args = ["--pull-number", "1", "--revision", self.revision, "--repo", self.repo]
         script = os.path.join(BOTS_DIR, "tests-invoke")
         with tempfile.TemporaryDirectory() as tempdir:
             testdir = f"{tempdir}/.cockpit-ci"
