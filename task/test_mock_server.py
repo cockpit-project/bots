@@ -22,21 +22,26 @@ import json
 import multiprocessing
 
 
-class MockServer(http.server.HTTPServer):
+class MockServer():
     def __init__(self, address, handler, data=None):
         self.address = address
         self.handler = handler
         self.data = data
-        self.reply_count: int = 0
-        super(MockServer, self).__init__(address, handler)
+
+    def run(self):
+        srv = http.server.HTTPServer(self.address, self.handler)
+        srv.data = self.data
+        srv.reply_count: int = 0
+        srv.serve_forever()
 
     def start(self):
-        self.process = multiprocessing.Process(target=self.serve_forever)
+        self.process = multiprocessing.Process(target=self.run)
         self.process.start()
 
     def kill(self):
         self.process.terminate()
         self.process.join()
+        assert self.process.exitcode is not None
 
 
 class MockHandler(http.server.BaseHTTPRequestHandler):
