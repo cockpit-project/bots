@@ -44,6 +44,9 @@ def main():
     def detect_collisions(opts):
         nonlocal last_updated_at
 
+        if opts.pull_number is None:
+            return None
+
         api = github.GitHub(repo=opts.repo)
 
         try:
@@ -79,7 +82,8 @@ def main():
         cmd = ["timeout", "120m", entry_point]
 
         os.environ["TEST_REVISION"] = opts.revision
-        os.environ["TEST_PULL"] = str(opts.pull_number)
+        if opts.pull_number is not None:
+            os.environ["TEST_PULL"] = str(opts.pull_number)
 
         collision_detected = False
         p = subprocess.Popen(cmd)
