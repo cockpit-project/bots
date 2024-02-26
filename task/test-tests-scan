@@ -54,6 +54,8 @@ GITHUB_DATA = {
         "statuses": [],
         "sha": "abcdef",
     },
+    "/repos/cockpit-project/cockpit/commits/abcdef/pulls": [{"state": "closed"}],
+    "/repos/cockpit-project/cockpit/commits/abcdef2/pulls": [{"state": "open"}],
     # HACK: we can't change the test map dynamically when invoked via test-scan
     "/repos/cockpit-project/cockpit/commits/abcdef/status?page=1&per_page=100": {
         "state": "pending",
@@ -75,14 +77,8 @@ class Handler(MockHandler):
     def do_GET(self):
         if self.path in self.server.data:
             self.replyJson(self.server.data[self.path])
-        elif self.path.startswith('/repos/project/repo/pulls/2'):
-            self.replyJson([])
-        elif self.path.startswith('/repos/project/repo/pulls'):
+        elif self.path.startswith('/repos/project/repo/pulls?'):
             self.replyJson([self.server.data['/repos/project/repo/pulls/1']])
-        elif self.path == "/repos/cockpit-project/cockpit/commits/abcdef/pulls":
-            self.replyJson([{"state": "closed"}])
-        elif self.path == "/repos/cockpit-project/cockpit/commits/abcdef2/pulls":
-            self.replyJson([{"state": "open"}])
         elif self.path.endswith("/issues"):
             issues = self.server.data.get('issues', [])
             self.replyJson(issues)
