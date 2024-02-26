@@ -284,7 +284,8 @@ class TestTestsScan(unittest.TestCase):
     # mock time for predictable test name
     @unittest.mock.patch("time.strftime", return_value="20240102-030405")
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def disabled_test_amqp_sha(self, mock_queue, _mock_strftime):
+    @unittest.expectedFailure
+    def test_amqp_sha(self, mock_queue, _mock_strftime):
         """Simulate nightly test on main branch"""
 
         # SHA without PR
