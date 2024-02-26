@@ -353,8 +353,9 @@ class TestTestsScan(unittest.TestCase):
     def test_tests_invoke_slash(self):
         self.do_test_tests_invoke("https://example.org/dir/", "https://example.org/dir/log.html")
 
-    def disabled_test_tests_invoke_no_issue(self):
+    def test_tests_invoke_no_issue_for_nonexisting_sha(self):
         repo = "cockpit-project/cockpit"
+        # sha/pulls API fails for this SHA (404), which happens if the PR is for a fork
         revision = "abcdef1"
         args = ["--revision", revision, "--repo", repo]
         script = os.path.join(BOTS_DIR, "tests-invoke")
@@ -375,7 +376,7 @@ class TestTestsScan(unittest.TestCase):
             self.assertEqual(len(issues), 0)
             self.assertIsNone(stderr)
 
-    def disabled_test_tests_invoke_open_pr(self):
+    def test_tests_invoke_no_issue_for_open_pr(self):
         repo = "cockpit-project/cockpit"
         revision = "abcdef2"
         args = ["--revision", revision, "--repo", repo]
