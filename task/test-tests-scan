@@ -285,8 +285,8 @@ class TestTestsScan(unittest.TestCase):
     @unittest.mock.patch("time.strftime", return_value="20240102-030405")
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
     @unittest.expectedFailure
-    def test_amqp_sha(self, mock_queue, _mock_strftime):
-        """Simulate nightly test on main branch"""
+    def test_amqp_sha_nightly(self, mock_queue, _mock_strftime):
+        """Nightly test on main branch, without PR"""
 
         # SHA without PR
         args = ["tests-scan", "--dry", "--repo", self.repo, "--context", self.context,
@@ -318,6 +318,43 @@ class TestTestsScan(unittest.TestCase):
             "name": "pull-0",
             # project/repo doesn't have a custom container name file
             "container": None,
+        })
+
+    # mock time for predictable test name
+    @unittest.mock.patch("time.strftime", return_value="20240102-030405")
+    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    def test_amqp_sha_pr(self, mock_queue, _mock_strftime):
+        """Status event on PR, via human tests-trigger"""
+
+        # SHA is attached to PR #1
+        args = ["tests-scan", "--dry", "--repo", self.repo, "--context", self.context,
+                "--sha", "abcdef", "--amqp", "amqp.example.com:1234"]
+
+        with unittest.mock.patch("sys.argv", args):
+            # needs to be in-process for mocking
+            self.get_tests_scan_module().main()
+
+        mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
+        channel = mock_queue.return_value.__enter__.return_value.channel
+
+        channel.basic_publish.assert_called_once()
+        self.assertEqual(channel.basic_publish.call_args[0][0], "")
+        self.assertEqual(channel.basic_publish.call_args[0][1], "public")
+        request = json.loads(channel.basic_publish.call_args[0][2])
+
+        expected_command = (
+            './s3-streamer --repo project/repo --test-name pull-1-20240102-030405 '
+            '--github-context fedora/nightly --revision abcdef -- /bin/sh -c "PRIORITY=0005 '
+            './make-checkout --verbose --repo=project/repo --rebase=stable-1.0 abcdef && '
+            'cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=stable-1.0 COCKPIT_BOTS_REF=main '
+            'TEST_SCENARIO=nightly ../tests-invoke --pull-number 1 --revision abcdef --repo project/repo"')
+        self.assertEqual(request, {
+            "command": expected_command,
+            "type": "test",
+            "sha": "abcdef",
+            "ref": "abcdef",
+            "name": "pull-1",
+            "container": "supertasks",
         })
 
     def do_test_tests_invoke(self, attachments_url, expected_logs_url):
