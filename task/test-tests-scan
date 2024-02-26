@@ -104,12 +104,15 @@ class Handler(MockHandler):
 class TestTestsScan(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.mkdtemp()
+        self.cache_dir = os.path.join(self.temp, "cache")
+        os.environ["XDG_CACHE_HOME"] = self.cache_dir
         self.server = MockServer(ADDRESS, Handler, GITHUB_DATA)
         self.server.start()
         self.repo = "project/repo"
         self.pull_number = "1"
         self.context = "fedora/nightly"
         self.revision = "abcdef"
+        os.environ["GITHUB_API"] = f"http://{ADDRESS[0]}:{ADDRESS[1]}"
 
     def tearDown(self):
         self.server.kill()
@@ -117,8 +120,7 @@ class TestTestsScan(unittest.TestCase):
 
     def run_tests_scan(self, args):
         script = os.path.join(BOTS_DIR, "tests-scan")
-        proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
-                                env={"GITHUB_API": f"http://{ADDRESS[0]}:{ADDRESS[1]}"})
+        proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True)
         output, stderr = proc.communicate()
         return proc, output, stderr
 
@@ -237,7 +239,6 @@ class TestTestsScan(unittest.TestCase):
 
         This is useful for mocking.
         """
-        os.environ["GITHUB_API"] = f"http://{ADDRESS[0]}:{ADDRESS[1]}"
         loader = importlib.machinery.SourceFileLoader("tests_scan", os.path.join(BOTS_DIR, "tests-scan"))
         spec = importlib.util.spec_from_loader(loader.name, loader)
         module = importlib.util.module_from_spec(spec)
@@ -329,7 +330,7 @@ class TestTestsScan(unittest.TestCase):
                 fp.write("#!/bin/bash\nexit 1")
             os.system(f"chmod +x {testdir}/run")
             proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
-                                    env={"GITHUB_API": f"http://{ADDRESS[0]}:{ADDRESS[1]}",
+                                    env={**os.environ,
                                          "TEST_INVOKE_SLEEP": "1", "TEST_OS": "fedora-38",
                                          "TEST_ATTACHMENTS_URL": attachments_url},
                                     cwd=tempdir)
@@ -364,8 +365,7 @@ class TestTestsScan(unittest.TestCase):
                 fp.write("#!/bin/bash\nexit 1")
             os.system(f"chmod +x {testdir}/run")
             proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
-                                    env={"GITHUB_API": f"http://{ADDRESS[0]}:{ADDRESS[1]}",
-                                         "TEST_INVOKE_SLEEP": "1"},
+                                    env={**os.environ, "TEST_INVOKE_SLEEP": "1"},
                                     cwd=tempdir)
             output, stderr = proc.communicate()
             api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/")
@@ -387,8 +387,7 @@ class TestTestsScan(unittest.TestCase):
                 fp.write("#!/bin/bash\nexit 1")
             os.system(f"chmod +x {testdir}/run")
             proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
-                                    env={"GITHUB_API": f"http://{ADDRESS[0]}:{ADDRESS[1]}",
-                                         "TEST_INVOKE_SLEEP": "1"},
+                                    env={**os.environ, "TEST_INVOKE_SLEEP": "1"},
                                     cwd=tempdir)
             output, stderr = proc.communicate()
             api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/")
