@@ -174,6 +174,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-4',
             'fedora-38',
             'fedora-39',
+            'fedora-40',
         ],
         'subscription-manager-1.28': [
             'rhel-8-4',
@@ -204,6 +205,7 @@ REPO_BRANCH_CONTEXT = {
             'rhel-9-4',
             'fedora-38',
             'fedora-39',
+            'fedora-40',
         ],
         '_manual': [
         ],
