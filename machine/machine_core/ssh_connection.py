@@ -437,7 +437,7 @@ class SSHConnection(object):
 
         Arguments:
            shell_cmd: The string to execute by /bin/sh.
-           log_id: The name of the file, realtive to /var/log on the test
+           log_id: The name of the file, relative to /var/log on the test
               machine, that will receive stdout and stderr of the command.
         Returns:
             The pid of the /bin/sh process that executes the command.
