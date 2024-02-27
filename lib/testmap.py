@@ -41,7 +41,6 @@ REPO_BRANCH_CONTEXT = {
             *contexts('debian-testing', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2204', COCKPIT_SCENARIOS),
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
-            *contexts('fedora-38', COCKPIT_SCENARIOS),
             *contexts('fedora-39', COCKPIT_SCENARIOS),
             *contexts('fedora-40', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
@@ -90,7 +89,6 @@ REPO_BRANCH_CONTEXT = {
             'rhel-8-10',
             'rhel-9-4',
             'rhel4edge',
-            'fedora-38',
             'fedora-39',
             'fedora-40',
             f'{TEST_OS_DEFAULT}/devel',
@@ -112,7 +110,6 @@ REPO_BRANCH_CONTEXT = {
             'debian-testing',
             'ubuntu-2204',
             'ubuntu-stable',
-            'fedora-38',
             'fedora-39',
             'fedora-40',
             f'{TEST_OS_DEFAULT}/devel',
@@ -129,7 +126,6 @@ REPO_BRANCH_CONTEXT = {
         'main': [
             'arch',
             'debian-testing',
-            'fedora-38',
             'fedora-39',
             'fedora-40',
             f'{TEST_OS_DEFAULT}/devel',
@@ -210,7 +206,6 @@ REPO_BRANCH_CONTEXT = {
     },
     'cockpit-project/cockpit-certificates': {
         'master': [
-            'fedora-38',
             'fedora-39',
             'fedora-40',
         ],
