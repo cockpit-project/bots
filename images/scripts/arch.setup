@@ -28,10 +28,13 @@ packagekit \
 libvirt \
 libvirt-python \
 libvirt-dbus \
+libblockdev-mdraid \
 libpwquality \
 tracer
 virt-install \
 udisks2 \
+udisks2-btrfs \
+udisks2-lvm2 \
 devtools \
 "
 
