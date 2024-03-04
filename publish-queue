@@ -26,11 +26,11 @@ from task import distributed_queue
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Publish a command (read from stdin) to an AMQP task queue')
+    parser = argparse.ArgumentParser(description='Publish stdin data to an AMQP task queue')
     parser.add_argument('-q', '--queue', required=True,
-                        help='Queue name where to submit the command')
+                        help='Queue name')
     parser.add_argument('--amqp', default=distributed_queue.DEFAULT_AMQP_SERVER,
-                        help='The host:port of the AMQP server to consume from (default: %(default)s)')
+                        help='The host:port of the AMQP server to publish to (default: %(default)s)')
     parser.add_argument('--secrets-dir', default=distributed_queue.DEFAULT_SECRETS_DIR,
                         help='Directory with ca.pem and amqp-client.{pem,key} (default: %(default)s)')
     parser.add_argument('--create', action='store_true',
@@ -39,8 +39,8 @@ def main():
 
     with distributed_queue.DistributedQueue(opts.amqp, [opts.queue], secrets_dir=opts.secrets_dir,
                                             passive=not opts.create) as q:
-        command = sys.stdin.read().strip()
-        q.channel.basic_publish('', opts.queue, body='{"command": "%s"}' % command,
+        body = sys.stdin.read().strip()
+        q.channel.basic_publish('', opts.queue, body=body,
                                 properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
 
     return 0
