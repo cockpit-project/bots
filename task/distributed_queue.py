@@ -92,19 +92,25 @@ class DistributedQueue(object):
                 if os.path.isdir(user_secrets):
                     secrets_dir = user_secrets
 
-        try:
-            host, port = amqp_server.split(':')
-        except ValueError:
-            raise ValueError('Please format amqp_server as host:port')
-        context = ssl.create_default_context(cafile=os.path.join(secrets_dir, 'ca.pem'))
-        context.load_cert_chain(keyfile=os.path.join(secrets_dir, 'amqp-client.key'),
-                                certfile=os.path.join(secrets_dir, 'amqp-client.pem'))
-        context.check_hostname = False
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host=host,
-            port=int(port),
-            ssl_options=pika.SSLOptions(context, server_hostname=host),
-            credentials=pika.credentials.ExternalCredentials()))
+        if amqp_server == 'localhost':
+            params = pika.ConnectionParameters(
+                'localhost', 5672, credentials=pika.credentials.PlainCredentials('guest', 'guest')
+            )
+        else:
+            try:
+                host, port = amqp_server.split(':')
+            except ValueError:
+                raise ValueError('Please format amqp_server as host:port')
+
+            context = ssl.create_default_context(cafile=os.path.join(secrets_dir, 'ca.pem'))
+            context.load_cert_chain(keyfile=os.path.join(secrets_dir, 'amqp-client.key'),
+                                    certfile=os.path.join(secrets_dir, 'amqp-client.pem'))
+            context.check_hostname = False
+            params = pika.ConnectionParameters(host, int(port),
+                                               ssl_options=pika.SSLOptions(context, server_hostname=host),
+                                               credentials=pika.credentials.ExternalCredentials())
+
+        self.connection = pika.BlockingConnection(params)
         self.channel = self.connection.channel()
         self.declare_results = {}
 
