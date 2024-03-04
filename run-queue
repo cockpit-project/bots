@@ -119,7 +119,11 @@ def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result
         return None, None
 
     body = json.loads(body)
-    return body['command'], method_frame.delivery_tag
+    if job := body.get('job'):
+        command = ['./job-runner', 'json', json.dumps(job)]
+    else:
+        command = body['command']
+    return command, method_frame.delivery_tag
 
 
 def mail_notification(body):
