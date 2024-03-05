@@ -130,7 +130,7 @@ class GitHub(object):
         self.token = None
         self.debug = False
         try:
-            with open(xdg_config_home('cockpit-dev', 'github-token'), "r") as f:
+            with open(xdg_config_home('cockpit-dev', 'github-token', envvar='COCKPIT_GITHUB_TOKEN_FILE'), "r") as f:
                 self.token = f.read().strip()
         except FileNotFoundError:
             try:
