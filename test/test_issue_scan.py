@@ -172,20 +172,40 @@ class TestIssueScan(unittest.TestCase):
         self.assertEqual(channel.basic_publish.call_args_list[0][0][1], "public")
         request = json.loads(channel.basic_publish.call_args_list[0][0][2])
 
-        self.assertEqual(request, {
+        assert request == {
             'command': EXPECTED_COMMAND_ISSUE_2,
             'type': 'issue',
-        })
+            'human': 'issue-2 image-refresh foonux main',
+            'job': {
+                'command': ['./image-refresh', '--verbose', '--issue=2', 'foonux'],
+                'context': 'image-refresh/foonux',
+                'pull': None,
+                'repo': 'cockpit-project/bots',
+                'secrets': ['github-token', 'image-upload'],
+                'sha': '123abc',
+                'slug': 'image-refresh-foonux-123abc-20240102-030405'
+            }
+        }
 
         # second call for pull/3
         self.assertEqual(channel.basic_publish.call_args_list[1][0][0], "")
         self.assertEqual(channel.basic_publish.call_args_list[1][0][1], "public")
         request = json.loads(channel.basic_publish.call_args_list[1][0][2])
 
-        self.assertEqual(request, {
+        assert request == {
             'command': EXPECTED_COMMAND_PULL_3,
             'type': 'issue',
-        })
+            'human': 'issue-3 image-refresh barnux main',
+            'job': {
+                'command': ['./image-refresh', '--verbose', '--issue=3', 'barnux'],
+                'context': 'image-refresh/barnux',
+                'pull': None,
+                'repo': 'cockpit-project/bots',
+                'secrets': ['github-token', 'image-upload'],
+                'sha': '123abc',
+                'slug': 'image-refresh-barnux-123abc-20240102-030405'
+            }
+        }
 
     def test_scan_clidata_default(self):
         code, output, error = self.run_issue_scan([
@@ -240,10 +260,20 @@ class TestIssueScan(unittest.TestCase):
         self.assertEqual(channel.basic_publish.call_args[0][1], "public")
         request = json.loads(channel.basic_publish.call_args[0][2])
 
-        self.assertEqual(request, {
+        assert request == {
             'command': EXPECTED_COMMAND_ISSUE_2,
             'type': 'issue',
-        })
+            'human': 'issue-2 image-refresh foonux main',
+            'job': {
+                'command': ['./image-refresh', '--verbose', '--issue=2', 'foonux'],
+                'context': 'image-refresh/foonux',
+                'pull': None,
+                'repo': 'cockpit-project/bots',
+                'secrets': ['github-token', 'image-upload'],
+                'sha': '123abc',
+                'slug': 'image-refresh-foonux-123abc-20240102-030405'
+            }
+        }
 
 
 if __name__ == '__main__':

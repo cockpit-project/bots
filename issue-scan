@@ -23,6 +23,7 @@ import logging
 import shlex
 import sys
 import time
+from collections.abc import Collection, Mapping, Sequence
 
 from lib import ALLOWLIST, testmap
 from task import distributed_queue, github, labels_of_pull
@@ -43,7 +44,7 @@ except ImportError:
     no_amqp = True
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description="Scan issues for image-refresh tasks")
     parser.add_argument("-v", "--human-readable", "--verbose", action="store_true", default=False,
                         dest="verbose", help="Print verbose information")
@@ -58,17 +59,20 @@ def main():
     if opts.amqp and no_amqp:
         parser.error("AMQP host:port specified but python-amqp not available")
 
-    for result in scan(opts.issues_data, opts.verbose, opts.repo):
+    for result in scan(opts.issues_data, opts.repo):
         if opts.amqp:
             with distributed_queue.DistributedQueue(opts.amqp, queues=['rhel', 'public']) as q:
                 queue_task(q.channel, result)
             continue
-        sys.stdout.write(result + "\n")
+        if opts.verbose:
+            sys.stdout.write(f"{result['human']}\n")
+        else:
+            sys.stdout.write(f"{result['command']}\n")
 
     return 0
 
 
-def contains_any(string, matches):
+def contains_any(string: str, matches: Collection[str]) -> bool:
     for match in matches:
         if match in string:
             return True
@@ -77,7 +81,7 @@ def contains_any(string, matches):
 # Map all checkable work items to fixtures
 
 
-def tasks_for_issues(issues_data, opts_repo):
+def tasks_for_issues(issues_data: str, opts_repo: str | None) -> Sequence[tuple[str, Mapping[str, object], str]]:
     results = []
     issues = []
 
@@ -116,14 +120,14 @@ def tasks_for_issues(issues_data, opts_repo):
     return results
 
 
-def output_task(command, issue, repo, verbose):
+def output_task(command: str, issue: Mapping[str, object], repo: str) -> Mapping[str, object] | None:
     name, unused, context = command.partition(" ")
     if name != "image-refresh" or not repo.endswith("/bots"):
         return None
     number = issue.get("number", None)
     if number is None:
         return None
-    number = int(number)
+    number = int(number)  # type: ignore[call-overload]
 
     context = shlex.quote(context.strip())
 
@@ -134,42 +138,50 @@ def output_task(command, issue, repo, verbose):
     if "pull_request" in issue or "commits" in issue:
         ref = f"pull/{number}/head"
         sha = api.get(f"git/ref/{ref}")["object"]["sha"]
+        pull = number
     else:
         ref = testmap.get_default_branch(repo)
         sha = api.get(f"git/ref/heads/{ref}")["object"]["sha"]
-
-    if verbose:
-        return f"issue-{number} {name} {context} {ref}"
+        pull = None
 
     current = time.strftime('%Y%m%d-%H%M%S')
+    slug = f'{name}-{context}-{sha[:8]}-{current}'
+
     cmd = f"./s3-streamer --repo {repo} --test-name {name}-{context}-{current} " \
         f"--github-context {name}/{context} --revision {sha} -- sh -exc '"
     cmd += f"./make-checkout --verbose --repo {repo} {ref}; cd make-checkout-workdir; "
     cmd += f"./{name} --verbose --issue={number} {context}'"
 
-    return cmd
-
-
-def queue_task(channel, result):
-    body = {
-        "command": result,
+    return {
+        'job': {
+            'repo': repo,
+            'sha': sha,
+            'pull': pull,
+            'slug': slug,
+            'context': f'{name}/{context}',
+            'command': (f'./{name}', '--verbose', f'--issue={number}', context),
+            'secrets': ('github-token', 'image-upload'),
+        },
+        'human': f"issue-{number} {name} {context} {ref}",
+        "command": cmd,
         "type": "issue",
     }
-    queue = 'rhel' if contains_any(result, REDHAT_TASKS) else 'public'
+
+
+def queue_task(channel, body):
+    queue = 'rhel' if contains_any(body['job']['context'], REDHAT_TASKS) else 'public'
     channel.basic_publish('', queue, json.dumps(body),
                           properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
-    logging.info("Published issue task with command: '%s'", result)
+    logging.info("Published issue task: %r", body)
 
 
 # Default scan behavior run for each task
-def scan(issues_data, verbose, opts_repo):
-    global issues
-
+def scan(issues_data: str, opts_repo: str) -> Sequence[Mapping[str, object]]:
     results = []
 
     # Now go through each fixture
     for (command, issue, repo) in tasks_for_issues(issues_data, opts_repo):
-        result = output_task(command, issue, repo, verbose)
+        result = output_task(command, issue, repo)
         if result is not None:
             results.append(result)
 
