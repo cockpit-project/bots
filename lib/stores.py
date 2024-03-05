@@ -31,7 +31,7 @@ REDHAT_STORES = [
 
 # local stores
 try:
-    with open(xdg_config_home('cockpit-dev', 'image-stores'), 'r') as fp:
+    with open(xdg_config_home('cockpit-dev', 'image-stores', envvar='COCKPIT_IMAGE_STORES_FILE'), 'r') as fp:
         data = fp.read().strip()
         if data:
             PUBLIC_STORES += data.split("\n")
