@@ -53,6 +53,7 @@ jobs:
               ':!machine/machine_core' \
               ':!lib/allowlist.py' \
               ':!lib/testmap.py' \
+              ':!test/' \
               ':!vm-run' \
           >&2 || echo "changed=true" >> "$GITHUB_OUTPUT"
 
