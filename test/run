@@ -24,4 +24,4 @@ test_mypy
 # run static code checks like pyflakes and pep8
 flake8 $PYEXEFILES
 
-./test-bots
+pytest -vv
