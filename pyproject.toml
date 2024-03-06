@@ -27,3 +27,18 @@ ignore = [
     "E731",  # Do not assign a `lambda` expression, use a `def`
     "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
 ]
+
+[tool.pytest.ini_options]
+addopts = ["--cov-config=pyproject.toml"]  # for subprocesses
+pythonpath = ["."]
+
+[tool.coverage.run]
+branch=true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+  "pragma: no cover",  # default
+  "raise NotImplementedError",
+]
