@@ -54,7 +54,7 @@ jobs:
               ':!lib/allowlist.py' \
               ':!lib/testmap.py' \
               ':!vm-run' \
-          >&2 || echo "::set-output name=changed::true"
+          >&2 || echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Ensure branch was proposed from origin
         if: steps.changes.outputs.changed
