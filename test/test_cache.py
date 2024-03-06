@@ -22,7 +22,7 @@ import tempfile
 import time
 import unittest
 
-import cache
+from task import cache
 
 
 class TestCache(unittest.TestCase):
