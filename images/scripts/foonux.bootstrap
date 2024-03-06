@@ -1,0 +1,4 @@
+#!/bin/sh
+# mock image which doesn't need any qemu/kvm; used by cockpituous integration tests
+echo fakeimage > $1
+date >> $1
