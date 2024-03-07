@@ -61,9 +61,11 @@ def get_images_data_dir() -> str:
     global _images_data_dir
 
     if _images_data_dir is None:
-        _images_data_dir = get_git_config('--type=path', 'cockpit.bots.images-data-dir')
-
+        _images_data_dir = os.getenv('COCKPIT_IMAGES_DATA_DIR')
         if _images_data_dir is None:
-            _images_data_dir = xdg_cache_home('cockpit-images')
+            _images_data_dir = get_git_config('--type=path', 'cockpit.bots.images-data-dir')
+
+            if _images_data_dir is None:
+                _images_data_dir = xdg_cache_home('cockpit-images')
 
     return _images_data_dir
