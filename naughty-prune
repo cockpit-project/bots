@@ -74,10 +74,9 @@ def run(unused, verbose=False, **kwargs):
         execute("find", "naughty/", "-name", f"{number}-*", "-delete")
 
         # Create a pull request from these changes
-        title = "naughty: Close {0}: {1}".format(number, issue["title"])
+        title = f"naughty: Close {number}: {issue['title']}"
         days = int((now - updated) / SECONDS_PER_DAY)
-        body = "Known issue which has not occurred in {0} days\n\n{1}\n\nFixes #{2}".format(
-            days, issue["title"], number)
+        body = f"Known issue which has not occurred in {days} days\n\n{issue['title']}\n\nFixes #{number}"
         branch = task.branch(number, f"{title}\n\n{body}", pathspec="naughty/", **kwargs)
 
         if branch:

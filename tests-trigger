@@ -65,7 +65,7 @@ def trigger_pull(api, opts):
             # also allow override with --force or --requeue
             if not (manual_testing or opts.force) and not (queued and opts.requeue):
                 if not all:
-                    sys.stderr.write("{0}: isn't in triggerable state (is: {1})\n".format(context, status["state"]))
+                    sys.stderr.write(f"{context}: isn't in triggerable state (is: {status['state']})\n")
                     ret = 1
                 continue
         sys.stderr.write(f"{context}: triggering on {target}\n")

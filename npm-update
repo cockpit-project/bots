@@ -86,7 +86,7 @@ def run(context, verbose=False, **kwargs):
                 for pkg in packages.split(", "):
                     pending_updates.append(pkg)
                     if task.verbose:
-                        sys.stderr.write("Ignoring '{0}' as there is pending PR #{1}\n".format(pkg, issue["number"]))
+                        sys.stderr.write(f"Ignoring '{pkg}' as there is pending PR #{issue['number']}\n")
 
     package_json_path = os.path.join(BASE_DIR, "package.json")
     old = read_package_json(package_json_path)

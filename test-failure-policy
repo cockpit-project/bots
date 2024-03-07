@@ -227,7 +227,7 @@ def update_known_issue(api, number, err, context):
                         # only keep the last 10
                         if len(occurrences) > 10:
                             occurrences.pop(0)
-                        parts[part_idx] = "{0}{1}{2}".format(latest[0], latest_occurrences, "\n".join(occurrences))
+                        parts[part_idx] = f"{latest[0]}{latest_occurrences}{'\n'.join(occurrences)}"
                         updated = True
                     break
 
@@ -261,7 +261,7 @@ Times recorded: 1
 
                 body = "<hr>\n".join(parts)
 
-            return api.patch("issues/comments/{0}".format(comment['id']), {"body": body})
+            return api.patch(f"issues/comments/{comment['id']}", {"body": body})
 
     # create a new comment, since we didn't find one to update
 
