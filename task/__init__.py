@@ -111,7 +111,7 @@ def main(**kwargs):
         ret = ret[0]
 
     if ret:
-        sys.stderr.write("{0}: {1}\n".format(task["name"], ret))
+        sys.stderr.write(f"{task['name']}: {ret}\n")
 
     sys.exit(ret and 1 or 0)
 
@@ -164,7 +164,7 @@ def report_finish(ret, name, context, issue, duration, dry=False):
     # Note that we check whether pass or fail ... this is because
     # the task is considered "done" until a human comes through and
     # triggers it again by unchecking the box.
-    item = "{0} {1}".format(name, context or "").strip()
+    item = f"{name} {context or ''}".strip()
     checklist = github.Checklist(issue["body"])
     checklist.check(item, result == "Failed" and "FAIL" or True)
 
@@ -185,7 +185,7 @@ def run(context, function, **kwargs):
         if not issue:
             return f"No such issue: {number}"
         elif issue["title"].startswith("WIP:"):
-            return "Issue is work in progress: {0}: {1}\n".format(number, issue["title"])
+            return f"Issue is work in progress: {number}: {issue['title']}\n"
         issue["number"] = int(number)
         kwargs["issue"] = issue
         kwargs["title"] = issue["title"]
@@ -370,7 +370,7 @@ def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=Tru
 
         # Make sure we return the updated pull data
         for retry in range(20):
-            new_data = api.get("pulls/{}".format(pull["number"]))
+            new_data = api.get(f"pulls/{pull['number']}")
             if pull["head"]["sha"] != new_data["head"]["sha"]:
                 pull = new_data
                 break
@@ -383,7 +383,7 @@ def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=Tru
 
 def label(issue, labels=['bot']):
     try:
-        resource = "issues/{0}/labels".format(issue["number"])
+        resource = f"issues/{issue['number']}/labels"
     except TypeError:
         resource = f"issues/{issue}/labels"
     return api.post(resource, labels)
@@ -391,7 +391,7 @@ def label(issue, labels=['bot']):
 
 def labels_of_pull(pull):
     if "labels" not in pull:
-        pull["labels"] = api.get("issues/{0}/labels".format(pull["number"]))
+        pull["labels"] = api.get(f"issues/{pull['number']}/labels")
     return [label["name"] for label in pull["labels"]]
 
 
@@ -409,7 +409,7 @@ def comment(issue, comment, dry: bool = False) -> 'dict[str, object]':
 
 
 def comment_done(issue, name, clean, branch, context=None, dry: bool = False) -> None:
-    message = "{0} {1} done: {2}/commits/{3}".format(name, context or "", clean, branch)
+    message = f"{name} {context or ''} done: {clean}/commits/{branch}"
     comment(issue, message, dry=dry)
 
 

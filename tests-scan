@@ -321,7 +321,7 @@ def update_status(api, revision, context, last, changes):
         if not errors:
             return True
         for error in response.get("errors", []):
-            sys.stderr.write("{0}: {1}\n".format(revision, error.get('message', json.dumps(error))))
+            sys.stderr.write(f"{revision}: {error.get('message', json.dumps(error))}\n")
             sys.stderr.write(json.dumps(changes))
         return False
     return True

@@ -252,13 +252,8 @@ class GitHub(object):
         heads = {}
         for (header, value) in response.getheaders():
             heads[header.lower()] = value
-        self.log.write('{0} - - [{1}] "{2} {3} HTTP/1.1" {4} -\n'.format(
-            self.url.netloc,
-            time.asctime(),
-            method,
-            resource,
-            response.status
-        ))
+        self.log.write(
+            f'{self.url.netloc} - - [{time.asctime()}] "{method} {resource} HTTP/1.1" {response.status} -\n')
         return {
             "status": response.status,
             "reason": response.reason,
@@ -385,7 +380,8 @@ class GitHub(object):
         count = 100
         label = ",".join(labels)
         if since:
-            since = "&since={0}".format(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(since)))
+            now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(since))
+            since = f"&since={now}"
         else:
             since = ""
 
@@ -415,7 +411,7 @@ class Checklist(object):
         if isinstance(check, str):
             status = check + ": "
             check = False
-        return " * [{0}] {1}{2}".format(check and "x" or " ", status, item)
+        return f" * [{check and 'x' or ' '}] {status}{item}"
 
     @staticmethod
     def parse_line(line):

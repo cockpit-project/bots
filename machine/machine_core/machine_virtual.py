@@ -218,7 +218,7 @@ class VirtNetwork:
         for remote, local in result["forward"].items():
             local = self._lock(int(local) + result["number"])
             result["forward"][remote] = f"127.0.0.2:{local}"
-            forwards.append("hostfwd=tcp:{}-:{}".format(result["forward"][remote], remote))
+            forwards.append(f"hostfwd=tcp:{result['forward'][remote]}-:{remote}")
             if remote == "22":
                 result["control"] = result["forward"][remote]
             elif remote == "9090":

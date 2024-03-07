@@ -125,7 +125,7 @@ def scan(api, force, verbose):
         if perform:
             text = f"Image refresh for {image}"
             issue = task.issue(text, text, "image-refresh", image)
-            sys.stderr.write("#{0}: image-refresh {1}\n".format(issue["number"], image))
+            sys.stderr.write(f'#{issue["number"]}: image-refresh {image}\n')
 
 
 if __name__ == '__main__':
