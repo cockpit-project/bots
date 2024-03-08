@@ -55,7 +55,7 @@ def image_refresh(image: str, **kwargs: Any):
 
         # download the current image, for comparing them; that may not exist yet for newly introduced images
         if run('./image-download', image, check=False) == 0:
-            old_image = f'{BOTS_DIR}/images/{image}'
+            old_image = os.path.realpath(f'{BOTS_DIR}/images/{image}')
         else:
             old_image = None
 
