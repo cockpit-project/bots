@@ -225,8 +225,9 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
             "sha": job.revision,
             "ref": job.ref,
             "name": job.name,
-            # future job-runner format; once everything moved over, remove the stuff above
-            "job": {
+
+            # job-runner doesn't support this yet...
+            "job": None if job.repo != options.repo else {
                 "repo": job.repo,
                 "sha": job.revision,
                 "context": job.context,
