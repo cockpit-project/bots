@@ -85,6 +85,8 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
 
         args = [
             *ctx.container_cmd, 'run',
+            # we run arbitrary commands in that container, which aren't prepared for being pid 1; reap zombies
+            '--init',
             *ctx.container_run_args,
             f'--cidfile={cidfile}',
             *(f'--env={k}={v}' for k, v in job.env.items()),
