@@ -46,9 +46,6 @@ REFRESH = {
     "fedora-39": {},
     "fedora-40": {},
     "fedora-coreos": {},
-    # TODO: fix and re-enable once Anaconda team has time and energy to maintain these again
-    # "fedora-eln": {},
-    # "fedora-eln-boot": {},
     "fedora-rawhide": {},
     "fedora-rawhide-boot": {},
     "fedora-rawhide-anaconda-payload": REFRESH_30,
