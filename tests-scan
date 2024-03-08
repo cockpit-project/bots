@@ -241,13 +241,15 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
         }
 
         # report issue for nightly runs
-        if job.number == 0:
-            body["job"]["report"] = {
-                "title": f"Tests failed on {job.revision}",
-                "labels": ["nightly"],
-            }
-        else:
-            body["job"]["pull"] = job.number
+        if isinstance(body['job'], dict):
+            if body["job"] is not None:
+                if job.number == 0:
+                    body["job"]["report"] = {
+                        "title": f"Tests failed on {job.revision}",
+                        "labels": ["nightly"],
+                    }
+                else:
+                    body["job"]["pull"] = job.number
 
         queue = 'rhel' if is_internal_context(job.context) else 'public'
         channel.basic_publish('', queue, json.dumps(body), properties=pika.BasicProperties(priority=priority))
