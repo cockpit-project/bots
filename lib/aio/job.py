@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+import contextlib
 import itertools
 import json
 import logging
@@ -135,7 +136,8 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
                 # TODO: invent async tarfile for StreamReader
                 await run([*ctx.container_cmd, 'cp', '--', f'{cid}:/var/tmp/attachments/.', f'{attachments}'])
                 for file in attachments.rglob('*'):
-                    log.index.write(str(file.relative_to(attachments)), file.read_bytes())
+                    with contextlib.suppress(IsADirectoryError):
+                        log.index.write(str(file.relative_to(attachments)), file.read_bytes())
 
                 if returncode := await container.wait():
                     raise Failure(f'Container exited with code {returncode}')
