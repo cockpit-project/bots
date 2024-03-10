@@ -1,7 +1,0 @@
-Job for abrtd.service failed because the control process exited with error code.
-*
-Traceback (most recent call last):
-  File "test/verify/check-system-journal", line *, in testAbrt*
-    m.execute("systemctl restart systemd-sysctl; systemctl start abrtd abrt-journal-core")
-*
-subprocess.CalledProcessError: Command *systemctl restart systemd-sysctl; systemctl start abrtd abrt-journal-core* returned non-zero exit status 1.
