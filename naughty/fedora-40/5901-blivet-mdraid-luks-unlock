@@ -1,3 +1,0 @@
-Traceback (most recent call last):
-  File "/work/bots/make-checkout-workdir/test/check-storage", line *, in testEncryptedUnlockRAIDonLUKS
-    s.unlock_device("einszweidrei", ["vda3", "vda4"], ["vda3", "vda4"])
