@@ -225,9 +225,7 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
             "sha": job.revision,
             "ref": job.ref,
             "name": job.name,
-
-            # job-runner doesn't support this yet...
-            "job": None if job.repo != options.repo else {
+            "job": {
                 "repo": options.repo,
                 "sha": job.revision,
                 "context": job.github_context,
@@ -235,6 +233,10 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
                 "report": None if job.number else {
                     "title": f"Tests failed on {job.revision}",
                     "labels": ["nightly"],
+                },
+                "command-subject": None if job.repo == options.repo else {
+                    "repo": job.repo,
+                    "branch": job.ref,
                 },
                 "slug": slug,
                 "env": env,

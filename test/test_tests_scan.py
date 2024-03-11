@@ -279,6 +279,7 @@ class TestTestsScan(unittest.TestCase):
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
+                "command-subject": None,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
@@ -333,6 +334,7 @@ class TestTestsScan(unittest.TestCase):
                     "title": "Tests failed on 9988aa",
                     "labels": ["nightly"],
                 },
+                "command-subject": None,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "COCKPIT_BOTS_REF": "main",
@@ -383,6 +385,7 @@ class TestTestsScan(unittest.TestCase):
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
+                "command-subject": None,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
@@ -427,14 +430,30 @@ class TestTestsScan(unittest.TestCase):
             f'cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH={branch} COCKPIT_BOTS_REF=main '
             'TEST_SCENARIO=nightly ../tests-invoke --pull-number 1 --revision abcdef --repo project/repo"')
 
+        slug_repo_branch = repo_branch.replace('@', '-').replace('/', '-')
+
         assert request == {
             "command": expected_command,
             "type": "test",
             "sha": "abcdef",
             "ref": branch,
             "name": f"pull-{self.pull_number}",
-            # job-runner currently disabled for cross-project tests (commit c377eb892)
-            "job": None,
+            "job": {
+                "context": f"fedora/nightly@{repo_branch}",
+                "repo": "project/repo",
+                "pull": int(self.pull_number),
+                "report": None,
+                "sha": "abcdef",
+                "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly-{slug_repo_branch}",
+                "command-subject": {"repo": "cockpit-project/cockpituous", "branch": branch},
+                "secrets": ["github-token", "image-download"],
+                "env": {
+                    "BASE_BRANCH": branch,
+                    "COCKPIT_BOTS_REF": "main",
+                    "TEST_OS": "fedora",
+                    "TEST_SCENARIO": "nightly",
+                }
+            }
         }
 
     def test_amqp_sha_pr_cross_project_default_branch(self):
