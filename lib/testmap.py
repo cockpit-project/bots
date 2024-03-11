@@ -34,6 +34,10 @@ REPO_BRANCH_CONTEXT = {
         # currently no tests outside of GitHub actions, but declares primary branch
         'main': [],
     },
+    'cockpit-project/cockpituous': {
+        # no real tests on our infra, but used in cockpituous' own integration tests
+        'main': [],
+    },
     'cockpit-project/cockpit': {
         'main': [
             *contexts('arch', COCKPIT_SCENARIOS),
