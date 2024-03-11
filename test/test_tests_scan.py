@@ -282,7 +282,7 @@ class TestTestsScan(unittest.TestCase):
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
                 "target": "stable-1.0",
                 "container": "supertasks",
-                "secrets": ["github-token"],
+                "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
                     "COCKPIT_BOTS_REF": "main",
@@ -338,7 +338,7 @@ class TestTestsScan(unittest.TestCase):
                 },
                 # project/repo doesn't have a custom container name file
                 "container": None,
-                "secrets": ["github-token"],
+                "secrets": ["github-token", "image-download"],
                 "env": {
                     "COCKPIT_BOTS_REF": "main",
                     "TEST_OS": "fedora",
@@ -389,7 +389,7 @@ class TestTestsScan(unittest.TestCase):
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
                 "target": "stable-1.0",
                 "container": "supertasks",
-                "secrets": ["github-token"],
+                "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
                     "COCKPIT_BOTS_REF": "main",
