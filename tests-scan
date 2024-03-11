@@ -232,6 +232,11 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
                 "sha": job.revision,
                 "context": job.github_context,
                 "target": job.base,
+                "pull": job.number or None,  # job.number uses 0 to mean 'None'
+                "report": None if job.number else {
+                    "title": f"Tests failed on {job.revision}",
+                    "labels": ["nightly"],
+                },
                 "slug": slug,
                 "env": env,
                 "container": job.container,
@@ -239,17 +244,6 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
                 "secrets": ["github-token", "image-download"],
             }
         }
-
-        # report issue for nightly runs
-        if isinstance(body['job'], dict):
-            if body["job"] is not None:
-                if job.number == 0:
-                    body["job"]["report"] = {
-                        "title": f"Tests failed on {job.revision}",
-                        "labels": ["nightly"],
-                    }
-                else:
-                    body["job"]["pull"] = job.number
 
         queue = 'rhel' if is_internal_context(job.context) else 'public'
         channel.basic_publish('', queue, json.dumps(body), properties=pika.BasicProperties(priority=priority))

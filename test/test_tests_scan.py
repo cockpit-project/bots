@@ -268,7 +268,7 @@ class TestTestsScan(unittest.TestCase):
             " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke --pull-number"
             f" {self.pull_number} --revision {self.revision} --repo {self.repo}\"")
 
-        self.assertEqual(request, {
+        assert request == {
             "command": expected_command,
             "type": "test",
             "sha": "abcdef",
@@ -278,6 +278,7 @@ class TestTestsScan(unittest.TestCase):
                 "context": "fedora/nightly",
                 "repo": "project/repo",
                 "pull": int(self.pull_number),
+                "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
                 "target": "stable-1.0",
@@ -290,7 +291,7 @@ class TestTestsScan(unittest.TestCase):
                     "TEST_SCENARIO": "nightly",
                 }
             }
-        })
+        }
 
     # mock time for predictable test name
     @unittest.mock.patch("time.strftime", return_value="20240102-030405")
@@ -320,7 +321,7 @@ class TestTestsScan(unittest.TestCase):
             'cd make-checkout-workdir && TEST_OS=fedora COCKPIT_BOTS_REF=main '
             'TEST_SCENARIO=nightly ../tests-invoke --revision 9988aa --repo project/repo"')
         self.maxDiff = None
-        self.assertEqual(request, {
+        assert request == {
             "command": expected_command,
             "type": "test",
             "sha": "9988aa",
@@ -332,6 +333,7 @@ class TestTestsScan(unittest.TestCase):
                 "sha": "9988aa",
                 "slug": "pull-0-9988aa-20240102-030405-fedora-nightly",
                 "target": None,
+                "pull": None,
                 "report": {
                     "title": "Tests failed on 9988aa",
                     "labels": ["nightly"],
@@ -345,7 +347,7 @@ class TestTestsScan(unittest.TestCase):
                     "TEST_SCENARIO": "nightly",
                 }
             }
-        })
+        }
 
     # mock time for predictable test name
     @unittest.mock.patch("time.strftime", return_value="20240102-030405")
@@ -375,7 +377,7 @@ class TestTestsScan(unittest.TestCase):
             './make-checkout --verbose --repo=project/repo --rebase=stable-1.0 abcdef && '
             'cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=stable-1.0 COCKPIT_BOTS_REF=main '
             'TEST_SCENARIO=nightly ../tests-invoke --pull-number 1 --revision abcdef --repo project/repo"')
-        self.assertEqual(request, {
+        assert request == {
             "command": expected_command,
             "type": "test",
             "sha": "abcdef",
@@ -385,6 +387,7 @@ class TestTestsScan(unittest.TestCase):
                 "context": "fedora/nightly",
                 "repo": "project/repo",
                 "pull": int(self.pull_number),
+                "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
                 "target": "stable-1.0",
@@ -397,7 +400,7 @@ class TestTestsScan(unittest.TestCase):
                     "TEST_SCENARIO": "nightly",
                 }
             }
-        })
+        }
 
     def do_test_tests_invoke(self, attachments_url, expected_logs_url):
         repo = "cockpit-project/cockpit"
