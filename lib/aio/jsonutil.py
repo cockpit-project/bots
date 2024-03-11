@@ -83,6 +83,15 @@ def get_dict(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> DT | J
     return _get(obj, lambda v: typechecked(v, dict), key, default)
 
 
+def get_object(
+    obj: JsonObject,
+    key: str,
+    constructor: Callable[[JsonObject], T],
+    default: Union[DT, _Empty] = _empty
+) -> Union[DT, T]:
+    return _get(obj, lambda v: constructor(typechecked(v, dict)), key, default)
+
+
 def get_str_map(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> DT | Mapping[str, str]:
     def as_str_map(value: JsonValue) -> Mapping[str, str]:
         return {key: typechecked(value, str) for key, value in typechecked(value, dict).items()}

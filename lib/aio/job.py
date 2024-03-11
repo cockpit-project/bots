@@ -30,7 +30,7 @@ from typing import Never
 from ..constants import BOTS_DIR
 from .abc import Forge, Subject, SubjectSpecification
 from .jobcontext import JobContext
-from .jsonutil import JsonObject, get_dict, get_int, get_str, get_str_map, get_strv
+from .jsonutil import JsonObject, get_dict, get_int, get_object, get_str, get_str_map, get_strv
 from .s3streamer import Index, LogStreamer
 from .spawn import run, spawn
 from .util import gather_and_cancel, read_utf8
@@ -49,6 +49,7 @@ class Job:
 
         # test specification
         self.container = get_str(obj, 'container', None)
+        self.command_subject = get_object(obj, 'command-subject', SubjectSpecification, None)
         self.secrets = get_strv(obj, 'secrets', ())
         self.command = get_strv(obj, 'command', None)
         self.env = get_str_map(obj, 'env', {})
@@ -165,7 +166,11 @@ async def run_job(job: Job, ctx: JobContext) -> None:
             )
             await status.post('pending', 'In progress')
 
-            tasks = {run_container(job, subject, ctx, log)}
+            if job.command_subject is not None:
+                command_subject = await ctx.forge.resolve_subject(job.command_subject)
+            else:
+                command_subject = subject
+            tasks = {run_container(job, command_subject, ctx, log)}
 
             if job.timeout:
                 tasks.add(timeout_minutes(job.timeout))
