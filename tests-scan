@@ -228,7 +228,7 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
 
             # job-runner doesn't support this yet...
             "job": None if job.repo != options.repo else {
-                "repo": job.repo,
+                "repo": options.repo,
                 "sha": job.revision,
                 "context": job.github_context,
                 "target": job.base,
