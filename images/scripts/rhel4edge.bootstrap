@@ -36,10 +36,10 @@ cat > edge-request.json <<EOF
 }
 EOF
 
-# File `/secrets/crc_passwd` contains the following line
+# $COCKPIT_CRC_PASSWORD must point to a file which contains the following line:
 # machine console.redhat.com login <username> password <password>
 
-response=$(curl --netrc-file /secrets/crc_passwd --json @edge-request.json https://console.redhat.com/api/edge/v1/images)
+response=$(curl --netrc-file $COCKPIT_CRC_PASSWORD --json @edge-request.json https://console.redhat.com/api/edge/v1/images)
 
 ID=$( echo "$response" | jq -r ".ID" )
 STATUS=$( echo "$response" | jq -r ".Status" )
@@ -50,7 +50,7 @@ InstallerID=$( echo "$response" | jq -r ".InstallerID" )
 while [ "$STATUS" == "BUILDING" ]
 do
     sleep 5m
-    STATUS=$(curl --netrc-file /secrets/crc_passwd https://console.redhat.com/api/edge/v1/images/$ID/status | jq -r ".Status")
+    STATUS=$(curl --netrc-file $COCKPIT_CRC_PASSWORD https://console.redhat.com/api/edge/v1/images/$ID/status | jq -r ".Status")
 done
 
 if [ "$STATUS" != "SUCCESS" ]; then
@@ -58,7 +58,7 @@ if [ "$STATUS" != "SUCCESS" ]; then
     exit 1
 fi
 
-curl --netrc-file /secrets/crc_passwd -L "https://console.redhat.com/api/edge/v1/storage/isos/$InstallerID" -o "rhel4edge-$timestamp.iso"
+curl --netrc-file $COCKPIT_CRC_PASSWORD -L "https://console.redhat.com/api/edge/v1/storage/isos/$InstallerID" -o "rhel4edge-$timestamp.iso"
 $BASE/virt-install-rhel4edge "$1" x86_64 "rhel4edge-$timestamp.iso"
 
 rm edge-request.json "rhel4edge-$timestamp.iso"
