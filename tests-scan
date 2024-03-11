@@ -230,7 +230,7 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
             "job": None if job.repo != options.repo else {
                 "repo": job.repo,
                 "sha": job.revision,
-                "context": job.context,
+                "context": job.github_context,
                 "target": job.base,
                 "slug": slug,
                 "env": env,
