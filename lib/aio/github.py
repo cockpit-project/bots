@@ -24,7 +24,7 @@ from typing import NamedTuple, Self
 import aiohttp
 from yarl import URL
 
-from .abc import Forge, Status, Subject
+from .abc import Forge, Status, Subject, SubjectSpecification
 from .jsonutil import JsonError, JsonObject, JsonValue, get_bool, get_dict, get_nested, get_str, typechecked
 from .util import LRUCache, create_http_session
 
@@ -143,28 +143,24 @@ class GitHub(Forge, contextlib.AsyncExitStack):
     def get_status(self, repo: str, sha: str, context: str | None, location: URL) -> Status:
         return GitHubStatus(self, repo, sha, context, location)
 
-    async def resolve_subject(
-        self, repo: str, sha: str | None, pull_nr: int | None, branch: str | None, target: str | None
-    ) -> Subject:
-        clone_url = self.clone / repo
+    async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
+        clone_url = self.clone / spec.repo
 
-        if sha is not None:
+        if spec.sha is not None:
             # if pull_nr is set and our sha doesn't match the PR, we will
             # detect it soon
-            return Subject(clone_url, sha, target)
+            return Subject(clone_url, spec.sha, spec.target)
 
-        elif pull_nr is not None:
-            pull = await self.get_obj(f'repos/{repo}/pulls/{pull_nr}')
-            if target is None:
-                target = get_str(get_dict(pull, 'base'), 'ref')
+        elif spec.pull is not None:
+            pull = await self.get_obj(f'repos/{spec.repo}/pulls/{spec.pull}')
+            target = spec.target or get_str(get_dict(pull, 'base'), 'ref')
             return Subject(clone_url, get_str(get_dict(pull, 'head'), 'sha'), target)
 
         else:
-            if not branch:
-                branch = get_str(await self.get_obj(f'repos/{repo}'), 'default_branch')
+            branch = spec.branch or get_str(await self.get_obj(f'repos/{spec.repo}'), 'default_branch')
 
-            with get_nested(await self.get_obj(f'repos/{repo}/git/refs/heads/{branch}'), 'object') as object:
-                return Subject(clone_url, get_str(object, 'sha'), target)
+            with get_nested(await self.get_obj(f'repos/{spec.repo}/git/refs/heads/{branch}'), 'object') as object:
+                return Subject(clone_url, get_str(object, 'sha'), spec.target)
 
 
 class GitHubStatus(Status):
