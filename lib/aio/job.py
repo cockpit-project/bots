@@ -162,7 +162,11 @@ async def run_job(job: Job, ctx: JobContext) -> None:
         logger.info('Log: %s', log.url)
 
         try:
-            log.start(f'{title}\nRunning on: {platform.node()}\n\nJob(' + json.dumps(job.__dict__, indent=4) + ')\n')
+            log.start(
+                f'{title}\n\n'
+                f'Running on: {platform.node()}\n\n'
+                f'Job({json.dumps(job, default=lambda obj: obj.__dict__, indent=4)})\n'
+            )
             await status.post('pending', 'In progress')
 
             tasks = {run_container(job, subject, ctx, log)}
