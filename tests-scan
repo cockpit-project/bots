@@ -235,8 +235,8 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
                 "slug": slug,
                 "env": env,
                 "container": job.container,
-                # for updating naughty trackers
-                "secrets": ["github-token"],
+                # for updating naughty trackers and downloading private images
+                "secrets": ["github-token", "image-download"],
             }
         }
 
