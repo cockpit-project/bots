@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Never
 
 from ..constants import BOTS_DIR
-from .abc import Forge, Subject
+from .abc import Forge, Subject, SubjectSpecification
 from .jobcontext import JobContext
 from .jsonutil import JsonObject, get_dict, get_int, get_str, get_str_map, get_strv
 from .s3streamer import Index, LogStreamer
@@ -45,11 +45,7 @@ class Failure(Exception):
 class Job:
     def __init__(self, obj: JsonObject) -> None:
         # test subject specification
-        self.repo = get_str(obj, 'repo')
-        self.sha = get_str(obj, 'sha', None)
-        self.pull = get_int(obj, 'pull', None)
-        self.branch = get_str(obj, 'branch', None)
-        self.target = get_str(obj, 'target', None)
+        self.subject = SubjectSpecification(obj)
 
         # test specification
         self.container = get_str(obj, 'container', None)
@@ -150,15 +146,15 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
 
 
 async def run_job(job: Job, ctx: JobContext) -> None:
-    subject = await ctx.forge.resolve_subject(job.repo, job.sha, job.pull, job.branch, job.target)
-    title = job.title or f'{job.context}@{job.repo}#{subject.sha[:12]}'
-    slug = job.slug or f'{job.repo}/{job.context or "-"}/{subject.sha[:12]}'
+    subject = await ctx.forge.resolve_subject(job.subject)
+    title = job.title or f'{job.context}@{job.subject.repo}#{subject.sha[:12]}'
+    slug = job.slug or f'{job.subject.repo}/{job.context or "-"}/{subject.sha[:12]}'
 
     async with ctx.logs.get_destination(slug) as destination:
         index = Index(destination)
         log = LogStreamer(index)
 
-        status = ctx.forge.get_status(job.repo, subject.sha, job.context, log.url)
+        status = ctx.forge.get_status(job.subject.repo, subject.sha, job.context, log.url)
         logger.info('Log: %s', log.url)
 
         try:
@@ -174,8 +170,8 @@ async def run_job(job: Job, ctx: JobContext) -> None:
             if job.timeout:
                 tasks.add(timeout_minutes(job.timeout))
 
-            if job.pull:
-                tasks.add(poll_pr(ctx.forge, job.repo, job.pull, subject.sha))
+            if job.subject.pull is not None:
+                tasks.add(poll_pr(ctx.forge, job.subject.repo, job.subject.pull, subject.sha))
 
             await gather_and_cancel(tasks)
 
@@ -193,7 +189,7 @@ async def run_job(job: Job, ctx: JobContext) -> None:
                     """).lstrip(),
                     **job.report
                 }
-                await ctx.forge.open_issue(job.repo, issue)
+                await ctx.forge.open_issue(job.subject.repo, issue)
 
         except asyncio.CancelledError:
             await status.post('error', 'Cancelled')

@@ -10,6 +10,7 @@ import pytest
 from aioresponses import CallbackResult, aioresponses
 from yarl import URL
 
+from lib.aio.abc import SubjectSpecification
 from lib.aio.github import GitHub
 from lib.aio.jobcontext import JobContext
 from lib.aio.jsonutil import JsonObject, JsonValue, json_merge_patch
@@ -219,7 +220,7 @@ async def test_github_pr_lookup(service: GitHubService, api: GitHub) -> None:
     })
 
     # Look up the sha in the PR via the REST API
-    subject = await api.resolve_subject('owner/repo', None, pull_nr, None, None)
+    subject = await api.resolve_subject(SubjectSpecification({'repo': 'owner/repo', 'pull': pull_nr}))
     assert subject == (service.CLONE_URL / repo, sha, 'main')
     service.assert_hits(1, 1)
 

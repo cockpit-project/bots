@@ -18,7 +18,16 @@ from typing import AsyncContextManager, NamedTuple, Self
 
 from yarl import URL
 
-from .jsonutil import JsonObject
+from .jsonutil import JsonObject, get_int, get_str
+
+
+class SubjectSpecification:
+    def __init__(self, obj: JsonObject) -> None:
+        self.repo = get_str(obj, 'repo')
+        self.sha = get_str(obj, 'sha', None)
+        self.pull = get_int(obj, 'pull', None)
+        self.branch = get_str(obj, 'branch', None)
+        self.target = get_str(obj, 'target', None)
 
 
 class Subject(NamedTuple):
@@ -35,9 +44,7 @@ class Status:
 
 
 class Forge:
-    async def resolve_subject(
-        self, repo: str, sha: str | None, pull_nr: int | None, branch: str | None, target: str | None
-    ) -> Subject:
+    async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
         raise NotImplementedError
 
     async def check_pr_changed(self, repo: str, pull_nr: int, expected_sha: str) -> str | None:
