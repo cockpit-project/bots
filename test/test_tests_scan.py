@@ -281,7 +281,6 @@ class TestTestsScan(unittest.TestCase):
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
-                "target": "stable-1.0",
                 "container": "supertasks",
                 "secrets": ["github-token", "image-download"],
                 "env": {
@@ -332,7 +331,6 @@ class TestTestsScan(unittest.TestCase):
                 "repo": "project/repo",
                 "sha": "9988aa",
                 "slug": "pull-0-9988aa-20240102-030405-fedora-nightly",
-                "target": None,
                 "pull": None,
                 "report": {
                     "title": "Tests failed on 9988aa",
@@ -390,7 +388,6 @@ class TestTestsScan(unittest.TestCase):
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
-                "target": "stable-1.0",
                 "container": "supertasks",
                 "secrets": ["github-token", "image-download"],
                 "env": {

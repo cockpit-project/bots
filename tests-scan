@@ -232,7 +232,6 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
                 "repo": options.repo,
                 "sha": job.revision,
                 "context": job.github_context,
-                "target": job.base,
                 "pull": job.number or None,  # job.number uses 0 to mean 'None'
                 "report": None if job.number else {
                     "title": f"Tests failed on {job.revision}",
