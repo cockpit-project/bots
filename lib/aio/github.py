@@ -60,6 +60,7 @@ class GitHub(Forge, contextlib.AsyncExitStack):
         self.config = config
         self.clone = URL(get_str(config, 'clone-url'))
         self.api = URL(get_str(config, 'api-url'))
+        self.content = URL(get_str(config, 'content-url'))
         self.dry_run = not get_bool(config, 'post')
 
     async def __aenter__(self) -> Self:
@@ -130,6 +131,19 @@ class GitHub(Forge, contextlib.AsyncExitStack):
 
     async def open_issue(self, repo: str, issue: JsonObject) -> None:
         await self.post(f'repos/{repo}/issues', issue)
+
+    async def read_file(self, subject: Subject, filename: str) -> str | None:
+        async def read_once() -> str | None:
+            try:
+                async with self.session.get(self.content / subject.repo / subject.sha / filename) as response:
+                    logger.debug('response %r', response)
+                    return await response.text()
+            except aiohttp.ClientResponseError as exc:
+                if exc.status == 404:
+                    return None
+                raise
+
+        return await retry(read_once)
 
     def get_status(self, repo: str, sha: str, context: str | None, location: URL) -> Status:
         return GitHubStatus(self, repo, sha, context, location)
