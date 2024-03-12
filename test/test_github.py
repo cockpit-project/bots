@@ -68,7 +68,7 @@ class Handler(MockHandler):
             self.send_error(404, 'Mock Not Found: ' + parsed.path)
 
 
-class TestLogger(object):
+class Logger(object):
     def __init__(self):
         self.data = ""
 
@@ -97,7 +97,7 @@ class TestGitHub(unittest.TestCase):
         self.assertEqual(count, 1)
 
     def testLog(self):
-        self.api.log = TestLogger()
+        self.api.log = Logger()
 
         self.api.get("/test/user")
         self.api.cache.mark(time.time() + 1)
