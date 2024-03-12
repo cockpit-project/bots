@@ -19,16 +19,33 @@ import json
 import logging
 import platform
 from collections.abc import Mapping
-from typing import NamedTuple, Self
+from typing import Awaitable, Callable, NamedTuple, Self
 
 import aiohttp
 from yarl import URL
 
 from .abc import Forge, Status, Subject, SubjectSpecification
 from .jsonutil import JsonError, JsonObject, JsonValue, get_bool, get_dict, get_nested, get_str, typechecked
-from .util import LRUCache, create_http_session
+from .util import LRUCache, T, create_http_session
 
 logger = logging.getLogger(__name__)
+
+
+async def retry(func: Callable[[], Awaitable[T]]) -> T:
+    for attempt in range(4):
+        try:
+            return await func()
+        except aiohttp.ClientResponseError as exc:
+            if exc.status < 500:
+                raise
+        except aiohttp.ClientError:
+            pass
+
+        # 1 → 2 → 4 → 8s delay
+        await asyncio.sleep(2 ** attempt)
+
+    # ...last attempt.
+    return await func()
 
 
 class CacheEntry(NamedTuple):
@@ -65,20 +82,7 @@ class GitHub(Forge, contextlib.AsyncExitStack):
                 logger.debug('response %r', response)
                 return await response.json()  # type: ignore[no-any-return]
 
-        for attempt in range(4):
-            try:
-                return await post_once()
-            except aiohttp.ClientResponseError as exc:
-                if exc.status < 500:
-                    raise
-            except aiohttp.ClientError:
-                pass
-
-            # 1 → 2 → 4 → 8s delay
-            await asyncio.sleep(2 ** attempt)
-
-        # ...last attempt.
-        return await post_once()
+        return await retry(post_once)
 
     async def get(self, resource: str) -> JsonValue:
         async def get_once() -> JsonValue:
@@ -103,20 +107,7 @@ class GitHub(Forge, contextlib.AsyncExitStack):
                     self.cache.add(resource, CacheEntry(conditions, value))
                     return value  # type: ignore[no-any-return]
 
-        for attempt in range(4):
-            try:
-                return await get_once()
-            except aiohttp.ClientResponseError as exc:
-                if exc.status < 500:
-                    raise
-            except aiohttp.ClientError:
-                pass
-
-            # 1 → 2 → 4 → 8s delay
-            await asyncio.sleep(2 ** attempt)
-
-        # ...last attempt.
-        return await get_once()
+        return await retry(get_once)
 
     async def get_obj(self, resource: str) -> JsonObject:
         return typechecked(await self.get(resource), dict)
