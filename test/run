@@ -19,6 +19,7 @@ test_mypy() {
       lib/testmap.py
       checkout-and-run
       image-download
+      image-upload
       job-runner
     '
     mypy  --scripts-are-modules --no-error-summary --strict $mypy_strict_files

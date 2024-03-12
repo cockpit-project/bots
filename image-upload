@@ -32,7 +32,7 @@ from lib.network import get_curl_ca_arg, redhat_network
 from lib.stores import PUBLIC_STORES, REDHAT_STORES
 
 
-def upload(store, source, public, prune=False):
+def upload(store: str, source: str, public: bool, prune: bool = False) -> bool:
     dest = urllib.parse.urljoin(store, os.path.basename(source))
     url = urllib.parse.urlparse(dest)
 
@@ -47,7 +47,9 @@ def upload(store, source, public, prune=False):
     headers = {s3.ACL: s3.PUBLIC} if public else {}
 
     # slightly magic: we already know the checksum: it's part of the filename
-    hash_value = re.search('[0-9a-f]{64}', source).group(0)
+    match = re.search('[0-9a-f]{64}', source)
+    assert match is not None
+    hash_value = match.group(0)
 
     cmd += s3.sign_curl(url, method='PUT', headers=headers, checksum=hash_value)
 
@@ -71,7 +73,7 @@ def upload(store, source, public, prune=False):
     return False
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='Upload bot state or images')
     parser.add_argument("--prune-s3", action="store_true", help="Run image-prune before upload to S3")
     parser.add_argument("--store", action="append", default=[], help="Where to send state or images")
