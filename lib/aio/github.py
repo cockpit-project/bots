@@ -146,19 +146,19 @@ class GitHub(Forge, contextlib.AsyncExitStack):
     async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
         if spec.pull is not None:
             pull = await self.get_obj(f'repos/{spec.repo}/pulls/{spec.pull}')
-            return Subject(clone_url,
+            return Subject(self, spec.repo,
                            # mypy needs some help here.  See https://github.com/python/mypy/issues/16659
                            spec.sha if spec.sha else get_str(get_dict(pull, 'head'), 'sha'),
                            spec.target or get_str(get_dict(pull, 'base'), 'ref'))
 
         elif spec.sha is not None:
-            return Subject(clone_url, spec.sha, spec.target)
+            return Subject(self, spec.repo, spec.sha, spec.target)
 
         else:
             branch = spec.branch or get_str(await self.get_obj(f'repos/{spec.repo}'), 'default_branch')
 
             with get_nested(await self.get_obj(f'repos/{spec.repo}/git/refs/heads/{branch}'), 'object') as object:
-                return Subject(clone_url, get_str(object, 'sha'), spec.target)
+                return Subject(self, spec.repo, get_str(object, 'sha'), spec.target)
 
 
 class GitHubStatus(Status):
