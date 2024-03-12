@@ -80,6 +80,14 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
         cidfile = tmpdir / 'cidfile'
         attachments = tmpdir / 'attachments'
 
+        container_image = (
+            job.container or
+            await ctx.forge.read_file(subject, '.cockpit-ci/container') or
+            ctx.default_image
+        ).strip()
+
+        log.write(f'Using container image: {container_image}\n')
+
         args = [
             *ctx.container_cmd, 'run',
             # we run arbitrary commands in that container, which aren't prepared for being pid 1; reap zombies
@@ -91,7 +99,7 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
             f'--env=COCKPIT_CI_LOG_URL={log.url}',
             *itertools.chain.from_iterable(args for name, args in ctx.secrets_args.items() if name in job.secrets),
 
-            job.container or ctx.default_image,
+            container_image,
 
             # we might be using podman-remote, so we can't --volume this:
             'python3', '-c', Path(f'{BOTS_DIR}/checkout-and-run').read_text(),  # lulz
@@ -162,7 +170,7 @@ async def run_job(job: Job, ctx: JobContext) -> None:
             log.start(
                 f'{title}\n\n'
                 f'Running on: {platform.node()}\n\n'
-                f'Job({json.dumps(job, default=lambda obj: obj.__dict__, indent=4)})\n'
+                f'Job({json.dumps(job, default=lambda obj: obj.__dict__, indent=4)})\n\n'
             )
             await status.post('pending', 'In progress')
 
