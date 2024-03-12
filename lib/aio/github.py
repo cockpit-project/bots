@@ -144,17 +144,15 @@ class GitHub(Forge, contextlib.AsyncExitStack):
         return GitHubStatus(self, repo, sha, context, location)
 
     async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
-        clone_url = self.clone / spec.repo
-
-        if spec.sha is not None:
-            # if pull_nr is set and our sha doesn't match the PR, we will
-            # detect it soon
-            return Subject(clone_url, spec.sha, spec.target)
-
-        elif spec.pull is not None:
+        if spec.pull is not None:
             pull = await self.get_obj(f'repos/{spec.repo}/pulls/{spec.pull}')
-            target = spec.target or get_str(get_dict(pull, 'base'), 'ref')
-            return Subject(clone_url, get_str(get_dict(pull, 'head'), 'sha'), target)
+            return Subject(clone_url,
+                           # mypy needs some help here.  See https://github.com/python/mypy/issues/16659
+                           spec.sha if spec.sha else get_str(get_dict(pull, 'head'), 'sha'),
+                           spec.target or get_str(get_dict(pull, 'base'), 'ref'))
+
+        elif spec.sha is not None:
+            return Subject(clone_url, spec.sha, spec.target)
 
         else:
             branch = spec.branch or get_str(await self.get_obj(f'repos/{spec.repo}'), 'default_branch')
