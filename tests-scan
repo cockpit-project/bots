@@ -391,8 +391,6 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             for context in build_policy(repo, contexts).get(base, []):
                 todos[context] = {}
 
-        container = api.fetch_file(merge_sha, '.cockpit-ci/container')
-
         # there are 3 different HEADs
         # ref:    the PR or SHA that we are testing
         # base:   the target branch of that PR (None for direct SHA trigger)
@@ -428,6 +426,11 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                 checkout_ref = ref
                 if project != repo:
                     checkout_ref = testmap.get_default_branch(project)
+                    project_api = github.GitHub(repo=project)
+                    container = project_api.fetch_file(checkout_ref, '.cockpit-ci/container')
+                else:
+                    container = api.fetch_file(merge_sha, '.cockpit-ci/container')
+
                 if base != branch:
                     checkout_ref = branch
 
