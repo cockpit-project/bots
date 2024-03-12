@@ -129,11 +129,11 @@ def find(name, stores, latest, quiet):
     return found[0][0], found[0][2]
 
 
-def download(dest, force, state, quiet, stores):
+def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[str]) -> None:
     name = os.path.basename(dest)
 
     if not stores:
-        stores = PUBLIC_STORES
+        stores = list(PUBLIC_STORES)
         if redhat_network():
             stores += REDHAT_STORES
         image_upload_store = os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE')
@@ -141,7 +141,7 @@ def download(dest, force, state, quiet, stores):
             # NB: This is an *addition* to the built-in stores, used for
             # testing.  Compare with image-upload which *only* uploads to this
             # store, if it's present.
-            stores += image_upload_store
+            stores += [image_upload_store]
 
     # The time condition for If-Modified-Since
     exists = not force and os.path.exists(dest)

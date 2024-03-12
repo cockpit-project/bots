@@ -104,7 +104,7 @@ def main():
                 # adds this to the list, if it's present.
                 stores = [image_upload_store]
         if not stores:
-            stores = PUBLIC_STORES
+            stores = list(PUBLIC_STORES)
             if redhat_network():
                 stores += REDHAT_STORES
         success = False
