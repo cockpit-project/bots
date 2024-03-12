@@ -21,6 +21,7 @@ from lib.aio.util import LRUCache
 class GitHubService:
     CLONE_URL = URL('http://github.test/')
     API_URL = URL('http://api.github.test/')
+    CONTENT_URL = URL('http://content.github.test/')
     TOKEN = 'token_ABCDEFG'
     USER_AGENT = __file__  # or any magic unique string
 
@@ -34,6 +35,7 @@ class GitHubService:
         self.config: JsonObject = {
             'api-url': str(self.API_URL),
             'clone-url': str(self.CLONE_URL),
+            'content-url': str(self.CONTENT_URL),
             'post': True,
             'token': self.TOKEN,
             'user-agent': self.USER_AGENT,

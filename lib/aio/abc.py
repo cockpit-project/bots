@@ -40,6 +40,10 @@ class Subject(NamedTuple):
     def clone_url(self) -> URL:
         return self.forge.clone / self.repo
 
+    @property
+    def content_url(self) -> URL:
+        return self.forge.content / self.repo
+
 
 class Status:
     link: str
@@ -50,6 +54,7 @@ class Status:
 
 class Forge:
     clone: URL
+    content: URL
 
     async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
         raise NotImplementedError
@@ -61,6 +66,9 @@ class Forge:
         raise NotImplementedError
 
     async def open_issue(self, repo: str, issue: JsonObject) -> None:
+        raise NotImplementedError
+
+    async def read_file(self, subject: Subject, filename: str) -> str | None:
         raise NotImplementedError
 
     @classmethod
