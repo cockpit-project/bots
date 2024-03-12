@@ -31,9 +31,14 @@ class SubjectSpecification:
 
 
 class Subject(NamedTuple):
-    clone_url: URL
+    forge: 'Forge'
+    repo: str
     sha: str
     rebase: str | None = None
+
+    @property
+    def clone_url(self) -> URL:
+        return self.forge.clone / self.repo
 
 
 class Status:
@@ -44,6 +49,8 @@ class Status:
 
 
 class Forge:
+    clone: URL
+
     async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
         raise NotImplementedError
 

@@ -221,7 +221,7 @@ async def test_github_pr_lookup(service: GitHubService, api: GitHub) -> None:
 
     # Look up the sha in the PR via the REST API
     subject = await api.resolve_subject(SubjectSpecification({'repo': 'owner/repo', 'pull': pull_nr}))
-    assert subject == (service.CLONE_URL / repo, sha, 'main')
+    assert subject == (api, repo, sha, 'main')
     service.assert_hits(1, 1)
 
     # The next thing that happens is that we poll this API a lot
