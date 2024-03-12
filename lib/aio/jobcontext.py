@@ -68,6 +68,7 @@ class JobContext(contextlib.AsyncExitStack):
         except FileNotFoundError as exc:
             if missing_ok:
                 logger.debug('No %s configuration found at %s', name, str(path))
+                return
             else:
                 sys.exit(f'{path}: {exc}')
         except OSError as exc:
