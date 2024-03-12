@@ -82,8 +82,6 @@ class Handler(MockHandler):
         elif self.path.endswith("/issues"):
             issues = self.server.data.get('issues', [])
             self.replyJson(issues)
-        elif self.path == "/project/repo/abcdef/.cockpit-ci/container":
-            self.replyData("supertasks")
         else:
             self.send_error(404, 'Mock Not Found: ' + self.path)
 
@@ -281,7 +279,6 @@ class TestTestsScan(unittest.TestCase):
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
-                "container": "supertasks",
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
@@ -336,8 +333,6 @@ class TestTestsScan(unittest.TestCase):
                     "title": "Tests failed on 9988aa",
                     "labels": ["nightly"],
                 },
-                # project/repo doesn't have a custom container name file
-                "container": None,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "COCKPIT_BOTS_REF": "main",
@@ -388,7 +383,6 @@ class TestTestsScan(unittest.TestCase):
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
-                "container": "supertasks",
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": "stable-1.0",

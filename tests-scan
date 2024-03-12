@@ -119,7 +119,6 @@ class Job(NamedTuple):
     repo: str
     bots_ref: 'str | None'
     github_context: str
-    container: 'str | None'
 
 
 # Prepare a human readable output
@@ -239,7 +238,6 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
                 },
                 "slug": slug,
                 "env": env,
-                "container": job.container,
                 # for updating naughty trackers and downloading private images
                 "secrets": ["github-token", "image-download"],
             }
@@ -365,7 +363,6 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
         statuses = api.statuses(revision)
         login = pull["head"]["user"]["login"]
         base = pull.get("base", {}).get("ref")  # The branch this pull request targets (None for direct SHA triggers)
-        merge_sha = pull.get("merge_commit_sha", revision)
 
         allowed = login in ALLOWLIST
 
@@ -426,10 +423,6 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                 checkout_ref = ref
                 if project != repo:
                     checkout_ref = testmap.get_default_branch(project)
-                    project_api = github.GitHub(repo=project)
-                    container = project_api.fetch_file(checkout_ref, '.cockpit-ci/container')
-                else:
-                    container = api.fetch_file(merge_sha, '.cockpit-ci/container')
 
                 if base != branch:
                     checkout_ref = branch
@@ -457,7 +450,6 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                     project,
                     bots_ref,
                     context,
-                    container,
                 )
 
 
