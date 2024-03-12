@@ -41,7 +41,7 @@ import subprocess
 import sys
 import time
 import urllib.parse
-from typing import Sequence
+from typing import Iterator, Sequence
 
 from lib import s3
 from lib.constants import IMAGES_DIR
@@ -58,22 +58,22 @@ else:
     SYMBOLS = {'present': ' >', 'absent': ' x', 'selected': '=>'}
 
 
-def show_status(quiet, status, *args, prefix=''):
+def show_status(quiet: bool, status: str, *args: str, prefix: str = '') -> None:
     if not quiet:
         message = ' '.join(args)
         sys.stderr.write(f'{prefix}{SYMBOLS[status]} {message}\n')
 
 
-def curl_cmd(args):
+def curl_cmd(args: Sequence[str]) -> Sequence[str]:
     return ['curl', '--connect-timeout', '10', '--fail', *args]
 
 
-def check_curl_args(args):
+def check_curl_args(args: Sequence[str]) -> tuple[str, float] | None:
     head_args = ['--silent', '--head']  # only used for this check
 
     try:
         start = time.time()
-        output = subprocess.check_output(curl_cmd(args + head_args), universal_newlines=True)
+        output = subprocess.check_output(curl_cmd((*args, *head_args)), universal_newlines=True)
         duration = time.time() - start
         return output, duration
     except subprocess.CalledProcessError:
@@ -90,10 +90,10 @@ def find(name: str, stores: Sequence[str], latest: float, quiet: bool) -> tuple[
 
         # First, check if this is an S3 store for which we have a key
         if s3.is_key_present(url):
-            result = check_curl_args(args + s3.sign_curl(url, method='HEAD'))
+            result = check_curl_args((*args, *s3.sign_curl(url, method='HEAD')))
             if result:
                 show_status(quiet, 'present', store, '(authenticated)')
-                found.append((args + s3.sign_curl(url), result, store))  # GET
+                found.append(([*args, *s3.sign_curl(url)], result, store))  # GET
                 continue
         else:
             # access the URL directly, without further authentication
@@ -111,7 +111,7 @@ def find(name: str, stores: Sequence[str], latest: float, quiet: bool) -> tuple[
         return None
 
     # Find the most recent version of this file
-    def header_date(args):
+    def header_date(args: tuple[Sequence[str], tuple[str, float], str]) -> str | float:
         _, (output, duration), message = args
         try:
             reply_line, headers_alone = output.split('\n', 1)
@@ -199,14 +199,14 @@ def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[
 
 
 # Calculate a place to put images where links are not committed in git
-def state_target(path):
+def state_target(path: str) -> str:
     data_dir = get_images_data_dir()
     os.makedirs(data_dir, mode=0o775, exist_ok=True)
     return os.path.join(data_dir, path)
 
 
 # Calculate a place to put images where links are committed in git
-def committed_target(image):
+def committed_target(image: str) -> str:
     link = os.path.join(IMAGES_DIR, image)
     if not os.path.islink(link):
         raise RuntimeError("image link does not exist: " + image)
@@ -245,7 +245,7 @@ def committed_target(image):
 
 
 @contextlib.contextmanager
-def wait_lock(target):
+def wait_lock(target: str) -> Iterator[None]:
     lockfile = os.path.join(os.path.dirname(target), ".lock." + os.path.basename(target))
 
     # we need to keep the lock fd open throughout the entire runtime, so remember it in a global-scoped variable

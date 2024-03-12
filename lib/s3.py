@@ -7,6 +7,7 @@
 # and
 # https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html
 
+import asyncio
 import base64
 import hashlib
 import hmac
@@ -18,7 +19,7 @@ import time
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from typing import IO, Dict, Iterable, List
+from typing import BinaryIO, Iterable, Mapping, Sequence
 
 from .directories import xdg_config_home
 from .network import host_ssl_context
@@ -42,8 +43,12 @@ SHA256_NIL = hashlib.sha256(b'').hexdigest()
 logger = logging.getLogger('s3')
 
 
-def get_key(hostname):
+def get_key(url: urllib.parse.ParseResult) -> tuple[str, str]:
     s3_key_dir = xdg_config_home('cockpit-dev/s3-keys', envvar='COCKPIT_S3_KEY_DIR')
+
+    if url.hostname is None:
+        raise KeyError
+    hostname = url.hostname
 
     # ie: 'cockpit-images.eu.linode.com' then 'eu.linode.com', then 'linode.com'
     while '.' in hostname:
@@ -57,26 +62,33 @@ def get_key(hostname):
             pass
         _, _, hostname = hostname.partition('.')  # strip a leading component
 
-    return None
+    raise KeyError
 
 
 def is_key_present(url: urllib.parse.ParseResult) -> bool:
     """Checks if an S3 key is available for the given url"""
-    return get_key(url.hostname) is not None
+    try:
+        return get_key(url) is not None
+    except KeyError:
+        return False
 
 
-def sign_request(url: urllib.parse.ParseResult, method, headers, checksum) -> Dict[str, str]:
+def sign_request(
+    url: urllib.parse.ParseResult, method: str, headers: Mapping[str, str], checksum: str
+) -> dict[str, str]:
     """Signs an AWS request using the AWS4-HMAC-SHA256 algorithm
 
     Returns a dictionary of extra headers which need to be sent along with the request.
     If the method is PUT then the checksum of the data to be uploaded must be provided.
     @headers, if given, are a dict of additional headers to be signed (eg: `x-amz-acl`)
     """
+    assert url.hostname is not None
+
     if url.scheme not in ['http', 'https']:
         sys.exit("S3 URLs must be http(s)")
     try:
-        access_key, secret_key = get_key(url.hostname)
-    except TypeError:
+        access_key, secret_key = get_key(url)
+    except KeyError:
         sys.exit(f"No key found for {url.hostname}")
 
     amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
@@ -103,20 +115,25 @@ def sign_request(url: urllib.parse.ParseResult, method, headers, checksum) -> Di
     return headers
 
 
-def sign_curl(url: urllib.parse.ParseResult, method='GET', headers={}, checksum=SHA256_NIL) -> List[str]:
+def sign_curl(
+    url: urllib.parse.ParseResult, method: str = 'GET', headers: Mapping[str, str] = {}, checksum: str = SHA256_NIL
+) -> Sequence[str]:
     """Same as sign_request() but formats the result as an argument list for curl, including the url"""
     headers = sign_request(url, method, headers, checksum)
     return [f'-H{key}:{value}' for key, value in headers.items()] + [url.geturl()]
 
 
-def urlopen(url: urllib.parse.ParseResult, method='GET', headers={}, data=b'') -> IO:
+def urlopen(
+    url: urllib.parse.ParseResult, method: str = 'GET', headers: Mapping[str, str] = {}, data: bytes = b''
+) -> BinaryIO:
     """Same as sign_request() but calls urlopen() on the result"""
     retries = 0
     while True:
         headers = sign_request(url, method, headers, hashlib.sha256(data).hexdigest())
         request = urllib.request.Request(url.geturl(), headers=headers, method=method, data=data)
         try:
-            return urllib.request.urlopen(request, context=host_ssl_context(url.netloc))
+            result = urllib.request.urlopen(request, context=host_ssl_context(url.netloc))
+            return result  # type: ignore[no-any-return] # https://github.com/python/typeshed/issues/3026
         except urllib.error.HTTPError as exc:
             logger.debug('%s %s %s attempt #%i → %s:', method, url.geturl(), headers, retries, exc.status)
             logger.debug('  %s', exc.read())
@@ -129,23 +146,36 @@ def urlopen(url: urllib.parse.ParseResult, method='GET', headers={}, data=b'') -
             raise
 
 
-def list_bucket(url: urllib.parse.ParseResult) -> ET:
+async def request(
+    url: urllib.parse.ParseResult, method: str, headers: Mapping[str, str] = {}, data: bytes = b''
+) -> None:
+    def run() -> None:
+        with urlopen(url, method, headers, data) as _:
+            pass
+
+    await asyncio.get_running_loop().run_in_executor(None, run)
+
+
+def list_bucket(url: urllib.parse.ParseResult) -> ET.Element:
     """Get the ListBucketResult as a xml.etree.ElementTree"""
     with urlopen(url) as response:
         return ET.fromstring(response.read())
 
 
-def parse_list(result: ET, *keys) -> Iterable[Iterable[str]]:
+def parse_list(result: ET.Element, *keys: str) -> Iterable[Iterable[str]]:
     """For each item in the bucket, return the given keys"""
     # 'http' url is API: see https://doc.s3.amazonaws.com/2006-03-01/AmazonS3.wsdl
     xmlns = {'s3': 'http://s3.amazonaws.com/doc/2006-03-01/'}
     for child in result.findall('s3:Contents', xmlns):
-        yield (child.find(f's3:{key}', xmlns).text for key in keys)
+        yield (attr is not None and attr.text or '' for attr in (child.find(f's3:{key}', xmlns) for key in keys))
 
 
-def sign_url(url: urllib.parse.ParseResult, method='GET', headers=[], duration=12 * 60 * 60) -> str:
+def sign_url(
+    url: urllib.parse.ParseResult, method: str = 'GET', headers: Sequence[str] = (), duration: int = 12 * 60 * 60
+) -> str:
     """Returns a "pre-signed" url for the given method and headers"""
-    access, secret = get_key(url.hostname)
+    assert url.hostname is not None
+    access, secret = get_key(url)
     bucket = url.hostname.split('.')[0]
 
     expires = int(time.time()) + duration
@@ -159,7 +189,7 @@ def sign_url(url: urllib.parse.ParseResult, method='GET', headers=[], duration=1
     return url._replace(query=query).geturl()
 
 
-def main():
+def main() -> None:
     # to be used like `python3 -m lib.s3 get https://...` from the toplevel dir
     prognam, cmd, uri = sys.argv
 

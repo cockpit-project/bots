@@ -15,7 +15,10 @@ test_mypy() {
       lib/aio
       lib/directories.py
       lib/network.py
+      lib/s3.py
+      lib/testmap.py
       checkout-and-run
+      image-download
       job-runner
     '
     mypy  --scripts-are-modules --no-error-summary --strict $mypy_strict_files

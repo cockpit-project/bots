@@ -17,19 +17,19 @@
 
 import itertools
 import os.path
-from typing import Iterable, Optional
+from typing import Iterable, Mapping, Optional, Sequence
 
 from lib.constants import TEST_OS_DEFAULT
 
 COCKPIT_SCENARIOS = {'networking', 'storage', 'expensive', 'other'}
 
 
-def contexts(image, *scenarios: Iterable[str], repo: Optional[str] = None):
+def contexts(image: str, *scenarios: Iterable[str], repo: Optional[str] = None) -> Sequence[str]:
     return [image + '/' + '-'.join(i) + (('@' + repo) if repo else '')
             for i in itertools.product(*scenarios)]
 
 
-REPO_BRANCH_CONTEXT = {
+REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'cockpit-project/bots': {
         # currently no tests outside of GitHub actions, but declares primary branch
         'main': [],
@@ -267,18 +267,18 @@ IMAGE_REFRESH_TRIGGERS = {
 # The OSTree variants can't build their own packages, so we build in
 # their classic siblings.  For example, fedora-coreos is built
 # in fedora-X
-def get_build_image(image):
+def get_build_image(image: str) -> str:
     (test_os, unused) = os.path.splitext(os.path.basename(image))
     return OSTREE_BUILD_IMAGE.get(image, image)
 
 
 # some tests have suffixes that run the same image in different modes; map a
 # test context image to an actual physical image name
-def get_test_image(image):
+def get_test_image(image: str) -> str:
     return image.replace("-distropkg", "")
 
 
-def split_context(context):
+def split_context(context: str) -> tuple[str, int | None, str, str]:
     bots_pr = None
     repo_branch = ""
 
@@ -295,11 +295,11 @@ def split_context(context):
     if len(context_parts) > 2:
         repo_branch = context_parts[2]
 
-    repo_branch = repo_branch.split('/', 2)
-    return (image_scenario, bots_pr, '/'.join(repo_branch[:2]), ''.join(repo_branch[2:]))
+    repo_branch_parts = repo_branch.split('/', 2)
+    return (image_scenario, bots_pr, '/'.join(repo_branch_parts[:2]), ''.join(repo_branch_parts[2:]))
 
 
-def is_valid_context(context, repo):
+def is_valid_context(context: str, repo: str) -> bool:
     image_scenario, _bots_pr, context_repo, branch = split_context(context)
     image = image_scenario.split('/')[0]
     # if the context specifies a repo, use that one instead
@@ -307,12 +307,12 @@ def is_valid_context(context, repo):
     if context_repo:
         # if the context specifies a repo, only look at that particular branch
         try:
-            repo_images = [c.split('/')[0] for c in branch_contexts[branch or get_default_branch(context_repo)]]
+            repo_images = {c.split('/')[0] for c in branch_contexts[branch or get_default_branch(context_repo)]}
         except KeyError:
             # unknown project
             return False
         # also allow _manual tests
-        repo_images.extend([c.split('/')[0] for c in branch_contexts.get('_manual', [])])
+        repo_images.update(c.split('/')[0] for c in branch_contexts.get('_manual', []))
     else:
         # FIXME: if context is just a simple OS/scenario, we don't know which branch
         # is meant by the caller; accept known contexts from all branches for now
@@ -322,12 +322,12 @@ def is_valid_context(context, repo):
     return image in repo_images
 
 
-def projects():
+def projects() -> Iterable[str]:
     """Return all projects for which we run tests."""
     return REPO_BRANCH_CONTEXT.keys()
 
 
-def get_default_branch(repo):
+def get_default_branch(repo: str) -> str:
     branches = REPO_BRANCH_CONTEXT[repo]
     if 'main' in branches:
         return 'main'
@@ -336,18 +336,18 @@ def get_default_branch(repo):
     raise ValueError(f"repo {repo} does not contain main or master branch")
 
 
-def tests_for_project(project):
+def tests_for_project(project: str) -> Mapping[str, Sequence[str]]:
     """Return branch -> contexts map."""
-    res = REPO_BRANCH_CONTEXT.get(project, {}).copy()
+    res = dict(REPO_BRANCH_CONTEXT.get(project, {}))
     # allow bots/cockpituous integration tests to inject a new context
     inject = os.getenv("COCKPIT_TESTMAP_INJECT")
     if inject:
         branch, context = inject.split('/', 1)
-        res.setdefault(branch, []).append(context)
+        res[branch] = [*res.get(branch, ()), context]
     return res
 
 
-def tests_for_image(image):
+def tests_for_image(image: str) -> Sequence[str]:
     """Return context list of all tests required for testing an image"""
 
     tests = set(IMAGE_REFRESH_TRIGGERS.get(image, []))
@@ -371,7 +371,7 @@ def tests_for_image(image):
     return list(tests)
 
 
-def tests_for_po_refresh(project):
+def tests_for_po_refresh(project: str) -> Sequence[str]:
     # by default, run all tests
     contexts = REPO_BRANCH_CONTEXT.get(project, {}).get(get_default_branch(project), [])
     # cockpit's are expensive, so only run a few
