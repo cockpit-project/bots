@@ -402,6 +402,60 @@ class TestTestsScan(unittest.TestCase):
             }
         }
 
+    # mock time for predictable test name
+    @unittest.mock.patch("time.strftime", return_value="20240102-030405")
+    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    def do_test_amqp_pr_cross_project(self, status_branch, mock_queue, _mock_strftime):
+        repo_branch = f"cockpit-project/cockpituous{f'/{status_branch}' if status_branch else ''}"
+        # SHA is attached to PR #1
+        args = ["tests-scan", "--dry", "--repo", self.repo,
+                # need to pick a project with a REPO_BRANCH_CONTEXT entry for default branch
+                "--context", f"{self.context}@{repo_branch}",
+                "--sha", "abcdef", "--amqp", "amqp.example.com:1234"]
+
+        with unittest.mock.patch("sys.argv", args):
+            # needs to be in-process for mocking
+            self.get_tests_scan_module().main()
+
+        mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
+        channel = mock_queue.return_value.__enter__.return_value.channel
+
+        channel.basic_publish.assert_called_once()
+        self.assertEqual(channel.basic_publish.call_args[0][0], "")
+        self.assertEqual(channel.basic_publish.call_args[0][1], "public")
+        request = json.loads(channel.basic_publish.call_args[0][2])
+
+        branch = status_branch or "main"
+
+        # make-checkout tests cockpituous, but tests-invoke *reports* for project/repo
+        expected_command = (
+            './s3-streamer --repo project/repo --test-name pull-1-20240102-030405 '
+            f'--github-context fedora/nightly@{repo_branch} --revision abcdef -- '
+            '/bin/sh -c "PRIORITY=0005 '
+            f'./make-checkout --verbose --repo=cockpit-project/cockpituous --rebase={branch} {branch} && '
+            f'cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH={branch} COCKPIT_BOTS_REF=main '
+            'TEST_SCENARIO=nightly ../tests-invoke --pull-number 1 --revision abcdef --repo project/repo"')
+
+        assert request == {
+            "command": expected_command,
+            "type": "test",
+            "sha": "abcdef",
+            "ref": branch,
+            "name": f"pull-{self.pull_number}",
+            # job-runner currently disabled for cross-project tests (commit c377eb892)
+            "job": None,
+        }
+
+    def test_amqp_sha_pr_cross_project_default_branch(self):
+        """Default branch cross-project status event on PR"""
+
+        self.do_test_amqp_pr_cross_project(None)
+
+    def test_amqp_sha_pr_cross_project_explicit_branch(self):
+        """Explicit branch cross-project status event on PR"""
+
+        self.do_test_amqp_pr_cross_project("otherbranch")
+
     def do_test_tests_invoke(self, attachments_url, expected_logs_url):
         repo = "cockpit-project/cockpit"
         args = ["--revision", self.revision, "--repo", repo]
