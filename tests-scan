@@ -205,7 +205,8 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
     if command:
         priority = min(job.priority, distributed_queue.MAX_PRIORITY)
 
-        slug = f"{job.name}-{job.revision[:8]}-{time.strftime('%Y%m%d-%H%M%S')}-{job.context.replace('/', '-')}"
+        slug_suffix = job.github_context.replace('/', '-').replace('@', '-')
+        slug = f"{job.name}-{job.revision[:8]}-{time.strftime('%Y%m%d-%H%M%S')}-{slug_suffix}"
         (image, _, scenario) = job.context.partition("/")
 
         env = {
