@@ -41,6 +41,7 @@ import subprocess
 import sys
 import time
 import urllib.parse
+from typing import Sequence
 
 from lib import s3
 from lib.constants import IMAGES_DIR
@@ -269,7 +270,7 @@ def wait_lock(target):
             pass
 
 
-def download_images(image_list, force, quiet, state, store):
+def download_images(image_list: Sequence[str], force: bool, quiet: bool, state: bool, stores: Sequence[str]) -> None:
     data_dir = get_images_data_dir()
     os.makedirs(data_dir, exist_ok=True)
 
@@ -285,29 +286,20 @@ def download_images(image_list, force, quiet, state, store):
                 if os.path.islink(link) and os.path.dirname(os.readlink(link)) == "":
                     image_list.append(filename)
 
-    success = True
-
     for image in image_list:
         image = get_test_image(image)
-        try:
-            if state:
-                target = state_target(image)
-            else:
-                target = committed_target(image)
+        if state:
+            target = state_target(image)
+        else:
+            target = committed_target(image)
 
-            # don't download the same thing multiple times in parallel
-            with wait_lock(target):
-                if force or state or not os.path.exists(target):
-                    download(target, force, state, quiet, store)
-
-        except Exception as ex:
-            success = False
-            sys.stderr.write(f"image-download: {ex!s}\n")
-
-    return success
+        # don't download the same thing multiple times in parallel
+        with wait_lock(target):
+            if force or state or not os.path.exists(target):
+                download(target, force, state, quiet, stores)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='Download a bot state or images')
     parser.add_argument("--force", action="store_true", help="Force unnecessary downloads")
     parser.add_argument("--store", action="append", help="Where to find state or images")
@@ -316,11 +308,8 @@ def main():
     parser.add_argument('image', nargs='*')
     args = parser.parse_args()
 
-    if not download_images(args.image, args.force, args.quiet, args.state, args.store):
-        return 1
-
-    return 0
+    download_images(args.image, args.force, args.quiet, args.state, args.store)
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
