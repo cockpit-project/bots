@@ -12,11 +12,7 @@ test_ruff() {
 test_mypy() {
     command -v mypy >/dev/null || { echo 'no mypy installed'; return 0; }
     mypy_strict_files='
-      lib/aio
-      lib/directories.py
-      lib/network.py
-      lib/s3.py
-      lib/testmap.py
+      lib/
       checkout-and-run
       image-download
       image-upload

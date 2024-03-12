@@ -19,8 +19,7 @@
 
 import unittest
 
-import testmap
-
+from lib import testmap
 from lib.constants import TEST_OS_DEFAULT
 
 
