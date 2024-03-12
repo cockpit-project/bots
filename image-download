@@ -80,7 +80,7 @@ def check_curl_args(args):
         return None
 
 
-def find(name, stores, latest, quiet):
+def find(name: str, stores: Sequence[str], latest: float, quiet: bool) -> tuple[list[str], str] | None:
     found = []
 
     for store in stores:
@@ -108,7 +108,7 @@ def find(name, stores, latest, quiet):
 
     # If we couldn't find the file, but it exists, we're good
     if not found:
-        return None, None
+        return None
 
     # Find the most recent version of this file
     def header_date(args):
@@ -150,14 +150,15 @@ def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[
     else:
         since = EPOCH
 
-    args, message = find(name, stores, latest=state, quiet=quiet)
+    result = find(name, stores, latest=state, quiet=quiet)
 
     # If we couldn't find the file, but it exists, we're good
-    if not args:
+    if result is None:
         if exists:
             return
         raise RuntimeError(f"image-download: couldn't find file anywhere: {name}")
 
+    args, message = result
     show_status(quiet, 'selected', urllib.parse.urljoin(message, name))
 
     temp = dest + ".partial"
