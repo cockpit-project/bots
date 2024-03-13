@@ -18,6 +18,7 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import importlib
+import io
 import json
 import os
 import shutil
@@ -25,6 +26,7 @@ import subprocess
 import tempfile
 import unittest
 import unittest.mock
+from typing import Tuple
 
 from lib.constants import BOTS_DIR
 from task import github
@@ -96,6 +98,14 @@ class Handler(MockHandler):
 
 
 class TestTestsScan(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        loader = importlib.machinery.SourceFileLoader("tests_scan", os.path.join(BOTS_DIR, "tests-scan"))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        loader.exec_module(module)
+        cls.tests_scan_module = module
+
     def setUp(self):
         self.temp = tempfile.mkdtemp()
         self.cache_dir = os.path.join(self.temp, "cache")
@@ -108,147 +118,103 @@ class TestTestsScan(unittest.TestCase):
         self.revision = "abcdef"
         os.environ["GITHUB_API"] = f"http://{ADDRESS[0]}:{ADDRESS[1]}"
 
+        # expected outputs for our standard mock PR #1 above
+        self.expected_command = (
+            f"./s3-streamer --repo {self.repo} --test-name pull-{self.pull_number}-20240102-030405"
+            f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
+            f" \"PRIORITY=0005 ./make-checkout --verbose --repo={self.repo} --rebase=stable-1.0 {self.revision}"
+            f" && cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=stable-1.0"
+            " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke --pull-number"
+            f" {self.pull_number} --revision {self.revision} --repo {self.repo}\"\n")
+
+        self.expected_human_output = (
+            f"pull-{self.pull_number}      {self.context}            {self.revision}"
+            f"     5.99999  ({self.repo}) [bots@main]   {{stable-1.0}}\n")
+
     def tearDown(self):
         self.server.kill()
         shutil.rmtree(self.temp)
 
-    def run_tests_scan(self, args):
-        script = os.path.join(BOTS_DIR, "tests-scan")
-        proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True)
-        output, stderr = proc.communicate()
-        return proc, output, stderr
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    @unittest.mock.patch("sys.stdout", new_callable=io.StringIO)
+    # fake the time so that we get predictable test names
+    @unittest.mock.patch("time.strftime", return_value="20240102-030405")
+    def run_tests_scan(self, args: list[str], _mock_strftime, mock_stdout, mock_stderr,
+                       repo: str | None = None) -> Tuple[str | int, str, str]:
+        with unittest.mock.patch("sys.argv", ["tests-scan", "--repo", repo or self.repo, *args]):
+            try:
+                self.tests_scan_module.main()  # type: ignore[attr-defined]
+                code: str | int = 0
+            except SystemExit as e:
+                assert e.code
+                code = e.code
 
-    def expected_command(self):
-        return (f"./s3-streamer --repo {self.repo} --test-name pull-{self.pull_number}-\\d+-\\d+"
-                f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
-                f" \"PRIORITY=0005 ./make-checkout --verbose --repo={self.repo} --rebase=stable-1.0 {self.revision}"
-                f" && cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=stable-1.0"
-                " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke --pull-number"
-                f" {self.pull_number} --revision {self.revision} --repo {self.repo}\"")
+        return code, mock_stdout.getvalue(), mock_stderr.getvalue()
 
-    def expected_human_output(self, pull_number=None):
-        if pull_number is None:
-            pull_number = self.pull_number
-        return (f"pull-{pull_number}      {self.context}            {self.revision}"
-                f"     5.99999  ({self.repo}) [bots@main]   {{stable-1.0}}")
+    def run_success(self, args: list[str], expected_output: str, repo: str | None = None):
+        code, output, stderr = self.run_tests_scan(args, repo=repo)
+
+        assert code == 0
+        assert stderr == ""
+        assert output == expected_output
 
     def test_pull_number(self):
-        args = ["--dry", "--repo", self.repo, "--pull-number", self.pull_number,
-                "--context", self.context]
-        proc, output, stderr = self.run_tests_scan(args)
-
-        self.assertEqual(proc.returncode, 0)
-        expected_output = self.expected_command()
-        self.assertRegex(output, expected_output)
-        self.assertIsNone(stderr)
+        args = ["--dry", "--pull-number", self.pull_number, "--context", self.context]
+        self.run_success(args, self.expected_command)
 
     def test_unkown_pull_number(self):
-        args = ["--dry", "--repo", self.repo, "--pull-number", "2", "--context", "fedora/nightly"]
-        proc, _, stderr = self.run_tests_scan(args)
+        args = ["--dry", "--pull-number", "2", "--context", "fedora/nightly"]
+        code, output, stderr = self.run_tests_scan(args)
 
-        self.assertEqual(proc.returncode, 1)
-        self.assertIsNone(stderr)
+        # sys.exit(str) will do that to you..
+        assert code == "Can't find pull request 2"
+        assert stderr == ""
+        assert output == ""
 
     def test_pull_data(self):
-        args = ["--dry", "--repo", self.repo, "--pull-data",
-                json.dumps({'pull_request': GITHUB_DATA['/repos/project/repo/pulls/1']}),
-                "--context", self.context]
-        proc, output, stderr = self.run_tests_scan(args)
-
-        self.assertEqual(proc.returncode, 0)
-        expected_output = self.expected_command()
-        self.assertRegex(output, expected_output)
-        self.assertIsNone(stderr)
+        args = ["--dry", "--context", self.context,
+                "--pull-data", json.dumps({'pull_request': GITHUB_DATA['/repos/project/repo/pulls/1']})]
+        self.run_success(args, self.expected_command)
 
     def test_no_arguments(self):
-        args = ["--dry", "--repo", self.repo, "--context", self.context]
-        proc, output, stderr = self.run_tests_scan(args)
-
-        self.assertEqual(proc.returncode, 0)
-        expected_output = self.expected_command()
-        self.assertRegex(output.strip(), expected_output)
-        self.assertIsNone(stderr)
+        self.run_success(["--dry", "--context", self.context], self.expected_command)
 
     def test_pull_number_human_readable(self):
-        args = ["--dry", "--repo", self.repo, "--pull-number", self.pull_number,
-                "--context", self.context, "-v"]
-        proc, output, stderr = self.run_tests_scan(args)
-
-        self.assertEqual(proc.returncode, 0)
-        expected_output = self.expected_human_output()
-        self.assertEqual(output.strip(), expected_output)
-        self.assertIsNone(stderr)
+        self.run_success(["--dry", "-v", "--context", self.context], self.expected_human_output)
 
     def test_pull_data_human_readable(self):
-        args = ["--dry", "--repo", self.repo, "--pull-data",
-                json.dumps({'pull_request': GITHUB_DATA['/repos/project/repo/pulls/1']}),
-                "--context", self.context, "-v"]
-        proc, output, stderr = self.run_tests_scan(args)
-
-        self.assertEqual(proc.returncode, 0)
-        expected_output = self.expected_human_output()
-        self.assertEqual(output.strip(), expected_output)
-        self.assertIsNone(stderr)
+        args = ["--dry", "-v", "--context", self.context,
+                "--pull-data", json.dumps({'pull_request': GITHUB_DATA['/repos/project/repo/pulls/1']})]
+        self.run_success(args, self.expected_human_output)
 
     def test_no_arguments_human_readable(self):
-        args = ["--dry", "--repo", self.repo, "--context", self.context, "-v"]
-        proc, output, stderr = self.run_tests_scan(args)
-
-        self.assertEqual(proc.returncode, 0)
-        expected_output = self.expected_human_output()
-        self.assertEqual(output.strip(), expected_output)
-        self.assertIsNone(stderr)
+        self.run_success(["--dry", "-v", "--context", self.context], self.expected_human_output)
 
     def test_no_pull_request(self):
         repo = "cockpit-project/cockpit"
-        args = ["--dry", "--sha", self.revision, "--repo", repo,
-                "--context", self.context]
-        proc, output, stderr = self.run_tests_scan(args)
-        expected_output = (f"./s3-streamer --repo {repo} --test-name pull-\\d+-\\d+-\\d+"
+        # PR #0 is special for "no PR"
+        expected_output = (f"./s3-streamer --repo {repo} --test-name pull-0-20240102-030405"
                            f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
                            f" \"PRIORITY=0006 ./make-checkout --verbose --repo={repo} {self.revision}"
                            f" && cd make-checkout-workdir && TEST_OS=fedora"
                            " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke"
-                           f" --revision {self.revision} --repo {repo}\"")
+                           f" --revision {self.revision} --repo {repo}\"\n")
 
-        self.assertEqual(proc.returncode, 0)
-        self.assertRegex(output.strip(), expected_output)
-        self.assertIsNone(stderr)
+        self.run_success(["--dry", "--sha", self.revision, "--context", self.context],
+                         expected_output, repo=repo)
 
     def test_no_pull_request_human(self):
         repo = "cockpit-project/cockpit"
-        args = ["--dry", "--sha", self.revision, "--repo", repo,
-                "--context", self.context, "-v"]
-        proc, output, stderr = self.run_tests_scan(args)
         expected_output = (f"pull-0      {self.context}            {self.revision}"
-                           f"     6.0  ({repo}) [bots@main]")
+                           f"     6.0  ({repo}) [bots@main]\n")
 
-        self.assertEqual(proc.returncode, 0)
-        self.assertEqual(output.strip(), expected_output)
-        self.assertIsNone(stderr)
+        self.run_success(["--dry", "-v", "--sha", self.revision, "--context", self.context],
+                         expected_output, repo=repo)
 
-    @staticmethod
-    def get_tests_scan_module():
-        """in-process version of tests-scan
-
-        This is useful for mocking.
-        """
-        loader = importlib.machinery.SourceFileLoader("tests_scan", os.path.join(BOTS_DIR, "tests-scan"))
-        spec = importlib.util.spec_from_loader(loader.name, loader)
-        module = importlib.util.module_from_spec(spec)
-        loader.exec_module(module)
-        return module
-
-    # mock time for predictable test name
-    @unittest.mock.patch("time.strftime", return_value="20240102-030405")
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def test_amqp_pr(self, mock_queue, _mock_strftime):
-        args = ["tests-scan", "--dry", "--repo", self.repo, "--context", self.context,
-                "--amqp", "amqp.example.com:1234"]
-
-        with unittest.mock.patch("sys.argv", args):
-            # needs to be in-process for mocking
-            self.get_tests_scan_module().main()
+    def test_amqp_pr(self, mock_queue):
+        args = ["--dry", "--context", self.context, "--amqp", "amqp.example.com:1234"]
+        self.run_success(args, "")
 
         mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
@@ -290,18 +256,12 @@ class TestTestsScan(unittest.TestCase):
             }
         }
 
-    # mock time for predictable test name
-    @unittest.mock.patch("time.strftime", return_value="20240102-030405")
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def test_amqp_sha_nightly(self, mock_queue, _mock_strftime):
+    def test_amqp_sha_nightly(self, mock_queue):
         """Nightly test on main branch, without PR"""
         # SHA without PR
-        args = ["tests-scan", "--dry", "--repo", self.repo, "--context", self.context,
-                "--sha", "9988aa", "--amqp", "amqp.example.com:1234"]
-
-        with unittest.mock.patch("sys.argv", args):
-            # needs to be in-process for mocking
-            self.get_tests_scan_module().main()
+        args = ["--dry", "--context", self.context, "--sha", "9988aa", "--amqp", "amqp.example.com:1234"]
+        self.run_success(args, "")
 
         mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
@@ -344,19 +304,13 @@ class TestTestsScan(unittest.TestCase):
             }
         }
 
-    # mock time for predictable test name
-    @unittest.mock.patch("time.strftime", return_value="20240102-030405")
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def test_amqp_sha_pr(self, mock_queue, _mock_strftime):
+    def test_amqp_sha_pr(self, mock_queue):
         """Status event on PR, via human tests-trigger"""
 
         # SHA is attached to PR #1
-        args = ["tests-scan", "--dry", "--repo", self.repo, "--context", self.context,
-                "--sha", "abcdef", "--amqp", "amqp.example.com:1234"]
-
-        with unittest.mock.patch("sys.argv", args):
-            # needs to be in-process for mocking
-            self.get_tests_scan_module().main()
+        args = ["--dry", "--context", self.context, "--sha", "abcdef", "--amqp", "amqp.example.com:1234"]
+        self.run_success(args, "")
 
         mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
@@ -396,20 +350,14 @@ class TestTestsScan(unittest.TestCase):
             }
         }
 
-    # mock time for predictable test name
-    @unittest.mock.patch("time.strftime", return_value="20240102-030405")
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def do_test_amqp_pr_cross_project(self, status_branch, mock_queue, _mock_strftime):
+    def do_test_amqp_pr_cross_project(self, status_branch, mock_queue):
         repo_branch = f"cockpit-project/cockpituous{f'/{status_branch}' if status_branch else ''}"
         # SHA is attached to PR #1
-        args = ["tests-scan", "--dry", "--repo", self.repo,
+        args = ["--dry", "--sha", "abcdef", "--amqp", "amqp.example.com:1234",
                 # need to pick a project with a REPO_BRANCH_CONTEXT entry for default branch
-                "--context", f"{self.context}@{repo_branch}",
-                "--sha", "abcdef", "--amqp", "amqp.example.com:1234"]
-
-        with unittest.mock.patch("sys.argv", args):
-            # needs to be in-process for mocking
-            self.get_tests_scan_module().main()
+                "--context", f"{self.context}@{repo_branch}"]
+        self.run_success(args, "")
 
         mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
