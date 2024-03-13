@@ -22,14 +22,12 @@ import io
 import json
 import os
 import shutil
-import subprocess
 import tempfile
 import unittest
 import unittest.mock
 from typing import Tuple
 
 from lib.constants import BOTS_DIR
-from task import github
 from task.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.7", 9898)
@@ -113,20 +111,12 @@ class TestTestsScan(unittest.TestCase):
         self.server = MockServer(ADDRESS, Handler, GITHUB_DATA)
         self.server.start()
         self.repo = "project/repo"
-        self.pull_number = "1"
+        self.pull_number = 1
         self.context = "fedora/nightly"
         self.revision = "abcdef"
         os.environ["GITHUB_API"] = f"http://{ADDRESS[0]}:{ADDRESS[1]}"
 
-        # expected outputs for our standard mock PR #1 above
-        self.expected_command = (
-            f"./s3-streamer --repo {self.repo} --test-name pull-{self.pull_number}-20240102-030405"
-            f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
-            f" \"PRIORITY=0005 ./make-checkout --verbose --repo={self.repo} --rebase=stable-1.0 {self.revision}"
-            f" && cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=stable-1.0"
-            " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke --pull-number"
-            f" {self.pull_number} --revision {self.revision} --repo {self.repo}\"\n")
-
+        # expected human output for our standard mock PR #1 above
         self.expected_human_output = (
             f"pull-{self.pull_number}      {self.context}            {self.revision}"
             f"     5.99999  ({self.repo}) [bots@main]   {{stable-1.0}}\n")
@@ -158,9 +148,31 @@ class TestTestsScan(unittest.TestCase):
         assert stderr == ""
         assert output == expected_output
 
+    # expected job JSON output for our standard mock PR #1 above
+    def run_success_mock_pr(self, args):
+        code, output, stderr = self.run_tests_scan(args)
+
+        assert code == 0
+        assert stderr == ""
+        assert json.loads(output) == {
+            'pull': self.pull_number,
+            'context': self.context,
+            'env': {
+                'BASE_BRANCH': 'stable-1.0',
+                'COCKPIT_BOTS_REF': 'main',
+                'TEST_OS': 'fedora',
+                'TEST_SCENARIO': 'nightly'},
+            'repo': self.repo,
+            'command-subject': None,
+            'report': None,
+            'secrets': ['github-token', 'image-download'],
+            'sha': self.revision,
+            'slug': f'pull-{self.pull_number}-{self.revision}-20240102-030405-fedora-nightly',
+        }
+
     def test_pull_number(self):
-        args = ["--dry", "--pull-number", self.pull_number, "--context", self.context]
-        self.run_success(args, self.expected_command)
+        args = ["--dry", "--pull-number", str(self.pull_number), "--context", self.context]
+        self.run_success_mock_pr(args)
 
     def test_unkown_pull_number(self):
         args = ["--dry", "--pull-number", "2", "--context", "fedora/nightly"]
@@ -174,10 +186,10 @@ class TestTestsScan(unittest.TestCase):
     def test_pull_data(self):
         args = ["--dry", "--context", self.context,
                 "--pull-data", json.dumps({'pull_request': GITHUB_DATA['/repos/project/repo/pulls/1']})]
-        self.run_success(args, self.expected_command)
+        self.run_success_mock_pr(args)
 
     def test_no_arguments(self):
-        self.run_success(["--dry", "--context", self.context], self.expected_command)
+        self.run_success_mock_pr(["--dry", "--context", self.context])
 
     def test_pull_number_human_readable(self):
         self.run_success(["--dry", "-v", "--context", self.context], self.expected_human_output)
@@ -189,19 +201,6 @@ class TestTestsScan(unittest.TestCase):
 
     def test_no_arguments_human_readable(self):
         self.run_success(["--dry", "-v", "--context", self.context], self.expected_human_output)
-
-    def test_no_pull_request(self):
-        repo = "cockpit-project/cockpit"
-        # PR #0 is special for "no PR"
-        expected_output = (f"./s3-streamer --repo {repo} --test-name pull-0-20240102-030405"
-                           f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
-                           f" \"PRIORITY=0006 ./make-checkout --verbose --repo={repo} {self.revision}"
-                           f" && cd make-checkout-workdir && TEST_OS=fedora"
-                           " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke"
-                           f" --revision {self.revision} --repo {repo}\"\n")
-
-        self.run_success(["--dry", "--sha", self.revision, "--context", self.context],
-                         expected_output, repo=repo)
 
     def test_no_pull_request_human(self):
         repo = "cockpit-project/cockpit"
@@ -224,24 +223,11 @@ class TestTestsScan(unittest.TestCase):
         self.assertEqual(channel.basic_publish.call_args[0][1], "public")
         request = json.loads(channel.basic_publish.call_args[0][2])
 
-        expected_command = (
-            f"./s3-streamer --repo {self.repo} --test-name pull-{self.pull_number}-20240102-030405"
-            f" --github-context {self.context} --revision {self.revision} -- /bin/sh -c"
-            f" \"PRIORITY=0005 ./make-checkout --verbose --repo={self.repo} --rebase=stable-1.0 {self.revision}"
-            f" && cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=stable-1.0"
-            " COCKPIT_BOTS_REF=main TEST_SCENARIO=nightly ../tests-invoke --pull-number"
-            f" {self.pull_number} --revision {self.revision} --repo {self.repo}\"")
-
         assert request == {
-            "command": expected_command,
-            "type": "test",
-            "sha": "abcdef",
-            "ref": "abcdef",
-            "name": f"pull-{self.pull_number}",
             "job": {
                 "context": "fedora/nightly",
                 "repo": "project/repo",
-                "pull": int(self.pull_number),
+                "pull": self.pull_number,
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
@@ -271,19 +257,8 @@ class TestTestsScan(unittest.TestCase):
         self.assertEqual(channel.basic_publish.call_args[0][1], "public")
         request = json.loads(channel.basic_publish.call_args[0][2])
 
-        expected_command = (
-            './s3-streamer --repo project/repo --test-name pull-0-20240102-030405 '
-            '--github-context fedora/nightly --revision 9988aa -- /bin/sh -c "PRIORITY=0005 '
-            './make-checkout --verbose --repo=project/repo 9988aa && '
-            'cd make-checkout-workdir && TEST_OS=fedora COCKPIT_BOTS_REF=main '
-            'TEST_SCENARIO=nightly ../tests-invoke --revision 9988aa --repo project/repo"')
         self.maxDiff = None
         assert request == {
-            "command": expected_command,
-            "type": "test",
-            "sha": "9988aa",
-            "ref": "9988aa",
-            "name": "pull-0",
             "job": {
                 "context": "fedora/nightly",
                 "repo": "project/repo",
@@ -320,22 +295,11 @@ class TestTestsScan(unittest.TestCase):
         self.assertEqual(channel.basic_publish.call_args[0][1], "public")
         request = json.loads(channel.basic_publish.call_args[0][2])
 
-        expected_command = (
-            './s3-streamer --repo project/repo --test-name pull-1-20240102-030405 '
-            '--github-context fedora/nightly --revision abcdef -- /bin/sh -c "PRIORITY=0005 '
-            './make-checkout --verbose --repo=project/repo --rebase=stable-1.0 abcdef && '
-            'cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH=stable-1.0 COCKPIT_BOTS_REF=main '
-            'TEST_SCENARIO=nightly ../tests-invoke --pull-number 1 --revision abcdef --repo project/repo"')
         assert request == {
-            "command": expected_command,
-            "type": "test",
-            "sha": "abcdef",
-            "ref": "abcdef",
-            "name": f"pull-{self.pull_number}",
             "job": {
                 "context": "fedora/nightly",
                 "repo": "project/repo",
-                "pull": int(self.pull_number),
+                "pull": self.pull_number,
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
@@ -369,31 +333,19 @@ class TestTestsScan(unittest.TestCase):
 
         branch = status_branch or "main"
 
-        # make-checkout tests cockpituous, but tests-invoke *reports* for project/repo
-        expected_command = (
-            './s3-streamer --repo project/repo --test-name pull-1-20240102-030405 '
-            f'--github-context fedora/nightly@{repo_branch} --revision abcdef -- '
-            '/bin/sh -c "PRIORITY=0005 '
-            f'./make-checkout --verbose --repo=cockpit-project/cockpituous --rebase={branch} {branch} && '
-            f'cd make-checkout-workdir && TEST_OS=fedora BASE_BRANCH={branch} COCKPIT_BOTS_REF=main '
-            'TEST_SCENARIO=nightly ../tests-invoke --pull-number 1 --revision abcdef --repo project/repo"')
-
         slug_repo_branch = repo_branch.replace('@', '-').replace('/', '-')
 
         assert request == {
-            "command": expected_command,
-            "type": "test",
-            "sha": "abcdef",
-            "ref": branch,
-            "name": f"pull-{self.pull_number}",
             "job": {
+                # reports for project/reop
                 "context": f"fedora/nightly@{repo_branch}",
+                # but tests cockpituous
+                "command-subject": {"repo": "cockpit-project/cockpituous", "branch": branch},
                 "repo": "project/repo",
-                "pull": int(self.pull_number),
+                "pull": self.pull_number,
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly-{slug_repo_branch}",
-                "command-subject": {"repo": "cockpit-project/cockpituous", "branch": branch},
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": branch,
@@ -413,60 +365,6 @@ class TestTestsScan(unittest.TestCase):
         """Explicit branch cross-project status event on PR"""
 
         self.do_test_amqp_pr_cross_project("otherbranch")
-
-    def do_test_tests_invoke(self, attachments_url, expected_logs_url):
-        repo = "cockpit-project/cockpit"
-        args = ["--revision", self.revision, "--repo", repo]
-        script = os.path.join(BOTS_DIR, "tests-invoke")
-        with tempfile.TemporaryDirectory() as tempdir:
-            testdir = f"{tempdir}/.cockpit-ci"
-            os.makedirs(testdir)
-            with open(f"{testdir}/run", "w") as fp:
-                fp.write("#!/bin/bash\nexit 1")
-            os.system(f"chmod +x {testdir}/run")
-            proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
-                                    env={**os.environ,
-                                         "TEST_INVOKE_SLEEP": "1", "TEST_OS": "fedora-38",
-                                         "TEST_ATTACHMENTS_URL": attachments_url},
-                                    cwd=tempdir)
-            output, stderr = proc.communicate()
-            api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/")
-            issues = api.get("issues")
-
-            self.assertEqual(output, "")
-            self.assertEqual(proc.returncode, 1)
-            self.assertEqual(len(issues), 1)
-            self.assertEqual(issues[0]['title'], "Nightly tests did not succeed on fedora-38")
-            self.assertEqual(issues[0]['body'],
-                             f"Tests failed on {self.revision}, [logs]({expected_logs_url})")
-            self.assertEqual(issues[0]['labels'], ["nightly"])
-            self.assertIsNone(stderr)
-
-    def test_tests_invoke_noslash(self):
-        self.do_test_tests_invoke("https://example.org/dir", "https://example.org/dir/log.html")
-
-    def test_tests_invoke_slash(self):
-        self.do_test_tests_invoke("https://example.org/dir/", "https://example.org/dir/log.html")
-
-    def test_tests_invoke_no_issue_for_pr(self):
-        args = ["--pull-number", "1", "--revision", self.revision, "--repo", self.repo]
-        script = os.path.join(BOTS_DIR, "tests-invoke")
-        with tempfile.TemporaryDirectory() as tempdir:
-            testdir = f"{tempdir}/.cockpit-ci"
-            os.makedirs(testdir)
-            with open(f"{testdir}/run", "w") as fp:
-                fp.write("#!/bin/bash\nexit 1")
-            os.system(f"chmod +x {testdir}/run")
-            proc = subprocess.Popen([script, *args], stdout=subprocess.PIPE, universal_newlines=True,
-                                    env={**os.environ, "TEST_INVOKE_SLEEP": "1"},
-                                    cwd=tempdir)
-            output, stderr = proc.communicate()
-            api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/")
-            issues = api.get("issues")
-            self.assertEqual(output, "")
-            self.assertEqual(proc.returncode, 1)
-            self.assertEqual(len(issues), 0)
-            self.assertIsNone(stderr)
 
 
 if __name__ == '__main__':
