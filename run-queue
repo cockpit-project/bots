@@ -100,8 +100,8 @@ def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result
     if statistics_queue and declare_stats_result.method.message_count > 0:
         # statistics queue is quick to process, always do that first
         queue = 'statistics'
-    elif os.path.exists('/dev/kvm') or os.getenv('COCKPIT_TESTMAP_INJECT'):
-        # only process test queues in capable environments: with KVM support, or during integration tests
+    elif os.path.exists('/dev/kvm') or os.getenv('JOB_RUNNER_CONFIG'):
+        # only process test queues in capable environments: with KVM or job-runner support
         queue = 'public'
         if redhat_network():
             # Try the rhel queue if the public queue is empty
