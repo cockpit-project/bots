@@ -70,19 +70,31 @@ GITHUB_DATA = {
     }
 }
 
-EXPECTED_COMMAND_ISSUE_2 = (
-    "./s3-streamer --repo cockpit-project/bots --test-name image-refresh-foonux-20240102-030405 "
-    "--github-context image-refresh/foonux --revision 123abc -- sh -exc '"
-    "./make-checkout --verbose --repo cockpit-project/bots main; cd make-checkout-workdir; "
-    "./image-refresh --verbose --issue=2 foonux'"
-)
+EXPECTED_JOB_ISSUE_2 = {
+    "job": {
+        "repo": "cockpit-project/bots",
+        "sha": "123abc",
+        "pull": None,
+        "slug": "image-refresh-foonux-123abc-20240102-030405",
+        "context": "image-refresh/foonux",
+        "command": ["./image-refresh", "--verbose", "--issue=2", "foonux"],
+        "secrets": ["github-token", "image-upload"],
+    },
+    "human": "issue-2 image-refresh foonux main",
+}
 
-EXPECTED_COMMAND_PULL_3 = (
-    "./s3-streamer --repo cockpit-project/bots --test-name image-refresh-barnux-20240102-030405 "
-    "--github-context image-refresh/barnux --revision 123abc -- sh -exc '"
-    "./make-checkout --verbose --repo cockpit-project/bots main; cd make-checkout-workdir; "
-    "./image-refresh --verbose --issue=3 barnux'"
-)
+EXPECTED_JOB_PULL_3 = {
+    "job": {
+        "repo": "cockpit-project/bots",
+        "sha": "123abc",
+        "pull": None,
+        "slug": "image-refresh-barnux-123abc-20240102-030405",
+        "context": "image-refresh/barnux",
+        "command": ["./image-refresh", "--verbose", "--issue=3", "barnux"],
+        "secrets": ["github-token", "image-upload"],
+    },
+    "human": "issue-3 image-refresh barnux main",
+}
 
 
 class Handler(MockHandler):
@@ -145,9 +157,15 @@ class TestIssueScan(unittest.TestCase):
         assert stderr == ""
         assert output == expected_output
 
+    def run_success_json(self, args, expected_jobs):
+        code, output, stderr = self.run_issue_scan(args)
+
+        assert code == 0
+        assert stderr == ""
+        assert list(map(json.loads, output.splitlines())) == expected_jobs
+
     def test_scan_ghapi_default(self):
-        self.run_success([], f'{EXPECTED_COMMAND_ISSUE_2}\n{EXPECTED_COMMAND_PULL_3}\n')
-        code, output, error = self.run_issue_scan([])
+        self.run_success_json([], [EXPECTED_JOB_ISSUE_2, EXPECTED_JOB_PULL_3])
 
     def test_scan_ghapi_human(self):
         self.run_success(["--human-readable"],
@@ -167,44 +185,16 @@ class TestIssueScan(unittest.TestCase):
         self.assertEqual(channel.basic_publish.call_args_list[0][0][0], "")
         self.assertEqual(channel.basic_publish.call_args_list[0][0][1], "public")
         request = json.loads(channel.basic_publish.call_args_list[0][0][2])
-
-        assert request == {
-            'command': EXPECTED_COMMAND_ISSUE_2,
-            'type': 'issue',
-            'human': 'issue-2 image-refresh foonux main',
-            'job': {
-                'command': ['./image-refresh', '--verbose', '--issue=2', 'foonux'],
-                'context': 'image-refresh/foonux',
-                'pull': None,
-                'repo': 'cockpit-project/bots',
-                'secrets': ['github-token', 'image-upload'],
-                'sha': '123abc',
-                'slug': 'image-refresh-foonux-123abc-20240102-030405'
-            }
-        }
+        assert request == EXPECTED_JOB_ISSUE_2
 
         # second call for pull/3
         self.assertEqual(channel.basic_publish.call_args_list[1][0][0], "")
         self.assertEqual(channel.basic_publish.call_args_list[1][0][1], "public")
         request = json.loads(channel.basic_publish.call_args_list[1][0][2])
-
-        assert request == {
-            'command': EXPECTED_COMMAND_PULL_3,
-            'type': 'issue',
-            'human': 'issue-3 image-refresh barnux main',
-            'job': {
-                'command': ['./image-refresh', '--verbose', '--issue=3', 'barnux'],
-                'context': 'image-refresh/barnux',
-                'pull': None,
-                'repo': 'cockpit-project/bots',
-                'secrets': ['github-token', 'image-upload'],
-                'sha': '123abc',
-                'slug': 'image-refresh-barnux-123abc-20240102-030405'
-            }
-        }
+        assert request == EXPECTED_JOB_PULL_3
 
     def test_scan_clidata_default(self):
-        self.run_success(
+        self.run_success_json(
             [
                 "--issues-data",
                 json.dumps({
@@ -212,7 +202,7 @@ class TestIssueScan(unittest.TestCase):
                     "repository": {"full_name": "cockpit-project/bots"},
                 })
             ],
-            f'{EXPECTED_COMMAND_ISSUE_2}\n')
+            [EXPECTED_JOB_ISSUE_2])
 
     def test_scan_clidata_no_bots_label(self):
         issue = GITHUB_DATA['/repos/cockpit-project/bots/issues/2'].copy()
@@ -249,21 +239,7 @@ class TestIssueScan(unittest.TestCase):
         self.assertEqual(channel.basic_publish.call_args[0][0], "")
         self.assertEqual(channel.basic_publish.call_args[0][1], "public")
         request = json.loads(channel.basic_publish.call_args[0][2])
-
-        assert request == {
-            'command': EXPECTED_COMMAND_ISSUE_2,
-            'type': 'issue',
-            'human': 'issue-2 image-refresh foonux main',
-            'job': {
-                'command': ['./image-refresh', '--verbose', '--issue=2', 'foonux'],
-                'context': 'image-refresh/foonux',
-                'pull': None,
-                'repo': 'cockpit-project/bots',
-                'secrets': ['github-token', 'image-upload'],
-                'sha': '123abc',
-                'slug': 'image-refresh-foonux-123abc-20240102-030405'
-            }
-        }
+        assert request == EXPECTED_JOB_ISSUE_2
 
 
 if __name__ == '__main__':

@@ -47,7 +47,7 @@ except ImportError:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Scan issues for image-refresh tasks")
     parser.add_argument("-v", "--human-readable", "--verbose", action="store_true", default=False,
-                        dest="verbose", help="Print verbose information")
+                        help="Print human readable output")
     parser.add_argument('--amqp', default=None,
                         help='The host:port of the AMQP server to publish to (format host:port)')
     parser.add_argument('--issues-data', default=None,
@@ -63,11 +63,10 @@ def main() -> int:
         if opts.amqp:
             with distributed_queue.DistributedQueue(opts.amqp, queues=['rhel', 'public']) as q:
                 queue_task(q.channel, result)
-            continue
-        if opts.verbose:
-            sys.stdout.write(f"{result['human']}\n")
+        elif opts.human_readable:
+            print(result['human'])
         else:
-            sys.stdout.write(f"{result['command']}\n")
+            print(json.dumps(result))
 
     return 0
 
@@ -147,11 +146,6 @@ def output_task(command: str, issue: Mapping[str, object], repo: str) -> Mapping
     current = time.strftime('%Y%m%d-%H%M%S')
     slug = f'{name}-{context}-{sha[:8]}-{current}'
 
-    cmd = f"./s3-streamer --repo {repo} --test-name {name}-{context}-{current} " \
-        f"--github-context {name}/{context} --revision {sha} -- sh -exc '"
-    cmd += f"./make-checkout --verbose --repo {repo} {ref}; cd make-checkout-workdir; "
-    cmd += f"./{name} --verbose --issue={number} {context}'"
-
     return {
         'job': {
             'repo': repo,
@@ -163,8 +157,6 @@ def output_task(command: str, issue: Mapping[str, object], repo: str) -> Mapping
             'secrets': ('github-token', 'image-upload'),
         },
         'human': f"issue-{number} {name} {context} {ref}",
-        "command": cmd,
-        "type": "issue",
     }
 
 
