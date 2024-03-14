@@ -138,29 +138,25 @@ class TestIssueScan(unittest.TestCase):
 
         return code, mock_stdout.getvalue(), mock_stderr.getvalue()
 
+    def run_success(self, args, expected_output):
+        code, output, stderr = self.run_issue_scan(args)
+
+        assert code == 0
+        assert stderr == ""
+        assert output == expected_output
+
     def test_scan_ghapi_default(self):
+        self.run_success([], f'{EXPECTED_COMMAND_ISSUE_2}\n{EXPECTED_COMMAND_PULL_3}\n')
         code, output, error = self.run_issue_scan([])
 
-        self.assertEqual(code, 0)
-        self.assertEqual(error, '')
-        self.maxDiff = None
-        self.assertEqual(output, f'{EXPECTED_COMMAND_ISSUE_2}\n{EXPECTED_COMMAND_PULL_3}\n')
-
     def test_scan_ghapi_human(self):
-        code, output, error = self.run_issue_scan(["--human-readable"])
-
-        self.assertEqual(code, 0)
-        self.assertEqual(error, '')
-        self.assertEqual(output, ("issue-2 image-refresh foonux main\n"
-                                  "issue-3 image-refresh barnux main\n"))
+        self.run_success(["--human-readable"],
+                         "issue-2 image-refresh foonux main\n"
+                         "issue-3 image-refresh barnux main\n")
 
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
     def test_scan_ghapi_amqp(self, mock_queue):
-        code, output, error = self.run_issue_scan(["--amqp", "amqp.example.com:1234"])
-
-        self.assertEqual(code, 0)
-        self.assertEqual(error, '')
-        self.assertEqual(output, '')
+        self.run_success(["--amqp", "amqp.example.com:1234"], "")
 
         mock_queue.assert_called_with("amqp.example.com:1234", queues=["rhel", "public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
@@ -208,49 +204,43 @@ class TestIssueScan(unittest.TestCase):
         }
 
     def test_scan_clidata_default(self):
-        code, output, error = self.run_issue_scan([
-            "--issues-data",
-            json.dumps({
-                "issue": GITHUB_DATA['/repos/cockpit-project/bots/issues/2'],
-                "repository": {"full_name": "cockpit-project/bots"},
-            })
-        ])
-
-        self.assertEqual(error, '')
-        self.assertEqual(code, 0)
-        self.assertEqual(output.strip(), EXPECTED_COMMAND_ISSUE_2)
+        self.run_success(
+            [
+                "--issues-data",
+                json.dumps({
+                    "issue": GITHUB_DATA['/repos/cockpit-project/bots/issues/2'],
+                    "repository": {"full_name": "cockpit-project/bots"},
+                })
+            ],
+            f'{EXPECTED_COMMAND_ISSUE_2}\n')
 
     def test_scan_clidata_no_bots_label(self):
         issue = GITHUB_DATA['/repos/cockpit-project/bots/issues/2'].copy()
         issue["labels"] = []
 
-        code, output, error = self.run_issue_scan([
-            "--issues-data",
-            json.dumps({
-                "issue": issue,
-                "repository": {"full_name": "cockpit-project/bots"},
-            })
-        ])
-
-        self.assertEqual(error, '')
-        self.assertEqual(code, 0)
-        self.assertEqual(output.strip(), '')
+        self.run_success(
+            [
+                "--issues-data",
+                json.dumps({
+                    "issue": issue,
+                    "repository": {"full_name": "cockpit-project/bots"},
+                })
+            ],
+            "")
 
     # this represents what actually happens in production
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
     def test_scan_clidata_amqp(self, mock_queue):
-        code, output, error = self.run_issue_scan([
-            "--amqp", "amqp.example.com:1234",
-            "--issues-data",
-            json.dumps({
-                "issue": GITHUB_DATA['/repos/cockpit-project/bots/issues/2'],
-                "repository": {"full_name": "cockpit-project/bots"},
-            })
-        ])
-
-        self.assertEqual(code, 0)
-        self.assertEqual(error, '')
-        self.assertEqual(output, '')
+        self.run_success(
+            [
+                "--amqp", "amqp.example.com:1234",
+                "--issues-data",
+                json.dumps({
+                    "issue": GITHUB_DATA['/repos/cockpit-project/bots/issues/2'],
+                    "repository": {"full_name": "cockpit-project/bots"},
+                })
+            ],
+            "")
 
         mock_queue.assert_called_once_with("amqp.example.com:1234", queues=["rhel", "public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
