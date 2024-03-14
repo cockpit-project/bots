@@ -57,7 +57,7 @@ def main() -> int:
     opts = parser.parse_args()
 
     if opts.amqp and no_amqp:
-        parser.error("AMQP host:port specified but python-amqp not available")
+        parser.error("AMQP host:port specified but python3-pika not available")
 
     for result in scan(opts.issues_data, opts.repo):
         if opts.amqp:

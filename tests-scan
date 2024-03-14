@@ -78,7 +78,7 @@ def main():
 
     opts = parser.parse_args()
     if opts.amqp and no_amqp:
-        logging.error("AMQP host:port specified but python-amqp not available")
+        logging.error("AMQP host:port specified but python3-pika not available")
         return 1
     if opts.pull_data and (opts.pull_number or opts.sha):
         parser.error("--pull-data and --pull-number/--sha are mutually exclusive")
