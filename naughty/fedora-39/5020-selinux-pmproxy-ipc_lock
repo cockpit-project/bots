@@ -1,1 +1,0 @@
-avc:  denied  { ipc_lock } for * comm="pmproxy" capability=14  scontext=system_u:system_r:pcp_pmproxy_t:s0 tcontext=system_u:system_r:pcp_pmproxy_t:s0 tclass=capability permissive=0
