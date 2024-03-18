@@ -68,7 +68,7 @@ async def main() -> None:
 
     tag = max({*tags} - {'latest'})
     logging.debug('Latest tag is %r', tag)
-    Path(args.file).write_text(f'ghcr.io/{args.org}/{args.package}:{tag}\n')
+    Path(args.file).write_text(f'{args.image}:{tag}\n')
 
     title = f".cockpit-ci: Update CI container to :{tag}"
     branch = task.branch('cockpit-ci-container', title, pathspec=args.file, dry=args.dry_run)
