@@ -278,7 +278,7 @@ def get_test_image(image: str) -> str:
     return image.replace("-distropkg", "")
 
 
-def split_context(context: str) -> tuple[str, int | None, str, str]:
+def split_context(context: str) -> 'tuple[str, int | None, str, str]':
     bots_pr = None
     repo_branch = ""
 
