@@ -23,7 +23,7 @@ command = ['podman']
 run-args = [
   # '--device=/dev/kvm'
 ]
-default-image = 'quay.io/cockpit/tasks:latest'
+default-image = 'ghcr.io/cockpit-project/tasks:latest'
 
 [container.secrets]
 # see podman-secret(1)
