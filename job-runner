@@ -48,7 +48,7 @@ async def main() -> None:
     run_parser.add_argument('--report', action=JsonObjectAction, help="Open an issue on failures")
     run_parser.add_argument('--slug', help="The URL slug (used for logging)")
     run_parser.add_argument('--title', help="The title for the log page")
-    run_parser.add_argument('--container', help="The container image to use (like `quay.io/cockpit/tasks:latest`)")
+    run_parser.add_argument('--container', help="The container image (like `ghcr.io/cockpit-project/tasks:latest`)")
     run_parser.add_argument('--env', help="Environment variables for the test run", action=KeyValueAction)
     run_parser.add_argument('--timeout', type=int, help="Timeout of the job, in minutes", default=120)
     run_parser.add_argument('--secret', dest='secrets', default=[], action='append', help="Provide the named secret")

@@ -4,7 +4,7 @@ jobs:
   bots:
     runs-on: ubuntu-22.04
     container:
-      image: quay.io/cockpit/tasks
+      image: ghcr.io/cockpit-project/tasks
       options: --user root
     permissions:
       pull-requests: none
