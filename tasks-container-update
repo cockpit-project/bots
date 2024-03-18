@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+
+# This file is part of Cockpit.
+#
+# Copyright (C) 2024 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
+# Update .cockpit-ci/container to the latest tasks container tag automatically
+
+import argparse
+import asyncio
+import logging
+import sys
+from pathlib import Path
+
+import aiohttp
+from yarl import URL
+
+import task
+from lib.aio.jsonutil import get_str, get_strv, typechecked
+
+sys.dont_write_bytecode = True
+
+
+async def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--debug', action='store_true', help="Print debugging messages")
+    parser.add_argument('--dry-run', '-n', action='store_true', help="Don't push or open a PR")
+    parser.add_argument('--image', default='ghcr.io/cockpit-project/tasks', help="The container image")
+    parser.add_argument('--file', default='.cockpit-ci/container', help="The filename to write to")
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    headers = {
+        'User-Agent': 'cockpit-project/bots (tasks-container-update)'
+    }
+
+    service, _, repository = args.image.partition('/')
+    if not service or not repository:
+        args.error(f'Invalid image name: {args.image}')
+
+    async with aiohttp.ClientSession(raise_for_status=True) as session:
+        async with session.get(URL.build(scheme='https', host=service, path='/token', query={
+            'scope': f'repository:{repository}:pull',
+            'service': service
+        }), headers=headers) as response:
+            logging.debug('token response: %r', await response.json())
+            token = get_str(typechecked(await response.json(), dict), 'token')
+            headers['Authorization'] = f'Bearer {token}'
+
+        async with session.get(f'https://{service}/v2/{repository}/tags/list', headers=headers) as response:
+            logging.debug('list response: %r', await response.json())
+            tags = get_strv(await response.json(), 'tags')
+
+    tag = max({*tags} - {'latest'})
+    logging.debug('Latest tag is %r', tag)
+    Path(args.file).write_text(f'ghcr.io/{args.org}/{args.package}:{tag}\n')
+
+    title = f".cockpit-ci: Update CI container to :{tag}"
+    branch = task.branch('cockpit-ci-container', title, pathspec=args.file, dry=args.dry_run)
+    if branch is not None:
+        task.pull(branch, title=title, dry=args.dry_run)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
