@@ -126,7 +126,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-rawhide',
         ],
     },
-    'cockpit-project/cockpit-navigator': {
+    'cockpit-project/cockpit-files': {
         'main': [
             'arch',
             'debian-testing',
