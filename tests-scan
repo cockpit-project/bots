@@ -148,6 +148,7 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
 
     env = {
         "TEST_OS": image,
+        "TEST_REVISION": job.revision,
     }
     if scenario:
         env["TEST_SCENARIO"] = scenario
@@ -155,6 +156,8 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
         env["COCKPIT_BOTS_REF"] = job.bots_ref
     if job.base:
         env["BASE_BRANCH"] = job.base
+    if job.number:
+        env["TEST_PULL"] = f'{job.number}'
 
     body = {
         "job": {

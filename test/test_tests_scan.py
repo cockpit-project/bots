@@ -172,6 +172,8 @@ class TestTestsScan(unittest.TestCase):
             'env': {
                 'BASE_BRANCH': 'stable-1.0',
                 'COCKPIT_BOTS_REF': 'main',
+                'TEST_PULL': str(self.pull_number),
+                'TEST_REVISION': self.revision,
                 'TEST_OS': 'fedora',
                 'TEST_SCENARIO': 'nightly'},
             'repo': self.repo,
@@ -256,6 +258,8 @@ class TestTestsScan(unittest.TestCase):
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
                     "COCKPIT_BOTS_REF": "main",
+                    'TEST_PULL': str(self.pull_number),
+                    'TEST_REVISION': self.revision,
                     "TEST_OS": "fedora",
                     "TEST_SCENARIO": "nightly",
                 }
@@ -293,6 +297,7 @@ class TestTestsScan(unittest.TestCase):
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "COCKPIT_BOTS_REF": "main",
+                    'TEST_REVISION': "9988aa",
                     "TEST_OS": "fedora",
                     "TEST_SCENARIO": "nightly",
                 }
@@ -328,6 +333,8 @@ class TestTestsScan(unittest.TestCase):
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
                     "COCKPIT_BOTS_REF": "main",
+                    'TEST_PULL': str(self.pull_number),
+                    'TEST_REVISION': self.revision,
                     "TEST_OS": "fedora",
                     "TEST_SCENARIO": "nightly",
                 }
@@ -370,6 +377,8 @@ class TestTestsScan(unittest.TestCase):
                 "env": {
                     "BASE_BRANCH": branch,
                     "COCKPIT_BOTS_REF": "main",
+                    'TEST_PULL': str(self.pull_number),
+                    'TEST_REVISION': self.revision,
                     "TEST_OS": "fedora",
                     "TEST_SCENARIO": "nightly",
                 }
