@@ -196,12 +196,6 @@ def prioritize(
     priority = distributed_queue.BASELINE_PRIORITY
     update: dict[str, JsonValue] | None = {"state": "pending"}
 
-    # This commit definitively succeeded or failed
-    if state in ["success", "failure"]:
-        logging.info("Skipping '%s' on #%s because it has already finished", context, number)
-        priority = 0
-        update = None
-
     if state in ["pending"]:
         logging.info("Not updating status for '%s' on #%s because it is pending", context, number)
         update = None
@@ -340,6 +334,11 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
 
             # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
             ref = revision
+
+            # This commit definitively succeeded or failed
+            if state in ["success", "failure"]:
+                logging.info("Skipping '%s' on #%s because it has already finished", context, number)
+                continue
 
             # For unmarked and untested status, user must be allowed
             # Not this only applies to this specific commit. A new status
