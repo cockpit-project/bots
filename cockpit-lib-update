@@ -78,11 +78,10 @@ def run(context, verbose=False, **kwargs):
     with open(makefile_path, 'w') as fp:
         fp.write(new_content)
 
-    if not kwargs['dry']:
-        title = f"Makefile: Update Cockpit lib to {git_head[:32]}"
-        branch = task.branch('cockpit-lib', title, pathspec=makefile, **kwargs)
-        kwargs["title"] = title
-        task.pull(branch, **kwargs)
+    title = f"Makefile: Update Cockpit lib to {git_head[:32]}"
+    branch = task.branch('cockpit-lib', title, pathspec=makefile, **kwargs)
+    kwargs["title"] = title
+    task.pull(branch, **kwargs)
 
 
 if __name__ == '__main__':
