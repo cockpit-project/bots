@@ -227,7 +227,7 @@ def prioritize(status, title, labels, priority, context, number, direct):
         description = status.get("description", "")
         if description.startswith(github.TESTING):
             logging.info("Skipping '%s' on #%s because it is already running", context, number)
-            priority = description
+            priority = 0
             update = None
 
     if update:
