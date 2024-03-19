@@ -22,7 +22,7 @@ import json
 import logging
 import sys
 import time
-from collections.abc import Container, Iterable
+from collections.abc import Iterable
 from typing import NamedTuple
 
 from lib import ALLOWLIST, testmap
@@ -187,8 +187,6 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
 def prioritize(
     state: str | None,
     description: str | None,
-    title: str,
-    labels: Container[str],
     context: str,
     number: int,
     direct: bool
@@ -201,15 +199,6 @@ def prioritize(
         update = None
 
     if priority > 0:
-        if "priority" in labels:
-            priority += 2
-        if "blocked" in labels:
-            priority -= 1
-
-        # Pull requests where the title starts with WIP get penalized
-        if title.startswith("WIP") or "needswork" in labels:
-            priority -= 1
-
         # Is testing already in progress?
         if description and description.startswith(github.TESTING):
             logging.info("Skipping '%s' on #%s because it is already running", context, number)
@@ -351,7 +340,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                 # without --amqp (as called manually or from workflows), trigger tests as NOT_TESTED_DIRECT,
                 # so that the webhook queues them
                 (priority, changes) = prioritize(
-                    state, description, title, labels, context, number, direct=not opts.amqp
+                    state, description, context, number, direct=not opts.amqp
                 )
             if opts.dry or update_status(api, revision, context, status, changes):
                 if not priority:
