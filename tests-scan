@@ -57,45 +57,6 @@ def build_policy(repo, context):
     return policy
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description='Bot: scan and update status of pull requests on GitHub')
-    parser.add_argument('-v', '--human-readable', action="store_true", default=False,
-                        help='Display human readable output rather than tasks')
-    parser.add_argument('-n', '--dry', action="store_true", default=False,
-                        help="Don't actually change anything on GitHub")
-    parser.add_argument('--repo', default=None,
-                        help='Repository to scan and checkout.')
-    parser.add_argument('-c', '--context', action="append", default=[],
-                        help='Test contexts to use.')
-    parser.add_argument('-p', '--pull-number', default=None,
-                        help='Single pull request to scan for tasks')
-    parser.add_argument('--pull-data', default=None,
-                        help='pull_request event GitHub JSON data to evaluate; mutualy exclusive with -p and -s')
-    parser.add_argument('-s', '--sha', default=None,
-                        help='Trigger for a specific SHA; file issue on failure if SHA is not on a PR')
-    parser.add_argument('--amqp', default=None,
-                        help='The host:port of the AMQP server to publish to (format host:port)')
-
-    opts = parser.parse_args()
-    if opts.amqp and no_amqp:
-        parser.error("AMQP host:port specified but python3-pika not available")
-    if opts.pull_data and (opts.pull_number or opts.sha):
-        parser.error("--pull-data and --pull-number/--sha are mutually exclusive")
-
-    api = github.GitHub(repo=opts.repo)
-
-    # HACK: The `repo` option is used throughout the code, for example repo from
-    # opts is needed in `tests_invoke`, `tests_human`, `queue_test` etc.
-    # Would be better to use api.repo everywhere
-    opts.repo = api.repo
-
-    results = scan_for_pull_tasks(api, opts.context, opts, opts.repo)
-
-    for result in results:
-        if result:
-            sys.stdout.write(result + "\n")
-
-
 class Job(NamedTuple):
     name: str
     number: int
@@ -371,6 +332,45 @@ def scan_for_pull_tasks(api, contexts, opts, repo):
         return [queue_test(job, None, options=opts) for job in results]
     with distributed_queue.DistributedQueue(opts.amqp, ['rhel', 'public']) as q:
         return [queue_test(job, channel=q.channel, options=opts) for job in results]
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description='Bot: scan and update status of pull requests on GitHub')
+    parser.add_argument('-v', '--human-readable', action="store_true", default=False,
+                        help='Display human readable output rather than tasks')
+    parser.add_argument('-n', '--dry', action="store_true", default=False,
+                        help="Don't actually change anything on GitHub")
+    parser.add_argument('--repo', default=None,
+                        help='Repository to scan and checkout.')
+    parser.add_argument('-c', '--context', action="append", default=[],
+                        help='Test contexts to use.')
+    parser.add_argument('-p', '--pull-number', default=None,
+                        help='Single pull request to scan for tasks')
+    parser.add_argument('--pull-data', default=None,
+                        help='pull_request event GitHub JSON data to evaluate; mutualy exclusive with -p and -s')
+    parser.add_argument('-s', '--sha', default=None,
+                        help='Trigger for a specific SHA; file issue on failure if SHA is not on a PR')
+    parser.add_argument('--amqp', default=None,
+                        help='The host:port of the AMQP server to publish to (format host:port)')
+
+    opts = parser.parse_args()
+    if opts.amqp and no_amqp:
+        parser.error("AMQP host:port specified but python3-pika not available")
+    if opts.pull_data and (opts.pull_number or opts.sha):
+        parser.error("--pull-data and --pull-number/--sha are mutually exclusive")
+
+    api = github.GitHub(repo=opts.repo)
+
+    # HACK: The `repo` option is used throughout the code, for example repo from
+    # opts is needed in `tests_invoke`, `tests_human`, `queue_test` etc.
+    # Would be better to use api.repo everywhere
+    opts.repo = api.repo
+
+    results = scan_for_pull_tasks(api, opts.context, opts, opts.repo)
+
+    for result in results:
+        if result:
+            sys.stdout.write(result + "\n")
 
 
 if __name__ == '__main__':
