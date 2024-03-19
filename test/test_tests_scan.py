@@ -192,7 +192,8 @@ class TestTestsScan(unittest.TestCase):
         self.run_success_mock_pr(["--dry", "--context", self.context])
 
     def test_pull_number_human_readable(self):
-        self.run_success(["--dry", "-v", "--context", self.context], self.expected_human_output)
+        self.run_success(["--dry", "-v", "--context", self.context, "--pull-number", str(self.pull_number)],
+                         self.expected_human_output)
 
     def test_pull_data_human_readable(self):
         args = ["--dry", "-v", "--context", self.context,
