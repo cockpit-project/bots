@@ -108,7 +108,7 @@ def main():
 
 
 class Job(NamedTuple):
-    priority: str
+    priority: int
     name: str
     number: int
     revision: str
@@ -122,8 +122,6 @@ class Job(NamedTuple):
 
 # Prepare a human readable output
 def tests_human(job: Job, options: argparse.Namespace) -> str:
-    if not job.priority and not options.force:
-        return ""
     return "{name:11} {context:25} {revision:10} {priority:2}{repo}{bots_ref}{branches}".format(
         priority=job.priority,
         revision=job.revision[0:7],
@@ -350,7 +348,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             # will apply if the user pushes a new commit.
             status = todos[context]
             if not allowed and status.get("description", github.NO_TESTING) == github.NO_TESTING:
-                priority = github.NO_TESTING
+                priority = 0
                 changes = {"description": github.NO_TESTING, "context": context, "state": "pending"}
             else:
                 # with --amqp (as called from run-queue), trigger tests as NOT_TESTED, as they already get queued;
@@ -360,6 +358,9 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                     status, title, labels, baseline, context, number, direct=not opts.amqp
                 )
             if opts.dry or update_status(api, revision, context, status, changes):
+                if not priority and not opts.force:
+                    continue
+
                 checkout_ref = ref
                 if project != repo:
                     checkout_ref = testmap.get_default_branch(project)
