@@ -61,8 +61,6 @@ def main():
                         help='Display human readable output rather than tasks')
     parser.add_argument('-n', '--dry', action="store_true", default=False,
                         help="Don't actually change anything on GitHub")
-    parser.add_argument('-f', '--force', action="store_true", default=False,
-                        help='Perform all actions, even those that should be skipped')
     parser.add_argument('--repo', default=None,
                         help='Repository to scan and checkout.')
     parser.add_argument('-c', '--context', action="append", default=[],
@@ -82,10 +80,6 @@ def main():
         return 1
     if opts.pull_data and (opts.pull_number or opts.sha):
         parser.error("--pull-data and --pull-number/--sha are mutually exclusive")
-
-    if opts.force:
-        if not opts.repo or not opts.context or not (opts.pull_number or opts.sha):
-            parser.error('--force requires --repo, --context, and one of --pull-number or --sha')
 
     api = github.GitHub(repo=opts.repo)
 
@@ -361,7 +355,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                     status, title, labels, baseline, context, number, direct=not opts.amqp
                 )
             if opts.dry or update_status(api, revision, context, status, changes):
-                if not priority and not opts.force:
+                if not priority:
                     continue
 
                 checkout_ref = ref
