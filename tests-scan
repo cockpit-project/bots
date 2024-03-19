@@ -23,7 +23,7 @@ import logging
 import sys
 import time
 from collections.abc import Iterable, Mapping, Sequence
-from typing import NamedTuple, TypedDict, Required
+from typing import NamedTuple, Required, TypedDict
 
 from lib import ALLOWLIST, testmap
 from lib.aio.jsonutil import JsonObject, get_str
@@ -146,8 +146,7 @@ def create_queue_entry(job: Job, options: argparse.Namespace) -> QueueEntry:
     }
 
 
-def queue_test(job: Job, channel: pika.channel.Channel, options: argparse.Namespace) -> None:
-    entry = create_queue_entry(job, options)
+def queue_test(entry: QueueEntry, channel: pika.channel.Channel, options: argparse.Namespace) -> None:
     queue = 'rhel' if is_internal_context(entry['job']['context']) else 'public'
     properties = pika.BasicProperties(priority=distributed_queue.BASELINE_PRIORITY)
     channel.basic_publish('', queue, json.dumps(entry), properties=properties)
@@ -170,7 +169,7 @@ def update_status(
     return False
 
 
-def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: str) -> 'Iterable[Job]':
+def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: str) -> Iterable[QueueEntry]:
     pulls = []
 
     if opts.pull_data:
@@ -303,7 +302,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                 else:
                     bots_ref = "main"
 
-            yield Job(
+            job = Job(
                 "pull-%d" % number,
                 number,
                 revision,
@@ -315,20 +314,22 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                 context,
             )
 
+            yield create_queue_entry(job, opts)
+
 
 def scan_for_pull_tasks(api: github.GitHub, contexts: str, opts: argparse.Namespace, repo: str) -> None:
     results = cockpit_tasks(api, contexts, opts, repo)
 
     if opts.human_readable:
-        for job in sorted(results, reverse=True, key=str):
-            print(create_queue_entry(job, opts)['human'])
+        for entry in sorted(results, reverse=True, key=str):
+            print(entry['human'])
     elif not opts.amqp:
-        for job in results:
-            print(json.dumps(create_queue_entry(job, opts)['job']))
+        for entry in results:
+            print(json.dumps(entry['job'], indent=4))
     else:
         with distributed_queue.DistributedQueue(opts.amqp, ['rhel', 'public']) as q:
-            for job in results:
-                queue_test(job, channel=q.channel, options=opts)
+            for entry in results:
+                queue_test(entry, channel=q.channel, options=opts)
 
 
 def main() -> None:
