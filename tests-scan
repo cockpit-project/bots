@@ -202,10 +202,6 @@ def prioritize(
         priority = 0
         update = None
 
-    # This test errored, we try again but low priority
-    if state in ["error"]:
-        priority -= 2
-
     if state in ["pending"]:
         logging.info("Not updating status for '%s' on #%s because it is pending", context, number)
         update = None
