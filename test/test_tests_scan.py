@@ -246,6 +246,7 @@ class TestTestsScan(unittest.TestCase):
         request = json.loads(channel.basic_publish.call_args[0][2])
 
         assert request == {
+            "human": self.expected_human_output.rstrip(),
             "job": {
                 "context": "fedora/nightly",
                 "repo": "project/repo",
@@ -282,6 +283,7 @@ class TestTestsScan(unittest.TestCase):
         request = json.loads(channel.basic_publish.call_args[0][2])
 
         assert request == {
+            "human": "pull-0      fedora/nightly            9988aa       (project/repo) [bots@main]",
             "job": {
                 "context": "fedora/nightly",
                 "repo": "project/repo",
@@ -320,6 +322,7 @@ class TestTestsScan(unittest.TestCase):
         request = json.loads(channel.basic_publish.call_args[0][2])
 
         assert request == {
+            "human": self.expected_human_output.rstrip(),
             "job": {
                 "context": "fedora/nightly",
                 "repo": "project/repo",
@@ -362,6 +365,8 @@ class TestTestsScan(unittest.TestCase):
         slug_repo_branch = repo_branch.replace('@', '-').replace('/', '-')
 
         assert request == {
+            "human": ("pull-1      fedora/nightly            abcdef       "
+                      f"(cockpit-project/cockpituous) [bots@main]   {{{branch}}}"),
             "job": {
                 # reports for project/reop
                 "context": f"fedora/nightly@{repo_branch}",
@@ -381,7 +386,7 @@ class TestTestsScan(unittest.TestCase):
                     "TEST_OS": "fedora",
                     "TEST_SCENARIO": "nightly",
                 }
-            }
+            },
         }
 
     def test_amqp_sha_pr_cross_project_default_branch(self):
