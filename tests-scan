@@ -185,9 +185,9 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
 
 
 def update_status(
-    api: github.GitHub, revision: str, last: Mapping[str, str], dry: bool, changes: Mapping[str, str] | None
+    api: github.GitHub, revision: str, last: Mapping[str, str], dry: bool, changes: Mapping[str, str]
 ) -> bool:
-    if changes is None or {**last, **changes} == last or dry:
+    if {**last, **changes} == last or dry:
         return True
 
     response = api.post("statuses/" + revision, changes, accept=[422])  # 422 Unprocessable Entity
@@ -300,21 +300,19 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                               {"description": github.NO_TESTING, "context": context, "state": "pending"})
                 continue
 
-            # with --amqp (as called from run-queue), trigger tests as NOT_TESTED, as they already get queued;
-            # without --amqp (as called manually or from workflows), trigger tests as NOT_TESTED_DIRECT,
-            # so that the webhook queues them
-            if state in ["pending"]:
-                logging.info("Not updating status for '%s' on #%s because it is pending", context, number)
-                changes = None
-            else:
+            if state != "pending":
+                # with --amqp (as called from run-queue), trigger tests as NOT_TESTED, as they already get queued;
+                # without --amqp (as called manually or from workflows), trigger tests as NOT_TESTED_DIRECT,
+                # so that the webhook queues them
                 changes = {
                     "context": context,
                     "state": "pending",
                     "description": github.NOT_TESTED if opts.amqp else github.NOT_TESTED_DIRECT
                 }
-
-            if not update_status(api, revision, status, opts.dry, changes):
-                continue
+                if not update_status(api, revision, status, opts.dry, changes):
+                    continue
+            else:
+                logging.info("Not updating status for '%s' on #%s because it is pending", context, number)
 
             checkout_ref = ref
             if project != repo:
