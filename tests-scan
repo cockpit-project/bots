@@ -23,7 +23,7 @@ import logging
 import sys
 import time
 from collections.abc import Iterable, Mapping, Sequence
-from typing import NamedTuple, Required, TypedDict
+from typing import Required, TypedDict
 
 from lib import ALLOWLIST, testmap
 from lib.aio.jsonutil import JsonObject, get_str
@@ -55,18 +55,6 @@ def build_policy(repo, context):
                 new_policy[branch] = branch_context
         policy = new_policy
     return policy
-
-
-class Job(NamedTuple):
-    name: str
-    number: int
-    revision: str
-    ref: str
-    context: str
-    base: 'str | None'
-    repo: str
-    bots_ref: 'str | None'
-    github_context: str
 
 
 class SubjectSpecification(TypedDict, total=False):
@@ -254,48 +242,36 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                 else:
                     bots_ref = "main"
 
-            job = Job(
-                "pull-%d" % number,
-                number,
-                revision,
-                checkout_ref,
-                image_scenario,
-                branch,
-                project,
-                bots_ref,
-                context,
-            )
-
-            slug_suffix = job.github_context.replace('/', '-').replace('@', '-')
-            slug = f"{job.name}-{job.revision[:8]}-{time.strftime('%Y%m%d-%H%M%S')}-{slug_suffix}"
-            (image, _, scenario) = job.context.partition("/")
+            slug_suffix = context.replace('/', '-').replace('@', '-')
+            slug = f"pull-{number}-{revision[:8]}-{time.strftime('%Y%m%d-%H%M%S')}-{slug_suffix}"
+            (image, _, scenario) = image_scenario.partition("/")
 
             env = {
                 "TEST_OS": image,
-                "TEST_REVISION": job.revision,
+                "TEST_REVISION": revision,
             }
             if scenario:
                 env["TEST_SCENARIO"] = scenario
-            if job.bots_ref:
-                env["COCKPIT_BOTS_REF"] = job.bots_ref
-            if job.base:
-                env["BASE_BRANCH"] = job.base
-            if job.number:
-                env["TEST_PULL"] = f'{job.number}'
+            if bots_ref:
+                env["COCKPIT_BOTS_REF"] = bots_ref
+            if branch:
+                env["BASE_BRANCH"] = branch
+            if number:
+                env["TEST_PULL"] = f'{number}'
 
             yield {
                 "job": {
-                    "repo": options.repo,
-                    "sha": job.revision,
-                    "context": job.github_context,
-                    "pull": job.number or None,  # job.number uses 0 to mean 'None'
-                    "report": None if job.number else {
-                        "title": f"Tests failed on {job.revision}",
+                    "repo": opts.repo,
+                    "sha": revision,
+                    "context": context,
+                    "pull": number or None,  # number uses 0 to mean 'None'
+                    "report": None if number else {
+                        "title": f"Tests failed on {revision}",
                         "labels": ["nightly"],
                     },
-                    "command_subject": None if job.repo == options.repo else {
-                        "repo": job.repo,
-                        "branch": job.ref,
+                    "command_subject": None if project == opts.repo else {
+                        "repo": project,
+                        "branch": checkout_ref,
                     },
                     "slug": slug,
                     "env": env,
@@ -303,12 +279,12 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                     "secrets": ["github-token", "image-download"],
                 },
                 "human": "{name:11} {context:25} {revision:10} {repo}{bots_ref}{branches}".format(
-                    revision=job.revision[0:7],
-                    context=job.context,
-                    name=job.name,
-                    repo=job.repo and "  (%s)" % job.repo or "",
-                    bots_ref=f" [bots@{job.bots_ref}]" if job.bots_ref else "",
-                    branches=f"   {{{job.base}}}" if job.base else "",
+                    revision=revision[0:7],
+                    context=image_scenario,
+                    name=f'pull-{number}',
+                    repo=project and "  (%s)" % project or "",
+                    bots_ref=f" [bots@{bots_ref}]" if bots_ref else "",
+                    branches=f"   {{{branch}}}" if branch else "",
                 )
             }
 
