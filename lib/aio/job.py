@@ -49,7 +49,7 @@ class Job:
 
         # test specification
         self.container = get_str(obj, 'container', None)
-        self.command_subject = get_object(obj, 'command-subject', SubjectSpecification, None)
+        self.command_subject = get_object(obj, 'command_subject', SubjectSpecification, None)
         self.secrets = get_strv(obj, 'secrets', ())
         self.command = get_strv(obj, 'command', None)
         self.env = get_str_map(obj, 'env', {})
