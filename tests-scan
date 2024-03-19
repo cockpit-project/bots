@@ -144,8 +144,6 @@ def is_internal_context(context):
 
 
 def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
-    priority = min(job.priority, distributed_queue.MAX_PRIORITY)
-
     slug_suffix = job.github_context.replace('/', '-').replace('@', '-')
     slug = f"{job.name}-{job.revision[:8]}-{time.strftime('%Y%m%d-%H%M%S')}-{slug_suffix}"
     (image, _, scenario) = job.context.partition("/")
@@ -183,7 +181,7 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
 
     queue = 'rhel' if is_internal_context(job.context) else 'public'
     if channel:
-        channel.basic_publish('', queue, json.dumps(body), properties=pika.BasicProperties(priority=priority))
+        channel.basic_publish('', queue, json.dumps(body), properties=pika.BasicProperties(priority=job.priority))
         logging.info("Published job: %s", json.dumps(body["job"]))
     else:
         print(json.dumps(body['job']))
@@ -238,6 +236,7 @@ def prioritize(status, title, labels, priority, context, number, direct):
         else:
             update["description"] = github.NOT_TESTED_DIRECT if direct else github.NOT_TESTED
 
+    priority = min(priority, distributed_queue.MAX_PRIORITY)
     return [priority, update]
 
 
