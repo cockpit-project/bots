@@ -198,13 +198,6 @@ def prioritize(
         logging.info("Not updating status for '%s' on #%s because it is pending", context, number)
         update = None
 
-    if priority > 0:
-        # Is testing already in progress?
-        if description and description.startswith(github.TESTING):
-            logging.info("Skipping '%s' on #%s because it is already running", context, number)
-            priority = 0
-            update = None
-
     if update:
         if priority <= 0:
             logging.info("Not updating status for '%s' on #%s because of low priority", context, number)
@@ -326,6 +319,10 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             # the context was directly triggered
             if (('no-test' in labels or '[no-test]' in title) and description != github.NOT_TESTED_DIRECT):
                 logging.info("Skipping '%s' on #%s because it is no-test", context, number)
+                continue
+
+            if description and description.startswith(github.TESTING):
+                logging.info("Skipping '%s' on #%s because it is already running", context, number)
                 continue
 
             # For unmarked and untested status, user must be allowed
