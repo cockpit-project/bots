@@ -22,11 +22,11 @@ import json
 import logging
 import sys
 import time
-from collections.abc import Iterable, Mapping
-from typing import NamedTuple
+from collections.abc import Iterable, Mapping, Sequence
+from typing import NamedTuple, TypedDict, Required
 
 from lib import ALLOWLIST, testmap
-from lib.aio.jsonutil import get_str
+from lib.aio.jsonutil import JsonObject, get_str
 from task import distributed_queue, github, labels_of_pull
 
 sys.dont_write_bytecode = True
@@ -115,6 +115,26 @@ class Job(NamedTuple):
     github_context: str
 
 
+class SubjectSpecification(TypedDict, total=False):
+    repo: Required[str]
+    sha: str | None
+    branch: str | None
+    pull: int | None
+
+
+class JobSpecification(SubjectSpecification):
+    context: str
+    slug: str
+    report: JsonObject | None
+    command_subject: SubjectSpecification | None
+    env: Mapping[str, str]
+    secrets: Sequence[str]
+
+
+class QueueEntry(TypedDict):
+    job: JobSpecification
+
+
 # Prepare a human readable output
 def tests_human(job: Job, options: argparse.Namespace) -> str:
     return "{name:11} {context:25} {revision:10} {repo}{bots_ref}{branches}".format(
@@ -135,7 +155,7 @@ def is_internal_context(context):
     return False
 
 
-def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
+def create_queue_entry(job: Job, options: argparse.Namespace) -> QueueEntry:
     slug_suffix = job.github_context.replace('/', '-').replace('@', '-')
     slug = f"{job.name}-{job.revision[:8]}-{time.strftime('%Y%m%d-%H%M%S')}-{slug_suffix}"
     (image, _, scenario) = job.context.partition("/")
@@ -153,7 +173,7 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
     if job.number:
         env["TEST_PULL"] = f'{job.number}'
 
-    body = {
+    return {
         "job": {
             "repo": options.repo,
             "sha": job.revision,
@@ -174,13 +194,16 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
         }
     }
 
-    queue = 'rhel' if is_internal_context(job.context) else 'public'
+
+def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
+    entry = create_queue_entry(job, options)
+    queue = 'rhel' if is_internal_context(entry['job']['context']) else 'public'
     if channel:
         properties = pika.BasicProperties(priority=distributed_queue.BASELINE_PRIORITY)
-        channel.basic_publish('', queue, json.dumps(body), properties=properties)
-        logging.info("Published job: %s", json.dumps(body["job"]))
+        channel.basic_publish('', queue, json.dumps(entry), properties=properties)
+        logging.info("Published job: %s", json.dumps(entry["job"]))
     else:
-        print(json.dumps(body['job']))
+        print(json.dumps(entry['job']))
 
 
 def update_status(
