@@ -250,8 +250,6 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
         login = pull["head"]["user"]["login"]
         base = pull.get("base", {}).get("ref")  # The branch this pull request targets (None for direct SHA triggers)
 
-        allowed = login in ALLOWLIST
-
         logging.info("Processing #%s titled '%s' on revision %s", number, title, revision)
 
         labels = labels_of_pull(pull)
@@ -306,7 +304,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             # Not this only applies to this specific commit. A new status
             # will apply if the user pushes a new commit.
             changes: JsonObject | None
-            if not allowed and description in (None, github.NO_TESTING):
+            if login not in ALLOWLIST and description in (None, github.NO_TESTING):
                 priority = 0
                 changes = {"description": github.NO_TESTING, "context": context, "state": "pending"}
             else:
