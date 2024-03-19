@@ -87,18 +87,7 @@ class JobSpecification(SubjectSpecification):
 
 class QueueEntry(TypedDict):
     job: JobSpecification
-
-
-# Prepare a human readable output
-def tests_human(job: Job, options: argparse.Namespace) -> str:
-    return "{name:11} {context:25} {revision:10} {repo}{bots_ref}{branches}".format(
-        revision=job.revision[0:7],
-        context=job.context,
-        name=job.name,
-        repo=job.repo and "  (%s)" % job.repo or "",
-        bots_ref=f" [bots@{job.bots_ref}]" if job.bots_ref else "",
-        branches=f"   {{{job.base}}}" if job.base else "",
-    )
+    human: str
 
 
 def is_internal_context(context):
@@ -145,19 +134,24 @@ def create_queue_entry(job: Job, options: argparse.Namespace) -> QueueEntry:
             "env": env,
             # for updating naughty trackers and downloading private images
             "secrets": ["github-token", "image-download"],
-        }
+        },
+        "human": "{name:11} {context:25} {revision:10} {repo}{bots_ref}{branches}".format(
+            revision=job.revision[0:7],
+            context=job.context,
+            name=job.name,
+            repo=job.repo and "  (%s)" % job.repo or "",
+            bots_ref=f" [bots@{job.bots_ref}]" if job.bots_ref else "",
+            branches=f"   {{{job.base}}}" if job.base else "",
+        )
     }
 
 
-def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
+def queue_test(job: Job, channel: pika.channel.Channel, options: argparse.Namespace) -> None:
     entry = create_queue_entry(job, options)
     queue = 'rhel' if is_internal_context(entry['job']['context']) else 'public'
-    if channel:
-        properties = pika.BasicProperties(priority=distributed_queue.BASELINE_PRIORITY)
-        channel.basic_publish('', queue, json.dumps(entry), properties=properties)
-        logging.info("Published job: %s", json.dumps(entry["job"]))
-    else:
-        print(json.dumps(entry['job']))
+    properties = pika.BasicProperties(priority=distributed_queue.BASELINE_PRIORITY)
+    channel.basic_publish('', queue, json.dumps(entry), properties=properties)
+    logging.info("Published job: %s", json.dumps(entry["job"]))
 
 
 def update_status(
@@ -322,16 +316,19 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             )
 
 
-def scan_for_pull_tasks(api, contexts, opts, repo):
-    results = list(cockpit_tasks(api, contexts, opts, repo))
+def scan_for_pull_tasks(api: github.GitHub, contexts: str, opts: argparse.Namespace, repo: str) -> None:
+    results = cockpit_tasks(api, contexts, opts, repo)
 
     if opts.human_readable:
-        results.sort(reverse=True, key=str)
-        return [tests_human(job, options=opts) for job in results]
-    if not opts.amqp:
-        return [queue_test(job, None, options=opts) for job in results]
-    with distributed_queue.DistributedQueue(opts.amqp, ['rhel', 'public']) as q:
-        return [queue_test(job, channel=q.channel, options=opts) for job in results]
+        for job in sorted(results, reverse=True, key=str):
+            print(create_queue_entry(job, opts)['human'])
+    elif not opts.amqp:
+        for job in results:
+            print(json.dumps(create_queue_entry(job, opts)['job']))
+    else:
+        with distributed_queue.DistributedQueue(opts.amqp, ['rhel', 'public']) as q:
+            for job in results:
+                queue_test(job, channel=q.channel, options=opts)
 
 
 def main() -> None:
@@ -366,11 +363,7 @@ def main() -> None:
     # Would be better to use api.repo everywhere
     opts.repo = api.repo
 
-    results = scan_for_pull_tasks(api, opts.context, opts, opts.repo)
-
-    for result in results:
-        if result:
-            sys.stdout.write(result + "\n")
+    scan_for_pull_tasks(api, opts.context, opts, opts.repo)
 
 
 if __name__ == '__main__':
