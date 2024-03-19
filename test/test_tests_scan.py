@@ -131,7 +131,7 @@ class TestTestsScan(unittest.TestCase):
         # expected human output for our standard mock PR #1 above
         self.expected_human_output = (
             f"pull-{self.pull_number}      {self.context}            {self.revision}"
-            f"      5  ({self.repo}) [bots@main]   {{stable-1.0}}\n")
+            f"       ({self.repo}) [bots@main]   {{stable-1.0}}\n")
 
     def tearDown(self):
         self.server.kill()
@@ -227,7 +227,7 @@ class TestTestsScan(unittest.TestCase):
     def test_no_pull_request_human(self):
         repo = "cockpit-project/cockpit"
         expected_output = (f"pull-0      {self.context}            {self.revision}"
-                           f"      5  ({repo}) [bots@main]\n")
+                           f"       ({repo}) [bots@main]\n")
 
         self.run_success(["--dry", "-v", "--sha", self.revision, "--context", self.context],
                          expected_output, repo=repo)

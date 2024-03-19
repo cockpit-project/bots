@@ -104,7 +104,6 @@ def main():
 
 
 class Job(NamedTuple):
-    priority: int
     name: str
     number: int
     revision: str
@@ -118,8 +117,7 @@ class Job(NamedTuple):
 
 # Prepare a human readable output
 def tests_human(job: Job, options: argparse.Namespace) -> str:
-    return "{name:11} {context:25} {revision:10} {priority:2}{repo}{bots_ref}{branches}".format(
-        priority=job.priority,
+    return "{name:11} {context:25} {revision:10} {repo}{bots_ref}{branches}".format(
         revision=job.revision[0:7],
         context=job.context,
         name=job.name,
@@ -178,7 +176,8 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
 
     queue = 'rhel' if is_internal_context(job.context) else 'public'
     if channel:
-        channel.basic_publish('', queue, json.dumps(body), properties=pika.BasicProperties(priority=job.priority))
+        properties = pika.BasicProperties(priority=distributed_queue.BASELINE_PRIORITY)
+        channel.basic_publish('', queue, json.dumps(body), properties=properties)
         logging.info("Published job: %s", json.dumps(body["job"]))
     else:
         print(json.dumps(body['job']))
@@ -334,7 +333,6 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                     bots_ref = "main"
 
             yield Job(
-                distributed_queue.BASELINE_PRIORITY,
                 "pull-%d" % number,
                 number,
                 revision,
