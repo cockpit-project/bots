@@ -51,6 +51,17 @@ GITHUB_DATA = {
         "labels": [],
         "updated_at": 0,
     },
+    # no-test PR
+    "/repos/project/repo/pulls/3": {
+        "title": "WIP stuff",
+        "number": 1,
+        "state": "open",
+        "body": "Don't run me yet",
+        "base": {"ref": "stable-1.0"},
+        "head": {"sha": "abcdef", "user": {"login": "cockpit-project"}},
+        "labels": [{"name": "no-test"}],
+        "updated_at": 0,
+    },
     "/repos/project/repo/commits/abcdef/status?page=1&per_page=100": {
         "state": "pending",
         "statuses": [],
@@ -78,7 +89,8 @@ class Handler(MockHandler):
         if self.path in self.server.data:
             self.replyJson(self.server.data[self.path])
         elif self.path.startswith('/repos/project/repo/pulls?'):
-            self.replyJson([self.server.data['/repos/project/repo/pulls/1']])
+            self.replyJson([self.server.data['/repos/project/repo/pulls/1'],
+                            self.server.data['/repos/project/repo/pulls/3']])
         elif self.path.endswith("/issues"):
             issues = self.server.data.get('issues', [])
             self.replyJson(issues)
@@ -174,6 +186,10 @@ class TestTestsScan(unittest.TestCase):
         args = ["--dry", "--pull-number", str(self.pull_number), "--context", self.context]
         self.run_success_mock_pr(args)
 
+    def test_notest_pull_number(self):
+        args = ["--dry", "--pull-number=3", "--context", self.context]
+        self.run_success(args, "")
+
     def test_unkown_pull_number(self):
         args = ["--dry", "--pull-number", "2", "--context", "fedora/nightly"]
         code, output, stderr = self.run_tests_scan(args)
@@ -194,6 +210,9 @@ class TestTestsScan(unittest.TestCase):
     def test_pull_number_human_readable(self):
         self.run_success(["--dry", "-v", "--context", self.context, "--pull-number", str(self.pull_number)],
                          self.expected_human_output)
+
+    def test_notest_human_readable(self):
+        self.run_success(["--dry", "-v", "--context", self.context, "--pull-number=3"], "")
 
     def test_pull_data_human_readable(self):
         args = ["--dry", "-v", "--context", self.context,
