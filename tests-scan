@@ -189,11 +189,11 @@ def prioritize(
     description: str | None,
     title: str,
     labels: Container[str],
-    priority: int,
     context: str,
     number: int,
     direct: bool
 ) -> tuple[int, JsonObject | None]:
+    priority = distributed_queue.BASELINE_PRIORITY
     update: dict[str, JsonValue] | None = {"state": "pending"}
 
     # This commit definitively succeeded or failed
@@ -314,13 +314,6 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
 
         labels = labels_of_pull(pull)
 
-        baseline: float = distributed_queue.BASELINE_PRIORITY
-        # amqp automatically prioritizes on age
-        if not opts.amqp:
-            # modify the baseline slightly to favor older pull requests, so that we don't
-            # end up with a bunch of half tested pull requests
-            baseline += 1.0 - (min(100000, float(number)) / 100000)
-
         # Create list of statuses to process: always process the requested contexts, if given
         todos: dict[str, dict[str, object]] = {context: {} for context in contexts}
         for status in statuses:  # Firstly add all valid contexts that already exist in github
@@ -364,7 +357,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                 # without --amqp (as called manually or from workflows), trigger tests as NOT_TESTED_DIRECT,
                 # so that the webhook queues them
                 (priority, changes) = prioritize(
-                    state, description, title, labels, baseline, context, number, direct=not opts.amqp
+                    state, description, title, labels, context, number, direct=not opts.amqp
                 )
             if opts.dry or update_status(api, revision, context, status, changes):
                 if not priority:
