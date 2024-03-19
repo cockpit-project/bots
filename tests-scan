@@ -22,11 +22,11 @@ import json
 import logging
 import sys
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import NamedTuple
 
 from lib import ALLOWLIST, testmap
-from lib.aio.jsonutil import JsonObject, get_str
+from lib.aio.jsonutil import get_str
 from task import distributed_queue, github, labels_of_pull
 
 sys.dont_write_bytecode = True
@@ -184,28 +184,20 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
         print(json.dumps(body['job']))
 
 
+def update_status(
+    api: github.GitHub, revision: str, last: Mapping[str, str], dry: bool, changes: Mapping[str, str] | None
+) -> bool:
+    if changes is None or {**last, **changes} == last or dry:
+        return True
 
-
-def dict_is_subset(full, check):
-    for (key, value) in check.items():
-        if key not in full or full[key] != value:
-            return False
-    return True
-
-
-def update_status(api, revision, context, last, changes):
-    if changes:
-        changes["context"] = context
-    if changes and not dict_is_subset(last, changes):
-        response = api.post("statuses/" + revision, changes, accept=[422])  # 422 Unprocessable Entity
-        errors = response.get("errors", None)
-        if not errors:
-            return True
-        for error in response.get("errors", []):
-            sys.stderr.write(f"{revision}: {error.get('message', json.dumps(error))}\n")
-            sys.stderr.write(json.dumps(changes))
-        return False
-    return True
+    response = api.post("statuses/" + revision, changes, accept=[422])  # 422 Unprocessable Entity
+    errors = response.get("errors", None)
+    if not errors:
+        return True
+    for error in response.get("errors", []):
+        sys.stderr.write(f"{revision}: {error.get('message', json.dumps(error))}\n")
+        sys.stderr.write(json.dumps(changes))
+    return False
 
 
 def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: str) -> 'Iterable[Job]':
@@ -303,7 +295,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             # For unmarked and untested status, user must be allowed
             # Not this only applies to this specific commit. A new status
             # will apply if the user pushes a new commit.
-            changes: JsonObject | None
+            changes: Mapping[str, str] | None
             if login not in ALLOWLIST and description in (None, github.NO_TESTING):
                 priority = 0
                 changes = {"description": github.NO_TESTING, "context": context, "state": "pending"}
@@ -316,13 +308,14 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                     changes = None
                 else:
                     changes = {
+                        "context": context,
                         "state": "pending",
                         "description": github.NOT_TESTED if opts.amqp else github.NOT_TESTED_DIRECT
                     }
 
                 priority = distributed_queue.BASELINE_PRIORITY
 
-            if opts.dry or update_status(api, revision, context, status, changes):
+            if update_status(api, revision, status, opts.dry, changes):
                 if not priority:
                     continue
 
