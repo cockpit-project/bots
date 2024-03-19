@@ -187,6 +187,7 @@ def main():
   %s
 
 failed with exit code %i. Please check the container logs for details.""" % (cmd_str, p.returncode))
+            return 1
 
         channel.basic_ack(delivery_tag)
 
