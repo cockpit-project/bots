@@ -199,11 +199,7 @@ def prioritize(
         update = None
 
     if update:
-        if priority <= 0:
-            logging.info("Not updating status for '%s' on #%s because of low priority", context, number)
-            update = None
-        else:
-            update["description"] = github.NOT_TESTED_DIRECT if direct else github.NOT_TESTED
+        update["description"] = github.NOT_TESTED_DIRECT if direct else github.NOT_TESTED
 
     priority = min(priority, distributed_queue.MAX_PRIORITY)
     return (priority, update)
