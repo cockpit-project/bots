@@ -22,9 +22,11 @@ import json
 import logging
 import sys
 import time
-from typing import Iterable, NamedTuple
+from collections.abc import Container, Iterable
+from typing import NamedTuple
 
 from lib import ALLOWLIST, testmap
+from lib.aio.jsonutil import JsonObject, JsonValue, get_str
 from task import distributed_queue, github, labels_of_pull
 
 sys.dont_write_bytecode = True
@@ -182,9 +184,17 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
         print(json.dumps(body['job']))
 
 
-def prioritize(status, title, labels, priority, context, number, direct):
-    state = status.get("state", None)
-    update = {"state": "pending"}
+def prioritize(
+    state: str | None,
+    description: str | None,
+    title: str,
+    labels: Container[str],
+    priority: int,
+    context: str,
+    number: int,
+    direct: bool
+) -> tuple[int, JsonObject | None]:
+    update: dict[str, JsonValue] | None = {"state": "pending"}
 
     # This commit definitively succeeded or failed
     if state in ["success", "failure"]:
@@ -202,7 +212,7 @@ def prioritize(status, title, labels, priority, context, number, direct):
 
     # Ignore context when the PR has [no-test] in the title or as label, unless
     # the context was directly triggered
-    if (('no-test' in labels or '[no-test]' in title) and status.get("description", "") != github.NOT_TESTED_DIRECT):
+    if (('no-test' in labels or '[no-test]' in title) and description != github.NOT_TESTED_DIRECT):
         logging.info("Skipping '%s' on #%s because it is no-test", context, number)
         priority = 0
         update = None
@@ -218,8 +228,7 @@ def prioritize(status, title, labels, priority, context, number, direct):
             priority -= 1
 
         # Is testing already in progress?
-        description = status.get("description", "")
-        if description.startswith(github.TESTING):
+        if description and description.startswith(github.TESTING):
             logging.info("Skipping '%s' on #%s because it is already running", context, number)
             priority = 0
             update = None
@@ -232,7 +241,7 @@ def prioritize(status, title, labels, priority, context, number, direct):
             update["description"] = github.NOT_TESTED_DIRECT if direct else github.NOT_TESTED
 
     priority = min(priority, distributed_queue.MAX_PRIORITY)
-    return [priority, update]
+    return (priority, update)
 
 
 def dict_is_subset(full, check):
@@ -328,7 +337,10 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
         # base:   the target branch of that PR (None for direct SHA trigger)
         # branch: the branch of the external project that we are testing
         #         against this PR (only applies to cockpit-project/bots PRs)
-        for context in todos:
+        for context, status in todos.items():
+            state = get_str(status, 'state', None)
+            description = get_str(status, 'description', None)
+
             # Get correct project and branch. Ones from test name have priority
             project = repo
             branch = base
@@ -343,8 +355,8 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             # For unmarked and untested status, user must be allowed
             # Not this only applies to this specific commit. A new status
             # will apply if the user pushes a new commit.
-            status = todos[context]
-            if not allowed and status.get("description", github.NO_TESTING) == github.NO_TESTING:
+            changes: JsonObject | None
+            if not allowed and description in (None, github.NO_TESTING):
                 priority = 0
                 changes = {"description": github.NO_TESTING, "context": context, "state": "pending"}
             else:
@@ -352,7 +364,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                 # without --amqp (as called manually or from workflows), trigger tests as NOT_TESTED_DIRECT,
                 # so that the webhook queues them
                 (priority, changes) = prioritize(
-                    status, title, labels, baseline, context, number, direct=not opts.amqp
+                    state, description, title, labels, baseline, context, number, direct=not opts.amqp
                 )
             if opts.dry or update_status(api, revision, context, status, changes):
                 if not priority:
