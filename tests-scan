@@ -57,7 +57,7 @@ def build_policy(repo, context):
     return policy
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='Bot: scan and update status of pull requests on GitHub')
     parser.add_argument('-v', '--human-readable', action="store_true", default=False,
                         help='Display human readable output rather than tasks')
@@ -78,8 +78,7 @@ def main():
 
     opts = parser.parse_args()
     if opts.amqp and no_amqp:
-        logging.error("AMQP host:port specified but python3-pika not available")
-        return 1
+        parser.error("AMQP host:port specified but python3-pika not available")
     if opts.pull_data and (opts.pull_number or opts.sha):
         parser.error("--pull-data and --pull-number/--sha are mutually exclusive")
 
@@ -90,17 +89,11 @@ def main():
     # Would be better to use api.repo everywhere
     opts.repo = api.repo
 
-    try:
-        results = scan_for_pull_tasks(api, opts.context, opts, opts.repo)
-    except RuntimeError as ex:
-        logging.error("tests-scan: %s", ex)
-        return 1
+    results = scan_for_pull_tasks(api, opts.context, opts, opts.repo)
 
     for result in results:
         if result:
             sys.stdout.write(result + "\n")
-
-    return 0
 
 
 class Job(NamedTuple):
@@ -381,4 +374,4 @@ def scan_for_pull_tasks(api, contexts, opts, repo):
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
