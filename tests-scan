@@ -313,38 +313,40 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                     "description": github.NOT_TESTED if opts.amqp else github.NOT_TESTED_DIRECT
                 }
 
-            if update_status(api, revision, status, opts.dry, changes):
-                checkout_ref = ref
-                if project != repo:
-                    checkout_ref = testmap.get_default_branch(project)
+            if not update_status(api, revision, status, opts.dry, changes):
+                continue
 
-                if base != branch:
-                    checkout_ref = branch
+            checkout_ref = ref
+            if project != repo:
+                checkout_ref = testmap.get_default_branch(project)
 
-                if repo == "cockpit-project/bots":
-                    # bots own test doesn't need bots/ setup as there is a permanent symlink to itself there
-                    # otherwise if we're testing an external project (repo != project) then checkout bots from the PR
-                    bots_ref = None if repo == project else ref
+            if base != branch:
+                checkout_ref = branch
+
+            if repo == "cockpit-project/bots":
+                # bots own test doesn't need bots/ setup as there is a permanent symlink to itself there
+                # otherwise if we're testing an external project (repo != project) then checkout bots from the PR
+                bots_ref = None if repo == project else ref
+            else:
+                if bots_pr:
+                    # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
+                    bots_api = github.GitHub(repo="cockpit-project/bots")
+                    bots_ref = bots_api.getHead(bots_pr) or "xxx"  # Make sure we fail when cannot get the head
                 else:
-                    if bots_pr:
-                        # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
-                        bots_api = github.GitHub(repo="cockpit-project/bots")
-                        bots_ref = bots_api.getHead(bots_pr) or "xxx"  # Make sure we fail when cannot get the head
-                    else:
-                        bots_ref = "main"
+                    bots_ref = "main"
 
-                yield Job(
-                    distributed_queue.BASELINE_PRIORITY,
-                    "pull-%d" % number,
-                    number,
-                    revision,
-                    checkout_ref,
-                    image_scenario,
-                    branch,
-                    project,
-                    bots_ref,
-                    context,
-                )
+            yield Job(
+                distributed_queue.BASELINE_PRIORITY,
+                "pull-%d" % number,
+                number,
+                revision,
+                checkout_ref,
+                image_scenario,
+                branch,
+                project,
+                bots_ref,
+                context,
+            )
 
 
 def scan_for_pull_tasks(api, contexts, opts, repo):
