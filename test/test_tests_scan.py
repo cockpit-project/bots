@@ -177,7 +177,7 @@ class TestTestsScan(unittest.TestCase):
                 'TEST_OS': 'fedora',
                 'TEST_SCENARIO': 'nightly'},
             'repo': self.repo,
-            'command-subject': None,
+            'command_subject': None,
             'report': None,
             'secrets': ['github-token', 'image-download'],
             'sha': self.revision,
@@ -253,7 +253,7 @@ class TestTestsScan(unittest.TestCase):
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
-                "command-subject": None,
+                "command_subject": None,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
@@ -292,7 +292,7 @@ class TestTestsScan(unittest.TestCase):
                     "title": "Tests failed on 9988aa",
                     "labels": ["nightly"],
                 },
-                "command-subject": None,
+                "command_subject": None,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "COCKPIT_BOTS_REF": "main",
@@ -327,7 +327,7 @@ class TestTestsScan(unittest.TestCase):
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
-                "command-subject": None,
+                "command_subject": None,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
@@ -366,7 +366,7 @@ class TestTestsScan(unittest.TestCase):
                 # reports for project/reop
                 "context": f"fedora/nightly@{repo_branch}",
                 # but tests cockpituous
-                "command-subject": {"repo": "cockpit-project/cockpituous", "branch": branch},
+                "command_subject": {"repo": "cockpit-project/cockpituous", "branch": branch},
                 "repo": "project/repo",
                 "pull": self.pull_number,
                 "report": None,

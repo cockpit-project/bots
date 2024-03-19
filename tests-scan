@@ -163,7 +163,7 @@ def queue_test(job: Job, channel, options: argparse.Namespace) -> None:
                 "title": f"Tests failed on {job.revision}",
                 "labels": ["nightly"],
             },
-            "command-subject": None if job.repo == options.repo else {
+            "command_subject": None if job.repo == options.repo else {
                 "repo": job.repo,
                 "branch": job.ref,
             },
