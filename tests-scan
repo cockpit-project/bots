@@ -109,7 +109,7 @@ def update_status(
     return False
 
 
-def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: str) -> Iterable[QueueEntry]:
+def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace) -> Iterable[QueueEntry]:
     pulls = []
 
     if opts.pull_data:
@@ -160,10 +160,10 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
         for status in statuses:  # Firstly add all valid contexts that already exist in github
             if contexts and status not in contexts:
                 continue
-            if testmap.is_valid_context(status, repo):
+            if testmap.is_valid_context(status, api.repo):
                 todos[status] = statuses[status]
         if not statuses and base:  # If none already present in PR, add basic set of contexts
-            for context in build_policy(repo, contexts).get(base, []):
+            for context in build_policy(api.repo, contexts).get(base, []):
                 todos[context] = {}
 
         # there are 3 different HEADs
@@ -176,7 +176,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             description = get_str(status, 'description', None)
 
             # Get correct project and branch. Ones from test name have priority
-            project = repo
+            project = api.repo
             branch = base
             image_scenario, bots_pr, context_project, context_branch = testmap.split_context(context)
             if context_project:
@@ -224,16 +224,16 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                 logging.info("Not updating status for '%s' on #%s because it is pending", context, number)
 
             checkout_ref = ref
-            if project != repo:
+            if project != api.repo:
                 checkout_ref = testmap.get_default_branch(project)
 
             if base != branch:
                 checkout_ref = branch
 
-            if repo == "cockpit-project/bots":
+            if api.repo == "cockpit-project/bots":
                 # bots own test doesn't need bots/ setup as there is a permanent symlink to itself there
                 # otherwise if we're testing an external project (repo != project) then checkout bots from the PR
-                bots_ref = None if repo == project else ref
+                bots_ref = None if api.repo == project else ref
             else:
                 if bots_pr:
                     # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
@@ -261,7 +261,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
 
             yield {
                 "job": {
-                    "repo": opts.repo,
+                    "repo": api.repo,
                     "sha": revision,
                     "context": context,
                     "pull": number or None,  # number uses 0 to mean 'None'
@@ -269,7 +269,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                         "title": f"Tests failed on {revision}",
                         "labels": ["nightly"],
                     },
-                    "command_subject": None if project == opts.repo else {
+                    "command_subject": None if project == api.repo else {
                         "repo": project,
                         "branch": checkout_ref,
                     },
@@ -289,8 +289,8 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             }
 
 
-def scan_for_pull_tasks(api: github.GitHub, contexts: str, opts: argparse.Namespace, repo: str) -> None:
-    results = cockpit_tasks(api, contexts, opts, repo)
+def scan_for_pull_tasks(api: github.GitHub, contexts: str, opts: argparse.Namespace) -> None:
+    results = cockpit_tasks(api, contexts, opts)
 
     if opts.human_readable:
         for entry in sorted(results, reverse=True, key=str):
@@ -331,12 +331,7 @@ def main() -> None:
 
     api = github.GitHub(repo=opts.repo)
 
-    # HACK: The `repo` option is used throughout the code, for example repo from
-    # opts is needed in `tests_invoke`, `tests_human`, `queue_test` etc.
-    # Would be better to use api.repo everywhere
-    opts.repo = api.repo
-
-    scan_for_pull_tasks(api, opts.context, opts, opts.repo)
+    scan_for_pull_tasks(api, opts.context, opts)
 
 
 if __name__ == '__main__':
