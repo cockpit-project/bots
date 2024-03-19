@@ -295,30 +295,25 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
             # For unmarked and untested status, user must be allowed
             # Not this only applies to this specific commit. A new status
             # will apply if the user pushes a new commit.
-            changes: Mapping[str, str] | None
             if login not in ALLOWLIST and description in (None, github.NO_TESTING):
-                priority = 0
-                changes = {"description": github.NO_TESTING, "context": context, "state": "pending"}
-            else:
-                # with --amqp (as called from run-queue), trigger tests as NOT_TESTED, as they already get queued;
-                # without --amqp (as called manually or from workflows), trigger tests as NOT_TESTED_DIRECT,
-                # so that the webhook queues them
-                if state in ["pending"]:
-                    logging.info("Not updating status for '%s' on #%s because it is pending", context, number)
-                    changes = None
-                else:
-                    changes = {
-                        "context": context,
-                        "state": "pending",
-                        "description": github.NOT_TESTED if opts.amqp else github.NOT_TESTED_DIRECT
-                    }
+                update_status(api, revision, status, opts.dry,
+                              {"description": github.NO_TESTING, "context": context, "state": "pending"})
+                continue
 
-                priority = distributed_queue.BASELINE_PRIORITY
+            # with --amqp (as called from run-queue), trigger tests as NOT_TESTED, as they already get queued;
+            # without --amqp (as called manually or from workflows), trigger tests as NOT_TESTED_DIRECT,
+            # so that the webhook queues them
+            if state in ["pending"]:
+                logging.info("Not updating status for '%s' on #%s because it is pending", context, number)
+                changes = None
+            else:
+                changes = {
+                    "context": context,
+                    "state": "pending",
+                    "description": github.NOT_TESTED if opts.amqp else github.NOT_TESTED_DIRECT
+                }
 
             if update_status(api, revision, status, opts.dry, changes):
-                if not priority:
-                    continue
-
                 checkout_ref = ref
                 if project != repo:
                     checkout_ref = testmap.get_default_branch(project)
@@ -339,7 +334,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                         bots_ref = "main"
 
                 yield Job(
-                    priority,
+                    distributed_queue.BASELINE_PRIORITY,
                     "pull-%d" % number,
                     number,
                     revision,
