@@ -98,54 +98,6 @@ def is_internal_context(context):
     return False
 
 
-def create_queue_entry(job: Job, options: argparse.Namespace) -> QueueEntry:
-    slug_suffix = job.github_context.replace('/', '-').replace('@', '-')
-    slug = f"{job.name}-{job.revision[:8]}-{time.strftime('%Y%m%d-%H%M%S')}-{slug_suffix}"
-    (image, _, scenario) = job.context.partition("/")
-
-    env = {
-        "TEST_OS": image,
-        "TEST_REVISION": job.revision,
-    }
-    if scenario:
-        env["TEST_SCENARIO"] = scenario
-    if job.bots_ref:
-        env["COCKPIT_BOTS_REF"] = job.bots_ref
-    if job.base:
-        env["BASE_BRANCH"] = job.base
-    if job.number:
-        env["TEST_PULL"] = f'{job.number}'
-
-    return {
-        "job": {
-            "repo": options.repo,
-            "sha": job.revision,
-            "context": job.github_context,
-            "pull": job.number or None,  # job.number uses 0 to mean 'None'
-            "report": None if job.number else {
-                "title": f"Tests failed on {job.revision}",
-                "labels": ["nightly"],
-            },
-            "command_subject": None if job.repo == options.repo else {
-                "repo": job.repo,
-                "branch": job.ref,
-            },
-            "slug": slug,
-            "env": env,
-            # for updating naughty trackers and downloading private images
-            "secrets": ["github-token", "image-download"],
-        },
-        "human": "{name:11} {context:25} {revision:10} {repo}{bots_ref}{branches}".format(
-            revision=job.revision[0:7],
-            context=job.context,
-            name=job.name,
-            repo=job.repo and "  (%s)" % job.repo or "",
-            bots_ref=f" [bots@{job.bots_ref}]" if job.bots_ref else "",
-            branches=f"   {{{job.base}}}" if job.base else "",
-        )
-    }
-
-
 def queue_test(entry: QueueEntry, channel: pika.channel.Channel, options: argparse.Namespace) -> None:
     queue = 'rhel' if is_internal_context(entry['job']['context']) else 'public'
     properties = pika.BasicProperties(priority=distributed_queue.BASELINE_PRIORITY)
@@ -314,7 +266,51 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace, repo: 
                 context,
             )
 
-            yield create_queue_entry(job, opts)
+            slug_suffix = job.github_context.replace('/', '-').replace('@', '-')
+            slug = f"{job.name}-{job.revision[:8]}-{time.strftime('%Y%m%d-%H%M%S')}-{slug_suffix}"
+            (image, _, scenario) = job.context.partition("/")
+
+            env = {
+                "TEST_OS": image,
+                "TEST_REVISION": job.revision,
+            }
+            if scenario:
+                env["TEST_SCENARIO"] = scenario
+            if job.bots_ref:
+                env["COCKPIT_BOTS_REF"] = job.bots_ref
+            if job.base:
+                env["BASE_BRANCH"] = job.base
+            if job.number:
+                env["TEST_PULL"] = f'{job.number}'
+
+            yield {
+                "job": {
+                    "repo": options.repo,
+                    "sha": job.revision,
+                    "context": job.github_context,
+                    "pull": job.number or None,  # job.number uses 0 to mean 'None'
+                    "report": None if job.number else {
+                        "title": f"Tests failed on {job.revision}",
+                        "labels": ["nightly"],
+                    },
+                    "command_subject": None if job.repo == options.repo else {
+                        "repo": job.repo,
+                        "branch": job.ref,
+                    },
+                    "slug": slug,
+                    "env": env,
+                    # for updating naughty trackers and downloading private images
+                    "secrets": ["github-token", "image-download"],
+                },
+                "human": "{name:11} {context:25} {revision:10} {repo}{bots_ref}{branches}".format(
+                    revision=job.revision[0:7],
+                    context=job.context,
+                    name=job.name,
+                    repo=job.repo and "  (%s)" % job.repo or "",
+                    bots_ref=f" [bots@{job.bots_ref}]" if job.bots_ref else "",
+                    branches=f"   {{{job.base}}}" if job.base else "",
+                )
+            }
 
 
 def scan_for_pull_tasks(api: github.GitHub, contexts: str, opts: argparse.Namespace, repo: str) -> None:
