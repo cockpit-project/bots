@@ -281,7 +281,6 @@ class TestTestsScan(unittest.TestCase):
         self.assertEqual(channel.basic_publish.call_args[0][1], "public")
         request = json.loads(channel.basic_publish.call_args[0][2])
 
-        self.maxDiff = None
         assert request == {
             "job": {
                 "context": "fedora/nightly",
