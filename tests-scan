@@ -175,17 +175,6 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace) -> Ite
             state = get_str(status, 'state', None)
             description = get_str(status, 'description', None)
 
-            # Get correct project and branch. Ones from test name have priority
-            project = api.repo
-            branch = base
-            image_scenario, bots_pr, context_project, context_branch = testmap.split_context(context)
-            if context_project:
-                project = context_project
-                branch = context_branch or testmap.get_default_branch(project)
-
-            # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
-            ref = revision
-
             # This commit definitively succeeded or failed
             if state in ["success", "failure"]:
                 logging.info("Skipping '%s' on #%s because it has already finished", context, number)
@@ -222,6 +211,20 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace) -> Ite
                     continue
             else:
                 logging.info("Not updating status for '%s' on #%s because it is pending", context, number)
+
+            # We're going to post an item to the queue now.  Let's figure what
+            # what it should look like...
+
+            # Get correct project and branch. Ones from test name have priority
+            project = api.repo
+            branch = base
+            image_scenario, bots_pr, context_project, context_branch = testmap.split_context(context)
+            if context_project:
+                project = context_project
+                branch = context_branch or testmap.get_default_branch(project)
+
+            # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
+            ref = revision
 
             checkout_ref = ref
             if project != api.repo:
