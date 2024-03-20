@@ -175,11 +175,19 @@ fi
 dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $ALL_DEPS
 
+# create/run this as a script, so that it can be re-run at image-prepare time with different repos
+cat > /var/lib/download-package-sets.sh <<EOF
+#!/bin/sh
+set -eu
+rm -rf /var/lib/package-sets
 mkdir -p /var/lib/package-sets/clevis
-dnf $DNF_OPTS download --destdir=/var/lib/package-sets/clevis $PACKAGE_SET_CLEVIS
+dnf $DNF_OPTS download --destdir=/var/lib/package-sets/clevis $(echo "$PACKAGE_SET_CLEVIS" | xargs)
 
 mkdir -p /var/lib/package-sets/stratis
-dnf $DNF_OPTS download --destdir=/var/lib/package-sets/stratis $PACKAGE_SET_STRATIS
+dnf $DNF_OPTS download --destdir=/var/lib/package-sets/stratis $(echo "$PACKAGE_SET_STRATIS" | xargs)
+EOF
+chmod +x /var/lib/download-package-sets.sh
+/var/lib/download-package-sets.sh
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 dnf --setopt=install_weak_deps=False install -y cockpit
