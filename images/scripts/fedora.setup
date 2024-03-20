@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -eux
 IMAGE="$1"
 
 . /etc/os-release
@@ -9,6 +9,7 @@ IMAGE="$1"
 unset LANGUAGE
 unset LANG
 export LC_ALL=C.utf8
+DNF_OPTS=""
 
 # make libpwquality less aggressive, so that our "foobar" password works
 printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
