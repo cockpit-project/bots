@@ -56,6 +56,12 @@ EOF
         VERSION=${VERSION/-/.}
         # current development version uses /nightly, released ones /rel-eng + updates
         case "$VERSION" in
+            10.0)
+                VERSION=10
+                RELSUFFIX="-Public-Beta"
+                TREE=nightly;
+                UPDATES="" ;;
+
             9.5)
                 TREE=nightly;
                 UPDATES="" ;;
@@ -64,7 +70,7 @@ EOF
                 UPDATES="rhel-${MAJOR}/${TREE}/updates/RHEL-${MAJOR}/latest-RHEL-${VERSION}.0/compose" ;;
         esac
 
-        REPO="rhel-${MAJOR}/${TREE}/RHEL-${MAJOR}/latest-RHEL-${VERSION}.0/compose"
+        REPO="rhel-${MAJOR}/${TREE}/RHEL-${MAJOR}${RELSUFFIX:-}/latest-RHEL-${VERSION}.0/compose"
 
         cat <<EOF > /etc/yum.repos.d/devel.repo
 [RHEL-BaseOS]
@@ -232,8 +238,8 @@ if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/wireguard-tools /}"
 fi
 
-# vdo not available on centos 10
-if  [ "$IMAGE" = "centos-10" ]; then
+# vdo not available on centos/rhel 10
+if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/ kmod-kvdo / }"
     TEST_PACKAGES="${TEST_PACKAGES/ vdo / }"
 fi
@@ -305,7 +311,11 @@ fi
 
 if [ -x /usr/bin/insights-client ]; then
     rpm -q insights-client
-    insights-client --version
+    if [ "${IMAGE#rhel-10}" != "$IMAGE" ]; then
+        insights-client --version || true  # Errors on RHEL-10
+    else
+        insights-client --version
+    fi
     insights-client --status || true
     if [ -f /var/lib/insights/newest.egg ]; then
         cp /var/lib/insights/newest.egg /var/lib/insights/last_stable.egg
@@ -356,12 +366,17 @@ EOF
     fi
 
     if [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
+        if [ "${IMAGE#rhel-10}" != "$IMAGE" ]; then
+            zversion="-beta"
+        else
+            zversion=".0"
+        fi
         cat <<EOF > /etc/mock/default.cfg
 config_opts['chroothome'] = '/builddir'
 config_opts['use_host_resolv'] = False
 config_opts['basedir'] = '/var/lib/mock'
 config_opts['rpmbuild_timeout'] = 86400
-config_opts['yum.conf'] = '[main]\\ncachedir=/var/cache/yum\\ndebuglevel=1\\nlogfile=/var/log/yum.log\\nreposdir=/dev/null\\nretries=20\\nobsoletes=1\\ngpgcheck=0\\nassumeyes=1\\nkeepcache=1\\ninstall_weak_deps=0\\nstrict=1\\n\\n# repos\\n\\n[build]\\nname=build\\nbaseurl=http://download.devel.redhat.com/brewroot/repos/rhel-${major}.${minor}.0-build/latest/x86_64/\\nmodule_hotfixes=1\\n'
+config_opts['yum.conf'] = '[main]\\ncachedir=/var/cache/yum\\ndebuglevel=1\\nlogfile=/var/log/yum.log\\nreposdir=/dev/null\\nretries=20\\nobsoletes=1\\ngpgcheck=0\\nassumeyes=1\\nkeepcache=1\\ninstall_weak_deps=0\\nstrict=1\\n\\n# repos\\n\\n[build]\\nname=build\\nbaseurl=http://download.devel.redhat.com/brewroot/repos/rhel-${major}.${minor}${zversion}-build/latest/x86_64/\\nmodule_hotfixes=1\\n'
 config_opts['chroot_setup_cmd'] = 'groupinstall build'
 config_opts['target_arch'] = 'x86_64'
 config_opts['root'] = u'rhel-candidate-x86_64'
