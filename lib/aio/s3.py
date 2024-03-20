@@ -134,7 +134,7 @@ def s3_sign(
         signing_key = hmac.new(signing_key, item.encode('ascii'), hashlib.sha256).digest()
 
     algorithm = 'AWS4-HMAC-SHA256'
-    canonical_request = f'{method}\n{url.path}\n{url.query_string}\n{headers_str}\n{headers_list}\n{checksum}'
+    canonical_request = f'{method}\n{url.raw_path}\n{url.query_string}\n{headers_str}\n{headers_list}\n{checksum}'
     request_hash = hashlib.sha256(canonical_request.encode('ascii')).hexdigest()
     string_to_sign = f'{algorithm}\n{amzdate}\n{credential_scope}\n{request_hash}'
     signature = hmac.new(signing_key, string_to_sign.encode('ascii'), hashlib.sha256).hexdigest()
