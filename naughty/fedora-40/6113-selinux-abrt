@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "test/verify/check-system-journal", line *, in testAbrt*
+*
+wait_js_cond(ph_is_present("#journal-box .cockpit-logline .cockpit-log-message:contains('(sleep) crashed in')* Uncaught (in promise) Error: condition did not become true
