@@ -168,10 +168,16 @@ class BuildAction(ActionBase):
             machine.execute(f'''su builder -c 'rpmbuild --define "_topdir /var/tmp/build" -ts "{vm_source}"' ''')
             srpm = "/var/tmp/build/SRPMS/*.src.rpm"
 
+        # HACK: mock in openSUSE must be called through sudo (but still originally as builder)
+        if "opensuse" in machine.execute("cat /etc/os-release"):
+            mock_sudo = "sudo"
+        else:
+            mock_sudo = ""
+
         # build binary RPMs from srpm; disable all repositorys as mock insists on
         # calling `dnf builddep`, which insists on a cache; our test VMs don't have a cache,
         # as the mock is offline and pre-installed
-        machine.execute("su builder -c 'mock --no-clean --no-cleanup-after --disablerepo=* "
+        machine.execute(f"su builder -c '{mock_sudo} mock --no-clean --no-cleanup-after --disablerepo=* "
                         f"--offline --resultdir /var/tmp/build {mock_opts} --rebuild {srpm}'",
                         timeout=1800, stdout=stdout_disposition)
 
