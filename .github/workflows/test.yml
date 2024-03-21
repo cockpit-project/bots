@@ -68,6 +68,12 @@ jobs:
           repository: cockpit-project/cockpituous
           path: cockpituous
 
+      - name: Install test dependencies
+        if: steps.changes.outputs.changed
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make python3-pytest
+
       # HACK: Ubuntu 22.04 has podman 3.4, which isn't compatible with podman-remote 4 in our tasks container
       # This PPA is a backport of podman 4.3 from Debian 12; drop this when moving `runs-on:` to ubuntu-24.04
       - name: Update to newer podman
@@ -83,7 +89,7 @@ jobs:
           set -ex
           if [ -n '${{ github.event.pull_request.number }}' ]; then
               echo '${{ secrets.GITHUB_TOKEN }}' > /tmp/github-token
-              pr_args='-r ${{ github.event.pull_request.base.user.login }}/bots -p ${{ github.event.pull_request.number }} -t /tmp/github-token'
+              pr_args='--pr-repository ${{ github.event.pull_request.base.user.login }}/bots --pr ${{ github.event.pull_request.number }} --github-token=/tmp/github-token'
               repo='${{ github.event.pull_request.head.repo.clone_url }}'
               branch='${{ github.event.pull_request.head.ref }}'
           else
@@ -92,4 +98,4 @@ jobs:
               branch="${GITHUB_REF##*/}"
           fi
           cd cockpituous
-          COCKPIT_BOTS_REPO=$repo COCKPIT_BOTS_BRANCH=$branch tasks/run-local.sh ${pr_args:-}
+          COCKPIT_BOTS_REPO=$repo COCKPIT_BOTS_BRANCH=$branch python3 -m pytest -vv ${pr_args:-}
