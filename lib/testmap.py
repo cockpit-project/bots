@@ -78,6 +78,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-40',
             'centos-8-stream',
             'fedora-rawhide',
+            'opensuse-tumbleweed',
         ],
     },
     'cockpit-project/cockpit-ostree': {
