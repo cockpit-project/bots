@@ -43,10 +43,10 @@ echo "$spec" | rpmspec -D "$OS_VER_NO_VARIANT" -D 'version 0' -D 'enable_old_bri
 # - nodejs for starter-kit and other projects which rebuild webpack during RPM build
 case "$OS_VER" in
     *suse*)
-        EXTRA_DEPS="appstream-glib rpmlint gettext-runtime desktop-file-utils nodejs"
+        EXTRA_DEPS="appstream-glib rpmlint gettext-runtime desktop-file-utils nodejs-default"
         ;;
     *)
-        EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs-default"
+        EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs"
         ;;
 esac
 
