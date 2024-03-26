@@ -96,7 +96,7 @@ def main():
 
         desc = status["description"]
         if status["state"] == "pending":
-            if "Testing in progress" in desc:
+            if "progress" in desc:
                 cc[-1]["url"] = status["target_url"]
                 cc[-1]["started"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()
             elif "Not yet tested" in desc:
