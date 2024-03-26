@@ -78,6 +78,8 @@ rpm-config-SUSE \
 
 NETWORK_PACKAGES="\
 systemd-network \
+sssd \
+sssd-dbus \
 "
 
 # avoid NM-wait-online hanging on disconnected interfaces
@@ -85,18 +87,11 @@ mkdir -p /etc/NetworkManager/conf.d/
 printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
 
 # our cloud-init.iso does not set up the host name
-
 echo "127.0.1.1 $(hostname)" >> /etc/hosts
-
-if ! getent passwd admin >/dev/null; then
-    useradd -c Administrator admin
-    echo admin:foobar | chpasswd
-fi
 
 if [ "${IMAGE%-i386}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/podman /}"
 fi
-
 
 zypper dup -y
 zypper install -y $TEST_PACKAGES $COCKPIT_DEPS $BUILD_PACKAGES $NETWORK_PACKAGES
@@ -115,8 +110,12 @@ useradd -c Builder -G mock builder
 
 su builder -c "sudo mock --verbose -i $(/var/lib/testvm/build-deps.sh "${ID} ${VERSION_ID}")"
 
+# Cloud init creates sshd_config to a wrong path so it needs to be removed
+rm -r /etc/ssh/sshd_config
 # Prevent SSH from hanging for a long time when no external network access
-echo 'UseDNS no' >> /etc/ssh/sshd_config
+echo 'UseDNS no' >> /usr/etc/ssh/sshd_config
+# Cloud init sets 'PasswordAuthentication yes'. Make sure it's replicated in tumbleweed
+echo 'PasswordAuthentication yes' >> /usr/etc/ssh/sshd_config
 
 # Audit events to the journal
 rm -f '/etc/systemd/system/multi-user.target.wants/auditd.service'
