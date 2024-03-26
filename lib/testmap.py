@@ -69,6 +69,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'rhel-8-10',
+            'opensuse-tumbleweed',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -106,6 +107,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-8-stream',
             'fedora-rawhide',
+            'opensuse-tumbleweed',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -125,6 +127,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'fedora-rawhide',
+            'opensuse-tumbleweed',
         ],
     },
     'cockpit-project/cockpit-files': {
