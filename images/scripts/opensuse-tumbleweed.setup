@@ -128,4 +128,8 @@ echo root:foobar | chpasswd
 
 # reduce image size
 zypper clean
+
+# c-podman tests
+/var/lib/testvm/podman-images.setup
+
 /var/lib/testvm/zero-disk.setup
