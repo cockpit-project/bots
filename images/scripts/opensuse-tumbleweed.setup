@@ -78,6 +78,9 @@ rpm-config-SUSE \
 
 NETWORK_PACKAGES="\
 systemd-network \
+sssd \
+sssd-dbus \
+dbus-broker \
 "
 
 # avoid NM-wait-online hanging on disconnected interfaces
@@ -89,7 +92,7 @@ printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
 echo "127.0.1.1 $(hostname)" >> /etc/hosts
 
 if ! getent passwd admin >/dev/null; then
-    useradd -c Administrator admin
+    useradd -c Administrator -G wheel admin
     echo admin:foobar | chpasswd
 fi
 
@@ -117,12 +120,17 @@ su builder -c "sudo mock --verbose -i $(/var/lib/testvm/build-deps.sh "${ID} ${V
 
 # Prevent SSH from hanging for a long time when no external network access
 echo 'UseDNS no' >> /etc/ssh/sshd_config
+# Pam is not enabled by default and is needed for systemctl --user to work
+echo 'UsePAM yes' >> /etc/ssh/sshd_config
 
 # Audit events to the journal
 rm -f '/etc/systemd/system/multi-user.target.wants/auditd.service'
 rm -rf /var/log/audit/
 
 systemctl enable --now systemd-networkd.service
+# dbus-broker needs to be manually enabled on opensuse-tumbleweed
+systemctl enable --now dbus-broker.service
+systemctl --global enable dbus-broker.service
 
 echo root:foobar | chpasswd
 
