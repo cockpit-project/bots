@@ -1,0 +1,3 @@
+#!/bin/bash
+set -eux
+exec $(dirname $0)/lib/bootc.bootstrap "$1" quay.io/centos-bootc/centos-bootc:stream9

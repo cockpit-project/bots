@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eux
+
+IMAGE="$1"
+
+podman pull quay.io/cockpit/ws
+podman pull quay.io/jitesoft/nginx
+
+# for c-podman tests
+/var/lib/testvm/podman-images.setup
+
+# disable various maintenance tasks which interfere with tests and don't make sense for our tests
+systemctl disable bootc-fetch-apply-updates.timer fstrim.timer logrotate.timer raid-check.timer
+
+# reduce image size
+rm -rf /var/log/journal/*
+/var/lib/testvm/zero-disk.setup

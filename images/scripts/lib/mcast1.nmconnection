@@ -1,0 +1,13 @@
+# don't hang/fail on non-existing DHCP on ens15 (second interface for mcast) on boot
+
+[connection]
+id=mcast1
+type=ethernet
+interface-name=ens15
+autoconnect-priority=-100
+
+[ipv4]
+method=disabled
+
+[ipv6]
+method=ignore

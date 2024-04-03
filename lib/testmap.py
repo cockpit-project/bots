@@ -81,6 +81,9 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
+        '_manual': [
+            'centos-9-bootc',
+        ]
     },
     'cockpit-project/cockpit-ostree': {
         'main': [
@@ -88,6 +91,9 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-coreos/devel',
             'rhel4edge',
         ],
+        '_manual': [
+            'centos-9-bootc',
+        ]
     },
     'cockpit-project/cockpit-podman': {
         'main': [
@@ -106,6 +112,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-8-stream',
+            'centos-9-bootc',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -237,6 +244,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
 # The OSTree variants can't build their own packages, so we build in
 # their non-Atomic siblings.
 OSTREE_BUILD_IMAGE = {
+    "centos-9-bootc": "centos-9-stream",
     "fedora-coreos": "fedora-39",
     "rhel4edge": "rhel-9-2",
 }
