@@ -81,6 +81,9 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
+        '_manual': [
+            'fedora-eln-bootc',
+        ]
     },
     'cockpit-project/cockpit-ostree': {
         'main': [
@@ -88,6 +91,9 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-coreos/devel',
             'rhel4edge',
         ],
+        '_manual': [
+            'fedora-eln-bootc',
+        ]
     },
     'cockpit-project/cockpit-podman': {
         'main': [
@@ -106,6 +112,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-8-stream',
+            'fedora-eln-bootc',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -238,6 +245,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
 # their non-Atomic siblings.
 OSTREE_BUILD_IMAGE = {
     "fedora-coreos": "fedora-39",
+    "fedora-eln-bootc": TEST_OS_DEFAULT,
     "rhel4edge": "rhel-9-2",
 }
 

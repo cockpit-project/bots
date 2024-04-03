@@ -46,6 +46,7 @@ REFRESH = {
     "fedora-39": {},
     "fedora-40": {},
     "fedora-coreos": {},
+    "fedora-eln-bootc": {},
     "fedora-rawhide": {},
     "fedora-rawhide-boot": {},
     "fedora-rawhide-anaconda-payload": REFRESH_30,

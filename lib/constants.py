@@ -18,7 +18,7 @@
 import os
 
 # Images which are OSTree based
-OSTREE_IMAGES = ["fedora-coreos", "rhel4edge"]
+OSTREE_IMAGES = ["fedora-coreos", "fedora-eln-bootc", "rhel4edge"]
 
 LIB_DIR = os.path.dirname(__file__)
 BOTS_DIR = os.path.dirname(LIB_DIR)
