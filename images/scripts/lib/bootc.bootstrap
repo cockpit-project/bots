@@ -1,0 +1,68 @@
+#!/usr/bin/python3
+
+# osbuild needs a privileged container with kvm, so we can't build or run this
+# directly in our CI tasks container or GitHub workflows; so run it in a VM.
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(1, os.path.realpath(__file__ + '/../../../..'))
+
+from lib.constants import BOTS_DIR, DEFAULT_IDENTITY_PUB_FILE, TEST_OS_DEFAULT
+from machine import testvm
+
+OCI_TAG = 'localhost/bootc:latest'
+
+parser = argparse.ArgumentParser(description='Bootstrap a bootc container based VM image')
+parser.add_argument('vmpath', type=Path, help='Path to the VM image to be created')
+parser.add_argument('container', help='Name of the bootc container image')
+args = parser.parse_args()
+
+subprocess.check_call([os.path.join(BOTS_DIR, 'image-download'), TEST_OS_DEFAULT])
+m = testvm.VirtMachine(image=TEST_OS_DEFAULT, verbose=True)
+m.start()
+m.wait_boot()
+
+# build OS bootc container image
+m.upload([str(Path(testvm.SCRIPTS_DIR, 'lib'))], '/root')
+m.execute(f'podman build -f lib/bootc.Containerfile -t {OCI_TAG} --build-arg base_image={args.container} .',
+          timeout=720, stdout=None)
+
+# convert container to qcow2 with image builder
+# see https://github.com/osbuild/bootc-image-builder?tab=readme-ov-file
+
+pubkey = Path(DEFAULT_IDENTITY_PUB_FILE).read_text().strip()
+config = {
+    'blueprint': {
+        'customizations': {
+            'user': [
+                {'name': 'root', 'password': 'foobar', 'key': pubkey},
+                {'name': 'admin', 'password': 'foobar', 'key': pubkey, 'groups': ['wheel']},
+            ]
+        }
+    }
+}
+m.write('/root/config.json', json.dumps(config))
+
+m.execute('mkdir output')
+
+m.execute(['podman', 'run', '--rm', '-i', '--privileged', '--security-opt=label=type:unconfined_t',
+           # for --local
+           '--volume=/var/lib/containers/storage:/var/lib/containers/storage',
+           '--volume=./config.json:/config.json',
+           '--volume=./output:/output',
+           'quay.io/centos-bootc/bootc-image-builder:latest',
+           # image-builder args
+           '--type=qcow2',
+           '--local',
+           '--config', '/config.json',
+           OCI_TAG], timeout=720, stdout=None)
+
+# copy out the image
+m.download('output/qcow2/disk.qcow2', args.vmpath)
+
+m.kill()
