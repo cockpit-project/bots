@@ -41,6 +41,7 @@ REFRESH = {
     "centos-8-stream": {},
     "centos-9-bootc": {},
     "centos-9-stream": {},
+    "centos-10": {},
     "debian-testing": {},
     "debian-stable": {},
     "fedora-38": {},

@@ -67,6 +67,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'centos-10',
             'fedora-rawhide',
             'rhel-8-10',
             'opensuse-tumbleweed',
@@ -83,6 +84,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-9-bootc',
+            'centos-10',
         ]
     },
     'cockpit-project/cockpit-ostree': {
@@ -113,6 +115,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-8-stream',
+            'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -133,6 +136,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-8-stream',
         ],
         '_manual': [
+            'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
