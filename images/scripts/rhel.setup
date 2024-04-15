@@ -218,15 +218,21 @@ if [ "${IMAGE#rhel*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} subscription-manager-cockpit insights-client"
 fi
 
-# kpatch not available on centos
-if [ "$IMAGE" = "centos-8-stream" ]; then
+# kpatch not available on centos 8 and 10
+if [ "$IMAGE" = "centos-8-stream" ] || [ "$IMAGE" = "centos-10" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/kpatch /}"
     TEST_PACKAGES="${TEST_PACKAGES/kpatch-dnf /}"
 fi
 
-# wireguard-tools not available on rhel-8* and centos-8-stream
-if [ "${IMAGE#rhel-8*}" != "$IMAGE" ] || [ "$IMAGE" = "centos-8-stream" ]; then
+# wireguard-tools not available on rhel-8* and centos 8/10
+if [ "${IMAGE#rhel-8*}" != "$IMAGE" ] || [ "$IMAGE" = "centos-8-stream" ] || [ "$IMAGE" = "centos-10" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/wireguard-tools /}"
+fi
+
+# vdo not available on centos 10
+if  [ "$IMAGE" = "centos-10" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES/ kmod-kvdo / }"
+    TEST_PACKAGES="${TEST_PACKAGES/ vdo / }"
 fi
 
 if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
@@ -304,13 +310,33 @@ if [ "$DO_BUILD" -eq 1 ]; then
     # install mock from EPEL
     major=$(cut -d '-' -f 2 <<< "$IMAGE")
     minor=$(cut -d '-' -f 3 <<< "$IMAGE")
-    dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-${major}.noarch.rpm
-    dnf install -y rpm-build mock
-    dnf config-manager --set-disabled epel
+    dnf install -y rpm-build
+
+    if [ "${IMAGE#rhel-10*}" != "$IMAGE" ] || [ "${IMAGE#centos-10}" != "$IMAGE" ]; then
+        # RHEL 10 has no EPEL yet, install from Fedora 40
+        cat <<EOF > /etc/yum.repos.d/fedora.repo
+[fedora]
+name=Fedora
+baseurl=http://download.fedoraproject.org/pub/fedora/linux/development/40/Everything/\$basearch/os/
+enabled=1
+gpgcheck=0
+
+[fedora-updates-testing]
+name=Fedora
+baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/testing/40/Everything/\$basearch/
+enabled=1
+gpgcheck=0
+EOF
+        dnf install -y --setopt=install_weak_deps=False mock
+        rm  /etc/yum.repos.d/fedora.repo
+    else
+        # RHEL/CentOS 8/9 has EPEL
+        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-${major}.noarch.rpm
+        dnf install -y mock
+        dnf config-manager --set-disabled epel
+    fi
 
     if [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
-        dnf install -y rpm-build
-
         cat <<EOF > /etc/mock/default.cfg
 config_opts['chroothome'] = '/builddir'
 config_opts['use_host_resolv'] = False
