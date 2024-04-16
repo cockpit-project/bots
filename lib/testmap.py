@@ -112,6 +112,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-coreos',
             'rhel-8-10',
             'rhel-9-4',
+            'rhel-9-5',
             'rhel4edge',
             'ubuntu-2204',
             'ubuntu-stable',
@@ -119,7 +120,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-8-stream',
             'centos-10',
-            'rhel-9-5',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -137,11 +137,11 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             f'{TEST_OS_DEFAULT}/firefox',
             'rhel-8-10',
             'rhel-9-4',
+            'rhel-9-5',
             'centos-8-stream',
         ],
         '_manual': [
             'centos-10',
-            'rhel-9-5',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
