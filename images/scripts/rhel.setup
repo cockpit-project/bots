@@ -184,6 +184,7 @@ sssd-dbus \
 "
 
 TEST_PACKAGES="\
+acl \
 boom-boot \
 clevis-luks \
 cryptsetup \
