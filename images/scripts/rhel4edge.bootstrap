@@ -2,7 +2,7 @@
 set -eux
 
 BASE=$(dirname $0)
-
+VERS=92
 # Names need to be unique
 timestamp=$(date +%s)
 
@@ -10,7 +10,7 @@ timestamp=$(date +%s)
 cat > edge-request.json <<EOF
 {
   "name": "rhel4edge-$timestamp",
-  "distribution": "rhel-92",
+  "distribution": "rhel-$VERS",
   "imageType": "rhel-edge-installer",
   "packages": [
     { "name": "cockpit-system" },
@@ -59,6 +59,6 @@ if [ "$STATUS" != "SUCCESS" ]; then
 fi
 
 curl --netrc-file /secrets/crc_passwd -L "https://console.redhat.com/api/edge/v1/storage/isos/$InstallerID" -o "rhel4edge-$timestamp.iso"
-$BASE/virt-install-rhel4edge "$1" x86_64 "rhel4edge-$timestamp.iso"
+$BASE/virt-install-rhel4edge "$1" x86_64 "rhel4edge-$timestamp.iso" "$VERS"
 
 rm edge-request.json "rhel4edge-$timestamp.iso"
