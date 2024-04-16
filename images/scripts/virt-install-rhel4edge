@@ -38,13 +38,6 @@ virt_log_file="$(basename $url).log"
 
 base=$(dirname $0)
 
-# HACK: Extract fleet.ks file and fix the kickstart for rhel4edge.
-# 'rootpw' parameter has to be defined for non-interactive installation
-# https://issues.redhat.com/browse/THEEDGE-3825
-fleet_ks_file="$(basename $url).ks"
-isoinfo  -i $url -x "/FLEET.KS;1" > "$fleet_ks_file"
-sed -i "/network --boot/a rootpw --lock" "$fleet_ks_file"
-
 qemu-img create -f qcow2 "$out" 12G
 
 connect="--connect=qemu:///session"
@@ -63,13 +56,12 @@ cleanup_builder_vm
 
 virt-install $connect \
                         --name=$name \
-                        --extra-args="inst.stage2=hd:LABEL=RHEL-${VERSION}-0-BaseOS-x86_64 inst.ks=file:/$fleet_ks_file console=ttyS0,115200" \
+                        --extra-args="inst.stage2=hd:LABEL=RHEL-${VERSION}-0-BaseOS-x86_64 inst.ks=hd:LABEL=RHEL-${VERSION}-0-BaseOS-x86_64:/osbuild.ks console=ttyS0,115200" \
                         --disk "path=$out,format=qcow2" \
                         --ram 4096 \
                         --vcpus=1 \
                         --location="$url" \
                         --nographics \
-                        --initrd-inject="$(realpath $fleet_ks_file)" \
                         --noreboot \
                         --serial=file,path="$(realpath $virt_log_file)" \
                         --noautoconsole \
@@ -78,8 +70,6 @@ machine_status="$(virsh $connect dominfo $name | grep State: | sed 's/State:\s*/
 
 cleanup_builder_vm
 
-
-rm "$fleet_ks_file"
 if echo "$machine_status" | grep "shut off"; then
     rm "$virt_log_file"
     echo "INSTALLATION PASSED"
