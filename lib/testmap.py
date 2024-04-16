@@ -79,12 +79,12 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-39',
             'fedora-40',
             'centos-8-stream',
+            'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
         '_manual': [
             'centos-9-bootc',
-            'centos-10',
         ]
     },
     'cockpit-project/cockpit-ostree': {
