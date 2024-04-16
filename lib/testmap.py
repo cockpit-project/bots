@@ -70,6 +70,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'rhel-8-10',
+            'rhel-9-5',
             'opensuse-tumbleweed',
         ],
     },
@@ -85,6 +86,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-9-bootc',
+            'rhel-9-5',
         ]
     },
     'cockpit-project/cockpit-ostree': {
@@ -95,6 +97,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-9-bootc',
+            'rhel-9-5',
         ]
     },
     'cockpit-project/cockpit-podman': {
@@ -116,6 +119,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-8-stream',
             'centos-10',
+            'rhel-9-5',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -137,6 +141,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-10',
+            'rhel-9-5',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -211,6 +216,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'rhel-8-10',
+            'rhel-9-5',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -223,6 +229,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-40',
         ],
         '_manual': [
+            'rhel-9-5',
         ],
     },
     'cockpit-project/cockpit-certificates': {
@@ -232,6 +239,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'rhel-9-4',
+            'rhel-9-5',
             'centos-8-stream',
         ]
     },
