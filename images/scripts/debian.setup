@@ -85,6 +85,7 @@ tang \
 libnss-myhostname \
 virtiofsd \
 wireguard-tools \
+nftables \
 "
 
 # older libvirt have this builtin
