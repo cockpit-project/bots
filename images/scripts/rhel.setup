@@ -388,6 +388,11 @@ if [ -d ~admin/.ssh ]; then
     chown admin:admin ~admin/.ssh
 fi
 
+# HACK: broken firewalld 2.1.2-1.el10 https://issues.redhat.com/browse/RHEL-33041
+if  [ "$IMAGE" = "centos-10" ]; then
+    ln -s org.fedoraproject.FirewallD1.server.policy.choice /usr/share/polkit-1/actions/org.fedoraproject.FirewallD1.policy
+fi
+
 # To enable persistent logging
 mkdir -p /var/log/journal
 
