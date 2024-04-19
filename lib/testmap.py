@@ -91,12 +91,12 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     },
     'cockpit-project/cockpit-ostree': {
         'main': [
+            'centos-9-bootc',
             'fedora-coreos',
             'fedora-coreos/devel',
             'rhel4edge',
         ],
         '_manual': [
-            'centos-9-bootc',
             'rhel-9-5',
         ]
     },
