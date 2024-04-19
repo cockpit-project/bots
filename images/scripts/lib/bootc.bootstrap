@@ -66,3 +66,16 @@ m.execute(['podman', 'run', '--rm', '-i', '--privileged', '--security-opt=label=
 m.download('output/qcow2/disk.qcow2', args.vmpath)
 
 m.kill()
+
+# it's too small by default
+subprocess.check_call(['qemu-img', 'resize', '-f', 'qcow2', args.vmpath, '+20G'])
+
+m = testvm.VirtMachine(image=os.path.abspath(args.vmpath), maintain=True, verbose=True)
+m.start()
+m.wait_boot()
+# resize file system to the full qcow device size
+m.execute('growpart /dev/vda 4')
+m.execute('mount -o remount,rw /sysroot')
+m.execute('resize2fs /dev/vda4')
+m.shutdown()
+m.kill()
