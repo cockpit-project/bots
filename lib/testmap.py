@@ -54,6 +54,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
             *contexts('rhel-9-4', COCKPIT_SCENARIOS),
             *contexts('rhel-9-5', COCKPIT_SCENARIOS),
+            *contexts('centos-10', COCKPIT_SCENARIOS),
             *contexts('rhel4edge', COCKPIT_SCENARIOS),
         ],
         'rhel-8': [
@@ -68,7 +69,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'centos-10',
             'fedora-rawhide',
             'rhel-8-10',
             'opensuse-tumbleweed',
