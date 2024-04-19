@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(1, os.path.realpath(__file__ + '/../../../..'))
@@ -62,8 +63,13 @@ m.execute(['podman', 'run', '--rm', '-i', '--privileged', '--security-opt=label=
            '--config', '/config.json',
            OCI_TAG], timeout=720, stdout=None)
 
-# copy out the image
+# copy out the converted qcow2 image
 m.download('output/qcow2/disk.qcow2', args.vmpath)
+
+# copy out the container image
+oci_image = tempfile.NamedTemporaryFile()
+m.execute(f"podman save {OCI_TAG}", stdout=oci_image)
+oci_image.flush()
 
 m.kill()
 
@@ -77,5 +83,10 @@ m.wait_boot()
 m.execute('growpart /dev/vda 4')
 m.execute('mount -o remount,rw /sysroot')
 m.execute('resize2fs /dev/vda4')
+
+# copy OCI image into the VM as well, for cockpit-ostree tests
+# the .setup script processes this further
+m.upload([oci_image.name], '/var/cache/bootc.oci.tar')
+
 m.shutdown()
 m.kill()
