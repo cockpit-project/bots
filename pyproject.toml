@@ -1,3 +1,70 @@
+[tool.mypy]
+strict = true
+follow_imports = 'silent'  # https://github.com/python-lsp/pylsp-mypy/issues/81
+scripts_are_modules = true  # allow checking all scripts in one invocation
+
+[[tool.mypy.overrides]]
+# things which may be unavailable when running checks
+module = [
+    'libvirt',
+    'libvirt_qemu',
+    'nacl',
+    'pika',
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# https://github.com/python/mypy/issues/11401 prevents us from enabling strict
+# mode for a given set of files, so instead, we disable the failing checks for
+# the files which aren't strictly typed.  Hopefully this decreases with time.
+check_untyped_defs = false
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+warn_return_any = false
+module = [
+    'task',
+    'task.github',
+
+    'test_cache',
+    'test_checklist',
+    'test_github',
+    'test_issue_scan',
+    'test_policy',
+    'test_task',
+    'test_test_failure_policy',
+    'test_testmap',
+    'test_tests_scan',
+
+    'cockpit-lib-update',
+    'create-anaconda-payload',
+    'github-info',
+    'github-upload-secrets',
+    'image-create',
+    'image-customize',
+    'image-diff',
+    'image-prune',
+    'image-refresh',
+    'image-trigger',
+    'inspect-queue',
+    'issue-scan',
+    'issues-review',
+    'naughty-prune',
+    'npm-update',
+    'po-refresh',
+    'prometheus-stats',
+    'publish-queue',
+    'push-rewrite',
+    'run-queue',
+    's3-lifecycle',
+    'store-tests',
+    'tasks-container-update',
+    'test-failure-policy',
+    'tests-policy',
+    'tests-scan',
+    'tests-status',
+    'tests-trigger',
+]
+
 [tool.ruff]
 exclude = [
     ".git/",
