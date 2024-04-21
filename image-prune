@@ -171,9 +171,9 @@ class S3ImageStore(ImageCache):
         # make sure this gets done before we start iterating
         self.sizes = dict(s3.parse_list(result, "Key", "Size"))
 
-        rfc3339ish = '%Y-%m-%dT%H:%M:%S.%f%z'
         for name, stamp in s3.parse_list(result, "Key", "LastModified"):
-            yield datetime.datetime.strptime(stamp, rfc3339ish).timestamp(), name
+            # rfc3339ish...
+            yield datetime.datetime.strptime(stamp, '%Y-%m-%dT%H:%M:%S.%f%z').timestamp(), name
 
     def delete_file(self, filename):
         try:
@@ -186,7 +186,7 @@ class S3ImageStore(ImageCache):
         del self.sizes[filename]
 
     def enough_space(self):
-        total = sum(int(bytes) for bytes in self.sizes.values())
+        total = sum(int(size) for size in self.sizes.values())
         return total < self.max_bytes
 
 

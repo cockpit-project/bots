@@ -138,8 +138,9 @@ def s3_sign(
     request_hash = hashlib.sha256(canonical_request.encode('ascii')).hexdigest()
     string_to_sign = f'{algorithm}\n{amzdate}\n{credential_scope}\n{request_hash}'
     signature = hmac.new(signing_key, string_to_sign.encode('ascii'), hashlib.sha256).hexdigest()
-    headers['Authorization'] = f'{algorithm} Credential={keys.access}/{credential_scope},' \
-        f'SignedHeaders={headers_list},Signature={signature}'
+    headers['Authorization'] = (
+        f'{algorithm} Credential={keys.access}/{credential_scope},SignedHeaders={headers_list},Signature={signature}'
+    )
 
     return headers
 

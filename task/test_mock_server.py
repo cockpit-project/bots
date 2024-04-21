@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # This file is part of Cockpit.
 #
 # Copyright (C) 2023 Red Hat, Inc.
@@ -63,6 +61,5 @@ class MockHandler(http.server.BaseHTTPRequestHandler):
     def replyJson(self, value: str, headers: Mapping[str, str] = {}, status: int = 200) -> None:
         assert isinstance(self.server, HTTPServer)
         self.server.reply_count += 1
-        all_headers = {"Content-type": "application/json"}
-        all_headers.update(headers or {})
+        all_headers = {"Content-type": "application/json", **headers}
         self.replyData(json.dumps(value), headers=all_headers, status=status)

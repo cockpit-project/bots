@@ -209,7 +209,7 @@ def check_known_issue(api, trace, image):
 # provided by the caller, such as a revision or link to log files.
 # The details can't contain newline characters and should be brief
 def update_known_issue(api, number, err, details, context, timestamp=None):
-    timestamp = timestamp or datetime.datetime.now().isoformat()
+    timestamp = timestamp or datetime.datetime.now(tz=datetime.UTC).isoformat()
 
     link = timestamp
     if details:

@@ -124,15 +124,15 @@ class Machine(ssh_connection.SSHConnection):
 
     def wait_poweroff(self, timeout_sec: int = 120) -> None:
         """Overridden by machine classes to wait for a machine to stop"""
-        assert False, "Cannot wait for a machine we didn't start"
+        raise NotImplementedError
 
     def kill(self) -> None:
         """Overridden by machine classes to unconditionally kill the running machine"""
-        assert False, "Cannot kill a machine we didn't start"
+        raise NotImplementedError
 
     def shutdown(self, timeout_sec: int = 120) -> None:
         """Overridden by machine classes to gracefully shutdown the running machine"""
-        assert False, "Cannot shutdown a machine we didn't start"
+        raise NotImplementedError
 
     def pull(self, image: str) -> str:
         """Download image.
@@ -226,8 +226,8 @@ class Machine(ssh_connection.SSHConnection):
 
         if self.image in ["debian-testing", "ubuntu-stable"]:
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
-            allowed.append('audit.* apparmor="DENIED" operation="open" class="file" ' +
-                           'profile=".*" name="/sys/devices/system/cpu/possible" .* ' +
+            allowed.append('audit.* apparmor="DENIED" operation="open" class="file" '
+                           'profile=".*" name="/sys/devices/system/cpu/possible" .* '
                            'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
 
         if self.image in ["debian-testing", "ubuntu-stable"]:
@@ -330,20 +330,29 @@ class Machine(ssh_connection.SSHConnection):
     def set_dns(self, nameserver: str | None = None, domain: str | None = None) -> None:
         self.execute(RESOLV_SCRIPT.format(nameserver=nameserver or "127.0.0.1", domain=domain or "cockpit.lan"))
 
-    def dhcp_server(self, mac: str = '52:54:01', range: tuple[str, str] = ('10.111.112.2', '10.111.127.254')) -> None:
+    def dhcp_server(
+        self, mac: str = '52:54:01', dhcp_range: tuple[str, str] = ('10.111.112.2', '10.111.127.254')
+    ) -> None:
         """Sets up a DHCP server on the interface"""
-        cmd = "dnsmasq --domain=cockpit.lan " \
-              "--interface=\"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\"" \
-              " --bind-interfaces --dhcp-range=" + ','.join(range) + ",4h" + \
-              "; systemctl start firewalld; firewall-cmd --add-service=dhcp"
-        self.execute(cmd.format(mac=mac))
+        self.execute(fr"""
+             dnsmasq \
+                --domain=cockpit.lan \
+                --interface="$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)" \
+                --bind-interfaces \
+                --dhcp-range={','.join(dhcp_range)},4h
+
+            systemctl start firewalld
+            firewall-cmd --add-service=dhcp
+        """)
 
     def dns_server(self, mac: str = '52:54:01') -> None:
         """Sets up a DNS server on the interface"""
-        cmd = "dnsmasq --domain=cockpit.lan " \
-              "--interface=\"$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)\"" \
-              " --bind-dynamic"
-        self.execute(cmd.format(mac=mac))
+        self.execute(fr"""
+            dnsmasq \
+                --domain=cockpit.lan \
+                --interface="$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)" \
+                --bind-dynamic
+        """)
 
     def wait_for_cockpit_running(
         self, address: str = "localhost", port: int = 9090, seconds: int = 30, tls: bool = False

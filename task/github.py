@@ -37,13 +37,13 @@ from lib.testmap import is_valid_context
 from . import cache
 
 __all__ = (
+    'Checklist',
     'GitHub',
     'GitHubError',
-    'Checklist',
-    'TESTING',
-    'NO_TESTING',
     'NOT_TESTED',
     'NOT_TESTED_DIRECT',
+    'NO_TESTING',
+    'TESTING',
 )
 
 TESTING = "Testing in progress"
@@ -286,7 +286,7 @@ class GitHub:
             self.cache.write(qualified, response)
             return json.loads(response['data'] or "null")
 
-    def post(self, resource, data, accept=[]):
+    def post(self, resource, data, accept=()):
         response = self.request("POST", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
@@ -294,7 +294,7 @@ class GitHub:
         self.cache.mark()
         return json.loads(response['data'])
 
-    def put(self, resource, data, accept=[]):
+    def put(self, resource, data, accept=()):
         response = self.request("PUT", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
@@ -305,7 +305,7 @@ class GitHub:
         else:
             return None
 
-    def delete(self, resource, accept=[]):
+    def delete(self, resource, accept=()):
         response = self.request("DELETE", resource, "", {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
@@ -316,7 +316,7 @@ class GitHub:
         else:
             return None
 
-    def patch(self, resource, data, accept=[]):
+    def patch(self, resource, data, accept=()):
         response = self.request("PATCH", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
@@ -374,7 +374,7 @@ class GitHub:
         return result
 
     # The since argument is seconds since the issue was last time modified
-    def issues(self, labels=["bot"], state="open", since=None):
+    def issues(self, labels=("bot",), state="open", since=None):
         result = []
         page = 1
         count = 100
@@ -428,10 +428,10 @@ class Checklist:
                 check = stripped[3] in ["x", "X"]
         return (item, check)
 
-    def process(self, body, items={}):
+    def process(self, body, items=None):
         self.items = {}
         lines = []
-        items = items.copy()
+        items = dict(items or {})
         for line in body.splitlines():
             (item, check) = self.parse_line(line)
             if item:

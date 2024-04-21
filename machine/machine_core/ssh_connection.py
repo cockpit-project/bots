@@ -279,7 +279,7 @@ class SSHConnection:
     def execute(
         self,
         command: str | Sequence[str],
-        input: str | None = None,
+        input: str | None = None,  # noqa:A002  # shadows `input()` but so does subprocess module
         environment: Mapping[str, str] = {},
         stdout: int | IO[str] | None = subprocess.PIPE,
         quiet: bool = False,

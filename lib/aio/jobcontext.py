@@ -54,7 +54,7 @@ LOG_DRIVERS: Mapping[str, Callable[[JsonObject], AsyncContextManager[LogDriver]]
 
 
 class JobContext(contextlib.AsyncExitStack):
-    config: JsonObject = {}  # immutable
+    config: JsonObject = {}  # noqa:RUF012  # JsonObject is immutable
     logs: LogDriver
     forge: Forge
 

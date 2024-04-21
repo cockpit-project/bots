@@ -52,7 +52,7 @@ def main():
     # in order for the limit not to be affected by the call itself,
     # use a conditional request with a timestamp in the future
 
-    future_timestamp = datetime.datetime.utcnow() + datetime.timedelta(seconds=3600)
+    future_timestamp = datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(seconds=3600)
 
     api = github.GitHub()
     headers = {'If-Modified-Since': httpdate(future_timestamp)}
@@ -62,7 +62,7 @@ def main():
         entries = [t for t in response['headers'].items() if t[0].lower() == entry.lower()]
         if entries:
             if entry == "X-RateLimit-Reset":
-                readable = datetime.datetime.utcfromtimestamp(float(entries[0][1])).isoformat()
+                readable = datetime.datetime.fromtimestamp(float(entries[0][1]), tz=datetime.UTC).isoformat()
                 sys.stdout.write(f"{entry}: {entries[0][1]} ({readable})\n")
             else:
                 sys.stdout.write(f"{entry}: {entries[0][1]}\n")

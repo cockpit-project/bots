@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # This file is public domain (CC0-1.0)
 
 # Adapted from examples in
@@ -109,8 +107,9 @@ def sign_request(
     request_hash = hashlib.sha256(canonical_request.encode('ascii')).hexdigest()
     string_to_sign = f'{algorithm}\n{amzdate}\n{credential_scope}\n{request_hash}'
     signature = hmac.new(signing_key, string_to_sign.encode('ascii'), hashlib.sha256).hexdigest()
-    headers['Authorization'] = f'{algorithm} Credential={access_key}/{credential_scope},' \
-        f'SignedHeaders={headers_list},Signature={signature}'
+    headers['Authorization'] = (
+        f'{algorithm} Credential={access_key}/{credential_scope},SignedHeaders={headers_list},Signature={signature}'
+    )
 
     return headers
 
