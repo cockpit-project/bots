@@ -303,7 +303,7 @@ class SSHConnection(object):
                                  input=input.encode("UTF-8") if input else b'',
                                  stdout=stdout, check=check)
 
-        return None if res.stdout is None else res.stdout.decode("UTF-8", "replace")
+        return '' if res.stdout is None else res.stdout.decode("UTF-8", "replace")
 
     def upload(self, sources, dest, relative_dir=TEST_DIR, use_scp=False):
         """Upload a file into the test machine
