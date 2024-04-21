@@ -241,23 +241,33 @@ class SSHConnection(object):
                 return True
         return False
 
-    def _ensure_ssh_master(self):
+    def _ensure_ssh_master(self) -> None:
         if not self._check_ssh_master():
             self._start_ssh_master()
 
-    def __ssh_direct_opt_var(self, direct=False):
+    def __ssh_direct_opt_var(self, direct: bool = False) -> bool:
         return bool(os.getenv("TEST_SSH_DIRECT", direct))
 
-    def __execution_opts(self, direct=False):
+    def __execution_opts(self, direct: bool = False) -> Sequence[str]:
         direct = self.__ssh_direct_opt_var(direct=direct)
         if direct:
-            return ["-i", self.identity_file]
+            return ("-i", self.identity_file)
         else:
-            return ["-o", "ControlPath=" + self.ssh_master]
+            assert self.ssh_master is not None
+            return ("-o", "ControlPath=" + self.ssh_master)
 
-    def execute(self, command, input=None, environment={},
-                stdout=subprocess.PIPE, quiet=False, direct=False, timeout=120,
-                ssh_env=["env", "-u", "LANGUAGE", "LC_ALL=C"], check=True):
+    def execute(
+        self,
+        command: str | Sequence[str],
+        input: str | None = None,
+        environment: Mapping[str, str] = {},
+        stdout: int = subprocess.PIPE,
+        quiet: bool = False,
+        direct: bool = False,
+        timeout: int = 120,
+        ssh_env: Sequence[str] = ("env", "-u", "LANGUAGE", "LC_ALL=C"),
+        check: bool = True
+    ) -> str:
         """Execute a shell command in the test machine and return its output.
 
             command: The string or argument list to execute by /bin/sh (still with shell interpretation)
@@ -273,30 +283,25 @@ class SSHConnection(object):
         if not self.__ssh_direct_opt_var(direct=direct):
             self._ensure_ssh_master()
 
-        default_ssh_params = [
+        if not isinstance(command, str):
+            command = shlex.join(command)
+
+        if not quiet:
+            self.message("+", command)
+
+        command_line = (
+            *ssh_env,
             "ssh",
             "-p", str(self.ssh_port),
             *self.ssh_default_opts,
             "-o", "LogLevel=ERROR",
             "-l", self.ssh_user,
-            self.ssh_address
-        ]
-        additional_ssh_params = []
-
-        cmd = ['set -e;']
-        cmd += [f'export {name}={shlex.quote(value)}; ' for name, value in environment.items()]
-
-        additional_ssh_params += self.__execution_opts(direct=direct)
-
-        if isinstance(command, str):
-            cmd += [command]
-            if not quiet:
-                self.message("+", command)
-        else:
-            cmd.append(shlex.join(command))
-            if not quiet:
-                self.message("+", *command)
-        command_line = ssh_env + default_ssh_params + additional_ssh_params + cmd
+            *self.__execution_opts(direct=direct),
+            self.ssh_address,
+            'set -e;',
+            *(f'export {name}={shlex.quote(value)}; ' for name, value in environment.items()),
+            command
+        )
 
         with timeoutlib.Timeout(seconds=timeout, error_message="Timed out on '%s'" % command, machine=self):
             res = subprocess.run(command_line,
