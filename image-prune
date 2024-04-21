@@ -108,7 +108,7 @@ class ImageCache:
         """yields tuples of (mtime, basename)"""
         raise NotImplementedError
 
-    def delete_file(self, filename: str):
+    def delete_file(self, filename: str) -> None:
         """delete the given basename from the cache"""
         raise NotImplementedError
 

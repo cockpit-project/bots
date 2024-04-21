@@ -25,7 +25,6 @@ import shutil
 import tempfile
 import unittest
 import unittest.mock
-from typing import Tuple
 
 from lib.constants import BOTS_DIR
 from task.test_mock_server import MockHandler, MockServer
@@ -141,8 +140,14 @@ class TestTestsScan(unittest.TestCase):
     @unittest.mock.patch("sys.stdout", new_callable=io.StringIO)
     # fake the time so that we get predictable test names
     @unittest.mock.patch("time.strftime", return_value="20240102-030405")
-    def run_tests_scan(self, args: list[str], _mock_strftime, mock_stdout, mock_stderr,
-                       repo: str | None = None) -> Tuple[str | int, str, str]:
+    def run_tests_scan(
+        self,
+        args: list[str],
+        _mock_strftime: unittest.mock.MagicMock,
+        mock_stdout: unittest.mock.MagicMock,
+        mock_stderr: unittest.mock.MagicMock,
+        repo: str | None = None
+    ) -> tuple[str | int, str, str]:
         with unittest.mock.patch("sys.argv", ["tests-scan", "--repo", repo or self.repo, *args]):
             try:
                 self.tests_scan_module.main()  # type: ignore[attr-defined]
@@ -153,7 +158,7 @@ class TestTestsScan(unittest.TestCase):
 
         return code, mock_stdout.getvalue(), mock_stderr.getvalue()
 
-    def run_success(self, args: list[str], expected_output: str, repo: str | None = None):
+    def run_success(self, args: list[str], expected_output: str, repo: str | None = None) -> None:
         code, output, stderr = self.run_tests_scan(args, repo=repo)
 
         assert code == 0

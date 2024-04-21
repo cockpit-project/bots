@@ -62,7 +62,7 @@ NOT_TESTED_DIRECT = "Not yet tested (direct trigger)"
 ISSUE_TITLE_IMAGE_REFRESH = "Image refresh for {0}"
 
 
-class Logger(object):
+class Logger:
     def __init__(self, directory):
         hostname = socket.gethostname().split(".")[0]
         month = time.strftime("%Y%m")
@@ -119,7 +119,7 @@ def get_origin_repo():
     raise RuntimeError("Not a GitHub repo: %s" % url)
 
 
-class GitHub(object):
+class GitHub:
     def __init__(self, base=None, cacher=None, repo=None, remote=None):
         self._remote = remote
         self._repo = repo
@@ -401,7 +401,7 @@ class GitHub(object):
         return None
 
 
-class Checklist(object):
+class Checklist:
     def __init__(self, body=None):
         self.process(body or "")
 

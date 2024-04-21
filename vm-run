@@ -69,7 +69,7 @@ try:
     machine.start()
 
     for disk in args.storage:
-        machine.add_disk(path=disk, type='qcow2')
+        machine.add_disk(path=disk, image_type='qcow2')
 
     # we need this to execute any commands, but we also want to wait here
     # before we display the "Press ^C" message

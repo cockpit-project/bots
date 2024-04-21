@@ -31,7 +31,7 @@ from lib.constants import BOTS_DIR, SCRIPTS_DIR
 sys.dont_write_bytecode = True
 
 
-def run(*cmd, check: bool = True, **kwargs) -> int:
+def run(*cmd: str, check: bool = True, **kwargs: Any) -> int:
     print('\n+', shlex.join(cmd), file=sys.stderr)
     result = subprocess.run(cmd, **kwargs, check=check)
     return result.returncode
@@ -43,7 +43,7 @@ def with_logs(n: int, log_url: str | None) -> int | tuple[int, str]:
     return n
 
 
-def image_refresh(image: str, **kwargs: Any):
+def image_refresh(image: str, **kwargs: Any) -> int | tuple[int, str]:
     try:
         log_url = os.environ.get('COCKPIT_CI_LOG_URL')
 

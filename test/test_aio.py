@@ -41,12 +41,12 @@ class GitHubService:
             'user-agent': self.USER_AGENT,
         }
 
-    def assert_hits(self, expected_hits: int, expected_points) -> None:
+    def assert_hits(self, expected_hits: int, expected_points: int) -> None:
         assert self.hits == expected_hits
         assert self.points == expected_points
         self.hits = self.points = 0
 
-    def add(self, resource: str, *, etag: bool = False, mtime: bool = False, **kwargs) -> None:
+    def add(self, resource: str, *, etag: bool = False, mtime: bool = False, **kwargs: Any) -> None:
         headers = {}
         if etag:
             all_data = str(kwargs.get('body')) + ':' + str(kwargs.get('payload'))
@@ -97,7 +97,7 @@ class GitHubService:
         return result
 
 
-def test_lru_cache():
+def test_lru_cache() -> None:
     cache = LRUCache[str, int](max_items=2)
     cache.add('a', 1)
     cache.add('b', 2)

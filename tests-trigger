@@ -47,15 +47,15 @@ def trigger_pull(api, opts):
                 contexts.add(cntx)
             else:
                 sys.stderr.write(f"ignoring unknown context {cntx}\n")
-        all = False
+        everything = False
     else:
         contexts = set(statuses.keys())
-        all = True
+        everything = True
 
     ret = 0
     for context in contexts:
         status = statuses.get(context, {})
-        current_status = status.get("state", all and "unknown" or "empty")
+        current_status = status.get("state", "unknown" if everything else "empty")
 
         if current_status not in ["empty", "error", "failure"]:
             # allow changing if manual testing required
@@ -64,7 +64,7 @@ def trigger_pull(api, opts):
             queued = current_status == "pending" and status.get("description", None) == github.NOT_TESTED_DIRECT
             # also allow override with --force or --requeue
             if not (manual_testing or opts.force) and not (queued and opts.requeue):
-                if not all:
+                if not everything:
                     sys.stderr.write(f"{context}: isn't in triggerable state (is: {status['state']})\n")
                     ret = 1
                 continue
