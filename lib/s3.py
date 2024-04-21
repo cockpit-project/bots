@@ -166,7 +166,7 @@ def parse_list(result: ET.Element, *keys: str) -> Iterable[Iterable[str]]:
     # 'http' url is API: see https://doc.s3.amazonaws.com/2006-03-01/AmazonS3.wsdl
     xmlns = {'s3': 'http://s3.amazonaws.com/doc/2006-03-01/'}
     for child in result.findall('s3:Contents', xmlns):
-        yield (attr is not None and attr.text or '' for attr in (child.find(f's3:{key}', xmlns) for key in keys))
+        yield ((attr is not None and attr.text) or '' for attr in (child.find(f's3:{key}', xmlns) for key in keys))
 
 
 def sign_url(
@@ -190,7 +190,7 @@ def sign_url(
 
 def main() -> None:
     # to be used like `python3 -m lib.s3 get https://...` from the toplevel dir
-    prognam, cmd, uri = sys.argv
+    _prognam, cmd, uri = sys.argv
 
     url = urllib.parse.urlparse(uri)
 

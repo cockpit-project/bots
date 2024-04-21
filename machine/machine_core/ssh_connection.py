@@ -89,7 +89,7 @@ class SSHConnection:
         start_time = time.time()
         while (time.time() - start_time) < timeout_sec:
             addrinfo = socket.getaddrinfo(self.ssh_address, self.ssh_port, 0, socket.SOCK_STREAM)
-            (family, socktype, proto, canonname, sockaddr) = addrinfo[0]
+            family, socktype, proto, _canonname, sockaddr = addrinfo[0]
             with socket.socket(family, socktype, proto) as sock:
                 sock.settimeout(5)
                 try:
@@ -445,7 +445,7 @@ class SSHConnection:
         assert self.ssh_address
 
         self.execute(["mkdir", "-p", os.path.dirname(dest)])
-        self.execute(f"cat {append and '>>' or '>'} {shlex.quote(dest)}", input=content)
+        self.execute(f"cat {'>>' if append else '>'} {shlex.quote(dest)}", input=content)
         if owner:
             self.execute(["chown", owner, dest])
         if perm:

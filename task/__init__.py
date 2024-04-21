@@ -39,14 +39,14 @@ from . import github
 
 __all__ = (
     "api",
-    "main",
-    "run",
-    "pull",
     "comment",
-    "label",
-    "issue",
-    "verbose",
     "default_branch",
+    "issue",
+    "label",
+    "main",
+    "pull",
+    "run",
+    "verbose",
 )
 
 sys.dont_write_bytecode = True
@@ -114,7 +114,7 @@ def main(**kwargs):
     if ret:
         sys.stderr.write(f"{task['name']}: {ret}\n")
 
-    sys.exit(ret and 1 or 0)
+    sys.exit(1 if ret else 0)
 
 
 def named(task):
@@ -167,7 +167,7 @@ def report_finish(ret, name, context, issue, duration, dry=False):
     # triggers it again by unchecking the box.
     item = f"{name} {context or ''}".strip()
     checklist = github.Checklist(issue["body"])
-    checklist.check(item, result == "Failed" and "FAIL" or True)
+    checklist.check(item, "FAIL" if result == "Failed" else True)
 
     number = issue["number"]
 

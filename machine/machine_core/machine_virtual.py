@@ -40,6 +40,7 @@ sys.path.insert(1, BOTS_DIR)
 
 MEMORY_MB = 1152
 
+
 # based on http://stackoverflow.com/a/17753573
 # we use this to quieten down calls
 @contextlib.contextmanager
@@ -296,7 +297,7 @@ class VirtMachine(Machine):
             self.image_file = os.path.join(TEST_DIR, "images", image)
             if not os.path.lexists(self.image_file):
                 self.image_file = os.path.join(BOTS_DIR, "images", image)
-        (image, extension) = os.path.splitext(os.path.basename(image))
+        image, _extension = os.path.splitext(os.path.basename(image))
 
         Machine.__init__(self, image=image, **kwargs)
 
@@ -406,7 +407,7 @@ class VirtMachine(Machine):
                         # machine not booted yet, try again in next iteration
                         pass
                     message = ''
-                (pid, ret) = os.waitpid(proc.pid, message and os.WNOHANG or 0)
+                pid, _ret = os.waitpid(proc.pid, os.WNOHANG if message else 0)
 
             try:
                 if self.maintain:
@@ -542,7 +543,8 @@ class VirtMachine(Machine):
         index = len(self._disks)
 
         if path:
-            (unused, image) = tempfile.mkstemp(suffix='.qcow2', prefix=os.path.basename(path), dir=self.run_dir)
+            fd, image = tempfile.mkstemp(suffix='.qcow2', prefix=os.path.basename(path), dir=self.run_dir)
+            os.close(fd)
             subprocess.check_call(["qemu-img", "create", "-q", "-f", "qcow2",
                                    "-o", f"backing_file={os.path.realpath(path)},backing_fmt=qcow2", image])
 
@@ -550,7 +552,8 @@ class VirtMachine(Machine):
             assert self._domain is not None
             assert size is not None
             name = f"disk-{self._domain.name()}"
-            (unused, image) = tempfile.mkstemp(suffix='qcow2', prefix=name, dir=self.run_dir)
+            fd, image = tempfile.mkstemp(suffix='qcow2', prefix=name, dir=self.run_dir)
+            os.close(fd)
             subprocess.check_call(["qemu-img", "create", "-q", "-f", "raw", image, str(size)])
 
         if not serial:

@@ -34,10 +34,20 @@ from machine.machine_core.machine_virtual import VirtMachine, VirtNetwork
 from machine.machine_core.timeout import Timeout
 
 __all__ = (
-    "Timeout", "Machine", "Failure", "VirtMachine",
-    "VirtNetwork", "get_build_image", "get_test_image", "get_images_data_dir",
-    "BOTS_DIR", "TEST_DIR", "IMAGES_DIR", "SCRIPTS_DIR",
-    "DEFAULT_IMAGE", "TEST_OS_DEFAULT"
+    "BOTS_DIR",
+    "DEFAULT_IMAGE",
+    "IMAGES_DIR",
+    "SCRIPTS_DIR",
+    "TEST_DIR",
+    "TEST_OS_DEFAULT",
+    "Failure",
+    "Machine",
+    "Timeout",
+    "VirtMachine",
+    "VirtNetwork",
+    "get_build_image",
+    "get_images_data_dir",
+    "get_test_image"
 )
 
 # This can be used as helper program for tests not written in Python: Run given

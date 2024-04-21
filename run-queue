@@ -45,7 +45,7 @@ statistics_queue = os.environ.get("RUN_STATISTICS_QUEUE")
 def consume_webhook_queue(channel, amqp):
     # interpret payload
     # call tests-scan or issue-scan appropriately
-    method_frame, header_frame, body = channel.basic_get(queue='webhook')
+    method_frame, _header_frame, body = channel.basic_get(queue='webhook')
     if not method_frame:
         return None, None
 
@@ -114,7 +114,7 @@ def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result
         # nothing to do
         return None, None
 
-    method_frame, header_frame, body = channel.basic_get(queue=queue)
+    method_frame, _header_frame, body = channel.basic_get(queue=queue)
     if not method_frame:
         return None, None
 

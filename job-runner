@@ -81,5 +81,6 @@ async def main() -> None:
     async with JobContext(args.config_file, debug=args.debug) as ctx:
         await run_job(job, ctx)
 
+
 if __name__ == '__main__':
     asyncio.run(main())

@@ -171,7 +171,7 @@ class MachineBuilder:
             subprocess.check_call(["qemu-img", "convert", "-c", "-O", "qcow2", self.machine.image_file, rebuild])
 
         # Hash the image here
-        (sha, x1, x2) = subprocess.check_output(
+        sha, _, _rest = subprocess.check_output(
             ["sha256sum", self.machine.image_file if (self.iso or self.payload) else rebuild], universal_newlines=True
         ).partition(" ")
         if not sha:

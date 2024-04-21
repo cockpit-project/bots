@@ -37,13 +37,13 @@ from lib.testmap import is_valid_context
 from . import cache
 
 __all__ = (
-    'Checklist',
-    'GitHub',
-    'GitHubError',
     'NOT_TESTED',
     'NOT_TESTED_DIRECT',
     'NO_TESTING',
     'TESTING',
+    'Checklist',
+    'GitHub',
+    'GitHubError',
 )
 
 TESTING = "Testing in progress"
@@ -233,7 +233,7 @@ class GitHub:
                     self.conn = http.client.HTTPConnection(self.url.netloc)
                 else:
                     self.conn = http.client.HTTPSConnection(self.url.netloc)
-                self.conn.set_debuglevel(self.debug and 1 or 0)
+                self.conn.set_debuglevel(1 if self.debug else 0)
 
             try:
                 self.conn.request(method, self.qualify(resource), data, headers)
@@ -411,14 +411,14 @@ class Checklist:
         if isinstance(check, str):
             status = check + ": "
             check = False
-        return f" * [{check and 'x' or ' '}] {status}{item}"
+        return f" * [{'x' if check else ' '}] {status}{item}"
 
     @staticmethod
     def parse_line(line):
         check = item = None
         stripped = line.strip()
         if stripped[:6] in ["* [ ] ", "- [ ] ", "* [x] ", "- [x] ", "* [X] ", "- [X] "]:
-            status, unused, item = stripped[6:].strip().partition(": ")
+            status, _, item = stripped[6:].strip().partition(": ")
             if not item:
                 item = status
                 status = None

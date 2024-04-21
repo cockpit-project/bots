@@ -120,7 +120,7 @@ def tasks_for_issues(issues_data: str, opts_repo: str | None) -> Sequence[tuple[
 
 
 def output_task(command: str, issue: Mapping[str, object], repo: str) -> Mapping[str, object] | None:
-    name, unused, context = command.partition(" ")
+    name, _, context = command.partition(" ")
     if name != "image-refresh" or not repo.endswith("/bots"):
         return None
     number = issue.get("number", None)

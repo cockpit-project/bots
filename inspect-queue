@@ -44,7 +44,7 @@ def main():
                 print(f"queue {queue} is empty")
                 return
             for _ in range(message_count):
-                method_frame, header_frame, body = q.channel.basic_get(queue=queue)
+                method_frame, _header_frame, body = q.channel.basic_get(queue=queue)
                 if method_frame:
                     print(body.decode())
 

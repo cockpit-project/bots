@@ -52,8 +52,8 @@ def main():
     context = opts.context
     if "/" not in context:
         context = f"verify/{context}"
-    prefix, _, image = context.partition("/")
-    image, _, scenario = image.partition("/")
+    _prefix, _, image = context.partition("/")
+    image, _, _scenario = image.partition("/")
 
     try:
         output = sys.stdin.read()
@@ -120,8 +120,8 @@ def parseName(output):
             line = line[7:]
             while line[0].isspace() or line[0].isdigit():
                 line = line[1:]
-            (name, delim, directive) = line.partition("#")
-            (name, delim, directive) = name.partition("duration")
+            name, _, _directive = line.partition("#")
+            name, _, _directive = name.partition("duration")
             name = name.strip()
             return name
     return ""
@@ -185,7 +185,7 @@ def check_known_issue(api, trace, image):
     trace = normalize_traceback(trace)
     number = None
     for naughty in os.listdir(image_naughty):
-        (prefix, unused, name) = naughty.partition("-")
+        prefix, _, _name = naughty.partition("-")
         n = int(prefix)
         with open(os.path.join(image_naughty, naughty), "r") as fp:
             match = "*" + normalize_traceback(fp.read()) + "*"
