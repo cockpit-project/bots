@@ -300,8 +300,7 @@ class SSHConnection(object):
             if not quiet:
                 self.message("+", command)
         else:
-            # use shlex.join() once Python 3.8 is available everywhere
-            cmd.append(' '.join(shlex.quote(arg) for arg in command))
+            cmd.append(shlex.join(command))
             if not quiet:
                 self.message("+", *command)
         command_line = ssh_env + default_ssh_params + additional_ssh_params + cmd
