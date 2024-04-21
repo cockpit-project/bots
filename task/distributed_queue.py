@@ -21,6 +21,9 @@
 import logging
 import os
 import ssl
+from collections.abc import Collection
+from types import TracebackType
+from typing import Any, Self
 
 no_amqp = False
 try:
@@ -62,8 +65,10 @@ arguments = {
 }
 
 
-class DistributedQueue(object):
-    def __init__(self, amqp_server, queues, secrets_dir=DEFAULT_SECRETS_DIR, **kwargs):
+class DistributedQueue:
+    def __init__(
+        self, amqp_server: str, queues: Collection[str], secrets_dir: str = DEFAULT_SECRETS_DIR, **kwargs: Any
+    ):
         """connect to some AMQP queues
 
         amqp_server should be formatted as host:port
@@ -126,8 +131,8 @@ class DistributedQueue(object):
                 self.declare_results[queue] = None
                 self.channel = self.connection.channel()
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, _type, value, traceback):
+    def __exit__(self, _type: type[BaseException], value: BaseException | None, traceback: TracebackType) -> None:
         self.connection.close()

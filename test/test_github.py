@@ -68,7 +68,7 @@ class Handler(MockHandler):
             self.send_error(404, 'Mock Not Found: ' + parsed.path)
 
 
-class Logger(object):
+class Logger:
     def __init__(self):
         self.data = ""
 

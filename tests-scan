@@ -109,7 +109,7 @@ def update_status(
     return False
 
 
-def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace) -> Iterable[QueueEntry]:
+def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Namespace) -> Iterable[QueueEntry]:
     pulls = []
 
     if opts.pull_data:
@@ -292,7 +292,7 @@ def cockpit_tasks(api: github.GitHub, contexts, opts: argparse.Namespace) -> Ite
             }
 
 
-def scan_for_pull_tasks(api: github.GitHub, contexts: str, opts: argparse.Namespace) -> None:
+def scan_for_pull_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Namespace) -> None:
     results = cockpit_tasks(api, contexts, opts)
 
     if opts.human_readable:

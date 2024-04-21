@@ -30,6 +30,7 @@ import subprocess
 import sys
 import time
 import traceback
+from collections.abc import Sequence
 from datetime import datetime, timezone
 
 from lib.constants import BASE_DIR
@@ -211,7 +212,16 @@ def run(context, function, **kwargs):
     return ret or 0
 
 
-def issue(title, body, item, context=None, items=[], state="open", since=None, dry: bool = False) -> dict:
+def issue(
+    title: str,
+    body: str,
+    item: str,
+    context: str | None = None,
+    items: Sequence[str] = (),
+    state: str = "open",
+    since: int | None = None,
+    dry: bool = False
+) -> dict[str, object]:
     if context:
         item = f"{item} {context}".strip()
 
@@ -312,7 +322,7 @@ def branch(context, message, pathspec=".", issue=None, push=True, branch=None, d
     return branch
 
 
-def pull(branch, body=None, issue=None, base=None, labels=['bot'], run_tests=True, dry: bool = False, **kwargs):
+def pull(branch, body=None, issue=None, base=None, labels=('bot',), run_tests=True, dry=False, **kwargs):
     if "pull" in kwargs:
         return kwargs["pull"]
 
@@ -395,7 +405,7 @@ def labels_of_pull(pull):
     return [label["name"] for label in pull["labels"]]
 
 
-def comment(issue, comment, dry: bool = False) -> 'dict[str, object]':
+def comment(issue, comment, dry=False):
     try:
         number = issue["number"]
     except TypeError:
@@ -408,7 +418,7 @@ def comment(issue, comment, dry: bool = False) -> 'dict[str, object]':
         return api.post(f"issues/{number}/comments", {"body": comment})
 
 
-def comment_done(issue, name, clean, branch, context=None, dry: bool = False) -> None:
+def comment_done(issue, name, clean, branch, context=None, dry=False):
     message = f"{name} {context or ''} done: {clean}/commits/{branch}"
     comment(issue, message, dry=dry)
 
