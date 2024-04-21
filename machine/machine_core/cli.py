@@ -21,7 +21,7 @@ import signal
 from . import machine_virtual
 
 
-def cmd_cli():
+def cmd_cli() -> None:
     parser = argparse.ArgumentParser(description="Run a VM image until SIGTERM or SIGINT")
     parser.add_argument("--memory", type=int, default=machine_virtual.MEMORY_MB,
                         help="Memory in MiB to allocate to the VM (default: %(default)s)")
