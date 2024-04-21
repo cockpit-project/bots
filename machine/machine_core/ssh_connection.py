@@ -35,13 +35,6 @@ sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realp
 from lib.constants import TEST_DIR
 
 
-def write_all(fd, data):
-    while len(data) > 0:
-        select.select([], [fd], [])
-        written = os.write(fd, data)
-        data = data[written:]
-
-
 class SSHConnection(object):
     ssh_default_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null",
                         "-o", "IdentitiesOnly=yes", "-o", "BatchMode=yes", "-o", "PKCS11Provider=none"]
