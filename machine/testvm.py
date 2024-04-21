@@ -20,23 +20,18 @@
 import os
 import sys
 
-# ensure that this module path is present
-machine_dir = os.path.dirname(os.path.realpath(__file__))
-if machine_dir not in sys.path:
-    sys.path.insert(1, machine_dir)
-bots_dir = os.path.dirname(machine_dir)
-if bots_dir not in sys.path:
-    sys.path.insert(1, bots_dir)
+if os.path.realpath(f'{__file__}/../..') not in sys.path:
+    # ensure that the top-level is present in the path so the following imports work
+    sys.path.insert(1, os.path.realpath(f'{__file__}/../..'))
 
-from machine_core.cli import cmd_cli  # noqa: E402
-from machine_core.exceptions import Failure  # noqa: E402
-from machine_core.machine import Machine  # noqa: E402
-from machine_core.machine_virtual import VirtMachine, VirtNetwork  # noqa: E402
-from machine_core.timeout import Timeout  # noqa: E402
-
-from lib.constants import BOTS_DIR, DEFAULT_IMAGE, IMAGES_DIR, SCRIPTS_DIR, TEST_DIR, TEST_OS_DEFAULT  # noqa: E402
-from lib.directories import get_images_data_dir  # noqa: E402
-from lib.testmap import get_build_image, get_test_image  # noqa: E402
+from lib.constants import BOTS_DIR, DEFAULT_IMAGE, IMAGES_DIR, SCRIPTS_DIR, TEST_DIR, TEST_OS_DEFAULT
+from lib.directories import get_images_data_dir
+from lib.testmap import get_build_image, get_test_image
+from machine.machine_core.cli import cmd_cli
+from machine.machine_core.exceptions import Failure
+from machine.machine_core.machine import Machine
+from machine.machine_core.machine_virtual import VirtMachine, VirtNetwork
+from machine.machine_core.timeout import Timeout
 
 __all__ = (
     "Timeout", "Machine", "Failure", "VirtMachine",
