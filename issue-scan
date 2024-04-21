@@ -53,7 +53,7 @@ def main() -> int:
     parser.add_argument('--issues-data', default=None,
                         help='issues or pull request event GitHub JSON data to evaluate')
     parser.add_argument('--repo', default=None,
-                        help='Repository to scan and checkout.')
+                        help='Repository to scan and checkout')
     opts = parser.parse_args()
 
     if opts.amqp and no_amqp:
