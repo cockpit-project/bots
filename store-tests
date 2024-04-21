@@ -244,7 +244,7 @@ def find_tests(fp):
             if "make-checkout-workdir" in testname:
                 testname = testname.split("make-checkout-workdir")[1]
             t = re_duration.match(prev_msg)
-            yield (testname, bool(m.group(1)), last_msg or (m.group(4) or None), t and t.group(2) or 0)
+            yield (testname, bool(m.group(1)), last_msg or (m.group(4) or None), (t and t.group(2)) or 0)
 
             last_msg = ""
 

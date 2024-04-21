@@ -70,6 +70,7 @@ exclude = [
     ".git/",
 ]
 line-length = 118
+preview = true
 
 [tool.ruff.lint]
 select = [

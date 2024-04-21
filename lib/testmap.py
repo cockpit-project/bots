@@ -292,7 +292,6 @@ IMAGE_REFRESH_TRIGGERS = {
 # their classic siblings.  For example, fedora-coreos is built
 # in fedora-X
 def get_build_image(image: str) -> str:
-    (test_os, unused) = os.path.splitext(os.path.basename(image))
     return OSTREE_BUILD_IMAGE.get(image, image)
 
 

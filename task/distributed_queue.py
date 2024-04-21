@@ -34,11 +34,11 @@ except ImportError:
 logging.getLogger("pika").propagate = False
 
 __all__ = (
-    'DistributedQueue',
-    'DEFAULT_SECRETS_DIR',
-    'DEFAULT_AMQP_SERVER',
     'BASELINE_PRIORITY',
+    'DEFAULT_AMQP_SERVER',
+    'DEFAULT_SECRETS_DIR',
     'MAX_PRIORITY',
+    'DistributedQueue',
     'no_amqp',
 )
 

@@ -285,7 +285,7 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
                     revision=revision[0:7],
                     context=image_scenario,
                     name=f'pull-{number}',
-                    repo=project and "  (%s)" % project or "",
+                    repo=("  (%s)" % project) if project else "",
                     bots_ref=f" [bots@{bots_ref}]" if bots_ref else "",
                     branches=f"   {{{branch}}}" if branch else "",
                 )

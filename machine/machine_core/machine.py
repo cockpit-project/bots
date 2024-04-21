@@ -111,7 +111,7 @@ class Machine(ssh_connection.SSHConnection):
             "web_address": self.web_address,
             "web_port": self.web_port,
         }
-        message = (tty and LOCAL_MESSAGE or '') + REMOTE_MESSAGE
+        message = (LOCAL_MESSAGE if tty else '') + REMOTE_MESSAGE
         return message.format(**keys)
 
     def start(self) -> None:
@@ -361,7 +361,7 @@ class Machine(ssh_connection.SSHConnection):
         until curl --insecure --silent --connect-timeout 2 --max-time 3 %s://%s:%s >/dev/null; do
             sleep 0.5;
         done;
-        """ % (tls and "https" or "http", address, port)
+        """ % ("https" if tls else "http", address, port)
         with timeout.Timeout(seconds=seconds, error_message="Timeout while waiting for cockpit to start"):
             self.execute(WAIT_COCKPIT_RUNNING)
 

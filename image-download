@@ -112,9 +112,9 @@ def find(name: str, stores: Sequence[str], latest: float, quiet: bool) -> tuple[
 
     # Find the most recent version of this file
     def header_date(args: tuple[Sequence[str], tuple[str, float], str]) -> str | float:
-        _, (output, duration), message = args
+        _, (output, _duration), _message = args
         try:
-            reply_line, headers_alone = output.split('\n', 1)
+            _reply_line, headers_alone = output.split('\n', 1)
             last_modified = email.message_from_file(io.StringIO(headers_alone)).get("Last-Modified", "")
             return time.mktime(time.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z'))
         except ValueError:

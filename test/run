@@ -1,30 +1,22 @@
 #!/bin/sh
+
 set -eu
 
-PYEXEFILES="$(git grep -lI '^#!.*python') $(git ls-files "*.py")"
-
-test_ruff() {
-    command -v ruff >/dev/null || { echo 'no ruff installed'; return 0; }
-    ruff check --no-cache . $PYEXEFILES
-
+find_scripts() {
+    # Helper to find all scripts in the tree
+    (
+        # Any non-binary file which contains a given shebang
+        git grep --cached -lIz '^#!.*'"$1"
+        shift
+        # Any file matching the provided globs
+        git ls-files -z "$@"
+    ) | sort -z | uniq -z
 }
 
-test_mypy() {
-    command -v mypy >/dev/null || { echo 'no mypy installed'; return 0; }
-    mypy_strict_files='
-      lib/
-      checkout-and-run
-      image-download
-      image-upload
-      job-runner
-    '
-    mypy  --scripts-are-modules --no-error-summary --strict $mypy_strict_files
+find_python_files() {
+    find_scripts 'python3' '*.py'
 }
 
-test_ruff
-test_mypy
-
-# run static code checks like pyflakes and pep8
-flake8 $PYEXEFILES
-
+find_python_files | xargs -0 ruff check --quiet
+find_python_files | xargs -0 mypy --no-error-summary
 pytest -vv
