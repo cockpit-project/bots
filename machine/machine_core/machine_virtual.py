@@ -25,6 +25,8 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Iterator, Mapping
+from typing import IO, Any, TextIO
 
 import libvirt
 import libvirt_qemu
@@ -38,11 +40,10 @@ sys.path.insert(1, BOTS_DIR)
 
 MEMORY_MB = 1152
 
-
 # based on http://stackoverflow.com/a/17753573
 # we use this to quieten down calls
 @contextlib.contextmanager
-def stdchannel_redirected(stdchannel, dest_filename):
+def stdchannel_redirected(stdchannel: TextIO, dest_filename: str) -> Iterator[None]:
     """
     A context manager to temporarily redirect stdout or stderr
     e.g.:
@@ -143,8 +144,8 @@ TEST_USERNET_XML = """
 
 
 class VirtNetwork:
-    def __init__(self, network=None, image="generic"):
-        self.locked = []
+    def __init__(self, network: int | None = None, image: str = "generic"):
+        self.locked: list[int] = []  # fds
         self.image = image
 
         if network is None:
@@ -166,7 +167,7 @@ class VirtNetwork:
         # Unique hostnet identifiers
         self.hostnet = 8
 
-    def _lock(self, start, step=1, force=False):
+    def _lock(self, start: int, step: int = 1, force: bool = False) -> int:
         resources = os.path.join(tempfile.gettempdir(), ".cockpit-test-resources")
         os.makedirs(resources, 0o755, exist_ok=True)
         for port in range(start, start + (100 * step), step):
@@ -187,7 +188,7 @@ class VirtNetwork:
         raise Failure("Couldn't find unique network port number")
 
     # Create resources for an interface, returns address and XML
-    def interface(self, number=None):
+    def interface(self, number: int | None = None) -> dict[str, Any]:
         if number is None:
             number = self.last + 1
         if number > self.last:
@@ -204,7 +205,13 @@ class VirtNetwork:
         }
         return result
 
-    def host(self, number=None, restrict=False, isolate=False, forward={}):
+    def host(
+        self,
+        number: int | None = None,
+        restrict: bool = False,
+        isolate: str | bool = False,
+        forward: Mapping[str, int] = {}
+    ) -> dict[str, Any]:
         """Create resources for a host, returns address and XML
 
         isolate: True for no network at all, "user" for QEMU user network instead of bridging
@@ -233,7 +240,7 @@ class VirtNetwork:
         result["forwards"] = ",".join(forwards)
         return result
 
-    def kill(self):
+    def kill(self) -> None:
         locked = self.locked
         self.locked = []
         for x in locked:
@@ -241,21 +248,36 @@ class VirtNetwork:
 
 
 class VirtMachine(Machine):
+    networking: dict[str, Any]
+    virt_connection: libvirt.virConnect | None
+    _transient_image: IO[bytes] | None
+    _domain: libvirt.virDomain | None
+
     network = None
     memory_mb = None
     cpus = None
 
-    def __init__(self, image, networking=None, maintain=False, memory_mb=None, cpus=None,
-                 capture_console=False, graphics=False, **args):
+    def __init__(
+        self,
+        image: str,
+        networking: dict[str, Any] | None = None,
+        maintain: bool = False,
+        memory_mb: int | None = None,
+        cpus: int | None = None,
+        capture_console: bool = False,
+        graphics: bool = False,
+        **kwargs: Any
+    ):
         self.maintain = maintain
 
         self.memory_mb = memory_mb or VirtMachine.memory_mb or MEMORY_MB
         self.cpus = cpus or VirtMachine.cpus or 1
         self.graphics = graphics
         if capture_console:
-            self.console_file = tempfile.NamedTemporaryFile(suffix='.log', prefix='console-')
+            console_file = tempfile.NamedTemporaryFile(suffix='.log', prefix='console-')
         else:
-            self.console_file = None
+            console_file = None
+        self.console_file = console_file
 
         # Set up some temporary networking info if necessary
         if networking is None:
@@ -263,8 +285,8 @@ class VirtMachine(Machine):
 
         # Allocate network information about this machine
         self.networking = networking
-        args["address"] = networking["control"]
-        args["browser"] = networking["browser"]
+        kwargs["address"] = networking["control"]
+        kwargs["browser"] = networking["browser"]
         self.forward = networking["forward"]
 
         # The path to the image file to load, and parse an image name
@@ -276,21 +298,21 @@ class VirtMachine(Machine):
                 self.image_file = os.path.join(BOTS_DIR, "images", image)
         (image, extension) = os.path.splitext(os.path.basename(image))
 
-        Machine.__init__(self, image=image, **args)
+        Machine.__init__(self, image=image, **kwargs)
 
         self.run_dir = os.path.join(os.getenv("TEST_OVERLAY_DIR", "/var/tmp"), "bots-run")
         os.makedirs(self.run_dir, 0o700, exist_ok=True)
 
         self.virt_connection = self._libvirt_connection(hypervisor="qemu:///session")
 
-        self._disks = []
+        self._disks: list[dict[str, Any]] = []
         self._domain = None
         self._transient_image = None
 
         # init variables needed for running a vm
         self._cleanup()
 
-    def _libvirt_connection(self, hypervisor, read_only=False):
+    def _libvirt_connection(self, hypervisor: str, read_only: bool = False) -> libvirt.virConnect:
         tries_left = 5
         connection = None
         if read_only:
@@ -309,7 +331,7 @@ class VirtMachine(Machine):
             connection = open_function(hypervisor)
         return connection
 
-    def _start_qemu(self):
+    def _start_qemu(self) -> None:
         self._cleanup()
 
         if not self.maintain:
@@ -328,7 +350,7 @@ class VirtMachine(Machine):
         else:
             image_to_use = self.image_file
 
-        keys = {
+        keys: dict[str, Any] = {
             "label": self.label,
             "image": self.image,
             "type": "qemu",
@@ -355,10 +377,11 @@ class VirtMachine(Machine):
 
         # add the virtual machine
         # print >> sys.stderr, test_domain_desc
+        assert self.virt_connection is not None
         self._domain = self.virt_connection.createXML(test_domain_desc, libvirt.VIR_DOMAIN_START_AUTODESTROY)
 
     # start virsh console
-    def qemu_console(self, extra_message=""):
+    def qemu_console(self, extra_message: str = "") -> None:
         self.message(f"Started machine {self.label}")
         if self.maintain:
             message = "\nWARNING: Uncontrolled shutdown can lead to a corrupted image\n"
@@ -368,6 +391,7 @@ class VirtMachine(Machine):
         message = message.replace("\n", "\r\n")
 
         try:
+            assert self._domain is not None
             proc = subprocess.Popen("virsh -c qemu:///session console %s" % str(self._domain.ID()), shell=True)
 
             # Fill in information into /etc/issue about login access
@@ -381,7 +405,7 @@ class VirtMachine(Machine):
                     except (Failure, subprocess.CalledProcessError):
                         # machine not booted yet, try again in next iteration
                         pass
-                    message = None
+                    message = ''
                 (pid, ret) = os.waitpid(proc.pid, message and os.WNOHANG or 0)
 
             try:
@@ -398,7 +422,7 @@ class VirtMachine(Machine):
         finally:
             self._cleanup()
 
-    def graphics_console(self):
+    def graphics_console(self) -> None:
         self.message(f"Started machine {self.label}")
         if self.maintain:
             message = "\nWARNING: Uncontrolled shutdown can lead to a corrupted image\n"
@@ -407,6 +431,7 @@ class VirtMachine(Machine):
         message = message.replace("\n", "\r\n")
 
         try:
+            assert self._domain is not None
             proc = subprocess.Popen(["virt-viewer", str(self._domain.ID())])
             sys.stderr.write(message)
             proc.wait()
@@ -415,7 +440,8 @@ class VirtMachine(Machine):
         finally:
             self._cleanup()
 
-    def wait_for_exit(self):
+    def wait_for_exit(self) -> None:
+        assert self._domain is not None
         cmdline = ['virsh', 'event', '--event', 'lifecycle', '--domain', str(self._domain.ID())]
         try:
             while subprocess.call(cmdline, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) == 0:
@@ -424,22 +450,23 @@ class VirtMachine(Machine):
             # user-requested Control-C, stop
             pass
 
-    def start(self):
+    def start(self) -> None:
         try:
             self._start_qemu()
+            assert self._domain is not None
             if not self._domain.isActive():
                 self._domain.start()
         except Failure:
             self.kill()
             raise
 
-    def stop(self, timeout_sec=120):
+    def stop(self, timeout_sec: int = 120) -> None:
         if self.maintain:
             self.shutdown(timeout_sec=timeout_sec)
         else:
             self.kill()
 
-    def _cleanup(self, quick=False):
+    def _cleanup(self, quick: bool = False) -> None:
         self.disconnect()
         try:
             for disk in self._disks:
@@ -453,7 +480,7 @@ class VirtMachine(Machine):
         except Exception as e:
             sys.stderr.write(f"WARNING: Cleanup failed: {e}\n")
 
-    def kill(self):
+    def kill(self) -> None:
         # stop system immediately, with potential data loss
         # to shutdown gracefully, use shutdown()
         self.disconnect()
@@ -466,7 +493,7 @@ class VirtMachine(Machine):
                 sys.stderr.write(f"WARNING: Destroying machine failed: {e}\n")
         self._cleanup(quick=True)
 
-    def wait_poweroff(self, timeout_sec=120):
+    def wait_poweroff(self, timeout_sec: int = 120) -> None:
         # shutdown must have already been triggered
         if self._domain:
             start_time = time.time()
@@ -491,7 +518,7 @@ class VirtMachine(Machine):
                     raise
         self._cleanup(quick=True)
 
-    def shutdown(self, timeout_sec=120):
+    def shutdown(self, timeout_sec: int = 120) -> None:
         # shutdown the system gracefully
         # to stop it immediately, use kill()
         self.disconnect()
@@ -502,7 +529,16 @@ class VirtMachine(Machine):
         finally:
             self._cleanup()
 
-    def add_disk(self, size=None, serial=None, path=None, type='raw', boot_disk=False):
+    def add_disk(
+        self,
+        size: int | None = None,
+        serial: str | None = None,
+        path: str | None = None,
+        type: str = 'raw',
+        boot_disk: bool = False
+    ) -> dict[str, Any]:
+        assert self._domain is not None
+
         index = len(self._disks)
 
         if path:
@@ -511,6 +547,7 @@ class VirtMachine(Machine):
                                    "-o", f"backing_file={os.path.realpath(path)},backing_fmt=qcow2", image])
 
         else:
+            assert self._domain is not None
             assert size is not None
             name = f"disk-{self._domain.name()}"
             (unused, image) = tempfile.mkstemp(suffix='qcow2', prefix=name, dir=self.run_dir)
@@ -545,7 +582,7 @@ class VirtMachine(Machine):
         self._disks.append(disk)
         return disk
 
-    def rem_disk(self, disk, quick=False):
+    def rem_disk(self, disk: dict[str, Any], quick: bool = False) -> None:
         if not quick:
             disk_desc = TEST_DISK_XML % {
                 'file': disk["filename"],
@@ -561,30 +598,32 @@ class VirtMachine(Machine):
                     raise Failure("Unable to remove disk from vm")
         os.unlink(disk['filename'])
 
-    def _qemu_monitor(self, command):
+    def _qemu_monitor(self, command: str) -> str:
         self.message("& " + command)
         # you can run commands manually using virsh:
         # virsh -c qemu:///session qemu-monitor-command [domain name/id] --hmp [command]
         output = libvirt_qemu.qemuMonitorCommand(self._domain, command,
                                                  libvirt_qemu.VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP)
         self.message(output.strip())
+        assert isinstance(output, str)
         return output
 
-    def add_netiface(self, networking=None):
+    def add_netiface(self, networking: dict[str, Any] | None = None) -> str:
         if not networking:
             networking = VirtNetwork(image=self.image).interface()
         self._qemu_monitor("netdev_add socket,mcast=230.0.0.1:{mcast},id={id}".format(
             mcast=networking["mcast"], id=networking["hostnet"]))
         self._qemu_monitor("device_add virtio-net-pci,mac={0},netdev={1}".format(
             networking["mac"], networking["hostnet"]))
+        assert isinstance(networking["mac"], str)
         return networking["mac"]
 
-    def needs_writable_usr(self):
+    def needs_writable_usr(self) -> None:
         # On atomic systems, we need a hack to change files in /usr/lib/systemd
         if self.ostree_image:
             self.execute("mount -o remount,rw /usr")
 
-    def print_console_log(self):
+    def print_console_log(self) -> None:
         """Prints VM's console to stderr"""
         if not self.console_file:
             return
