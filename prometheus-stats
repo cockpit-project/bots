@@ -151,7 +151,7 @@ test_run_seconds_count {test_runs}
             GROUP BY project, revision""").fetchall()
     retry_buckets = {}
     merged_failures = 0
-    for (project, revision, state, retries) in pr_retries:
+    for _project, _revision, state, retries in pr_retries:
         retry_buckets[retries] = retry_buckets.setdefault(retries, 0) + 1
         if state != 'success':
             merged_failures += 1

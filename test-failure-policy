@@ -186,7 +186,7 @@ def check_known_issue(api, trace, image):
 # occurrences.
 # For each (listed) occurrence we display the timestamp and revision
 def update_known_issue(api, number, err, context):
-    occ = datetime.datetime.now().isoformat()
+    occ = datetime.datetime.now(tz=datetime.UTC).isoformat()
 
     revision = os.environ.get("TEST_REVISION", None)
     if revision:

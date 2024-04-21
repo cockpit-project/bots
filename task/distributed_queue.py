@@ -104,8 +104,8 @@ class DistributedQueue:
         else:
             try:
                 host, port = amqp_server.split(':')
-            except ValueError:
-                raise ValueError('Please format amqp_server as host:port')
+            except ValueError as exc:
+                raise ValueError('Please format amqp_server as host:port') from exc
 
             context = ssl.create_default_context(cafile=os.path.join(secrets_dir, 'ca.pem'))
             context.load_cert_chain(keyfile=os.path.join(secrets_dir, 'amqp-client.key'),

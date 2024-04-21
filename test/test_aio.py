@@ -25,7 +25,7 @@ class GitHubService:
     TOKEN = 'token_ABCDEFG'
     USER_AGENT = __file__  # or any magic unique string
 
-    db: JsonObject = {}  # immutable
+    db: JsonObject = {}  # noqa:RUF012  # JsonObject is immutable
 
     def __init__(self) -> None:
         self.resources: dict[URL, CallbackResult] = {}
@@ -66,7 +66,7 @@ class GitHubService:
         self.flakes.extend(flakes)
 
     async def post(self, url: URL, headers: dict[str, str], **kwargs: str) -> CallbackResult:
-        assert False
+        raise NotImplementedError
 
     async def get(self, url: URL, headers: dict[str, str], **kwargs: str) -> CallbackResult:
         if self.flakes:
@@ -143,7 +143,7 @@ async def test_github_404(service: GitHubService, api: GitHub) -> None:
     # Make sure 4xx errors get raised immediately without retries
     service.add('x', status=404, reason='Not Found')
     with pytest.raises(aiohttp.ClientResponseError, match='404.*Not Found'):
-        await api.get('x') == {}
+        assert await api.get('x') == {}
     service.assert_hits(1, 1)
 
 

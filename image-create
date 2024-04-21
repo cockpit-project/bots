@@ -40,7 +40,7 @@ parser.add_argument('-n', '--no-save', action='store_true', help='Don\'t save th
 parser.add_argument('-u', '--upload', action='store_true', help='Upload the image after creation')
 parser.add_argument('--capture-console', action='store_true', help='Capture VM console to stderr')
 parser.add_argument('--no-build', action='store_true', dest='no_build',
-                    help='Don''t build packages and create the vm without build capabilities')
+                    help="Don't build packages and create the vm without build capabilities")
 parser.add_argument("--store", default=None, help="Where to send images")
 parser.add_argument('image', help='The image to create')
 args = parser.parse_args()
@@ -117,11 +117,11 @@ class MachineBuilder:
                 self.machine.execute(f"/var/tmp/SETUP {self.machine.image}",
                                      environment=env, stdout=None, quiet=not self.machine.verbose, timeout=7200)
                 self.machine.execute("rm -f /var/tmp/SETUP")
-            except subprocess.CalledProcessError as ex:
+            except subprocess.CalledProcessError as exc:
                 if args.sit:
                     sys.stderr.write(self.machine.diagnose())
                     input("Press RET to continue... ")
-                raise testvm.Failure(f"setup failed with code {ex.returncode}\n")
+                raise testvm.Failure(f"setup failed with code {exc.returncode}\n") from exc
 
         finally:
             self.machine.stop(timeout_sec=500)

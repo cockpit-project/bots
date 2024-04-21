@@ -98,15 +98,15 @@ def main():
         if status["state"] == "pending":
             if "progress" in desc:
                 cc[-1]["url"] = status["target_url"]
-                cc[-1]["started"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()
+                cc[-1]["started"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()  # noqa:DTZ007
             elif "Not yet tested" in desc:
-                new_run = {"posted": datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()}
+                new_run = {"posted": datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()}  # noqa:DTZ007
                 new_run["state"] = "pending"
                 cc.append(new_run)
             else:
                 logging.warning("Pending status has unexpected description '%s', skipping.", desc)
         elif status["state"] in ["success", "failure", "error"]:
-            cc[-1]["finished"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()
+            cc[-1]["finished"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()  # noqa:DTZ007
             cc[-1]["state"] = status["state"]
             if status["state"] == "error":
                 cc[-1]["description"] = desc

@@ -103,8 +103,10 @@ class TestGitHub(unittest.TestCase):
         self.api.cache.mark(time.time() + 1)
         self.api.get("/test/user")
 
-        expect = '127.0.0.8:9898 - - * "GET /test/user HTTP/1.1" 200 -\n' + \
-                 '127.0.0.8:9898 - - * "GET /test/user HTTP/1.1" 304 -\n'
+        expect = (
+            '127.0.0.8:9898 - - * "GET /test/user HTTP/1.1" 200 -\n'
+            '127.0.0.8:9898 - - * "GET /test/user HTTP/1.1" 304 -\n'
+        )
 
         match = fnmatch.fnmatch(self.api.log.data, expect)
         if not match:

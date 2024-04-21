@@ -297,8 +297,8 @@ def branch(context, message, pathspec=".", issue=None, push=True, branch=None, d
     # Tell git about our github token for authentication
     try:
         subprocess.check_call(["git", "config", "credential.https://github.com.username", api.token])
-    except subprocess.CalledProcessError:
-        raise RuntimeError("Couldn't configure git config with our API token")
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError("Couldn't configure git config with our API token") from exc
 
     clean = f"https://github.com/{api.repo}"
 
@@ -379,7 +379,7 @@ def pull(branch, body=None, issue=None, base=None, labels=('bot',), run_tests=Tr
         push_branch(branch, force=True)
 
         # Make sure we return the updated pull data
-        for retry in range(20):
+        for _ in range(20):
             new_data = api.get(f"pulls/{pull['number']}")
             if pull["head"]["sha"] != new_data["head"]["sha"]:
                 pull = new_data
@@ -391,7 +391,7 @@ def pull(branch, body=None, issue=None, base=None, labels=('bot',), run_tests=Tr
     return pull
 
 
-def label(issue, labels=['bot']):
+def label(issue, labels=('bot',)):
     try:
         resource = f"issues/{issue['number']}/labels"
     except TypeError:

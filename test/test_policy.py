@@ -73,28 +73,28 @@ class TestPolicy(unittest.TestCase):
         script = os.path.join(BOTS_DIR, "tests-policy")
         cmd = [script, "--simple", "--offline", "verify/example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-        (output, unused) = proc.communicate(PCP_CRASH)
+        output, _ = proc.communicate(PCP_CRASH)
         self.assertEqual(output, "9876\n")
 
     def testScenario(self):
         script = os.path.join(BOTS_DIR, "tests-policy")
         cmd = [script, "--simple", "--offline", "verify/example/scen-one"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-        (output, unused) = proc.communicate(PCP_CRASH)
+        output, _ = proc.communicate(PCP_CRASH)
         self.assertEqual(output, "9876\n")
 
     def testKnownIssue(self):
         script = os.path.join(BOTS_DIR, "tests-policy")
         cmd = [script, "--offline", "verify/example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-        (output, unused) = proc.communicate(PCP_CRASH)
+        output, _ = proc.communicate(PCP_CRASH)
         self.assertEqual(output, PCP_KNOWN)
 
     def testLineGlob(self):
         script = os.path.join(BOTS_DIR, "tests-policy")
         cmd = [script, "--offline", "verify/example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-        (output, unused) = proc.communicate("""
+        output, _ = proc.communicate("""
 > log: phase coils are misaligned by 0.34 micron
 > warning: this will explode in your face
 Some other mubo-jumbo
@@ -106,7 +106,7 @@ not ok 1 test/verify/check-warp-drive TestDrive.testCoils
         self.assertIn("\nok 1 test/verify/check-warp-drive TestDrive.testCoils # SKIP Known issue #123", output)
 
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-        (output, unused) = proc.communicate("""
+        output, _ = proc.communicate("""
 > log: phase coils are misaligned by 0.34 micron
 Traceback (most recent call last):
   File "test/verify/check-warp-drive", line 34, in testCoils

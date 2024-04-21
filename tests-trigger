@@ -87,7 +87,7 @@ def trigger_pull(api, opts):
 def main():
     parser = argparse.ArgumentParser(description='Manually trigger CI Robots')
     parser.add_argument('-f', '--force', action="store_true",
-                        help='Force setting the status even if the program logic thinks it shouldn''t be done')
+                        help="Force setting the status even if the program logic thinks it shouldn't be done")
     parser.add_argument('-a', '--allow', action='store_true', dest='allow',
                         help="Allow triggering for users that aren't allowed")
     parser.add_argument('--requeue', action="store_true",

@@ -103,8 +103,8 @@ TEST_DOMAIN_XML = """
   <qemu:commandline>
     {ethernet}
     <qemu:arg value='-netdev'/>
-    <qemu:arg value='user,id=base0,restrict={restrict},net=172.27.0.0/24,""" \
-"""dnssearch=loopback,hostname={hostname},{forwards}'/>
+    <qemu:arg
+      value='user,id=base0,restrict={restrict},net=172.27.0.0/24,dnssearch=loopback,hostname={hostname},{forwards}'/>
     <qemu:arg value='-device'/>
     <qemu:arg value='virtio-net-pci,netdev=base0,bus=pci.0,addr=0x0e'/>
   </qemu:commandline>
@@ -417,8 +417,8 @@ class VirtMachine(Machine):
                 # the domain may have already been freed (shutdown) while the console was running
                 self.message("libvirt error during shutdown: %s" % (le.get_error_message()))
 
-        except OSError as ex:
-            raise Failure(f"Failed to launch virsh command: {ex.strerror}")
+        except OSError as exc:
+            raise Failure(f"Failed to launch virsh command: {exc.strerror}") from exc
         finally:
             self._cleanup()
 
@@ -435,8 +435,8 @@ class VirtMachine(Machine):
             proc = subprocess.Popen(["virt-viewer", str(self._domain.ID())])
             sys.stderr.write(message)
             proc.wait()
-        except OSError as ex:
-            raise Failure(f"Failed to launch virt-viewer command: {ex.strerror}")
+        except OSError as exc:
+            raise Failure(f"Failed to launch virt-viewer command: {exc.strerror}") from exc
         finally:
             self._cleanup()
 
@@ -534,7 +534,7 @@ class VirtMachine(Machine):
         size: int | None = None,
         serial: str | None = None,
         path: str | None = None,
-        type: str = 'raw',
+        image_type: str = 'raw',
         boot_disk: bool = False
     ) -> dict[str, Any]:
         assert self._domain is not None
@@ -562,7 +562,7 @@ class VirtMachine(Machine):
             'serial': serial,
             'unit': index,
             'dev': dev,
-            'type': type,
+            'type': image_type,
             'extra': extra,
         }
 
@@ -575,7 +575,7 @@ class VirtMachine(Machine):
             "filename": image,
             "dev": dev,
             "index": index,
-            "type": type,
+            "type": image_type,
             "extra": extra,
         }
 

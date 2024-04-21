@@ -162,8 +162,8 @@ class GitHub(Forge, contextlib.AsyncExitStack):
         else:
             branch = spec.branch or get_str(await self.get_obj(f'repos/{spec.repo}'), 'default_branch')
 
-            with get_nested(await self.get_obj(f'repos/{spec.repo}/git/refs/heads/{branch}'), 'object') as object:
-                return Subject(self, spec.repo, get_str(object, 'sha'), spec.target)
+            with get_nested(await self.get_obj(f'repos/{spec.repo}/git/refs/heads/{branch}'), 'object') as obj:
+                return Subject(self, spec.repo, get_str(obj, 'sha'), spec.target)
 
 
 class GitHubStatus(Status):
