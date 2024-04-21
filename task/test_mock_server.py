@@ -20,34 +20,39 @@
 import http.server
 import json
 import multiprocessing
+from typing import Mapping
 
 
-class MockServer():
-    def __init__(self, address, handler, data=None):
+class HTTPServer(http.server.HTTPServer):
+    reply_count = 0
+    data: object
+
+
+class MockServer:
+    def __init__(
+        self, address: tuple[str, int], handler: type[http.server.BaseHTTPRequestHandler], data: object = None
+    ):
         self.address = address
         self.handler = handler
         self.data = data
 
-    def run(self):
-        srv = http.server.HTTPServer(self.address, self.handler)
+    def run(self) -> None:
+        srv = HTTPServer(self.address, self.handler)
         srv.data = self.data
-        srv.reply_count: int = 0
         srv.serve_forever()
 
-    def start(self):
+    def start(self) -> None:
         self.process = multiprocessing.Process(target=self.run)
         self.process.start()
 
-    def kill(self):
+    def kill(self) -> None:
         self.process.terminate()
         self.process.join()
         assert self.process.exitcode is not None
 
 
 class MockHandler(http.server.BaseHTTPRequestHandler):
-    server: MockServer
-
-    def replyData(self, value, headers={}, status=200):
+    def replyData(self, value: str, headers: Mapping[str, str] = {}, status: int = 200) -> None:
         self.send_response(status)
         for name, content in headers.items():
             self.send_header(name, content)
@@ -55,7 +60,8 @@ class MockHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(value.encode('utf-8'))
         self.wfile.flush()
 
-    def replyJson(self, value, headers=None, status=200):
+    def replyJson(self, value: str, headers: Mapping[str, str] = {}, status: int = 200) -> None:
+        assert isinstance(self.server, HTTPServer)
         self.server.reply_count += 1
         all_headers = {"Content-type": "application/json"}
         all_headers.update(headers or {})
