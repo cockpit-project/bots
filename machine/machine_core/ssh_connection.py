@@ -281,7 +281,7 @@ class SSHConnection:
         command: str | Sequence[str],
         input: str | None = None,  # noqa:A002  # shadows `input()` but so does subprocess module
         environment: Mapping[str, str] = {},
-        stdout: int | IO[str] | None = subprocess.PIPE,
+        stdout: int | IO[str] | IO[bytes] | None = subprocess.PIPE,
         quiet: bool = False,
         direct: bool = False,
         timeout: int = 120,
