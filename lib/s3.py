@@ -17,7 +17,7 @@ import time
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from typing import BinaryIO, Iterable, Mapping, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 from .directories import xdg_config_home
 from .network import host_ssl_context
@@ -124,7 +124,7 @@ def sign_curl(
 
 def urlopen(
     url: urllib.parse.ParseResult, method: str = 'GET', headers: Mapping[str, str] = {}, data: bytes = b''
-) -> BinaryIO:
+) -> Any:  # https://github.com/python/typersshed/issues/3026
     """Same as sign_request() but calls urlopen() on the result"""
     retries = 0
     while True:
@@ -132,7 +132,7 @@ def urlopen(
         request = urllib.request.Request(url.geturl(), headers=headers, method=method, data=data)
         try:
             result = urllib.request.urlopen(request, context=host_ssl_context(url.netloc))
-            return result  # type: ignore[no-any-return] # https://github.com/python/typeshed/issues/3026
+            return result
         except urllib.error.HTTPError as exc:
             logger.debug('%s %s %s attempt #%i → %s:', method, url.geturl(), headers, retries, exc.status)
             logger.debug('  %s', exc.read())
