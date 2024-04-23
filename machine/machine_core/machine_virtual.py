@@ -254,9 +254,9 @@ class VirtMachine(Machine):
     _transient_image: IO[bytes] | None
     _domain: libvirt.virDomain | None
 
-    network = None
-    memory_mb = None
-    cpus = None
+    network: int | None = None
+    memory_mb: int | None = None
+    cpus: int | None = None
 
     def __init__(
         self,
