@@ -56,7 +56,7 @@ lvm2
 KICKSTART_PATH = "/tmp/payload.ks"
 
 
-def build_payload(image, output):
+def build_payload(image: str, output: str) -> None:
     subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), image])
     machine = testvm.VirtMachine(image=image, memory_mb=4096)
     try:
@@ -79,7 +79,7 @@ def build_payload(image, output):
         machine.stop()
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('--image', default='fedora-rawhide')
     parser.add_argument('--output', required=True)

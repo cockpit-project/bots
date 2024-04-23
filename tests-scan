@@ -23,7 +23,7 @@ import logging
 import sys
 import time
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Required, TypedDict
+from typing import Any, Required, TypedDict
 
 from lib import ALLOWLIST, testmap
 from lib.aio.jsonutil import JsonObject, get_str
@@ -110,14 +110,14 @@ def update_status(
 
 
 def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Namespace) -> Iterable[QueueEntry]:
-    pulls = []
+    pulls: Sequence[Any]
 
     if opts.pull_data:
-        pulls.append(json.loads(opts.pull_data)['pull_request'])
+        pulls = [json.loads(opts.pull_data)['pull_request']]
     elif opts.pull_number:
         pull = api.get(f"pulls/{opts.pull_number}")
         if pull:
-            pulls.append(pull)
+            pulls = [pull]
         else:
             sys.exit(f"Can't find pull request {opts.pull_number}")
     else:

@@ -14,7 +14,7 @@ from pathlib import Path
 from lib import s3
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='Gets (default) or sets (--days, --file) S3 lifecycle policy')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--days', type=int, help='Set a simple expiry policy, in days')

@@ -25,7 +25,7 @@ import pika
 from task import distributed_queue
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description='Publish stdin data to an AMQP task queue')
     parser.add_argument('-q', '--queue', required=True,
                         help='Queue name')

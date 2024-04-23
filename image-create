@@ -54,7 +54,7 @@ if args.image in ["fedora-coreos", "services"]:
 
 
 class MachineBuilder:
-    def __init__(self, machine):
+    def __init__(self, machine: testvm.VirtMachine):
         self.machine = machine
         self.iso = self.machine.image.endswith("boot")
         self.payload = self.machine.image.endswith("payload")
@@ -70,7 +70,7 @@ class MachineBuilder:
         fp, self.machine.image_file = tempfile.mkstemp(dir="/var/tmp/", prefix=self.machine.image, suffix=self.suffix)
         os.close(fp)
 
-    def bootstrap_system(self):
+    def bootstrap_system(self) -> None:
         assert not self.machine._domain
 
         os.makedirs(self.machine.run_dir, 0o750, exist_ok=True)
@@ -82,7 +82,7 @@ class MachineBuilder:
         else:
             raise testvm.Failure("Unsupported OS %s: %s not found." % (self.machine.image, bootstrap_script))
 
-    def run_setup_script(self, script):
+    def run_setup_script(self, script: str) -> None:
         """Prepare a test image further by running some commands in it."""
         self.machine.start()
 
@@ -126,7 +126,7 @@ class MachineBuilder:
         finally:
             self.machine.stop(timeout_sec=500)
 
-    def boot_system(self):
+    def boot_system(self) -> None:
         """Start the system to make sure it can boot, then shutdown cleanly"""
 
         self.machine.start()
@@ -141,7 +141,7 @@ class MachineBuilder:
         finally:
             self.machine.stop(timeout_sec=30)
 
-    def build(self):
+    def build(self) -> None:
         self.bootstrap_system()
 
         # gather the scripts, separated by reboots
@@ -156,7 +156,7 @@ class MachineBuilder:
         # make sure we can boot the system
         self.boot_system()
 
-    def save(self):
+    def save(self) -> None:
         data_dir = testvm.get_images_data_dir()
 
         os.makedirs(data_dir, 0o750, exist_ok=True)
