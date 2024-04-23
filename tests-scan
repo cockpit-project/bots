@@ -86,7 +86,7 @@ def is_internal_context(context):
     return False
 
 
-def queue_test(entry: QueueEntry, channel: pika.channel.Channel, options: argparse.Namespace) -> None:
+def queue_test(entry: QueueEntry, channel: 'pika.channel.Channel', options: argparse.Namespace) -> None:
     queue = 'rhel' if is_internal_context(entry['job']['context']) else 'public'
     properties = pika.BasicProperties(priority=distributed_queue.BASELINE_PRIORITY)
     channel.basic_publish('', queue, json.dumps(entry), properties=properties)
