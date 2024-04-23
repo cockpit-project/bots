@@ -24,10 +24,10 @@ import sys
 from lib.constants import BOTS_DIR, TEST_DIR
 from machine import testvm
 
-opt_quick = False
-opt_verbose = False
-opt_build_options = None
-stdout_disposition = None
+opt_quick: bool = False
+opt_verbose: bool = False
+opt_build_options: str = ''
+stdout_disposition: int | None = None
 
 
 def prepare_install_image(base_image, install_image, resize, fresh):
