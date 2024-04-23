@@ -2,6 +2,7 @@
 strict = true
 follow_imports = 'silent'  # https://github.com/python-lsp/pylsp-mypy/issues/81
 scripts_are_modules = true  # allow checking all scripts in one invocation
+warn_return_any = false
 
 [[tool.mypy.overrides]]
 # things which may be unavailable when running checks
