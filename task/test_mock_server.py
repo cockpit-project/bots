@@ -18,7 +18,7 @@
 import http.server
 import json
 import multiprocessing
-from typing import Mapping
+from collections.abc import Mapping
 
 
 class HTTPServer(http.server.HTTPServer):

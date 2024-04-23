@@ -21,9 +21,9 @@ import argparse
 import json
 import logging
 import os
+import platform
 import random
 import smtplib
-import socket
 import subprocess
 import sys
 import time
@@ -136,11 +136,11 @@ def mail_notification(body):
     # if sending the notification fails, then fail the pod -- we do *not* want to ack messages in this case,
     # otherwise we would silently miss failure notifications; thus no exception handling here
     s = smtplib.SMTP(mx)
-    s.sendmail(sender, receivers, """From: %s
-To: %s
-Subject: cockpituous: run-queue crash on %s
+    s.sendmail(sender, receivers, f"""From: {sender}
+To: {', '.join(receivers)}
+Subject: cockpituous: run-queue crash on {platform.node()}
 
-%s""" % (sender, ', '.join(receivers), socket.gethostname(), body))
+{body}""")
 
 
 # Consume from the webhook queue and republish to the task queue via *-scan

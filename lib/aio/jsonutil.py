@@ -14,9 +14,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import contextlib
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import Callable, ContextManager, Iterator, Mapping, Sequence, Type, TypeVar, Union
+from typing import ContextManager, TypeVar, Union
 
 JsonLiteral = str | float | bool | None
 JsonValue = Union['JsonObject', Sequence['JsonValue'], JsonLiteral]
@@ -35,7 +36,7 @@ class JsonError(Exception):
         self.value = value
 
 
-def typechecked(value: JsonValue, expected_type: Type[T]) -> T:
+def typechecked(value: JsonValue, expected_type: type[T]) -> T:
     """Ensure a JSON value has the expected type, returning it if so."""
     if not isinstance(value, expected_type):
         raise JsonError(value, f'must have type {expected_type.__name__}')
@@ -87,8 +88,8 @@ def get_object(
     obj: JsonObject,
     key: str,
     constructor: Callable[[JsonObject], T],
-    default: Union[DT, _Empty] = _empty
-) -> Union[DT, T]:
+    default: DT | _Empty = _empty
+) -> DT | T:
     return _get(obj, lambda v: constructor(typechecked(v, dict)), key, default)
 
 

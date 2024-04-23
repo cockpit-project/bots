@@ -267,7 +267,7 @@ def execute(*args):
         env["GIT_ASKPASS"] = "/bin/true"
     try:
         output = subprocess.check_output(args, cwd=BASE_DIR, stderr=subprocess.STDOUT,
-                                         env=env, universal_newlines=True)
+                                         env=env, text=True)
     except subprocess.CalledProcessError as e:
         if verbose:
             sys.stderr.write("! " + str(e))

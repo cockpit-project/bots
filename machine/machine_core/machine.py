@@ -84,12 +84,7 @@ class Machine(ssh_connection.SSHConnection):
         if not label and image != "unknown":
             label = f"{image}-{ssh_address}-{ssh_port}"
 
-        super(Machine, self).__init__(user,
-                                      ssh_address,
-                                      ssh_port,
-                                      identity_file,
-                                      verbose=verbose,
-                                      label=label)
+        super().__init__(user, ssh_address, ssh_port, identity_file, verbose=verbose, label=label)
 
         self.arch = arch
         self.image = image
@@ -192,8 +187,7 @@ class Machine(ssh_connection.SSHConnection):
         else:
             cursor_arg = ""
 
-        cmd = "journalctl %s -o cat SYSLOG_IDENTIFIER=kernel 2>&1 | grep 'type=%s.*audit' || true" % (
-            cursor_arg, type_pref,)
+        cmd = f"journalctl {cursor_arg} -o cat SYSLOG_IDENTIFIER=kernel 2>&1 | grep 'type={type_pref}.*audit' || true"
         messages = self.execute(cmd).splitlines()
         if len(messages) == 1 and "Cannot assign requested address" in messages[0]:
             messages = []
@@ -357,11 +351,12 @@ class Machine(ssh_connection.SSHConnection):
     def wait_for_cockpit_running(
         self, address: str = "localhost", port: int = 9090, seconds: int = 30, tls: bool = False
     ) -> None:
-        WAIT_COCKPIT_RUNNING = """
-        until curl --insecure --silent --connect-timeout 2 --max-time 3 %s://%s:%s >/dev/null; do
+        proto = 'https' if tls else 'http'
+        WAIT_COCKPIT_RUNNING = fr"""
+        until curl --insecure --silent --connect-timeout 2 --max-time 3 {proto}://{address}:{port} >/dev/null; do
             sleep 0.5;
         done;
-        """ % ("https" if tls else "http", address, port)
+        """
         with timeout.Timeout(seconds=seconds, error_message="Timeout while waiting for cockpit to start"):
             self.execute(WAIT_COCKPIT_RUNNING)
 

@@ -17,14 +17,14 @@
 
 import itertools
 import os.path
-from typing import Iterable, Mapping, Optional, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from lib.constants import TEST_OS_DEFAULT
 
 COCKPIT_SCENARIOS = {'networking', 'storage', 'expensive', 'other'}
 
 
-def contexts(image: str, *scenarios: Iterable[str], repo: Optional[str] = None) -> Sequence[str]:
+def contexts(image: str, *scenarios: Iterable[str], repo: str | None = None) -> Sequence[str]:
     return [image + '/' + '-'.join(i) + (('@' + repo) if repo else '')
             for i in itertools.product(*scenarios)]
 

@@ -18,8 +18,8 @@ import contextlib
 import json
 import logging
 import platform
-from collections.abc import Mapping
-from typing import Awaitable, Callable, NamedTuple, Self
+from collections.abc import Awaitable, Callable, Mapping
+from typing import NamedTuple, Self
 
 import aiohttp
 from yarl import URL

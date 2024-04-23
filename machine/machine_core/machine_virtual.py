@@ -180,7 +180,7 @@ class VirtNetwork:
                     fcntl.flock(lockf, fcntl.LOCK_NB | fcntl.LOCK_EX)
                     sock.bind(("127.0.0.1", port))
                     self.locked.append(lockf)
-                except IOError:
+                except OSError:
                     if not force:
                         os.close(lockf)
                         continue
@@ -616,8 +616,7 @@ class VirtMachine(Machine):
             networking = VirtNetwork(image=self.image).interface()
         self._qemu_monitor("netdev_add socket,mcast=230.0.0.1:{mcast},id={id}".format(
             mcast=networking["mcast"], id=networking["hostnet"]))
-        self._qemu_monitor("device_add virtio-net-pci,mac={0},netdev={1}".format(
-            networking["mac"], networking["hostnet"]))
+        self._qemu_monitor(f"device_add virtio-net-pci,mac={networking['mac']},netdev={networking['hostnet']}")
         assert isinstance(networking["mac"], str)
         return networking["mac"]
 

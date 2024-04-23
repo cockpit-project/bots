@@ -20,7 +20,8 @@ import locale
 import logging
 import os
 import textwrap
-from typing import ClassVar, Collection
+from collections.abc import Collection
+from typing import ClassVar
 
 from ..constants import LIB_DIR
 from .abc import Destination

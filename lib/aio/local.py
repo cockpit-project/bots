@@ -16,9 +16,8 @@
 import contextlib
 import logging
 import os
-from collections.abc import Collection
+from collections.abc import AsyncIterator, Collection
 from pathlib import Path
-from typing import AsyncIterator
 
 from yarl import URL
 

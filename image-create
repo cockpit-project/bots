@@ -75,12 +75,12 @@ class MachineBuilder:
 
         os.makedirs(self.machine.run_dir, 0o750, exist_ok=True)
 
-        bootstrap_script = os.path.join(testvm.SCRIPTS_DIR, "%s.bootstrap" % (self.machine.image, ))
+        bootstrap_script = os.path.join(testvm.SCRIPTS_DIR, f"{self.machine.image}.bootstrap")
 
         if os.path.isfile(bootstrap_script):
             subprocess.check_call([bootstrap_script, self.machine.image_file])
         else:
-            raise testvm.Failure("Unsupported OS %s: %s not found." % (self.machine.image, bootstrap_script))
+            raise testvm.Failure(f"Unsupported OS {self.machine.image}: {bootstrap_script}")
 
     def run_setup_script(self, script: str) -> None:
         """Prepare a test image further by running some commands in it."""
@@ -145,7 +145,7 @@ class MachineBuilder:
         self.bootstrap_system()
 
         # gather the scripts, separated by reboots
-        script = os.path.join(testvm.SCRIPTS_DIR, "%s.setup" % (self.machine.image, ))
+        script = os.path.join(testvm.SCRIPTS_DIR, f"{self.machine.image}.setup")
 
         if not os.path.exists(script):
             return
@@ -172,7 +172,7 @@ class MachineBuilder:
 
         # Hash the image here
         sha, _, _rest = subprocess.check_output(
-            ["sha256sum", self.machine.image_file if (self.iso or self.payload) else rebuild], universal_newlines=True
+            ["sha256sum", self.machine.image_file if (self.iso or self.payload) else rebuild], text=True
         ).partition(" ")
         if not sha:
             raise testvm.Failure("sha256sum returned invalid output")

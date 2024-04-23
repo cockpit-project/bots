@@ -21,7 +21,8 @@ import contextlib
 import json
 import logging
 import ssl
-from typing import Any, AsyncIterator, Collection, Coroutine, Hashable, Mapping, Sequence, TypeVar
+from collections.abc import AsyncIterator, Collection, Coroutine, Hashable, Mapping, Sequence
+from typing import Any, TypeVar
 
 import aiohttp
 

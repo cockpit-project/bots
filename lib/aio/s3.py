@@ -20,8 +20,9 @@ import hmac
 import logging
 import mimetypes
 import time
+from collections.abc import Collection, Mapping
 from types import TracebackType
-from typing import Collection, Mapping, NamedTuple, Self
+from typing import NamedTuple, Self
 
 import aiohttp
 from yarl import URL

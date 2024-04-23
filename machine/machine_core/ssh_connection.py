@@ -98,7 +98,7 @@ class SSHConnection:
                     if len(data):
                         self.ssh_reachable = True
                         return True
-                except IOError:
+                except OSError:
                     time.sleep(0.5)
         return False
 

@@ -2,8 +2,9 @@ import hashlib
 import json
 import re
 import time
+from collections.abc import AsyncIterator, Sequence
 from pathlib import Path
-from typing import Any, AsyncIterator, Sequence
+from typing import Any
 
 import aiohttp
 import pytest

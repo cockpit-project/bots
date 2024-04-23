@@ -36,12 +36,12 @@ def run(context, verbose=False, **kwargs):
     def output(*args):
         if verbose:
             sys.stderr.write("+ " + " ".join(args) + "\n")
-        return subprocess.check_output(args, cwd=cwd, universal_newlines=True)
+        return subprocess.check_output(args, cwd=cwd, text=True)
 
     def output_with_stderr(*args):
         if verbose:
             sys.stderr.write("+ " + " ".join(args) + "\n")
-        return subprocess.check_output(args, cwd=cwd, universal_newlines=True, stderr=subprocess.STDOUT)
+        return subprocess.check_output(args, cwd=cwd, text=True, stderr=subprocess.STDOUT)
 
     def execute(*args):
         if verbose:
@@ -81,7 +81,7 @@ def run(context, verbose=False, **kwargs):
 
     # Build language map a read manifest
     if manifest_exists:
-        with open("po/language_map.txt", "r") as lm:
+        with open("po/language_map.txt") as lm:
             for line in lm:
                 line = line.strip()
                 if not line:
@@ -90,12 +90,12 @@ def run(context, verbose=False, **kwargs):
                 language_map[items[0]] = items
 
         # Read manifest
-        with open("pkg/shell/manifest.json", "r", encoding='utf-8') as mnfst:
+        with open("pkg/shell/manifest.json", encoding='utf-8') as mnfst:
             current_manifest = json.load(mnfst)
 
     # Read linguas
     if linguas_exists:
-        with open("po/LINGUAS", "r", encoding='utf-8') as lngs:
+        with open("po/LINGUAS", encoding='utf-8') as lngs:
             current_linguas = lngs.read().strip().split()
 
     # Remove all files that have less than X% coverage
