@@ -32,7 +32,7 @@ import urllib.request
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
 from ssl import SSLEOFError
-from typing import Any
+from typing import Any, TypedDict
 
 from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
@@ -79,6 +79,13 @@ class Logger:
             f.write(value)
 
 
+class Response(TypedDict):
+    status: int
+    reason: str
+    headers: Mapping[str, str]
+    data: str
+
+
 class GitHubError(RuntimeError):
     """Raise when getting an error from the GitHub API
 
@@ -86,13 +93,13 @@ class GitHubError(RuntimeError):
     code depending on it continues to work.
     """
 
-    def __init__(self, url, response):
+    def __init__(self, url: str, response: Response):
         self.url = url
         self.data = response.get('data', "")
         self.status = response.get('status')
         self.reason = response.get('reason')
 
-    def __str__(self):
+    def __str__(self) -> str:
         result = (f'Error accessing {self.url}\n'
                   f'  Status: {self.status}\n'
                   f'  Reason: {self.reason}\n'
@@ -126,7 +133,7 @@ class GitHub:
     def __init__(
         self,
         base: str | None = None,
-        cacher: cache.Cache | None = None,
+        cacher: cache.Cache[Response] | None = None,
         repo: str | None = None,
         remote: str | None = None
     ):
@@ -225,12 +232,12 @@ class GitHub:
 
         raise OSError(f"Repeated failure to fetch to {url}, giving up")
 
-    def request(self, method, resource, data="", headers=None):
-        if headers is None:
-            headers = {}
-        headers["User-Agent"] = "Cockpit Tests"
+    def request(
+        self, method: str, resource: str | None, data: str = "", headers: Mapping[str, str] = {}
+    ) -> Response:
+        all_headers = {**headers, "User-Agent": "Cockpit Tests"}
         if self.token:
-            headers["Authorization"] = "token " + self.token
+            all_headers["Authorization"] = "token " + self.token
 
         for retry in range(5):
             if not self.conn:
@@ -241,7 +248,7 @@ class GitHub:
                 self.conn.set_debuglevel(1 if self.debug else 0)
 
             try:
-                self.conn.request(method, self.qualify(resource), data, headers)
+                self.conn.request(method, self.qualify(resource), data, all_headers)
                 response = self.conn.getresponse()
                 if response.status != HTTPStatus.BAD_GATEWAY:
                     # success!

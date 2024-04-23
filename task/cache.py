@@ -27,13 +27,16 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import Generic, TypeVar
 
 __all__ = (
     'Cache',
 )
 
+_T = TypeVar('_T')
 
-class Cache:
+
+class Cache(Generic[_T]):
     def __init__(self, directory: str, lag: int | None = None):
         self.directory = directory
         self.pruned = False
@@ -71,7 +74,7 @@ class Cache:
                     sys.stderr.write(f"Failed to remove GitHub cache item {entry.path}: {exc}\n")
 
     # Read a resource from the cache or return None
-    def read(self, resource: str) -> object:
+    def read(self, resource: str) -> _T | None:
         path = os.path.join(self.directory, urllib.parse.quote(resource, safe=''))
         try:
             with open(path) as fp:
@@ -80,7 +83,7 @@ class Cache:
             return None
 
     # Write a resource to the cache in an atomic way
-    def write(self, resource: str, contents: object) -> None:
+    def write(self, resource: str, contents: _T) -> None:
         path = os.path.join(self.directory, urllib.parse.quote(resource, safe=''))
         os.makedirs(self.directory, exist_ok=True)
         (fd, temp) = tempfile.mkstemp(dir=self.directory)
