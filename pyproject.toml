@@ -26,7 +26,6 @@ module = [
     'task',
     'task.github',
 
-    'test_cache',
     'test_checklist',
     'test_github',
     'test_issue_scan',
