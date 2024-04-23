@@ -28,8 +28,10 @@ import subprocess
 import time
 import urllib.parse
 import urllib.request
+from collections.abc import Sequence
 from http import HTTPStatus
 from ssl import SSLEOFError
+from typing import Any
 
 from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
@@ -120,7 +122,13 @@ def get_origin_repo():
 
 
 class GitHub:
-    def __init__(self, base=None, cacher=None, repo=None, remote=None):
+    def __init__(
+        self,
+        base: str | None = None,
+        cacher: cache.Cache | None = None,
+        repo: str | None = None,
+        remote: str | None = None
+    ):
         self._remote = remote
         self._repo = repo
         self._base = base
@@ -351,7 +359,7 @@ class GitHub:
             count = len(data)
         return result
 
-    def pulls(self, state='open', since=None):
+    def pulls(self, state: str = 'open', since: float | None = None) -> Sequence[Any]:
         result = []
         page = 1
         count = 100

@@ -18,11 +18,12 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+from collections.abc import Mapping
 
 from machine import testvm
 
 
-def get_packages(machine):
+def get_packages(machine: testvm.VirtMachine) -> Mapping[str, str]:
     # List all packages, irrespective of package manager (rpm or dpkg or pacman).
     # If both are missing, then the command will fail.
     #

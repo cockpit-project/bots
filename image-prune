@@ -28,7 +28,7 @@ import tempfile
 import time
 import urllib.error
 import urllib.parse
-from typing import Iterable, Tuple
+from collections.abc import Collection, Iterator
 
 from lib import s3
 from lib.directories import get_images_data_dir
@@ -40,11 +40,11 @@ logger = logging.getLogger('image-prune')
 IMAGE_EXPIRE = 14
 
 
-def git(*args, cwd='.'):
+def git(*args: str, cwd: str = '.') -> str:
     return subprocess.check_output(['git', *args], text=True, cwd=cwd)
 
 
-def get_images_in_commit(commit, cwd='.'):
+def get_images_in_commit(commit: str, cwd: str = '.') -> Iterator[str]:
     """Returns all images pointed to by a symlink in images/ from the given commit"""
 
     logger.debug('Keeping all images in %s...', commit)
@@ -56,7 +56,7 @@ def get_images_in_commit(commit, cwd='.'):
             yield image
 
 
-def get_images_in_branches(merge_target, *branch_patterns, cwd='.'):
+def get_images_in_branches(merge_target: str, *branch_patterns: str, cwd: str = '.') -> Iterator[str]:
     """Returns all images introduced by branches, relative to merge_target"""
 
     # KISS: just get a diff and grab anything that looks like an image update
@@ -70,7 +70,7 @@ def get_images_in_branches(merge_target, *branch_patterns, cwd='.'):
                 yield image
 
 
-def get_remote_images():
+def get_remote_images() -> Iterator[str]:
     """Returns all images currently used by PRs and origin branches on GitHub"""
 
     api = github.GitHub()
@@ -92,7 +92,7 @@ def get_remote_images():
         yield from get_images_in_branches('head', 'refs/heads/origin/*', 'refs/heads/pr/*', cwd=tmpdir)
 
 
-def get_keepers(offline=False, checkout_only=False):
+def get_keepers(offline: bool = False, checkout_only: bool = False) -> Collection[str]:
     keepers = set(get_images_in_commit('HEAD'))
 
     if not checkout_only:
@@ -104,7 +104,7 @@ def get_keepers(offline=False, checkout_only=False):
 
 
 class ImageCache:
-    def list_files(self) -> Iterable[Tuple[str, float]]:
+    def list_files(self) -> Iterator[tuple[float, str]]:
         """yields tuples of (mtime, basename)"""
         raise NotImplementedError
 
@@ -116,12 +116,12 @@ class ImageCache:
         """returns True if disk space is not currently an issue"""
         raise NotImplementedError
 
-    def prune(self, keepers, force=False, dryrun=False):
+    def prune(self, keepers: Collection[str], force: bool = False, dryrun: bool = False) -> None:
         expiry_threshold = time.time() - IMAGE_EXPIRE * 86400
 
         # Sort by mtime, oldest first.
         for mtime, image in sorted(self.list_files()):
-            if not any(image.endswith(ext) for ext in ['.iso', 'tar.gz', '.qcow2', '.partial']):
+            if not image.endswith(('.iso', 'tar.gz', '.qcow2', '.partial')):
                 logger.debug('Skipping file %s with unknown extension', image)
                 continue
 
@@ -140,42 +140,42 @@ class ImageCache:
 
 
 class LocalImageDirectory(ImageCache):
-    def __init__(self, directory=None):
+    def __init__(self, directory: str | None = None):
         self.directory = directory or get_images_data_dir()
         self.space_threshold = float(os.environ.get("PRUNE_THRESHOLD_G", 15))
 
-    def list_files(self):
+    def list_files(self) -> Iterator[tuple[float, str]]:
         for entry in os.scandir(self.directory):
             if entry.is_file(follow_symlinks=False):
                 yield entry.stat().st_mtime, entry.name
 
-    def delete_file(self, filename):
+    def delete_file(self, filename: str) -> None:
         os.unlink(os.path.join(self.directory, filename))
 
-    def enough_space(self):
+    def enough_space(self) -> bool:
         buf = os.statvfs(self.directory)
         free = buf.f_bavail * buf.f_frsize / (1024 * 1024 * 1024)
         return free >= self.space_threshold
 
 
 class S3ImageStore(ImageCache):
-    def __init__(self, url):
+    def __init__(self, url: urllib.parse.ParseResult):
         self.url = url
         # A bit magic: we have 2 buckets and 250GB quota.  Try to keep each bucket below ca. 100GB.
         self.max_bytes = float(os.environ.get("S3_IMAGES_MAX_GB", 100)) * 1000 * 1000 * 1000
-        self.sizes = {}
+        self.sizes: dict[str, str] = {}
 
-    def list_files(self):
+    def list_files(self) -> Iterator[tuple[float, str]]:
         result = s3.list_bucket(self.url)
 
         # make sure this gets done before we start iterating
-        self.sizes = dict(s3.parse_list(result, "Key", "Size"))
+        self.sizes = dict(s3.parse_list(result, "Key", "Size"))  # type: ignore[arg-type]  # https://github.com/python/typeshed/issues/11532
 
         for name, stamp in s3.parse_list(result, "Key", "LastModified"):
             # rfc3339ish...
             yield datetime.datetime.strptime(stamp, '%Y-%m-%dT%H:%M:%S.%f%z').timestamp(), name
 
-    def delete_file(self, filename):
+    def delete_file(self, filename: str) -> None:
         try:
             with s3.urlopen(self.url._replace(path=os.path.join(self.url.path, filename)), method='DELETE'):
                 pass
@@ -185,12 +185,12 @@ class S3ImageStore(ImageCache):
                 raise
         del self.sizes[filename]
 
-    def enough_space(self):
+    def enough_space(self) -> bool:
         total = sum(int(size) for size in self.sizes.values())
         return total < self.max_bytes
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='Prune downloaded images')
     parser.add_argument("--debug", '-d', action="store_true", help="Enable debugging output")
     parser.add_argument("--force", '-f', action="store_true", help="Delete images even if they aren't old")
@@ -210,6 +210,7 @@ def main():
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
+    collection: ImageCache
     if args.s3:
         collection = S3ImageStore(args.s3)
 

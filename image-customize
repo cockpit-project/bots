@@ -20,6 +20,7 @@ import argparse
 import os
 import subprocess
 import sys
+from collections.abc import Sequence
 
 from lib.constants import BOTS_DIR, TEST_DIR
 from machine import testvm
@@ -30,7 +31,7 @@ opt_build_options: str = ''
 stdout_disposition: int | None = None
 
 
-def prepare_install_image(base_image, install_image, resize, fresh):
+def prepare_install_image(base_image: str, install_image: str, resize: str | None, fresh: bool) -> str:
     """Create the necessary layered image for the build/install"""
 
     if "/" not in base_image:
@@ -68,14 +69,24 @@ def prepare_install_image(base_image, install_image, resize, fresh):
 class ActionBase(argparse.Action):
     """Keep an ordered list of actions"""
 
-    def __call__(self, parser, namespace, value, option_string=None):
+    @staticmethod
+    def execute(machine_instance: testvm.Machine, argument: str) -> None:
+        raise NotImplementedError
+
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        value: str | Sequence[str] | None,
+        option_string: object = None
+    ) -> None:
         getattr(namespace, self.dest).append((self.execute, value))
 
 
 class InstallAction(ActionBase):
     """Install local rpm or distro package"""
     @staticmethod
-    def execute(machine_instance, package):
+    def execute(machine_instance: testvm.Machine, package: str) -> None:
         # If we have a '/' in the package name, or if a file with that name
         # exists in the current directory, then assume that this is a package
         # we're uploading from the host.
@@ -105,7 +116,7 @@ class BuildAction(ActionBase):
     """Build and install distribution package(s) from dist tarball or source RPM"""
 
     @staticmethod
-    def execute(machine_instance, source):
+    def execute(machine_instance: testvm.Machine, source: str) -> None:
         # upload the tarball or srpm
         sourcename = os.path.basename(source)
 
@@ -124,7 +135,7 @@ class BuildAction(ActionBase):
             raise NotImplementedError(f"unknown build platform: {out}")
 
     @staticmethod
-    def build_deb(machine, vm_source):
+    def build_deb(machine: testvm.Machine, vm_source: str) -> None:
         build_opts = 'nocheck' if opt_quick else ''
 
         # build source packge
@@ -152,7 +163,7 @@ class BuildAction(ActionBase):
         machine.execute("dpkg -i /var/tmp/build/*.deb")
 
     @staticmethod
-    def build_rpm(machine, vm_source):
+    def build_rpm(machine: testvm.Machine, vm_source: str) -> None:
         mock_opts = ''
         if opt_verbose:
             mock_opts += ' --verbose'
@@ -186,7 +197,7 @@ class BuildAction(ActionBase):
                         f'rpm -U --force --verbose {"--nodigest --nosignature" if opt_quick else ""} $packages')
 
     @staticmethod
-    def build_arch(machine, vm_source):
+    def build_arch(machine: testvm.Machine, vm_source: str) -> None:
         # unpack source tree's arch packaging directory (PKGBUILD refers to some files)
         # and set PKGBUILD variables
         machine.write("/var/tmp/mkbuild.sh", f"""#!/bin/sh
@@ -213,7 +224,7 @@ class BuildAction(ActionBase):
 
 class RunCommandAction(ActionBase):
     @staticmethod
-    def execute(machine_instance, command):
+    def execute(machine_instance: testvm.Machine, command: str) -> None:
         try:
             machine_instance.execute(command, timeout=1800)
         except subprocess.CalledProcessError as e:
@@ -223,7 +234,7 @@ class RunCommandAction(ActionBase):
 
 class ScriptAction(ActionBase):
     @staticmethod
-    def execute(machine_instance, script):
+    def execute(machine_instance: testvm.Machine, script: str) -> None:
         uploadpath = "/var/tmp/" + os.path.basename(script)
         machine_instance.upload([os.path.abspath(script)], uploadpath)
         machine_instance.execute("chmod a+x %s" % uploadpath)
@@ -236,7 +247,7 @@ class ScriptAction(ActionBase):
 
 class UploadAction(ActionBase):
     @staticmethod
-    def execute(machine_instance, srcdest):
+    def execute(machine_instance: testvm.Machine, srcdest: str) -> None:
         src, dest = srcdest.split(":")
         abssrc = os.path.abspath(src)
         # preserve trailing / for rsync compatibility
@@ -245,7 +256,7 @@ class UploadAction(ActionBase):
         machine_instance.upload([abssrc], dest)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description=('Run command inside or install packages into a Cockpit virtual machine. '
                      'All actions can be specified multiple times and run in the given order.'))
