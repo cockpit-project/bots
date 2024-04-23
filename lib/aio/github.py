@@ -81,7 +81,7 @@ class GitHub(Forge, contextlib.AsyncExitStack):
         async def post_once() -> JsonValue:
             async with self.session.post(self.api / resource, json=body) as response:
                 logger.debug('response %r', response)
-                return await response.json()  # type: ignore[no-any-return]
+                return await response.json()
 
         return await retry(post_once)
 
@@ -106,7 +106,7 @@ class GitHub(Forge, contextlib.AsyncExitStack):
                     value = await response.json()
                     logger.debug('  cache miss %r -- caching and returning %r', resource, conditions)
                     self.cache.add(resource, CacheEntry(conditions, value))
-                    return value  # type: ignore[no-any-return]
+                    return value
 
         return await retry(get_once)
 
