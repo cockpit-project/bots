@@ -16,7 +16,8 @@
 import asyncio
 import contextlib
 import logging
-from typing import Any, AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Sequence
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

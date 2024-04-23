@@ -22,7 +22,6 @@ import functools
 import os
 import socket
 import ssl
-from typing import List, Optional
 
 from lib.constants import IMAGES_DIR
 
@@ -37,7 +36,7 @@ CA_PEM_DOMAINS = [
 ]
 
 
-def get_host_ca(hostname: str) -> Optional[str]:
+def get_host_ca(hostname: str) -> str | None:
     """Return custom CA that applies to the given host name.
 
     Self-hosted infrastructure uses CA_PEM, while publicly hosted infrastructure ought to have
@@ -51,7 +50,7 @@ def get_host_ca(hostname: str) -> Optional[str]:
     return None
 
 
-def get_curl_ca_arg(hostname: str) -> List[str]:
+def get_curl_ca_arg(hostname: str) -> list[str]:
     """Return curl CLI arguments for talking to hostname.
 
     This uses get_host_ca() to determine an appropriate CA for talking to hostname.
@@ -61,7 +60,7 @@ def get_curl_ca_arg(hostname: str) -> List[str]:
     return ['--cacert', ca] if ca else []
 
 
-def host_ssl_context(hostname: str) -> Optional[ssl.SSLContext]:
+def host_ssl_context(hostname: str) -> ssl.SSLContext | None:
     """Return SSLContext suitable for given hostname.
 
     This uses get_host_ca() to determine an appropriate CA.
@@ -70,7 +69,7 @@ def host_ssl_context(hostname: str) -> Optional[ssl.SSLContext]:
     return ssl.create_default_context(cafile=cafile) if cafile else None
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def redhat_network() -> bool:
     """Check if we can access the Red Hat network
 

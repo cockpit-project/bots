@@ -18,12 +18,11 @@
 import functools
 import os
 import subprocess
-from typing import Optional
 
 from .constants import GIT_DIR
 
 
-def xdg_home(subdir: str, envvar: str, *components: str, override: Optional[str] = None) -> str:
+def xdg_home(subdir: str, envvar: str, *components: str, override: str | None = None) -> str:
     path = override and os.getenv(override)
 
     if not path:
@@ -35,22 +34,22 @@ def xdg_home(subdir: str, envvar: str, *components: str, override: Optional[str]
     return path
 
 
-def xdg_config_home(*components: str, envvar: Optional[str] = None) -> str:
+def xdg_config_home(*components: str, envvar: str | None = None) -> str:
     return xdg_home('.config', 'XDG_CONFIG_HOME', *components, override=envvar)
 
 
-def xdg_cache_home(*components: str, envvar: Optional[str] = None) -> str:
+def xdg_cache_home(*components: str, envvar: str | None = None) -> str:
     return xdg_home('.cache', 'XDG_CACHE_HOME', *components, override=envvar)
 
 
-def get_git_config(*args: str) -> Optional[str]:
+def get_git_config(*args: str) -> str | None:
     if not os.path.exists(GIT_DIR):
         return None
 
     try:
         myenv = os.environ.copy()
         myenv["GIT_DIR"] = GIT_DIR
-        return subprocess.check_output(('git', 'config', *args), universal_newlines=True, env=myenv).strip()
+        return subprocess.check_output(('git', 'config', *args), text=True, env=myenv).strip()
 
     except (OSError, subprocess.CalledProcessError):  # 'git' not in PATH, or cmd fails
         return None

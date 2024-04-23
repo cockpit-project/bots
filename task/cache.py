@@ -74,9 +74,9 @@ class Cache:
     def read(self, resource: str) -> object:
         path = os.path.join(self.directory, urllib.parse.quote(resource, safe=''))
         try:
-            with open(path, 'r') as fp:
+            with open(path) as fp:
                 return json.load(fp)
-        except (IOError, ValueError):
+        except (OSError, ValueError):
             return None
 
     # Write a resource to the cache in an atomic way

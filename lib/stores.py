@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from lib.directories import xdg_config_home
 
@@ -33,7 +33,7 @@ REDHAT_STORES: Sequence[str] = (
 
 # local stores
 try:
-    with open(xdg_config_home('cockpit-dev', 'image-stores', envvar='COCKPIT_IMAGE_STORES_FILE'), 'r') as fp:
+    with open(xdg_config_home('cockpit-dev', 'image-stores', envvar='COCKPIT_IMAGE_STORES_FILE')) as fp:
         data = fp.read().strip()
         if data:
             PUBLIC_STORES = (*PUBLIC_STORES, *data.split("\n"))

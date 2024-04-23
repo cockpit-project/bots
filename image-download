@@ -41,7 +41,7 @@ import subprocess
 import sys
 import time
 import urllib.parse
-from typing import Iterator, Sequence
+from collections.abc import Iterator, Sequence
 
 from lib import s3
 from lib.constants import IMAGES_DIR
@@ -73,7 +73,7 @@ def check_curl_args(args: Sequence[str]) -> tuple[str, float] | None:
 
     try:
         start = time.time()
-        output = subprocess.check_output(curl_cmd((*args, *head_args)), universal_newlines=True)
+        output = subprocess.check_output(curl_cmd((*args, *head_args)), text=True)
         duration = time.time() - start
         return output, duration
     except subprocess.CalledProcessError:
@@ -188,7 +188,7 @@ def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[
     curl = subprocess.Popen(curl_cmd(args))
     ret = curl.wait()
     if ret != 0:
-        raise RuntimeError("curl: unable to download %s (returned: %s)" % (message, ret))
+        raise RuntimeError(f"curl: unable to download {message} (returned: {ret})")
 
     os.chmod(temp, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 

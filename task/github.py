@@ -138,11 +138,11 @@ class GitHub:
         self.token = None
         self.debug = False
         try:
-            with open(xdg_config_home('cockpit-dev', 'github-token', envvar='COCKPIT_GITHUB_TOKEN_FILE'), "r") as f:
+            with open(xdg_config_home('cockpit-dev', 'github-token', envvar='COCKPIT_GITHUB_TOKEN_FILE')) as f:
                 self.token = f.read().strip()
         except FileNotFoundError:
             try:
-                with open(xdg_config_home('github-token'), "r") as f:
+                with open(xdg_config_home('github-token')) as f:
                     self.token = f.read().strip()
             except FileNotFoundError:
                 # fall back to GitHub's CLI token
@@ -223,10 +223,10 @@ class GitHub:
             except urllib.error.HTTPError as exc:
                 if exc.code == 404:
                     return None
-            except (ConnectionResetError, http.client.BadStatusLine, socket.error, SSLEOFError) as e:
+            except (ConnectionResetError, http.client.BadStatusLine, OSError, SSLEOFError) as e:
                 logging.warning("Transient error during GitHub request, attempt #%s: %s", retry, e)
 
-        raise IOError(f"Repeated failure to fetch to {url}, giving up")
+        raise OSError(f"Repeated failure to fetch to {url}, giving up")
 
     def request(self, method, resource, data="", headers=None):
         if headers is None:
@@ -249,13 +249,13 @@ class GitHub:
                 if response.status != HTTPStatus.BAD_GATEWAY:
                     # success!
                     break
-            except (ConnectionResetError, http.client.BadStatusLine, socket.error, SSLEOFError) as e:
+            except (ConnectionResetError, http.client.BadStatusLine, OSError, SSLEOFError) as e:
                 logging.warning("Transient error during GitHub request, attempt #%s: %s", retry, e)
 
             self.conn = None
             time.sleep(2 ** retry)
         else:
-            raise IOError("Repeated failure to talk to GitHub API, giving up")
+            raise OSError("Repeated failure to talk to GitHub API, giving up")
 
         heads = {}
         for (header, value) in response.getheaders():

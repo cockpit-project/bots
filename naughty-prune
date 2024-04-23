@@ -41,7 +41,7 @@ SECONDS_PER_DAY = 3600 * 24
 def execute(*args):
     if task.verbose:
         sys.stderr.write("+ " + " ".join(args) + "\n")
-    return subprocess.check_output(args, cwd=BASE_DIR, universal_newlines=True)
+    return subprocess.check_output(args, cwd=BASE_DIR, text=True)
 
 
 def run(unused, verbose=False, **kwargs):

@@ -23,7 +23,7 @@ from task import github, labels_of_pull
 def execute(*args):
     try:
         sys.stderr.write("+ " + " ".join(args) + "\n")
-        output = subprocess.check_output(args, universal_newlines=True)
+        output = subprocess.check_output(args, text=True)
     except subprocess.CalledProcessError as ex:
         sys.exit(ex.returncode)
     return output

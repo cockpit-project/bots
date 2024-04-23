@@ -17,9 +17,9 @@ import contextlib
 import logging
 import os
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import AsyncContextManager, Callable, Self
+from typing import AsyncContextManager, Self
 
 import tomllib
 

@@ -94,7 +94,7 @@ def stale(days, pathspec, ref="HEAD", verbose=False):
     def execute(*args):
         if verbose:
             sys.stderr.write("+ " + " ".join(args) + "\n")
-        output = subprocess.check_output(args, cwd=BASE_DIR, universal_newlines=True)
+        output = subprocess.check_output(args, cwd=BASE_DIR, text=True)
         if verbose:
             sys.stderr.write("> " + output + "\n")
         return output

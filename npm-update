@@ -45,7 +45,7 @@ sys.dont_write_bytecode = True
 
 
 def read_package_json(package_json_path):
-    with open(package_json_path, "r") as f:
+    with open(package_json_path) as f:
         return json.load(f, object_pairs_hook=collections.OrderedDict)
 
 
@@ -64,7 +64,7 @@ def prefix(name, version):
 def output(*args):
     if task.verbose:
         sys.stderr.write("+ " + " ".join(args) + "\n")
-    return subprocess.check_output(args, cwd=BASE_DIR, universal_newlines=True)
+    return subprocess.check_output(args, cwd=BASE_DIR, text=True)
 
 
 def run(context, verbose=False, **kwargs):
