@@ -18,6 +18,7 @@
 # Shared GitHub code. When run as a script, we print out info about
 # our GitHub interacition.
 
+import functools
 import http.client
 import json
 import logging
@@ -129,12 +130,14 @@ class GitHub:
         repo: str | None = None,
         remote: str | None = None
     ):
-        self._remote = remote
-        self._repo = repo
-        self._base = base
-        self._url = None
+        if repo is not None:
+            self.repo = repo
+        if remote is not None:
+            self.remote = remote
+        if base is not None:
+            self.base = base
 
-        self.conn = None
+        self.conn: http.client.HTTPConnection | None = None
         self.token = None
         self.debug = False
         try:
@@ -165,41 +168,35 @@ class GitHub:
         self.log = Logger(self.cache.directory)
         self.log.write("")
 
-    @property
-    def remote(self):
-        if not self._remote:
-            repo = os.environ.get("GITHUB_BASE", None) or get_repo()
+    @functools.cached_property
+    def remote(self) -> str:
+        repo = os.environ.get("GITHUB_BASE", None) or get_repo()
 
-            if repo:
-                self._remote = f'https://github.com/{repo}'
-            else:
-                self._remote = 'origin'
+        if repo:
+            return f'https://github.com/{repo}'
+        else:
+            return 'origin'
 
-        return self._remote
+    @functools.cached_property
+    def repo(self) -> str:
+        repo = os.environ.get("GITHUB_BASE", None) or get_repo() or get_origin_repo()
+        if not repo:
+            raise RuntimeError('Could not determine the github repository:\n'
+                               '  - some commands accept a --repo argument\n'
+                               '  - you can set the GITHUB_BASE environment variable\n'
+                               '  - you can set git config cockpit.bots.github-repo\n'
+                               '  - otherwise, the "origin" remote from the current checkout is used')
 
-    @property
-    def repo(self):
-        if not self._repo:
-            self._repo = os.environ.get("GITHUB_BASE", None) or get_repo() or get_origin_repo()
-            if not self._repo:
-                raise RuntimeError('Could not determine the github repository:\n'
-                                   '  - some commands accept a --repo argument\n'
-                                   '  - you can set the GITHUB_BASE environment variable\n'
-                                   '  - you can set git config cockpit.bots.github-repo\n'
-                                   '  - otherwise, the "origin" remote from the current checkout is used')
+        return repo
 
-        return self._repo
+    @functools.cached_property
+    def base(self) -> str:
+        netloc = os.environ.get("GITHUB_API", "https://api.github.com")
+        return f"{netloc}/repos/{self.repo}"
 
-    @property
-    def url(self):
-        if not self._url:
-            if not self._base:
-                netloc = os.environ.get("GITHUB_API", "https://api.github.com")
-                self._base = f"{netloc}/repos/{self.repo}"
-
-            self._url = urllib.parse.urlparse(self._base)
-
-        return self._url
+    @functools.cached_property
+    def url(self) -> urllib.parse.ParseResult:
+        return urllib.parse.urlparse(self.base)
 
     def qualify(self, resource):
         if resource is None:
