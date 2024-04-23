@@ -28,7 +28,7 @@ import subprocess
 import time
 import urllib.parse
 import urllib.request
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from http import HTTPStatus
 from ssl import SSLEOFError
 from typing import Any
@@ -410,38 +410,29 @@ class GitHub:
 
 
 class Checklist:
-    def __init__(self, body=None):
-        self.process(body or "")
+    def __init__(self, body: str = ''):
+        self.process(body)
 
     @staticmethod
-    def format_line(item, check):
-        status = ""
-        if isinstance(check, str):
-            status = check + ": "
-            check = False
-        return f" * [{'x' if check else ' '}] {status}{item}"
+    def format_line(item: str, check: bool | str) -> str:
+        if isinstance(check, bool):
+            return f' * [{" x"[check]}] {item}'  # ' * [ ] item' or ' * [x] item'
+        else:
+            return f' * [ ] {check}: {item}'  # eg ' * [ ] FAIL: item'
 
     @staticmethod
-    def parse_line(line):
-        check = item = None
-        stripped = line.strip()
-        if stripped[:6] in ["* [ ] ", "- [ ] ", "* [x] ", "- [x] ", "* [X] ", "- [X] "]:
-            status, _, item = stripped[6:].strip().partition(": ")
-            if not item:
-                item = status
-                status = None
-            if status:
-                check = status
-            else:
-                check = stripped[3] in ["x", "X"]
-        return (item, check)
+    def parse_line(line: str) -> tuple[str | None, str | bool | None]:
+        match = re.fullmatch(r'[*-] \[(?P<checked>[ xX])\]\s+((?P<status>[A-Z]+):\s+)?(?P<item>.+)', line.strip())
+        if match is None:
+            return None, None
+        return match['item'], match['status'] or match['checked'] in 'xX'
 
-    def process(self, body, items=None):
+    def process(self, body: str, items: Mapping[str, str | bool] = {}) -> None:
         self.items = {}
         lines = []
-        items = dict(items or {})
+        items = dict(items)
         for line in body.splitlines():
-            (item, check) = self.parse_line(line)
+            item, check = self.parse_line(line)
             if item:
                 if item in items:
                     check = items[item]
@@ -454,13 +445,13 @@ class Checklist:
             self.items[item] = check
         self.body = "\n".join(lines)
 
-    def check(self, item, checked=True):
+    def check(self, item: str, checked: str | bool = True) -> None:
         self.process(self.body, {item: checked})
 
-    def add(self, item):
+    def add(self, item: str) -> None:
         self.process(self.body, {item: False})
 
-    def checked(self):
+    def checked(self) -> Mapping[str, str | bool]:
         result = {}
         for item, check in self.items.items():
             if check:

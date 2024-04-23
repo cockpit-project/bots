@@ -30,7 +30,7 @@ import subprocess
 import sys
 import time
 import traceback
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 
 from lib.constants import BASE_DIR
@@ -221,7 +221,7 @@ def issue(
     state: str = "open",
     since: int | None = None,
     dry: bool = False
-) -> dict[str, object]:
+) -> Mapping[str, object]:
     if context:
         item = f"{item} {context}".strip()
 
