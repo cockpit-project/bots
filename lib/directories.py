@@ -15,13 +15,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import functools
 import os
 import subprocess
 from typing import Optional
 
 from .constants import GIT_DIR
-
-_images_data_dir = None
 
 
 def xdg_home(subdir: str, envvar: str, *components: str, override: Optional[str] = None) -> str:
@@ -57,15 +56,14 @@ def get_git_config(*args: str) -> Optional[str]:
         return None
 
 
+@functools.cache
 def get_images_data_dir() -> str:
-    global _images_data_dir
+    images_data_dir = os.getenv('COCKPIT_IMAGES_DATA_DIR')
 
-    if _images_data_dir is None:
-        _images_data_dir = os.getenv('COCKPIT_IMAGES_DATA_DIR')
-        if _images_data_dir is None:
-            _images_data_dir = get_git_config('--type=path', 'cockpit.bots.images-data-dir')
+    if images_data_dir is None:
+        images_data_dir = get_git_config('--type=path', 'cockpit.bots.images-data-dir')
 
-            if _images_data_dir is None:
-                _images_data_dir = xdg_cache_home('cockpit-images')
+    if images_data_dir is None:
+        images_data_dir = xdg_cache_home('cockpit-images')
 
-    return _images_data_dir
+    return images_data_dir
