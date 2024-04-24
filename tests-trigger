@@ -5,16 +5,17 @@ import subprocess
 import sys
 
 from lib import ALLOWLIST, testmap
+from lib.aio.jsonutil import get_str
 from task import github
 
 sys.dont_write_bytecode = True
 
 
-def git(*args):
+def git(*args: str) -> str:
     return subprocess.check_output(('git', *args), encoding='utf-8').strip()
 
 
-def trigger_pull(api, opts):
+def trigger_pull(api: github.GitHub, opts: argparse.Namespace) -> int:
     if opts.target != '-':
         pull = api.get("pulls/" + opts.target)
 
@@ -37,7 +38,7 @@ def trigger_pull(api, opts):
 
     statuses = api.statuses(revision)
     if opts.context:
-        contexts = set()
+        contexts = set[str]()
         for cntx in opts.context:
             if cntx.startswith("image:"):
                 contexts.update(testmap.tests_for_image(cntx.split(':', 1)[1]))
@@ -75,7 +76,7 @@ def trigger_pull(api, opts):
         changes = {"state": "pending", "description": github.NOT_TESTED_DIRECT, "context": context}
 
         # Keep the old link for reference, until testing starts again
-        link = status.get("target_url", None)
+        link = get_str(status, "target_url", None)
         if link:
             changes["target_url"] = link
 
@@ -84,7 +85,7 @@ def trigger_pull(api, opts):
     return ret
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description='Manually trigger CI Robots')
     parser.add_argument('-f', '--force', action="store_true",
                         help="Force setting the status even if the program logic thinks it shouldn't be done")
