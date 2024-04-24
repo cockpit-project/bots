@@ -39,7 +39,6 @@ module = [
     'image-refresh',
     'image-trigger',
     'inspect-queue',
-    'issue-scan',
     'issues-review',
     'naughty-prune',
     'npm-update',

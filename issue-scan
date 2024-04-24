@@ -23,10 +23,11 @@ import logging
 import shlex
 import sys
 import time
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Collection, Sequence
 
 from lib import ALLOWLIST, testmap
-from lib.aio.jsonutil import JsonObject, get_dict, get_str
+from lib.aio.jsonutil import JsonObject, get_dict, get_int, get_str
+from lib.jobqueue import QueueEntry
 from task import distributed_queue, github, labels_of_pull
 
 # RHEL tasks have to be done inside Red Hat network
@@ -81,7 +82,7 @@ def contains_any(string: str, matches: Collection[str]) -> bool:
 # Map all checkable work items to fixtures
 
 
-def tasks_for_issues(issues_data: str, opts_repo: str | None) -> Sequence[tuple[str, Mapping[str, object], str]]:
+def tasks_for_issues(issues_data: str, opts_repo: str | None) -> Sequence[tuple[str, JsonObject, str]]:
     issues: Sequence[JsonObject]
 
     if issues_data:
@@ -120,14 +121,14 @@ def tasks_for_issues(issues_data: str, opts_repo: str | None) -> Sequence[tuple[
     return results
 
 
-def output_task(command: str, issue: Mapping[str, object], repo: str) -> Mapping[str, object] | None:
+def output_task(command: str, issue: JsonObject, repo: str) -> QueueEntry | None:
     name, _, context = command.partition(" ")
     if name != "image-refresh" or not repo.endswith("/bots"):
         return None
-    number = issue.get("number", None)
+    number = get_int(issue, "number", None)
     if number is None:
         return None
-    number = int(number)  # type: ignore[call-overload]
+    number = int(number)
 
     context = shlex.quote(context.strip())
 
@@ -161,7 +162,7 @@ def output_task(command: str, issue: Mapping[str, object], repo: str) -> Mapping
     }
 
 
-def queue_task(channel, body):
+def queue_task(channel: 'pika.channel.Channel', body: QueueEntry) -> None:
     queue = 'rhel' if contains_any(body['job']['context'], REDHAT_TASKS) else 'public'
     channel.basic_publish('', queue, json.dumps(body),
                           properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
@@ -169,7 +170,7 @@ def queue_task(channel, body):
 
 
 # Default scan behavior run for each task
-def scan(issues_data: str, opts_repo: str) -> Sequence[Mapping[str, object]]:
+def scan(issues_data: str, opts_repo: str) -> Sequence[QueueEntry]:
     results = []
 
     # Now go through each fixture
