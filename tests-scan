@@ -23,10 +23,11 @@ import logging
 import sys
 import time
 from collections.abc import Collection, Iterable, Mapping, Sequence
-from typing import Any, Required, TypedDict
+from typing import Any
 
 from lib import ALLOWLIST, testmap
 from lib.aio.jsonutil import JsonObject, get_str
+from lib.jobqueue import QueueEntry
 from task import distributed_queue, github, labels_of_pull
 
 sys.dont_write_bytecode = True
@@ -57,27 +58,6 @@ def build_policy(repo: str, requested_contexts: Collection[str]) -> Policy:
                 new_policy[branch] = branch_context
         policy = new_policy
     return policy
-
-
-class SubjectSpecification(TypedDict, total=False):
-    repo: Required[str]
-    sha: str | None
-    branch: str | None
-    pull: int | None
-
-
-class JobSpecification(SubjectSpecification):
-    context: str
-    slug: str
-    report: JsonObject | None
-    command_subject: SubjectSpecification | None
-    env: Mapping[str, str]
-    secrets: Sequence[str]
-
-
-class QueueEntry(TypedDict):
-    job: JobSpecification
-    human: str
 
 
 def is_internal_context(context: str) -> bool:
