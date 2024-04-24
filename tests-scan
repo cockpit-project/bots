@@ -68,7 +68,7 @@ def is_internal_context(context: str) -> bool:
     return False
 
 
-def queue_test(entry: QueueEntry, channel: 'pika.channel.Channel', options: argparse.Namespace) -> None:
+def queue_test(entry: QueueEntry, channel: 'pika.channel.Channel') -> None:
     queue = 'rhel' if is_internal_context(entry['job']['context']) else 'public'
     properties = pika.BasicProperties(priority=distributed_queue.BASELINE_PRIORITY)
     channel.basic_publish('', queue, json.dumps(entry), properties=properties)
@@ -286,7 +286,7 @@ def scan_for_pull_tasks(api: github.GitHub, contexts: Sequence[str], opts: argpa
     else:
         with distributed_queue.DistributedQueue(opts.amqp, ['rhel', 'public']) as q:
             for entry in results:
-                queue_test(entry, channel=q.channel, options=opts)
+                queue_test(entry, channel=q.channel)
 
 
 def main() -> None:
