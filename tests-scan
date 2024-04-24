@@ -99,7 +99,7 @@ def update_status(
     if {**last, **changes} == last or dry:
         return True
 
-    response = api.post("statuses/" + revision, changes, accept=[422])  # 422 Unprocessable Entity
+    response: Any = api.post("statuses/" + revision, changes, accept=[422])  # 422 Unprocessable Entity
     errors = response.get("errors", None)
     if not errors:
         return True

@@ -15,9 +15,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-# Shared GitHub code. When run as a script, we print out info about
-# our GitHub interacition.
-
 import functools
 import http.client
 import json
@@ -27,9 +24,10 @@ import re
 import socket
 import subprocess
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
-from collections.abc import Callable, Collection, Mapping, Sequence
+from collections.abc import Callable, Collection, Container, Mapping, Sequence
 from http import HTTPStatus
 from ssl import SSLEOFError
 from types import EllipsisType
@@ -71,7 +69,7 @@ _DT = TypeVar('_DT')
 
 
 class Logger:
-    def __init__(self, directory):
+    def __init__(self, directory: str):
         hostname = socket.gethostname().split(".")[0]
         month = time.strftime("%Y%m")
         self.path = os.path.join(directory, f"{hostname}-{month}.log")
@@ -79,7 +77,7 @@ class Logger:
         os.makedirs(directory, exist_ok=True)
 
     # Yes, we open the file each time
-    def write(self, value):
+    def write(self, value: str) -> None:
         with open(self.path, 'a') as f:
             f.write(value)
 
@@ -117,12 +115,12 @@ class GitHubError(RuntimeError):
         return result
 
 
-def get_repo():
+def get_repo() -> str | None:
     res = subprocess.check_output(['git', 'config', '--default=', 'cockpit.bots.github-repo'])
     return res.decode('utf-8').strip() or None
 
 
-def get_origin_repo():
+def get_origin_repo() -> str | None:
     try:
         res = subprocess.check_output(["git", "remote", "get-url", "origin"])
     except subprocess.CalledProcessError:
@@ -210,7 +208,7 @@ class GitHub:
     def url(self) -> urllib.parse.ParseResult:
         return urllib.parse.urlparse(self.base)
 
-    def qualify(self, resource):
+    def qualify(self, resource: str | None) -> str:
         if resource is None:
             return self.url.path
         return urllib.parse.urljoin(f"{self.url.path}/", resource)
@@ -228,7 +226,8 @@ class GitHub:
             try:
                 req = urllib.request.Request(url)
                 with urllib.request.urlopen(req) as response:
-                    return response.read().decode().strip()
+                    data: bytes = response.read()
+                    return data.decode().strip()
             except urllib.error.HTTPError as exc:
                 if exc.code == 404:
                     return None
@@ -314,7 +313,7 @@ class GitHub:
     def get_objv(self, resource: str | None = None, default: _DT | EllipsisType = ...) -> Sequence[JsonObject] | _DT:
         return self._get(lambda v: tuple(typechecked(item, dict) for item in typechecked(v, list)), resource, default)
 
-    def post(self, resource, data, accept=()):
+    def post(self, resource: str, data: JsonValue, accept: Container[int] = ()) -> JsonValue:
         response = self.request("POST", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
@@ -322,7 +321,7 @@ class GitHub:
         self.cache.mark()
         return json.loads(response['data'])
 
-    def put(self, resource, data, accept=()):
+    def put(self, resource: str, data: JsonValue, accept: Container[int] = ()) -> JsonValue:
         response = self.request("PUT", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
@@ -333,7 +332,7 @@ class GitHub:
         else:
             return None
 
-    def delete(self, resource, accept=()):
+    def delete(self, resource: str, accept: Container[int] = ()) -> JsonValue:
         response = self.request("DELETE", resource, "", {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
@@ -344,7 +343,7 @@ class GitHub:
         else:
             return None
 
-    def patch(self, resource, data, accept=()):
+    def patch(self, resource: str, data: JsonValue, accept: Container[int] = ()) -> JsonValue:
         response = self.request("PATCH", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
         if (status < 200 or status >= 300) and status not in accept:
