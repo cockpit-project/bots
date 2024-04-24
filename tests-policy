@@ -214,7 +214,7 @@ def update_known_issue(api, number, err, details, context, timestamp=None):
     if details:
         link = f"{timestamp} | {details}"
 
-    comments = issue_comments(api, number)
+    comments = api.issue_comments(number)
 
     # try to find an existing comment to update; extract the traceback from the
     # whole output; also ensure to remove the "# duration: XXs" trailer
@@ -296,20 +296,6 @@ Times recorded: 1
 {latest_occurrences}- {link}
 """}
     return api.post(f"issues/{number}/comments", data)
-
-
-def issue_comments(api, number):
-    result = []
-    page = 1
-    count = 100
-    while count == 100:
-        comments = api.get(f"issues/{number}/comments?page={page}&per_page={count}")
-        count = 0
-        page += 1
-        if comments:
-            result += comments
-            count = len(comments)
-    return result
 
 
 def post_github(api, number, output, image):
