@@ -41,8 +41,6 @@ module = [
     'run-queue',
     'store-tests',
     'tasks-container-update',
-    'test-failure-policy',
-    'tests-policy',
     'tests-status',
 ]
 

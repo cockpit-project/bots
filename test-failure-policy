@@ -25,6 +25,7 @@ import re
 import sys
 import traceback
 
+from lib.aio.jsonutil import JsonValue, get_str
 from lib.constants import BOTS_DIR
 from lib.testmap import get_test_image
 from task import github
@@ -32,7 +33,7 @@ from task import github
 sys.dont_write_bytecode = True
 
 
-def main():
+def main() -> int:
     script = os.path.basename(__file__)
     parser = argparse.ArgumentParser(description='Check a traceback for a known issue')
     parser.add_argument('-o', "--offline", action='store_true',
@@ -81,7 +82,7 @@ def main():
 # -----------------------------------------------------------------------------
 # Retry policy
 
-def checkRetry(trace):
+def checkRetry(trace: str) -> bool:
     # We check for persistent but test harness or framework specific
     # failures that otherwise cause flakiness and false positives.
     #
@@ -116,7 +117,7 @@ def checkRetry(trace):
 # Known Issue Matching and Filing
 
 
-def check_all_known_issues(api, trace, image):
+def check_all_known_issues(api: github.GitHub | None, trace: str, image: str) -> tuple[int | None, str | None]:
     img = None
     number = None
     naughty_dir = os.path.join(BOTS_DIR, "naughty")
@@ -137,7 +138,7 @@ def check_all_known_issues(api, trace, image):
     return number, img
 
 
-def normalize_traceback(trace):
+def normalize_traceback(trace: str) -> str:
     # All file paths converted to basename
     trace = re.sub(r'File "[^"]*/([^/"]+)"', 'File "\\1"', trace.strip())
 
@@ -150,7 +151,7 @@ def normalize_traceback(trace):
     return trace
 
 
-def check_known_issue(api, trace, image):
+def check_known_issue(api: github.GitHub | None, trace: str, image: str) -> int | None:
     image_naughty = os.path.join(BOTS_DIR, "naughty", get_test_image(image))
     if not os.path.exists(image_naughty):
         return None
@@ -184,7 +185,7 @@ def check_known_issue(api, trace, image):
 # the number of recorded events, the first occurrence and the last 10
 # occurrences.
 # For each (listed) occurrence we display the timestamp and revision
-def update_known_issue(api, number, err, context):
+def update_known_issue(api: github.GitHub, number: int, err: str, context: str) -> JsonValue:
     occ = datetime.datetime.now(tz=datetime.UTC).isoformat()
 
     revision = os.environ.get("TEST_REVISION", None)
@@ -202,8 +203,9 @@ def update_known_issue(api, number, err, context):
     comment_key = f"{context}\n"
     latest_occurrences = "Latest occurrences:\n\n"
     for comment in reversed(comments):
-        if 'body' in comment and comment['body'].startswith(comment_key):
-            parts = comment['body'].split("<hr>")
+        body = get_str(comment, 'body', None)
+        if body is not None and body.startswith(comment_key):
+            parts = body.split("<hr>")
             updated = False
             for part_idx, part in enumerate(parts):
                 part = normalize_traceback(part).strip()
