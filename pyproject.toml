@@ -30,7 +30,6 @@ module = [
     'test_policy',
     'test_task',
     'test_test_failure_policy',
-    'test_testmap',
     'test_tests_scan',
 
     'cockpit-lib-update',
