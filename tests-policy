@@ -25,6 +25,7 @@ import re
 import sys
 import traceback
 
+from lib.aio.jsonutil import JsonValue, get_str
 from lib.constants import BOTS_DIR
 from lib.testmap import get_test_image
 from task import github
@@ -34,7 +35,7 @@ sys.dont_write_bytecode = True
 FLAKE_THRESHOLD = 0.4
 
 
-def main():
+def main() -> int:
     script = os.path.basename(__file__)
     parser = argparse.ArgumentParser(description='Check a traceback for a known issue')
     parser.add_argument('-o', "--offline", action='store_true',
@@ -94,7 +95,7 @@ def main():
 
 # Update TAP output failure and put a skip message
 # in the appropriate place
-def filterSkip(output, skip):
+def filterSkip(output: str, skip: str) -> str:
     lines = output.split("\n")
     for i, line in enumerate(lines):
         if line.startswith("not ok "):
@@ -104,7 +105,7 @@ def filterSkip(output, skip):
 
 # Update TAP output failure and put a retry message
 # in the appropriate place
-def filterRetry(output, retry):
+def filterRetry(output: str, retry: str) -> str:
     lines = output.split("\n")
     for i, line in enumerate(lines):
         if line.startswith("not ok "):
@@ -113,7 +114,7 @@ def filterRetry(output, retry):
 
 
 # Figure out the name from a failed test
-def parseName(output):
+def parseName(output: str) -> str:
     for line in output.split("\n"):
         if line.startswith("not ok "):
             line = line[7:]
@@ -129,7 +130,7 @@ def parseName(output):
 # -----------------------------------------------------------------------------
 # Retry policy
 
-def checkRetry(trace):
+def checkRetry(trace: str) -> bool:
     # We check for persistent but test harness or framework specific
     # failures that otherwise cause flakiness and false positives.
     #
@@ -163,7 +164,7 @@ def checkRetry(trace):
 # -----------------------------------------------------------------------------
 # Known Issue Matching and Filing
 
-def normalize_traceback(trace):
+def normalize_traceback(trace: str) -> str:
     # All file paths converted to basename
     trace = re.sub(r'File "[^"]*/([^/"]+)"', 'File "\\1"', trace.strip())
 
@@ -176,7 +177,7 @@ def normalize_traceback(trace):
     return trace
 
 
-def check_known_issue(api, trace, image):
+def check_known_issue(api: github.GitHub | None, trace: str, image: str) -> int | None:
     image_naughty = os.path.join(BOTS_DIR, "naughty", get_test_image(image))
     if not os.path.exists(image_naughty):
         return None
@@ -207,7 +208,9 @@ def check_known_issue(api, trace, image):
 # For each (listed) occurrence we display the timestamp and some details
 # provided by the caller, such as a revision or link to log files.
 # The details can't contain newline characters and should be brief
-def update_known_issue(api, number, err, details, context, timestamp=None):
+def update_known_issue(
+    api: github.GitHub, number: int, err: str, details: str | None, context: str, timestamp: str | None = None
+) -> JsonValue:
     timestamp = timestamp or datetime.datetime.now(tz=datetime.UTC).isoformat()
 
     link = timestamp
@@ -225,8 +228,9 @@ def update_known_issue(api, number, err, details, context, timestamp=None):
     comment_key = f"{context}\n"
     latest_occurrences = "Latest occurrences:\n\n"
     for comment in reversed(comments):
-        if 'body' in comment and comment['body'].startswith(comment_key):
-            parts = comment['body'].split("<hr>")
+        body = get_str(comment, 'body', None)
+        if body is not None and body.startswith(comment_key):
+            parts = body.split("<hr>")
             updated = False
             for part_idx, part in enumerate(parts):
                 part = normalize_traceback(part).strip()
@@ -298,8 +302,7 @@ Times recorded: 1
     return api.post(f"issues/{number}/comments", data)
 
 
-def post_github(api, number, output, image):
-
+def post_github(api: github.GitHub | None, number: int, output: str, image: str) -> None:
     # Ignore this if we were not given a token
     if not api or not api.token:
         return
