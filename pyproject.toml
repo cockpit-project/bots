@@ -52,7 +52,6 @@ module = [
     'tests-policy',
     'tests-scan',
     'tests-status',
-    'tests-trigger',
 ]
 
 [tool.ruff]
