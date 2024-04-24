@@ -74,18 +74,15 @@ class DistributedQueue:
         amqp_server should be formatted as host:port
 
         queues should be a list of strings with the names of queues, each queue
-        will be declared and usable
+        will be declared. Any extra arguments in **kwargs will be passed to queue_declare().
+        In particular, with passive=True queues which don't already exist will not be created.
 
         secrets_dir can be passed for enviroments where the AMQP secrets are not
         in DEFAULT_SECRETS_DIR.
 
-        any extra arguments in **kwargs will be passed to queue_declare()
-
-        the results of the result declarations are stored in
-        DistributedQueue.declare_results, a dict mapping queue name to result
-
-        when passive=True is passed to queue_declare() and the queue does not
-        exist, the declare result will be None
+        After queue declarations, their current lengths are stored in self.queue_counts,
+        a dict mapping all existing queue names to the number of queue entries. Non-existing
+        queues are not included in the dict.
         """
         if no_amqp:
             raise ImportError('pika is not available')
@@ -117,19 +114,20 @@ class DistributedQueue:
 
         self.connection = pika.BlockingConnection(params)
         self.channel = self.connection.channel()
-        self.declare_results = {}
+        self.queue_counts: dict[str, int] = {}
 
         for queue in queues:
             try:
                 result = self.channel.queue_declare(queue=queue, arguments=arguments.get(queue, None), **kwargs)
-                self.declare_results[queue] = result
+                self.queue_counts[queue] = result.method.message_count
             except pika.exceptions.ChannelClosedByBroker as e:
-                # unknown error
-                if e.reply_code != 404:
-                    raise e
-                # queue does not exist
-                self.declare_results[queue] = None
-                self.channel = self.connection.channel()
+                if e.reply_code == 404 and kwargs.get('passive'):
+                    # queue does not exist, that's ok
+                    self.channel = self.connection.channel()
+                    continue
+
+                # everything else is unexpected
+                raise e
 
     def __enter__(self) -> Self:
         return self

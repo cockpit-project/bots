@@ -96,8 +96,8 @@ def consume_webhook_queue(channel, amqp):
 # Returns a command to execute and the delivery tag needed to ack the message
 
 
-def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result, declare_stats_result):
-    if statistics_queue and declare_stats_result.method.message_count > 0:
+def consume_task_queue(channel, amqp, public_count, rhel_count, stats_count):
+    if statistics_queue and stats_count > 0:
         # statistics queue is quick to process, always do that first
         queue = 'statistics'
     elif os.path.exists('/dev/kvm') or os.getenv('JOB_RUNNER_CONFIG'):
@@ -105,10 +105,10 @@ def consume_task_queue(channel, amqp, declare_public_result, declare_rhel_result
         queue = 'public'
         if redhat_network():
             # Try the rhel queue if the public queue is empty
-            if declare_public_result.method.message_count == 0:
+            if public_count == 0:
                 queue = 'rhel'
                 # If both are non-empty, shuffle
-            elif declare_rhel_result.method.message_count > 0:
+            elif rhel_count > 0:
                 queue = ['public', 'rhel'][random.randrange(2)]
     else:
         # nothing to do
@@ -164,9 +164,9 @@ def main():
             cmd, delivery_tag = consume_task_queue(
                 channel,
                 opts.amqp,
-                q.declare_results['public'],
-                q.declare_results['rhel'],
-                q.declare_results['statistics'])
+                q.queue_counts['public'],
+                q.queue_counts['rhel'],
+                q.queue_counts['statistics'])
         if not cmd:
             logging.info("All queues are empty")
             return 1

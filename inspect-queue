@@ -36,12 +36,9 @@ def main() -> int:
     with distributed_queue.DistributedQueue(opts.amqp, ['public', 'rhel', 'statistics', 'webhook'],
                                             secrets_dir=opts.secrets_dir, passive=True) as q:
         def print_queue(queue: str) -> None:
-            if q.declare_results[queue] is None:
-                print(f"queue {queue} does not exist")
-                return
-            message_count = q.declare_results[queue].method.message_count
+            message_count = q.queue_counts.get(queue, 0)
             if message_count == 0:
-                print(f"queue {queue} is empty")
+                print(f"queue {queue} does not exist or is empty")
                 return
             for _ in range(message_count):
                 method_frame, _header_frame, body = q.channel.basic_get(queue=queue)
