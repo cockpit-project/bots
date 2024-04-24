@@ -33,6 +33,7 @@ import traceback
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 
+from lib.aio.jsonutil import get_str
 from lib.constants import BASE_DIR
 
 from . import github
@@ -230,7 +231,7 @@ def issue(
         since += random.randint(-3600, 3600)
 
     for issue in api.issues(state=state, since=since):
-        checklist = github.Checklist(issue["body"])
+        checklist = github.Checklist(get_str(issue, "body"))
         if item in checklist.items:
             return issue
 
