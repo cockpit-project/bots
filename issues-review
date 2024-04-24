@@ -31,7 +31,7 @@ the implementation, please comment here.
 """
 
 
-def issues_review(api, opts):
+def issues_review(api: github.GitHub, opts: argparse.Namespace) -> None:
     now = time.time()
     treshold = opts.age * 86400
     count = 100
@@ -47,7 +47,7 @@ def issues_review(api, opts):
                 api.post("issues/%i/labels" % issue["number"], [opts.label])
 
 
-def close_issues(api, opts):
+def close_issues(api: github.GitHub, opts: argparse.Namespace) -> None:
     count = 100
     page = 1
     while count == 100:
@@ -70,7 +70,7 @@ def close_issues(api, opts):
             api.post("issues/%i" % issue["number"], {"state": "closed"})
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='Label or close labeled stable issues')
     parser.add_argument('-a', '--age', metavar='DAYS', default=90,
                         help='Label issues whose last update is older than DAYS (default: %(default)s)')

@@ -25,7 +25,7 @@ from task import distributed_queue
 MAX_PRIORITY = 9
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description='Read and print messages from the queue without acknowleding them')
     parser.add_argument('--amqp', default=distributed_queue.DEFAULT_AMQP_SERVER,
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
@@ -35,7 +35,7 @@ def main():
 
     with distributed_queue.DistributedQueue(opts.amqp, ['public', 'rhel', 'statistics', 'webhook'],
                                             secrets_dir=opts.secrets_dir, passive=True) as q:
-        def print_queue(queue):
+        def print_queue(queue: str) -> None:
             if q.declare_results[queue] is None:
                 print(f"queue {queue} does not exist")
                 return

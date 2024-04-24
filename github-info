@@ -18,7 +18,7 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 # Shared GitHub code. When run as a script, we print out info about
-# our GitHub interacition.
+# our GitHub interaction.
 
 import argparse
 import datetime
@@ -29,7 +29,7 @@ from task import github
 sys.dont_write_bytecode = True
 
 
-def httpdate(dt):
+def httpdate(dt: datetime.datetime) -> str:
     """Return a string representation of a date according to RFC 1123
     (HTTP/1.1).
 
@@ -45,7 +45,7 @@ def httpdate(dt):
                                                     dt.year, dt.hour, dt.minute, dt.second)
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description='Test GitHub rate limits')
     parser.parse_args()
 
