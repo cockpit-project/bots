@@ -241,7 +241,7 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
                 if bots_pr:
                     # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
                     bots_api = github.GitHub(repo="cockpit-project/bots")
-                    bots_ref = bots_api.getHead(bots_pr) or "xxx"  # Make sure we fail when cannot get the head
+                    bots_ref = bots_api.get_head(bots_pr) or "xxx"  # Make sure we fail when cannot get the head
                 else:
                     bots_ref = "main"
 

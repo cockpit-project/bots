@@ -26,6 +26,7 @@ import time
 from collections.abc import Collection, Mapping, Sequence
 
 from lib import ALLOWLIST, testmap
+from lib.aio.jsonutil import JsonObject, get_dict, get_str
 from task import distributed_queue, github, labels_of_pull
 
 # RHEL tasks have to be done inside Red Hat network
@@ -81,25 +82,25 @@ def contains_any(string: str, matches: Collection[str]) -> bool:
 
 
 def tasks_for_issues(issues_data: str, opts_repo: str | None) -> Sequence[tuple[str, Mapping[str, object], str]]:
-    results = []
-    issues = []
+    issues: Sequence[JsonObject]
 
     if issues_data:
         event = json.loads(issues_data)
         repo = event["repository"]["full_name"]
         issue = event.get("issue") or event.get("pull_request")
-        labels = labels_of_pull(issue)
-        if 'bot' in labels:
-            issues.append(issue)
+        if 'bot' not in labels_of_pull(issue):
+            return []
         api = github.GitHub(repo=repo)
+        issues = [issue]
     else:
         api = github.GitHub(repo=opts_repo)
         issues = api.issues(state="open")
 
+    results = []
     for issue in issues:
-        if issue["title"].strip().startswith("WIP"):
+        if get_str(issue, "title").strip().startswith("WIP"):
             continue
-        login = issue.get("user", {}).get("login", {})
+        login = get_str(get_dict(issue, "user", {}), "login", None)
         if login not in ALLOWLIST:
             continue
 
@@ -111,7 +112,7 @@ def tasks_for_issues(issues_data: str, opts_repo: str | None) -> Sequence[tuple[
         # the bots can do, then the bots will ignore this issue
         # (below in output_task)
         #
-        checklist = github.Checklist(issue["body"])
+        checklist = github.Checklist(get_str(issue, "body"))
         for item, checked in checklist.items.items():
             if not checked:
                 results.append((item, issue, api.repo))

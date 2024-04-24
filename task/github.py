@@ -29,13 +29,13 @@ import subprocess
 import time
 import urllib.parse
 import urllib.request
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from http import HTTPStatus
 from ssl import SSLEOFError
 from types import EllipsisType
 from typing import Any, TypedDict, TypeVar
 
-from lib.aio.jsonutil import JsonObject, JsonValue, typechecked
+from lib.aio.jsonutil import JsonObject, JsonValue, get_dict, get_dictv, get_str, typechecked
 from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
 
@@ -352,48 +352,48 @@ class GitHub:
         self.cache.mark()
         return json.loads(response['data'])
 
-    def statuses(self, revision):
-        result = {}
+    def statuses(self, revision: str) -> Mapping[str, JsonObject]:
+        result: dict[str, JsonObject] = {}
         page = 1
         count = 100
         while count == 100:
-            data = self.get(f"commits/{revision}/status?page={page}&per_page={count}")
+            data = self.get_obj(f"commits/{revision}/status?page={page}&per_page={count}")
             count = 0
             page += 1
-            if "statuses" in data:
-                for status in data["statuses"]:
-                    if is_valid_context(status["context"], self.repo) and status["context"] not in result:
-                        result[status["context"]] = status
-                count = len(data["statuses"])
+            for status in get_dictv(data, "statuses", ()):
+                context = get_str(status, "context")
+                if is_valid_context(context, self.repo) and context not in result:
+                    result[context] = status
+                count += 1
         return result
 
-    def all_statuses(self, revision):
-        result = []
+    def all_statuses(self, revision: str) -> Sequence[JsonObject]:
+        result: list[JsonObject] = []
         page = 1
         count = 100
         while count == 100:
-            data = self.get(f"commits/{revision}/statuses?page={page}&per_page={count}")
+            data = self.get_objv(f"commits/{revision}/statuses?page={page}&per_page={count}")
             count = 0
             page += 1
             result += data
             count = len(data)
         return result
 
-    def pulls(self, state: str = 'open', since: float | None = None) -> Sequence[Any]:
+    def pulls(self, state: str = 'open', since: float | None = None) -> Sequence[JsonObject]:
         result = []
         page = 1
         count = 100
         while count == 100:
-            pulls = self.get(f"pulls?page={page}&per_page={count}&state={state}&sort=created&direction=desc")
+            pulls = self.get_objv(f"pulls?page={page}&per_page={count}&state={state}&sort=created&direction=desc", [])
             count = 0
             page += 1
-            for pull in pulls or []:
+            for pull in pulls:
                 # Check that the pulls are past the expected date
                 if since:
-                    closed = pull.get("closed_at", None)
+                    closed = get_str(pull, 'closed_at', None)
                     if closed and since > time.mktime(time.strptime(closed, "%Y-%m-%dT%H:%M:%SZ")):
                         continue
-                    created = pull.get("created_at", None)
+                    created = get_str(pull, 'created_at', None)
                     if not closed and created and since > time.mktime(time.strptime(created, "%Y-%m-%dT%H:%M:%SZ")):
                         continue
 
@@ -402,31 +402,31 @@ class GitHub:
         return result
 
     # The since argument is seconds since the issue was last time modified
-    def issues(self, labels=("bot",), state="open", since=None):
-        result = []
+    def issues(
+        self, labels: Collection[str] = ("bot",), state: str = "open", since: float | None = None
+    ) -> Sequence[JsonObject]:
+        result: list[JsonObject] = []
         page = 1
         count = 100
         label = ",".join(labels)
         if since:
             now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(since))
-            since = f"&since={now}"
+            sincestr = f"&since={now}"
         else:
-            since = ""
+            sincestr = ""
 
         while count == 100:
-            req = f"issues?labels={label}&state={state}&page={page}&per_page={count}{since}"
-            issues = self.get(req)
+            req = f"issues?labels={label}&state={state}&page={page}&per_page={count}{sincestr}"
+            issues = self.get_objv(req)
 
             page += 1
             count = len(issues)
-            result = result + issues
+            result += issues
         return result
 
-    def getHead(self, pr):
-        pull = self.get(f"pulls/{pr}")
-        if pull:
-            return pull.get("head", {}).get("sha")
-        return None
+    def get_head(self, pr: int) -> str | None:
+        pull = self.get_obj(f"pulls/{pr}", {})
+        return get_str(get_dict(pull, "head", {}), "sha", None)
 
 
 class Checklist:

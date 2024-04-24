@@ -84,6 +84,10 @@ def get_dict(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> DT | J
     return _get(obj, lambda v: typechecked(v, dict), key, default)
 
 
+def get_dictv(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> DT | Sequence[JsonObject]:
+    return _get(obj, lambda v: tuple(typechecked(item, dict) for item in typechecked(v, list)), key, default)
+
+
 def get_object(
     obj: JsonObject,
     key: str,
