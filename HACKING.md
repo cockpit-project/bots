@@ -31,8 +31,13 @@ There are static code and syntax checks which you should run often:
 
     $ test/run
 
-You will need to install the python3-flake8 package for python3 in order to run
-this script.
+You will need to either use the tasks container to run this script or install:
+
+* python3-mypy
+* python3-pytest
+* python3-aioresponses
+* python3-aiohttp
+* ruff
 
 It is highly recommended to set this up as a git pre-push hook, to avoid
 pushing PRs that will fail on trivial errors:
