@@ -17,11 +17,10 @@ import contextlib
 import logging
 import os
 import sys
+import tomllib
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import AsyncContextManager, Self
-
-import tomllib
 
 from ..constants import BOTS_DIR
 from ..directories import xdg_config_home
