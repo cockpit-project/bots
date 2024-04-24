@@ -50,7 +50,6 @@ module = [
     'tasks-container-update',
     'test-failure-policy',
     'tests-policy',
-    'tests-scan',
     'tests-status',
 ]
 

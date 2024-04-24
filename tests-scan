@@ -22,7 +22,7 @@ import json
 import logging
 import sys
 import time
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import Any, Required, TypedDict
 
 from lib import ALLOWLIST, testmap
@@ -38,12 +38,14 @@ try:
 except ImportError:
     no_amqp = True
 
+Policy = Mapping[str, Sequence[str]]
 
-def build_policy(repo, context):
+
+def build_policy(repo: str, requested_contexts: Collection[str]) -> Policy:
     policy = testmap.tests_for_project(repo)
-    if context:
+    if requested_contexts:
         short_contexts = []
-        for c in context:
+        for c in requested_contexts:
             short_contexts.append(c.split("@")[0])
         new_policy = {}
         for (branch, contexts) in policy.items():
@@ -78,7 +80,7 @@ class QueueEntry(TypedDict):
     human: str
 
 
-def is_internal_context(context):
+def is_internal_context(context: str) -> bool:
     # HACK: CentOS CI doesn't like firefox, browser fails to start way too often
     for pattern in ["rhel", "edge", "vmware", "openstack", "/firefox"]:
         if pattern in context:
