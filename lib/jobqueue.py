@@ -26,11 +26,12 @@ class SubjectSpecification(TypedDict, total=False):
     pull: int | None
 
 
-class JobSpecification(SubjectSpecification):
-    context: str
+class JobSpecification(SubjectSpecification, total=False):
+    context: Required[str]
     slug: str
     report: JsonObject | None
     command_subject: SubjectSpecification | None
+    command: Sequence[str]
     env: Mapping[str, str]
     secrets: Sequence[str]
 
