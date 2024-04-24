@@ -29,11 +29,13 @@ import subprocess
 import time
 import urllib.parse
 import urllib.request
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from http import HTTPStatus
 from ssl import SSLEOFError
-from typing import Any, TypedDict
+from types import EllipsisType
+from typing import Any, TypedDict, TypeVar
 
+from lib.aio.jsonutil import JsonObject, JsonValue, typechecked
 from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
 
@@ -63,6 +65,9 @@ NOT_TESTED = "Not yet tested"
 NOT_TESTED_DIRECT = "Not yet tested (direct trigger)"
 
 ISSUE_TITLE_IMAGE_REFRESH = "Image refresh for {0}"
+
+_T = TypeVar('_T')
+_DT = TypeVar('_DT')
 
 
 class Logger:
@@ -273,7 +278,9 @@ class GitHub:
             "data": response.read().decode('utf-8')
         }
 
-    def get(self, resource=None):
+    def _get(
+        self, cast: Callable[[JsonValue], _T], resource: str | None = None, default: _DT | EllipsisType = ...
+    ) -> _T | _DT:
         headers = {}
         qualified = self.qualify(resource)
         cached = self.cache.read(qualified)
@@ -287,16 +294,25 @@ class GitHub:
             elif modified:
                 headers['If-Modified-Since'] = modified
         response = self.request("GET", resource, "", headers)
-        if response['status'] == 404:
-            return None
+        if response['status'] == 404 and default is not ...:
+            return default
         elif cached and response['status'] == 304:  # Not modified
             self.cache.write(qualified, cached)
-            return json.loads(cached['data'] or "null")
+            return cast(json.loads(cached['data'] or "null"))
         elif response['status'] < 200 or response['status'] >= 300:
             raise GitHubError(self.qualify(resource), response)
         else:
             self.cache.write(qualified, response)
-            return json.loads(response['data'] or "null")
+            return cast(json.loads(response['data'] or "null"))
+
+    def get(self, resource: str | None = None) -> Any:
+        return self._get(lambda v: v, resource, None)
+
+    def get_obj(self, resource: str | None = None, default: _DT | EllipsisType = ...) -> JsonObject | _DT:
+        return self._get(lambda v: typechecked(v, dict), resource, default)
+
+    def get_objv(self, resource: str | None = None, default: _DT | EllipsisType = ...) -> Sequence[JsonObject] | _DT:
+        return self._get(lambda v: tuple(typechecked(item, dict) for item in typechecked(v, list)), resource, default)
 
     def post(self, resource, data, accept=()):
         response = self.request("POST", resource, json.dumps(data), {"Content-Type": "application/json"})
