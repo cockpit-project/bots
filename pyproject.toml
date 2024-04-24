@@ -59,6 +59,7 @@ exclude = [
 ]
 line-length = 118
 preview = true
+target-version = 'py312'
 
 [tool.ruff.lint]
 select = [
