@@ -33,7 +33,7 @@ import traceback
 from collections.abc import Sequence
 from datetime import datetime, timezone
 
-from lib.aio.jsonutil import JsonObject, get_str, typechecked
+from lib.aio.jsonutil import JsonObject, get_dictv, get_str, typechecked
 from lib.constants import BASE_DIR
 
 from . import github
@@ -400,10 +400,13 @@ def label(issue, labels=('bot',)):
     return api.post(resource, labels)
 
 
-def labels_of_pull(pull):
-    if "labels" not in pull:
-        pull["labels"] = api.get(f"issues/{pull['number']}/labels")
-    return [label["name"] for label in pull["labels"]]
+def labels_of_pull(pull: JsonObject) -> Sequence[str]:
+    if "labels" in pull:
+        labels = get_dictv(pull, "labels")
+    else:
+        labels = api.get_objv(f"issues/{pull['number']}/labels")
+
+    return [get_str(label, "name") for label in labels]
 
 
 def comment(issue, comment, dry=False):
