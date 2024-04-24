@@ -30,10 +30,10 @@ import subprocess
 import sys
 import time
 import traceback
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from datetime import datetime, timezone
 
-from lib.aio.jsonutil import get_str
+from lib.aio.jsonutil import JsonObject, get_str, typechecked
 from lib.constants import BASE_DIR
 
 from . import github
@@ -222,7 +222,7 @@ def issue(
     state: str = "open",
     since: int | None = None,
     dry: bool = False
-) -> Mapping[str, object]:
+) -> JsonObject:
     if context:
         item = f"{item} {context}".strip()
 
@@ -250,7 +250,7 @@ def issue(
         would(f'open issue on {api.repo}', json.dumps(data, indent=4))
         return data
     else:
-        return api.post("issues", data)
+        return typechecked(api.post("issues", data), dict)
 
 
 def execute(*args):
