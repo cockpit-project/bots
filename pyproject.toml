@@ -25,7 +25,6 @@ warn_return_any = false
 module = [
     'task',
 
-    'test_checklist',
     'test_github',
     'test_issue_scan',
     'test_policy',
