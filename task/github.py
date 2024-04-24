@@ -423,6 +423,19 @@ class GitHub:
             result += issues
         return result
 
+    def issue_comments(self, number: int) -> Sequence[JsonObject]:
+        result: list[JsonObject] = []
+        page = 1
+        count = 100
+        while count == 100:
+            comments = self.get_objv(f"issues/{number}/comments?page={page}&per_page={count}")
+            count = 0
+            page += 1
+            if comments:
+                result += comments
+                count = len(comments)
+        return result
+
     def get_head(self, pr: int) -> str | None:
         pull = self.get_obj(f"pulls/{pr}", {})
         return get_str(get_dict(pull, "head", {}), "sha", None)
