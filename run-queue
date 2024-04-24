@@ -27,6 +27,7 @@ import smtplib
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 
 import pika
 
@@ -39,10 +40,14 @@ logging.basicConfig(level=logging.INFO)
 
 statistics_queue = os.environ.get("RUN_STATISTICS_QUEUE")
 
-# Returns a command to execute and the delivery tag needed to ack the message
+# as per pika docs
+DeliveryTag = int
+
+ConsumeResult = tuple[Sequence[str] | str | None, DeliveryTag | None]
 
 
-def consume_webhook_queue(channel, amqp):
+# Returns a command argv to execute and the delivery tag needed to ack the message
+def consume_webhook_queue(channel: pika.channel.Channel, amqp: str) -> ConsumeResult:
     # interpret payload
     # call tests-scan or issue-scan appropriately
     method_frame, _header_frame, body = channel.basic_get(queue='webhook')
@@ -68,10 +73,9 @@ def consume_webhook_queue(channel, amqp):
         elif action == 'closed' and pull_request.get('merged', False):
             sha = pull_request['head']['sha']
             db = os.path.join(get_images_data_dir(), "test-results.db")
-            cmd = (f"./store-tests --db {db} --repo {repo} {sha} && "
-                   f"./prometheus-stats --db {db} --s3 {os.path.join(LOG_STORE, 'prometheus')}")
             body = {
-                "command": cmd,
+                "command": (f"./store-tests --db {db} --repo {repo} {sha} && "
+                            f"./prometheus-stats --db {db} --s3 {os.path.join(LOG_STORE, 'prometheus')}")
             }
             channel.basic_publish('', 'statistics', json.dumps(body),
                                   properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
@@ -93,10 +97,15 @@ def consume_webhook_queue(channel, amqp):
 
     return cmd, method_frame.delivery_tag
 
+
 # Returns a command to execute and the delivery tag needed to ack the message
-
-
-def consume_task_queue(channel, amqp, public_count, rhel_count, stats_count):
+def consume_task_queue(
+    channel: pika.channel.Channel,
+    amqp: str,
+    public_count: int,
+    rhel_count: int,
+    stats_count: int,
+) -> ConsumeResult:
     if statistics_queue and stats_count > 0:
         # statistics queue is quick to process, always do that first
         queue = 'statistics'
@@ -126,7 +135,7 @@ def consume_task_queue(channel, amqp, public_count, rhel_count, stats_count):
     return command, method_frame.delivery_tag
 
 
-def mail_notification(body):
+def mail_notification(body: str) -> None:
     mx = os.environ.get("TEST_NOTIFICATION_MX")
     if not mx:
         return
@@ -145,7 +154,7 @@ Subject: cockpituous: run-queue crash on {platform.node()}
 
 # Consume from the webhook queue and republish to the task queue via *-scan
 # Consume from the task queue (endpoint)
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description='Bot: read a single test command from the queue and execute it')
     parser.add_argument('--amqp', default=distributed_queue.DEFAULT_AMQP_SERVER,
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
@@ -171,7 +180,7 @@ def main():
             logging.info("All queues are empty")
             return 1
 
-        if isinstance(cmd, list):
+        if isinstance(cmd, Sequence):
             cmd_str = ' '.join(cmd)
         else:
             cmd_str = cmd
