@@ -217,6 +217,7 @@ class VirtNetwork:
 
         isolate: True for no network at all, "user" for QEMU user network instead of bridging
         """
+        localaddr = '' if os.getenv('TEST_BIND_GLOBAL') else '127.0.0.2'
         result = self.interface(number)
         result["mcast"] = self.network
         result["restrict"] = "on" if restrict else "off"
@@ -225,8 +226,8 @@ class VirtNetwork:
         forwards = []
         for remote, local in result["forward"].items():
             local = self._lock(int(local) + result["number"])
-            result["forward"][remote] = f"127.0.0.2:{local}"
-            forwards.append(f"hostfwd=tcp:{result['forward'][remote]}-:{remote}")
+            result["forward"][remote] = f"{localaddr or '127.0.0.1'}:{local}"
+            forwards.append(f"hostfwd=tcp:{localaddr}:{local}-:{remote}")
             if remote == "22":
                 result["control"] = result["forward"][remote]
             elif remote == "9090":
