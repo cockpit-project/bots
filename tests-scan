@@ -94,7 +94,7 @@ def queue_test(entry: QueueEntry, channel: 'pika.channel.Channel', options: argp
 
 
 def update_status(
-    api: github.GitHub, revision: str, last: Mapping[str, str], dry: bool, changes: Mapping[str, str]
+    api: github.GitHub, revision: str, last: JsonObject, dry: bool, changes: JsonObject
 ) -> bool:
     if {**last, **changes} == last or dry:
         return True
@@ -156,12 +156,12 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
         labels = labels_of_pull(pull)
 
         # Create list of statuses to process: always process the requested contexts, if given
-        todos: dict[str, dict[str, object]] = {context: {} for context in contexts}
-        for status in statuses:  # Firstly add all valid contexts that already exist in github
-            if contexts and status not in contexts:
+        todos: dict[str, JsonObject] = {context: {} for context in contexts}
+        for context in statuses:  # Firstly add all valid contexts that already exist in github
+            if contexts and context not in contexts:
                 continue
-            if testmap.is_valid_context(status, api.repo):
-                todos[status] = statuses[status]
+            if testmap.is_valid_context(context, api.repo):
+                todos[context] = statuses[context]
         if not statuses and base:  # If none already present in PR, add basic set of contexts
             for context in build_policy(api.repo, contexts).get(base, []):
                 todos[context] = {}
