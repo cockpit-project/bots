@@ -76,8 +76,7 @@ def trigger_pull(api: github.GitHub, opts: argparse.Namespace) -> int:
         changes = {"state": "pending", "description": github.NOT_TESTED_DIRECT, "context": context}
 
         # Keep the old link for reference, until testing starts again
-        link = get_str(status, "target_url", None)
-        if link:
+        if link := get_str(status, "target_url", None):
             changes["target_url"] = link
 
         api.post("statuses/" + revision, changes)
