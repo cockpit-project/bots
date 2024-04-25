@@ -63,10 +63,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('rhel-8-10-distropkg', COCKPIT_SCENARIOS - {'networking'}),
             *contexts('centos-8-stream', COCKPIT_SCENARIOS),
         ],
-        'rhel-7.9': [
-            'rhel-7-9',
-            'centos-7',
-        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
@@ -263,8 +259,8 @@ OSTREE_BUILD_IMAGE = {
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
 IMAGE_REFRESH_TRIGGERS = {
-    # some tests run against centos-7's cockpit-ws for backwards compat testing
-    "centos-7": [
+    # some tests run against CentOS 8 ws/bridge for backwards compat testing
+    "centos-8-stream": [
         f"{TEST_OS_DEFAULT}/expensive@cockpit-project/cockpit",
     ],
     "services": [
@@ -273,7 +269,7 @@ IMAGE_REFRESH_TRIGGERS = {
         *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('debian-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('rhel-9-4', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        "rhel-7-9@cockpit-project/cockpit/rhel-7.9",
+        "rhel-8-10@cockpit-project/cockpit/rhel-8",
         "rhel-8-8@candlepin/subscription-manager/subscription-manager-1.28",
         "rhel-9-4@candlepin/subscription-manager-cockpit",
     ],

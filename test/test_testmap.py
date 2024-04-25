@@ -46,7 +46,7 @@ def test_is_valid_context() -> None:
     # context from _manual pseudo-branch
     good("fedora-rawhide", "cockpit-project/cockpit")
     # not known in this branch
-    bad("debian-testing", "cockpit-project/cockpit/rhel-7.9")
+    bad("debian-testing", "cockpit-project/cockpit/rhel-8")
 
     # unknown image/projects/branches
     bad("wrongos", "cockpit-project/cockpit")

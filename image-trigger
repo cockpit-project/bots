@@ -37,7 +37,6 @@ REFRESH_30 = {"refresh-days": 30}
 # stable/old OSes don't need to be refreshed as often
 REFRESH = {
     "arch": {},
-    "centos-7": REFRESH_30,
     "centos-8-stream": {},
     "centos-9-bootc": {},
     "centos-9-stream": {},
@@ -55,7 +54,6 @@ REFRESH = {
     "opensuse-tumbleweed": {},
     "ubuntu-2204": {},
     "ubuntu-stable": {},
-    "rhel-7-9": REFRESH_30,
     "rhel-8-4": REFRESH_30,
     "rhel-8-6": REFRESH_30,
     "rhel-8-8": REFRESH_30,
