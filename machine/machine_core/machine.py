@@ -155,9 +155,8 @@ class Machine(ssh_connection.SSHConnection):
         """Return interesting journal messages"""
 
         # give the OS some time to write pending log messages, to make
-        # unexpected message detection more reliable; RHEL/CentOS 7 does not
-        # yet know about --sync, so ignore failures
-        self.execute("journalctl --sync 2>/dev/null || true; sleep 1; journalctl --sync 2>/dev/null || true")
+        # unexpected message detection more reliable
+        self.execute("sleep 1; journalctl --sync")
 
         # Prepend "SYSLOG_IDENTIFIER=" as a default field, for backwards compatibility
         filters = (m if re.match("[a-zA-Z0-9_]+=", m) else "SYSLOG_IDENTIFIER=" + m for m in matches)
