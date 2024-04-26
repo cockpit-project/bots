@@ -61,7 +61,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('rhel-8-10', COCKPIT_SCENARIOS),
             # all skipped
             *contexts('rhel-8-10-distropkg', COCKPIT_SCENARIOS - {'networking'}),
-            *contexts('centos-8-stream', COCKPIT_SCENARIOS),
         ],
         'rhel-7.9': [
             'rhel-7-9',
@@ -70,7 +69,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
-            'rhel-8-10',
             'opensuse-tumbleweed',
         ],
     },
@@ -79,7 +77,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             TEST_OS_DEFAULT,
             'fedora-39',
             'fedora-40',
-            'centos-8-stream',
+            'centos-9-stream',
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
@@ -118,7 +116,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'ubuntu-stable',
         ],
         '_manual': [
-            'centos-8-stream',
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
@@ -138,7 +135,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10',
             'rhel-9-4',
             'rhel-9-5',
-            'centos-8-stream',
         ],
         '_manual': [
             'centos-10',
@@ -175,7 +171,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-38',
             'fedora-39',
             'fedora-39/firefox',
-            'centos-8-stream',
             'centos-9-stream',
             'rhel-8-10',
             'rhel-9-4',
@@ -240,7 +235,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'rhel-9-4',
             'rhel-9-5',
-            'centos-8-stream',
         ]
     },
     'rhinstaller/anaconda-webui': {
