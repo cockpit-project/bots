@@ -28,14 +28,18 @@ if [ "$IMAGE" == "fedora-coreos" ]; then
 fi
 
 if [ "$IMAGE" == "rhel4edge" ]; then
-    # Setup password for admin user as edge management only sets ssh key
-    echo foobar | passwd --stdin admin
+
+    # create admin user manually to avoid sudo issue when created via kickstart
+    USER="admin"
+    useradd $USER -G wheel
+    mkdir -p /home/$USER/.ssh
+    cp /home/installer/.ssh/authorized_keys /home/$USER/.ssh/authorized_keys
+    chown -R $USER:$USER /home/$USER/.ssh
+    restorecon -R /home/$USER
+    echo foobar | passwd --stdin $USER
 
     # Setup password for root user
     echo foobar | passwd --stdin root
-
-    # HACK: Fix .ssh ownership, see https://issues.redhat.com/browse/THEEDGE-3033
-    chown admin:admin /var/home/admin/.ssh
 
     # HACK - remove passwordless wheel login in original rhel4edge image as it is expected
     # by tests to have password sudo login by default.

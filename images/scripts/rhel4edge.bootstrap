@@ -30,7 +30,7 @@ cat > edge-request.json <<EOF
     "arch": "x86_64"
   },
   "installer": {
-    "username": "admin",
+    "username": "installer",
     "sshkey": "$(cat $BASE/../../machine/identity.pub)"
   }
 }

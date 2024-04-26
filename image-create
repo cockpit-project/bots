@@ -88,7 +88,7 @@ class MachineBuilder:
 
         # Edge management does not allow setting key for root account but rest of this script depends on it
         if self.machine.image == "rhel4edge":
-            admin_s = ssh_connection.SSHConnection(user="admin",
+            admin_s = ssh_connection.SSHConnection(user="installer",
                                                    address=self.machine.ssh_address,
                                                    ssh_port=self.machine.ssh_port,
                                                    identity_file=self.machine.identity_file)
