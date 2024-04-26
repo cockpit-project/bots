@@ -293,7 +293,7 @@ class GitHub:
             elif modified:
                 headers['If-Modified-Since'] = modified
         response = self.request("GET", resource, "", headers)
-        if response['status'] == 404 and default is not ...:
+        if response['status'] == 404 and not isinstance(default, EllipsisType):
             return default
         elif cached and response['status'] == 304:  # Not modified
             self.cache.write(qualified, cached)
