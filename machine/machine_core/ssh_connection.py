@@ -183,7 +183,7 @@ class SSHConnection:
             "-o", "LogLevel=ERROR",
             "-l", self.ssh_user,
             self.ssh_address,
-            "/bin/bash -c 'echo READY; read a'"
+            "/bin/sh -c 'echo READY; read a'"
         )
 
         # Connection might be refused, so try this 10 times
