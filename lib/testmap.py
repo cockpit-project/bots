@@ -156,16 +156,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-4',
         ],
     },
-    'weldr/lorax': {
-        'master': [
-        ],
-        'rhel8-branch': [
-        ],
-        # These can be triggered manually with bots/tests-trigger
-        '_manual': [
-            'rhel-8-6/osbuild-composer',
-        ],
-    },
     'osbuild/cockpit-composer': {
         'main': [
             'fedora-38',
