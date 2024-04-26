@@ -3,4 +3,4 @@ Traceback (most recent call last):
     b.wait_in_text(f"#vm-{vmName}-system-state", "Running")
 *
 testlib.Error: timeout
-wait_js_cond(ph_in_text("#vm-subVmTest1-system-state","Running")): Uncaught (in promise) Error: actual text: Shut off
+wait_js_cond(ph_in_text("#vm-subVmTest1-system-state","Running")): * actual text: Shut off
