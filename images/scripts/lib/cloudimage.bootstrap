@@ -3,11 +3,12 @@
 set -ex
 
 out=$1
+image_url="$2"
+size=${3:-+8G}
 
 # download cloud image; re-use a previously downloaded image
-image_url="$2"
 image=tmp/$(basename $image_url)
 mkdir -p $(dirname $image)
 [ -f "$image" ] || curl -L -o "$image" "$image_url"
 cp "$image" "$out"
-qemu-img resize -f qcow2 "$out" +8G
+qemu-img resize -f qcow2 "$out" "$size"
