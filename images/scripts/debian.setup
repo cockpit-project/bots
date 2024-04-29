@@ -135,8 +135,7 @@ Pin-Priority: 10
 EOF
 fi
 
-# HACK while ubuntu-stable == current noble devel: don't enable -proposed, that's broken by definition
-if [ "${IMAGE#ubuntu}" != "$IMAGE" ] && [ "$RELEASE" != "noble" ]; then
+if [ "${IMAGE#ubuntu}" != "$IMAGE" ]; then
     echo "deb http://archive.ubuntu.com/ubuntu ${RELEASE}-proposed main restricted universe" > /etc/apt/sources.list.d/proposed.list
     cat <<EOF > /etc/apt/preferences.d/all-proposed
 Package: *
