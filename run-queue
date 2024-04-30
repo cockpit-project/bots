@@ -47,14 +47,14 @@ ConsumeResult = tuple[Sequence[str] | str | None, DeliveryTag | None]
 
 
 # Returns a command argv to execute and the delivery tag needed to ack the message
-def consume_webhook_queue(channel: pika.channel.Channel, amqp: str) -> ConsumeResult:
+def consume_webhook_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResult:
     # interpret payload
     # call tests-scan or issue-scan appropriately
-    method_frame, _header_frame, body = channel.basic_get(queue='webhook')
-    if not method_frame:
+    method_frame, _header_frame, message = dq.channel.basic_get(queue='webhook')
+    if not method_frame or not message:
         return None, None
 
-    body = json.loads(body)
+    body = json.loads(message)
     event = body['event']
     request = body['request']
     repo = None
@@ -66,9 +66,9 @@ def consume_webhook_queue(channel: pika.channel.Channel, amqp: str) -> ConsumeRe
         # scan for body changes (edited) and the bots label; we only use that for image refreshes in the bots repo
         if repo.endswith('/bots') and (
                 action == 'labeled' or (action == 'edited' and 'body' in request.get('changes', {}))):
-            cmd = ['./issue-scan', '--issues-data', json.dumps(request), '--amqp', amqp]
+            cmd = ['./issue-scan', '--issues-data', json.dumps(request), '--amqp', dq.address]
         elif action in ['opened', 'synchronize']:
-            cmd = ['./tests-scan', '--pull-data', json.dumps(request), '--amqp', amqp, '--repo', repo]
+            cmd = ['./tests-scan', '--pull-data', json.dumps(request), '--amqp', dq.address, '--repo', repo]
         # When PR was merged, generate task for storing tests
         elif action == 'closed' and pull_request.get('merged', False):
             sha = pull_request['head']['sha']
@@ -77,20 +77,20 @@ def consume_webhook_queue(channel: pika.channel.Channel, amqp: str) -> ConsumeRe
                 "command": (f"./store-tests --db {db} --repo {repo} {sha} && "
                             f"./prometheus-stats --db {db} --s3 {os.path.join(LOG_STORE, 'prometheus')}")
             }
-            channel.basic_publish('', 'statistics', json.dumps(body),
-                                  properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
+            dq.channel.basic_publish('', 'statistics', json.dumps(body),
+                                     properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
             cmd = None
 
     elif event == 'status':
         repo = request['repository']['full_name']
         sha = request['sha']
         context = request['context']
-        cmd = ['./tests-scan', '--sha', sha, '--amqp', amqp, '--context', context, '--repo', repo]
+        cmd = ['./tests-scan', '--sha', sha, '--amqp', dq.address, '--context', context, '--repo', repo]
     elif event == 'issues':
         action = request['action']
         # scan for opened, body changes (edited), and the bots label
         if action in ['opened', 'labeled'] or (action == 'edited' and 'body' in request.get('changes', {})):
-            cmd = ['./issue-scan', '--issues-data', json.dumps(request), '--amqp', amqp]
+            cmd = ['./issue-scan', '--issues-data', json.dumps(request), '--amqp', dq.address]
     else:
         logging.error('Unkown event type in the webhook queue')
         return None, None
@@ -99,14 +99,8 @@ def consume_webhook_queue(channel: pika.channel.Channel, amqp: str) -> ConsumeRe
 
 
 # Returns a command to execute and the delivery tag needed to ack the message
-def consume_task_queue(
-    channel: pika.channel.Channel,
-    amqp: str,
-    public_count: int,
-    rhel_count: int,
-    stats_count: int,
-) -> ConsumeResult:
-    if statistics_queue and stats_count > 0:
+def consume_task_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResult:
+    if statistics_queue and dq.queue_counts['statistics'] > 0:
         # statistics queue is quick to process, always do that first
         queue = 'statistics'
     elif os.path.exists('/dev/kvm') or os.getenv('JOB_RUNNER_CONFIG'):
@@ -114,20 +108,20 @@ def consume_task_queue(
         queue = 'public'
         if redhat_network():
             # Try the rhel queue if the public queue is empty
-            if public_count == 0:
+            if dq.queue_counts['public'] == 0:
                 queue = 'rhel'
                 # If both are non-empty, shuffle
-            elif rhel_count > 0:
+            elif dq.queue_counts['rhel'] > 0:
                 queue = ['public', 'rhel'][random.randrange(2)]
     else:
         # nothing to do
         return None, None
 
-    method_frame, _header_frame, body = channel.basic_get(queue=queue)
-    if not method_frame:
+    method_frame, _header_frame, message = dq.channel.basic_get(queue=queue)
+    if not method_frame or not message:
         return None, None
 
-    body = json.loads(body)
+    body = json.loads(message)
     if job := body.get('job'):
         command = ['./job-runner', 'json', json.dumps(job)]
     else:
@@ -160,22 +154,15 @@ def main() -> int:
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
     opts = parser.parse_args()
 
-    with distributed_queue.DistributedQueue(opts.amqp, ['webhook', 'rhel', 'public', 'statistics']) as q:
-        channel = q.channel
-
-        cmd, delivery_tag = consume_webhook_queue(channel, opts.amqp)
+    with distributed_queue.DistributedQueue(opts.amqp, ['webhook', 'rhel', 'public', 'statistics']) as dq:
+        cmd, delivery_tag = consume_webhook_queue(dq)
         if not cmd and delivery_tag:
             logging.info("Webhook message interpretation generated no command")
-            channel.basic_ack(delivery_tag)
+            dq.channel.basic_ack(delivery_tag)
             return 0
 
         if not cmd:
-            cmd, delivery_tag = consume_task_queue(
-                channel,
-                opts.amqp,
-                q.queue_counts['public'],
-                q.queue_counts['rhel'],
-                q.queue_counts['statistics'])
+            cmd, delivery_tag = consume_task_queue(dq)
         if not cmd:
             logging.info("All queues are empty")
             return 1
@@ -187,7 +174,7 @@ def main() -> int:
         logging.info("Consuming message with command: %s", cmd_str)
         p = subprocess.Popen(cmd, shell=isinstance(cmd, str))
         while p.poll() is None:
-            q.connection.process_data_events()
+            dq.connection.process_data_events()
             time.sleep(3)
         if p.returncode != 0:
             logging.error("%s failed with exit code %i", cmd_str, p.returncode)
@@ -197,7 +184,8 @@ def main() -> int:
 
 failed with exit code %i. Please check the container logs for details.""" % (cmd_str, p.returncode))
 
-        channel.basic_ack(delivery_tag)
+        if delivery_tag is not None:
+            dq.channel.basic_ack(delivery_tag)
 
     return 0
 

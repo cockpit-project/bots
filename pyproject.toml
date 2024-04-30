@@ -10,7 +10,7 @@ module = [
     'libvirt',
     'libvirt_qemu',
     'nacl',
-    'pika',
+    'pika.*',
 ]
 ignore_missing_imports = true
 
