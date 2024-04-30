@@ -296,7 +296,7 @@ def main() -> None:
     parser.add_argument('-n', '--dry', action="store_true", default=False,
                         help="Don't actually change anything on GitHub")
     parser.add_argument('--repo', default=None,
-                        help='Repository to scan and checkout.')
+                        help='Repository to scan and checkout')
     parser.add_argument('-c', '--context', action="append", default=[],
                         help='Test contexts to use.')
     parser.add_argument('-p', '--pull-number', default=None,
