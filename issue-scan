@@ -25,6 +25,8 @@ import sys
 import time
 from collections.abc import Collection, Sequence
 
+import pika
+
 from lib import ALLOWLIST, testmap
 from lib.aio.jsonutil import JsonObject, get_dict, get_int, get_str
 from lib.jobqueue import QueueEntry
@@ -39,12 +41,6 @@ REDHAT_TASKS = [
 sys.dont_write_bytecode = True
 logging.basicConfig(level=logging.INFO)
 
-no_amqp = False
-try:
-    import pika
-except ImportError:
-    no_amqp = True
-
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Scan issues for image-refresh tasks")
@@ -57,9 +53,6 @@ def main() -> int:
     parser.add_argument('--repo', default=None,
                         help='Repository to scan and checkout.')
     opts = parser.parse_args()
-
-    if opts.amqp and no_amqp:
-        parser.error("AMQP host:port specified but python3-pika not available")
 
     for result in scan(opts.issues_data, opts.repo):
         if opts.amqp:
@@ -162,7 +155,7 @@ def output_task(command: str, issue: JsonObject, repo: str) -> QueueEntry | None
     }
 
 
-def queue_task(channel: 'pika.channel.Channel', body: QueueEntry) -> None:
+def queue_task(channel: pika.channel.Channel, body: QueueEntry) -> None:
     queue = 'rhel' if contains_any(body['job']['context'], REDHAT_TASKS) else 'public'
     channel.basic_publish('', queue, json.dumps(body),
                           properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
