@@ -183,6 +183,7 @@ def main() -> int:
   %s
 
 failed with exit code %i. Please check the container logs for details.""" % (cmd_str, p.returncode))
+            return 1
 
         if delivery_tag is not None:
             dq.channel.basic_ack(delivery_tag)
