@@ -132,7 +132,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-4',
             'rhel-9-5',
         ],
-        'rhel8': [
+        'rhel-8': [
             'rhel-8-10',
             'rhel-9-4',
             'rhel-9-4/firefox',
