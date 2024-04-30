@@ -25,11 +25,7 @@ from collections.abc import Collection
 from types import TracebackType
 from typing import Any, Self
 
-no_amqp = False
-try:
-    import pika
-except ImportError:
-    no_amqp = True
+import pika
 
 logging.getLogger("pika").propagate = False
 
@@ -39,7 +35,6 @@ __all__ = (
     'DEFAULT_SECRETS_DIR',
     'MAX_PRIORITY',
     'DistributedQueue',
-    'no_amqp',
 )
 
 BASELINE_PRIORITY = 5
@@ -84,8 +79,6 @@ class DistributedQueue:
         a dict mapping all existing queue names to the number of queue entries. Non-existing
         queues are not included in the dict.
         """
-        if no_amqp:
-            raise ImportError('pika is not available')
 
         # Try looking in the XDG_RUNTIME_DIR instead.  Nice for local hacking.
         if not os.path.isdir(secrets_dir) and secrets_dir.startswith('/run'):
