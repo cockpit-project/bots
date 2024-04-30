@@ -18,6 +18,7 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import json
 import sys
 
 from task import distributed_queue
@@ -29,6 +30,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description='Read and print messages from the queue without acknowleding them')
     parser.add_argument('--amqp', default=distributed_queue.DEFAULT_AMQP_SERVER,
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
+    parser.add_argument('--human', help="Print the 'human' field, if present")
     parser.add_argument('--secrets-dir', default=distributed_queue.DEFAULT_SECRETS_DIR,
                         help='Directory with ca.pem and amqp-client.{pem,key} (default: %(default)s)')
     opts = parser.parse_args()
@@ -41,9 +43,13 @@ def main() -> int:
                 print(f"queue {queue} does not exist or is empty")
                 return
             for _ in range(message_count):
-                method_frame, _header_frame, body = q.channel.basic_get(queue=queue)
-                if method_frame:
-                    print(body.decode())
+                method_frame, _header_frame, message = q.channel.basic_get(queue=queue)
+                if method_frame and message:
+                    body = json.loads(message)
+                    if opts.human and 'human' in body:
+                        print(body['human'])
+                    else:
+                        print(body)
 
         print('public queue:')
         print_queue('public')
