@@ -26,6 +26,7 @@ from types import TracebackType
 from typing import Any, Self
 
 import pika
+import pika.exceptions
 
 logging.getLogger("pika").propagate = False
 
@@ -105,6 +106,7 @@ class DistributedQueue:
                                                ssl_options=pika.SSLOptions(context, server_hostname=host),
                                                credentials=pika.credentials.ExternalCredentials())
 
+        self.address = amqp_server
         self.connection = pika.BlockingConnection(params)
         self.channel = self.connection.channel()
         self.queue_counts: dict[str, int] = {}
@@ -112,6 +114,7 @@ class DistributedQueue:
         for queue in queues:
             try:
                 result = self.channel.queue_declare(queue=queue, arguments=arguments.get(queue, None), **kwargs)
+                assert result.method.message_count is not None
                 self.queue_counts[queue] = result.method.message_count
             except pika.exceptions.ChannelClosedByBroker as e:
                 if e.reply_code == 404 and kwargs.get('passive'):

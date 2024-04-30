@@ -56,8 +56,8 @@ def main() -> int:
 
     for result in scan(opts.issues_data, opts.repo):
         if opts.amqp:
-            with distributed_queue.DistributedQueue(opts.amqp, queues=['rhel', 'public']) as q:
-                queue_task(q.channel, result)
+            with distributed_queue.DistributedQueue(opts.amqp, queues=['rhel', 'public']) as dq:
+                queue_task(dq, result)
         elif opts.human_readable:
             print(result['human'])
         else:
@@ -155,10 +155,10 @@ def output_task(command: str, issue: JsonObject, repo: str) -> QueueEntry | None
     }
 
 
-def queue_task(channel: pika.channel.Channel, body: QueueEntry) -> None:
+def queue_task(dq: distributed_queue.DistributedQueue, body: QueueEntry) -> None:
     queue = 'rhel' if contains_any(body['job']['context'], REDHAT_TASKS) else 'public'
-    channel.basic_publish('', queue, json.dumps(body),
-                          properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
+    dq.channel.basic_publish('', queue, json.dumps(body),
+                             properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
     logging.info("Published issue task: %r", body)
 
 
