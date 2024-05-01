@@ -82,7 +82,7 @@ m.wait_boot()
 # resize file system to the full qcow device size
 m.execute('growpart /dev/vda 4')
 m.execute('mount -o remount,rw /sysroot')
-m.execute('resize2fs /dev/vda4')
+m.execute('xfs_growfs -d /dev/vda4')
 
 # copy OCI image into the VM as well, for cockpit-ostree tests
 # the .setup script processes this further
