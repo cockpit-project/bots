@@ -322,9 +322,9 @@ baseurl=http://download.fedoraproject.org/pub/fedora/linux/releases/40/Everythin
 enabled=1
 gpgcheck=0
 
-[fedora-updates-testing]
+[fedora-updates]
 name=Fedora
-baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/testing/40/Everything/\$basearch/
+baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/40/Everything/\$basearch/
 enabled=1
 gpgcheck=0
 EOF
