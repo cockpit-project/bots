@@ -442,8 +442,9 @@ class GitHub:
 
 
 class Checklist:
-    def __init__(self, body: str = ''):
-        self.process(body)
+    # NB: GitHub sends `body: null` for issues with empty bodies
+    def __init__(self, body: str | None):
+        self.process(body or '')
 
     @staticmethod
     def format_line(item: str, check: bool | str) -> str:

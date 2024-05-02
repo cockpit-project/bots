@@ -106,7 +106,7 @@ def tasks_for_issues(issues_data: str, opts_repo: str | None) -> Sequence[tuple[
         # the bots can do, then the bots will ignore this issue
         # (below in output_task)
         #
-        checklist = github.Checklist(get_str(issue, "body"))
+        checklist = github.Checklist(get_str(issue, "body", None))
         for item, checked in checklist.items.items():
             if not checked:
                 results.append((item, issue, api.repo))

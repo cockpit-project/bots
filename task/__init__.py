@@ -231,7 +231,7 @@ def issue(
         since += random.randint(-3600, 3600)
 
     for issue in api.issues(state=state, since=since):
-        checklist = github.Checklist(get_str(issue, "body"))
+        checklist = github.Checklist(get_str(issue, "body", None))
         if item in checklist.items:
             return issue
 
