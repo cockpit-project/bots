@@ -39,6 +39,11 @@ def test_parse() -> None:
     assert parse_line(" * [X]test five") == (None, None)
 
 
+def test_empty_body() -> None:
+    assert github.Checklist('').items == {}
+    assert github.Checklist(None).items == {}
+
+
 def test_format() -> None:
     format_line = github.Checklist.format_line
     assert format_line("blah", True) == " * [x] blah"
