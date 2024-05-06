@@ -242,6 +242,11 @@ if  [ "$IMAGE" = "centos-10" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/ vdo / }"
 fi
 
+# NM-team dropped in RHEL 10
+if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10*}" != "$IMAGE" ]; then
+    COCKPIT_DEPS="${COCKPIT_DEPS/ NetworkManager-team / }"
+fi
+
 if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} zram-generator"
 fi
