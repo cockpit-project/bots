@@ -124,6 +124,12 @@ EOF
     if [ "${IMAGE#rhel-8*}" != "$IMAGE" ] || [ "${IMAGE#centos-8}" != "$IMAGE" ]; then
         dnf module enable -y idm:client
     fi
+
+    # see centos-10.bootstrap: development composes still lack cloud images, but production
+    # composes are way too infrequent and outdated
+    if [ "$IMAGE" = "centos-10" ]; then
+        sed -i 's_stream-10/production_stream-10/development_' /etc/yum.repos.d/centos.repo
+    fi
 fi
 
 # man-db cache update is a CPU/memory hog
