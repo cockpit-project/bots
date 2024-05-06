@@ -1,4 +1,0 @@
-*TestCurrentMetrics*
-Error: could not find slirp4netns, the network namespace can't be configured: exec: "slirp4netns": executable file not found in $PATH
-*
-subprocess.CalledProcessError: *podman*run
