@@ -103,6 +103,7 @@ TEST_DOMAIN_XML = """
   </devices>
   <qemu:commandline>
     {ethernet}
+    {firmware}
     <qemu:arg value='-netdev'/>
     <qemu:arg
       value='user,id=base0,restrict={restrict},net=172.27.0.0/24,dnssearch=loopback,hostname={hostname},{forwards}'/>
@@ -258,6 +259,7 @@ class VirtMachine(Machine):
     network: int | None = None
     memory_mb: int | None = None
     cpus: int | None = None
+    is_efi: bool = False
 
     def __init__(
         self,
@@ -280,6 +282,7 @@ class VirtMachine(Machine):
         else:
             console_file = None
         self.console_file = console_file
+        self.is_efi = "-efi" in image
 
         # Set up some temporary networking info if necessary
         if networking is None:
@@ -365,6 +368,12 @@ class VirtMachine(Machine):
             "console_type": "file" if self.console_file else "pty",
             "console_source": f"<source path='{self.console_file.name}'/>" if self.console_file else "",
         }
+
+        if self.is_efi:
+            # path for Fedora/RHEL (our tasks container)
+            keys["firmware"] = "<qemu:arg value='-bios' /><qemu:arg value='/usr/share/OVMF/OVMF_CODE.fd' />"
+        else:
+            keys["firmware"] = ""
 
         if os.path.exists("/dev/kvm"):
             keys["type"] = "kvm"
