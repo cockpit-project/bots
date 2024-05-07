@@ -126,7 +126,7 @@ systemctl stop tomcat
 # regenerate the certs used by Candlepin; this is done so the hostname
 # of the certificate is actually this container's hostname (which actually
 # is the hostname of the system, because of --uts=host)
-~candlepin/devel/candlepin/bin/deployment/gen_certs.sh --force --trust --hostname `hostname -f`
+~candlepin/devel/candlepin/bin/deployment/gen_certs.sh --force --trust --hostname \$(hostname -f)
 # restart tomcat
 systemctl start tomcat
 EOF
