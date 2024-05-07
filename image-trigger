@@ -37,7 +37,6 @@ REFRESH_30 = {"refresh-days": 30}
 # stable/old OSes don't need to be refreshed as often
 REFRESH = {
     "arch": {},
-    "centos-8-stream": {},
     "centos-9-bootc": {},
     "centos-9-stream": {},
     "centos-10": {},
