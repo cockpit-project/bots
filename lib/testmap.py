@@ -248,10 +248,6 @@ OSTREE_BUILD_IMAGE = {
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
 IMAGE_REFRESH_TRIGGERS = {
-    # some tests run against CentOS 8 ws/bridge for backwards compat testing
-    "centos-8-stream": [
-        f"{TEST_OS_DEFAULT}/expensive@cockpit-project/cockpit",
-    ],
     "services": [
         *contexts(TEST_OS_DEFAULT, COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
