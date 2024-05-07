@@ -19,5 +19,5 @@
 
 set -eux
 
-URL='https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/cloud/nocloud_alpine-3.19.0-x86_64-bios-cloudinit-r0.qcow2'
+URL='https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/cloud/nocloud_alpine-3.19.1-x86_64-bios-cloudinit-r0.qcow2'
 exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL" "+0M"
