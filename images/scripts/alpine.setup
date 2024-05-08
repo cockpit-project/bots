@@ -3,5 +3,7 @@
 set -eux
 
 apk add qemu-guest-agent
+apk del cloud-init
+
 rc-update add qemu-guest-agent default
 rc-update del chronyd default
