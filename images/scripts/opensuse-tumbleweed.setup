@@ -77,7 +77,6 @@ rpm-config-SUSE \
 "
 
 NETWORK_PACKAGES="\
-systemd-network \
 sssd \
 sssd-dbus \
 "
@@ -121,9 +120,11 @@ echo 'PasswordAuthentication yes' >> /usr/etc/ssh/sshd_config
 rm -f '/etc/systemd/system/multi-user.target.wants/auditd.service'
 rm -rf /var/log/audit/
 
-systemctl enable --now systemd-networkd.service
-
 echo root:foobar | chpasswd
+
+# cloud-init is not needed after initial setup and will only slow down boot time
+# and it trying to re-setup networking on every boot can cause network issues
+zypper remove -y cloud-init
 
 # reduce image size
 zypper clean
