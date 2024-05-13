@@ -76,13 +76,10 @@ m.kill()
 # it's too small by default
 subprocess.check_call(['qemu-img', 'resize', '-f', 'qcow2', args.vmpath, '+20G'])
 
+# booting the image will cause bootc-generic-growpart to grow the /sysroot partition
 m = testvm.VirtMachine(image=os.path.abspath(args.vmpath), maintain=True, verbose=True)
 m.start()
 m.wait_boot()
-# resize file system to the full qcow device size
-m.execute('growpart /dev/vda 4')
-m.execute('mount -o remount,rw /sysroot')
-m.execute('xfs_growfs -d /dev/vda4')
 
 # copy OCI image into the VM as well, for cockpit-ostree tests
 # the .setup script processes this further
