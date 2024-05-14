@@ -247,6 +247,11 @@ if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10*}" != "$IMAGE" ]; then
     COCKPIT_DEPS="${COCKPIT_DEPS/ NetworkManager-team / }"
 fi
 
+# no dhcp-client in RHEL 10
+if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10*}" != "$IMAGE" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES/ dhcp-client / }"
+fi
+
 if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} zram-generator"
 fi
