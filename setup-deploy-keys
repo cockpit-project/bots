@@ -74,6 +74,16 @@ deploy_to osbuild/cockpit-composer-weblate \
     --deploy-from \
         osbuild/cockpit-composer/cockpit-composer-weblate/DEPLOY_KEY
 
+# cockpit-files
+deploy_to cockpit-project/cockpit-files \
+    --deploy-from \
+        cockpit-project/cockpit-files/npm-update/SELF_DEPLOY_KEY \
+        cockpit-project/cockpit-files/self/DEPLOY_KEY
+
+deploy_to cockpit-project/cockpit-files-weblate \
+    --deploy-from \
+        cockpit-project/cockpit-files/cockpit-files-weblate/DEPLOY_KEY
+
 # shared
 deploy_to cockpit-project/node-cache \
     --deploy-from \
