@@ -37,6 +37,15 @@ if [ "$IMAGE" == "rhel4edge" ]; then
     # HACK: Fix .ssh ownership, see https://issues.redhat.com/browse/THEEDGE-3033
     chown admin:admin /var/home/admin/.ssh
 
+    # HACK: fix the home dir for rhel4edge user to avoid terminal plugin issue
+    # unable to use usermod, as account is locked by using admin user for this task
+    sed -i 's$/home/admin$/var/home/admin$' /etc/passwd
+
+    # change how sudo is configured inside edge images via osbuild.ks, do not use passwordless wheel group
+    # but use passwordless admin user directly.
+    rm -f /etc/sudoers.d/%wheel
+    echo -e "admin\tALL=(ALL)\tNOPASSWD: ALL" >> /etc/sudoers
+
     # If the insights-client is installed, update the insights-client
     # "egg" and make sure that only the newest one is used.
     #
