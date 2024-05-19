@@ -1,3 +1,0 @@
-#* xdr_remote_interface_lookup_by_mac_string_args*
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
-Process *virtinterfaced* dumped core.
