@@ -55,7 +55,6 @@ glibc-langpack-pt \
 glib-networking \
 grubby \
 json-glib \
-kexec-tools \
 libssh \
 NetworkManager-team \
 openssl \
@@ -72,6 +71,7 @@ sscg \
 system-logos \
 subscription-manager \
 tuned \
+/usr/bin/kdumpctl \
 "
 
 # We also install the packages necessary to join a FreeIPA domain so
