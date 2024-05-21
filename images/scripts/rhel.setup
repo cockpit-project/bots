@@ -154,7 +154,6 @@ device-mapper-multipath \
 firewalld \
 glib-networking \
 json-glib \
-kexec-tools \
 libssh \
 libvirt-dbus \
 libvirt-client \
@@ -176,6 +175,7 @@ tuned \
 udisks2 \
 udisks2-lvm2 \
 udisks2-iscsi \
+/usr/bin/kdumpctl \
 "
 
 # We also install the packages necessary to join a FreeIPA domain so
