@@ -217,6 +217,14 @@ class Machine(ssh_connection.SSHConnection):
             # https://bugzilla.redhat.com/show_bug.cgi?id=2250930
             allowed.append('audit.*denied  { map_read map_write } for .* tclass=bpf.*')
 
+        if self.image == "centos-10":
+            # https://issues.redhat.com/browse/RHEL-37631
+            allowed.append('.*avc:  denied  { map_read map_write } for .* tclass=bpf.*')
+            allowed.append('.*avc:  denied .* comm=daemon-init name=libvirt.*')
+            # also need to ignore the corresponding ausearch
+            allowed.append('----')
+            allowed.append('type=(PROCTITLE|SYSCALL|EXECVE|PATH|CWD).*')
+
         if self.image in ["debian-testing", "ubuntu-stable"]:
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
             allowed.append('audit.* apparmor="DENIED" operation="open" class="file" '
