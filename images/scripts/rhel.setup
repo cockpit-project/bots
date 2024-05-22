@@ -246,6 +246,11 @@ if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/ dhcp-client / }"
 fi
 
+# workaround for https://issues.redhat.com/browse/RHEL-29893
+if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10*}" != "$IMAGE" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES} kernel-modules-extra"
+fi
+
 if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} zram-generator"
 fi
