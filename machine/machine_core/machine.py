@@ -213,10 +213,6 @@ class Machine(ssh_connection.SSHConnection):
             # Default PAM configuration logs motd for cockpit-session
             allowed.append(".*cockpit-session: pam: Web console: .*")
 
-        if self.image in ["fedora-rawhide"]:
-            # https://bugzilla.redhat.com/show_bug.cgi?id=2250930
-            allowed.append('audit.*denied  { map_read map_write } for .* tclass=bpf.*')
-
         if self.image == "centos-10":
             # https://issues.redhat.com/browse/RHEL-37631
             allowed.append('.*avc:  denied  { map_read map_write } for .* tclass=bpf.*')
@@ -243,10 +239,6 @@ class Machine(ssh_connection.SSHConnection):
                 'audit.*denied  { read .* for.*comm="gpg" .* tcontext=unconfined_u:object_r:admin_home_t.*'
             )
             allowed.append("Error importing insights.client.*newest.egg: No module named 'insights'")
-
-        if self.image == "ubuntu-stable":
-            # https://launchpad.net/bugs/2056739
-            allowed.append('audit.* apparmor="DENIED".* name="/etc/gnutls/config".*')
 
         return allowed
 
