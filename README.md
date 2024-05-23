@@ -43,6 +43,29 @@ For running and debugging the images:
    overlay in test/images/ instead.
  - `vm-reset`: Remove all overlays from test/images/
 
+### Creating a new image
+
+Creating a new image from scratch requires a bootstrap and a setup script,
+these scripts are located in `images/scripts`. In this example our new image is
+called `tux` and we run `./image-create -v tux` to create this image we
+expect two scripts:
+
+- `tux.bootstrap`: The bootstrap script downloads the latest available cloud image (qcow2)
+- `tux.setup`: The setup script runs inside the downloaded test image,
+  install all required build and test dependencies, and sets up a test user
+
+For a new image it is recommended to read the existing setup/bootstrap scripts
+for example the `fedora` one. 
+When `image-create` succeeds a new image is saved in `images` as `images/tux`
+(a symlink to the real qcow2 file).
+
+To add a new image to our CI, create a PR and following the `Creating new
+images for a pull request` workflow. Externals contributors will need to ask a
+Cockpit team member to create a copy of the PR and follow this workflow.
+
+For the initial PR it is recommended to add the new image to the `_manual`
+testmap of `starter-kit` to proof the created image is functional.
+
 ## Image location
 
 Downloaded images are stored into ~/.cache/cockpit-images/ by default. If you
