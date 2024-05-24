@@ -51,7 +51,6 @@ fi
 IPA_CLIENT_PACKAGES="\
 freeipa-client \
 python3-gssapi \
-sssd-dbus \
 sssd-tools \
 "
 
@@ -74,6 +73,8 @@ podman \
 qemu-kvm \
 redis \
 rsync \
+sssd-dbus \
+sssd-proxy \
 socat \
 sosreport \
 strace \
