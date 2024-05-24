@@ -15,6 +15,7 @@ sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT/# GRUB_CMDLINE_LINUX_DEFAULT/' /etc/default
 COCKPIT_DEPS="\
 cryptsetup \
 libjson-glib-1.0-0 \
+libosinfo-bin \
 libpcp3 \
 libpolkit-agent-1-0 \
 libpolkit-gobject-1-0 \
@@ -23,22 +24,21 @@ libssh-4 \
 libteam-utils \
 libvirt-daemon-system \
 libvirt-dbus \
-libosinfo-bin \
 network-manager \
+packagekit \
 pcp \
 policykit-1 \
-packagekit \
 python3-dbus \
 qemu-block-extra \
 realmd \
 selinux-basics \
 sscg \
-unattended-upgrades \
 tuned \
-xdg-utils \
 udisks2 \
 udisks2-btrfs \
 udisks2-lvm2 \
+unattended-upgrades \
+xdg-utils \
 "
 
 # udisks >= 2.10 depends on libblockdev-mdraid, so add it manually only for older OSes
@@ -51,40 +51,40 @@ fi
 IPA_CLIENT_PACKAGES="\
 freeipa-client \
 python3-gssapi \
-sssd-tools \
 sssd-dbus \
+sssd-tools \
 "
 
 TEST_PACKAGES="\
 acl \
 bind9-dnsutils \
+clevis-luks \
 curl \
 firewalld \
 gdb \
-strace \
-ltrace \
 iproute2 \
+libnss-myhostname \
+ltrace \
 mdadm \
 nfs-server \
-podman \
-qemu-kvm \
-rsync \
-redis \
-socat \
-systemd-coredump \
-virtinst \
-xfsprogs \
-sosreport \
+nftables \
 open-iscsi \
 packagekit-tools \
+podman \
+qemu-kvm \
+redis \
+rsync \
+socat \
+sosreport \
+strace \
+systemd-coredump \
+tang \
 targetcli-fb \
 tcsh \
-clevis-luks \
-tang \
-libnss-myhostname \
+virtinst \
 virtiofsd \
 wireguard-tools \
-nftables \
+xfsprogs \
 "
 
 # older libvirt have this builtin
@@ -96,8 +96,8 @@ fi
 # install them on-demand.
 
 PACKAGE_SET_CLEVIS="\
-clevis-systemd
 clevis-dracut
+clevis-systemd
 "
 
 PACKAGE_SET_CHRONYD="\
