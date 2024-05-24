@@ -62,6 +62,7 @@ curl \
 firewalld \
 gdb \
 iproute2 \
+krb5-user \
 libnss-myhostname \
 ltrace \
 mdadm \
