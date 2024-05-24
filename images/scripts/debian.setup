@@ -132,10 +132,6 @@ Package: thin-provisioning-tools
 Pin: release a=unstable
 Pin-Priority: 10
 
-Package: virtinst
-Pin: release a=unstable
-Pin-Priority: 10
-
 Package: *ipa*
 Pin: release a=unstable
 Pin-Priority: 10
