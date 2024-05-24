@@ -127,16 +127,15 @@ if [ "$IMAGE" = "debian-testing" ]; then
     echo 'deb http://deb.debian.org/debian testing main' > /etc/apt/sources.list
     RELEASE=testing
 
+    # too buggy and uninstallable even in unstable, see https://tracker.debian.org/pkg/freeipa
+    IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client/}"
+
     # HACK: some packages fell out of testing, get them from unstable
     echo 'deb http://deb.debian.org/debian unstable main' >> /etc/apt/sources.list
     cat <<EOF > /etc/apt/preferences.d/unstable
 Package: *
 Pin: release a=unstable
 Pin-Priority: -1
-
-Package: *ipa*
-Pin: release a=unstable
-Pin-Priority: 10
 
 Package: *sss*
 Pin: release a=unstable
