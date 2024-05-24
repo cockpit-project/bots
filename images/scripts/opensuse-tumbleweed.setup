@@ -98,7 +98,11 @@ if [ "${IMAGE%-i386}" != "$IMAGE" ]; then
 fi
 
 zypper dup -y
-# kernel-default has more kernel modules that are required for testing
+
+# HACK: There are a number of kernel modules needed for testing, for
+# instance scsi_debug which is needed for most if not all of the disk
+# based tests. Since the cloud image ships a slimmed down set of modules
+# We need to install the full set, this is still the same kernel
 zypper remove -y kernel-default-base
 zypper install -y kernel-default
 
