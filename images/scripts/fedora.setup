@@ -115,6 +115,7 @@ tang \
 targetcli \
 tcsh \
 tlog \
+valkey \
 wireguard-tools \
 "
 
