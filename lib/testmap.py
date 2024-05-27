@@ -218,16 +218,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-5',
         ],
     },
-    'cockpit-project/cockpit-certificates': {
-        'master': [
-            'fedora-39',
-            'fedora-40',
-        ],
-        '_manual': [
-            'rhel-9-4',
-            'rhel-9-5',
-        ]
-    },
     'rhinstaller/anaconda-webui': {
         'main': [
             'fedora-rawhide-boot',
