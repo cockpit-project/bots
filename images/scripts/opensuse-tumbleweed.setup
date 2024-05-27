@@ -21,11 +21,15 @@ printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
 COCKPIT_DEPS="\
 criu \
 libcriu2 \
+crypto-policies-scripts \
 device-mapper \
 glibc-locale \
 glib-networking \
 json-glib \
 kexec-tools \
+krb5 \
+lastlog2 \
+libssh2-1 \
 libvirt-daemon-config-network \
 libvirt-daemon-driver-qemu \
 libvirt-daemon-driver-network \
@@ -38,8 +42,10 @@ libvirt-dbus \
 openssl \
 PackageKit \
 pcp \
-pcp-devel \
+pkexec \
+polkit \
 python3-pip \
+python3-pcp \
 qemu-block-curl \
 qemu-chardev-spice \
 qemu-hw-usb-host \
@@ -51,17 +57,23 @@ virt-install \
 virtiofsd \
 udisks2 \
 libudisks2-0_lvm2 \
+libudisks2-0_btrfs \
+setroubleshoot-server \
+wtmpdb \
 "
 
 TEST_PACKAGES="\
 acl \
 ansible-core \
+bind-utils \
+certmonger \
 clevis-luks \
 cryptsetup \
 firewalld \
 gdb \
 gettext \
 gvfs \
+krb5-client \
 libvirt-daemon-driver-storage-iscsi \
 libvirt-daemon-driver-storage-iscsi-direct \
 libvirt-daemon-driver-storage-logical \
@@ -69,8 +81,9 @@ libxml2-tools \
 ltrace \
 nginx \
 nfs-kernel-server \
+patterns-base-fips \
 podman \
-redis \
+valkey \
 socat \
 strace \
 targetcli \
@@ -79,11 +92,20 @@ bzip2 \
 rpm-build \
 rpm-config-SUSE \
 psmisc \
+ntfs-3g \
+ntfsprogs \
+multipath-tools \
+systemd-coredump \
+kdump \
 "
 
 NETWORK_PACKAGES="\
 sssd \
 sssd-dbus \
+sssd-proxy \
+sssd-tools \
+sssd-ipa \
+wireguard-tools \
 "
 
 # avoid NM-wait-online hanging on disconnected interfaces
@@ -106,8 +128,7 @@ zypper dup -y
 zypper remove -y kernel-default-base
 zypper install -y kernel-default
 
-zypper install -y $TEST_PACKAGES $COCKPIT_DEPS $BUILD_PACKAGES $NETWORK_PACKAGES
-
+zypper -n install -y $TEST_PACKAGES $COCKPIT_DEPS $BUILD_PACKAGES $NETWORK_PACKAGES
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 zypper install -y cockpit
