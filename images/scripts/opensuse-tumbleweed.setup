@@ -33,6 +33,7 @@ libvirt-daemon-driver-nodedev \
 libvirt-daemon-driver-storage-core \
 libvirt-daemon-driver-interface \
 libvirt-daemon-driver-storage-disk \
+libvirt-daemon-qemu \
 libvirt-client \
 libvirt-dbus \
 openssl \
@@ -48,6 +49,7 @@ qemu-kvm \
 realmd \
 tuned \
 virt-install \
+virtiofsd \
 udisks2 \
 libudisks2-0_lvm2 \
 "
@@ -60,9 +62,11 @@ cryptsetup \
 firewalld \
 gdb \
 gettext \
+gvfs \
 libvirt-daemon-driver-storage-iscsi \
 libvirt-daemon-driver-storage-iscsi-direct \
 libvirt-daemon-driver-storage-logical \
+libxml2-tools \
 ltrace \
 nginx \
 podman \
@@ -74,6 +78,7 @@ tcsh \
 bzip2 \
 rpm-build \
 rpm-config-SUSE \
+psmisc \
 "
 
 NETWORK_PACKAGES="\
@@ -93,6 +98,10 @@ if [ "${IMAGE%-i386}" != "$IMAGE" ]; then
 fi
 
 zypper dup -y
+# kernel-default has more kernel modules that are required for testing
+zypper remove -y kernel-default-base
+zypper install -y kernel-default
+
 zypper install -y $TEST_PACKAGES $COCKPIT_DEPS $BUILD_PACKAGES $NETWORK_PACKAGES
 
 
@@ -119,6 +128,9 @@ echo 'PasswordAuthentication yes' >> /usr/etc/ssh/sshd_config
 # Audit events to the journal
 rm -f '/etc/systemd/system/multi-user.target.wants/auditd.service'
 rm -rf /var/log/audit/
+
+# Make sure firewalld is enabled
+systemctl enable --now firewalld
 
 echo root:foobar | chpasswd
 
