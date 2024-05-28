@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "*test/check-machines-settings", line *, in testVsock
+    setVsockLive(new_auto=True, previous_auto=False, previous_address="5", reboot_machine=True)
+  File "*test/check-machines-settings", line *, in setVsockLive
+    self.performAction("subVmTest1", "forceOff")
+*
+    raise Error("%s(%s): %s" % (func, arg, msg))
+testlib.Error: timeout
+wait_js_cond(ph_in_text("#vm-subVmTest1-system-state","Shut off"))* actual text: Running
