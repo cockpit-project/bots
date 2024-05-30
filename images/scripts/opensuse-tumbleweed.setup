@@ -138,6 +138,11 @@ echo root:foobar | chpasswd
 # and it trying to re-setup networking on every boot can cause network issues
 zypper remove -y cloud-init
 
+# Display the boot messages for easier debugging
+echo 'GRUB_CMDLINE_LINUX_DEFAULT=""' >> /etc/default/grub
+echo 'GRUB_CMDLINE_LINUX="no_timer_check net.ifnames=0 console=tty1 console=ttyS0,115200n8"' >> /etc/default/grub
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
 # reduce image size
 zypper clean
 
