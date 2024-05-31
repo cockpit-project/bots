@@ -20,6 +20,7 @@ printf 'dictcheck = 0\nminlen = 6\n' >> /etc/security/pwquality.conf
 #
 COCKPIT_DEPS="\
 criu \
+libcriu2 \
 device-mapper \
 glibc-locale \
 glib-networking \
