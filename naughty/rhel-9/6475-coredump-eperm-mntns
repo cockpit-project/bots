@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "test/verify/check-connection", line *, in testBasic
+    self.check_basic_with_start_stop(m.start_cockpit, m.stop_cockpit)
+  File "test/verify/check-connection", line *, in check_basic_with_start_stop
+    testlib.wait(lambda: m.execute("journalctl -b | grep 'Process.*systemd-hostnam.*of user.*dumped core.'"))
+*
+subprocess.CalledProcessError: *journalctl -b*systemd-hostnam*returned non-zero exit status 1.
