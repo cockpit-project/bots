@@ -129,13 +129,15 @@ EOF
     # composes are way too infrequent and outdated
     if [ "$IMAGE" = "centos-10" ]; then
         sed -i 's_stream-10/production_stream-10/development_' /etc/yum.repos.d/centos.repo
+        # development repo is not signed: https://issues.redhat.com/browse/CS-2243
+        sed -i 's/gpgcheck=1/gpgcheck=0/' /etc/yum.repos.d/centos.repo
     fi
 fi
 
 # man-db cache update is a CPU/memory hog
 rpm -e --verbose man-db
 
-dnf --nogpgcheck -y update
+dnf -y update
 
 # unbreak rhel-9-0's default choice of 999999999 rounds
 if [ "${IMAGE}" = "rhel-9-0" ]; then
