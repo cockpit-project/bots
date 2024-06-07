@@ -89,8 +89,8 @@ deploy_to cockpit-project/node-cache \
     --deploy-from \
         cockpit-project/cockpit/npm-update/NODE_CACHE_DEPLOY_KEY \
         cockpit-project/cockpit/node-cache/DEPLOY_KEY \
-        cockpit-project/cockpit-files/npm-update/SELF_DEPLOY_KEY \
-        cockpit-project/cockpit-files/node-cache/SELF_DEPLOY_KEY \
+        cockpit-project/cockpit-files/npm-update/NODE_CACHE_DEPLOY_KEY \
+        cockpit-project/cockpit-files/node-cache/DEPLOY_KEY \
         cockpit-project/cockpit-machines/npm-update/NODE_CACHE_DEPLOY_KEY \
         cockpit-project/cockpit-machines/node-cache/DEPLOY_KEY \
         cockpit-project/cockpit-podman/npm-update/NODE_CACHE_DEPLOY_KEY \
