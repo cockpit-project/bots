@@ -159,7 +159,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     },
     'osbuild/cockpit-composer': {
         'main': [
-            'fedora-38',
             'fedora-39',
             'fedora-39/firefox',
             'centos-9-stream',
@@ -178,7 +177,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-2',
             'rhel-9-3',
             'rhel-9-4',
-            'fedora-38',
             'fedora-39',
             'fedora-40',
         ],
@@ -210,7 +208,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-9-stream',
             'rhel-9-3',
             'rhel-9-4',
-            'fedora-38',
             'fedora-39',
             'fedora-40',
         ],
