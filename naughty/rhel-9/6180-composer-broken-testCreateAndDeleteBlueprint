@@ -1,0 +1,4 @@
+  File "test/verify/check-blueprintWizard", line *, in testCreateAndDeleteBlueprint
+    b.click("li[data-testid='openssh-server']")
+*
+wait_js_cond(ph_is_present("li[data-testid='openssh-server']:not([disabled]):not([aria-disabled=true])"))
