@@ -63,6 +63,7 @@ firewalld \
 gdb \
 iproute2 \
 krb5-user \
+lastlog2 \
 libnss-myhostname \
 ltrace \
 mdadm \
@@ -92,6 +93,11 @@ xfsprogs \
 # older libvirt have this builtin
 if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/virtiofsd/}"
+fi
+
+# introduced in util-linux 2.40.1-5
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-stable" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES/lastlog2/}"
 fi
 
 # These packages are downloaded to the image so that the tests can
