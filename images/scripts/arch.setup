@@ -131,6 +131,7 @@ accountsservice \
 base-devel \
 git \
 glib-networking \
+glib2-devel \
 gobject-introspection \
 gtk-doc \
 intltool \
