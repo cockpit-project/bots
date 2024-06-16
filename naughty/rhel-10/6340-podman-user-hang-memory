@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-metrics", line *, in testMemory
-    admin_s.execute(f"""
-*
-RuntimeError: Timed out on '
-                podman run
