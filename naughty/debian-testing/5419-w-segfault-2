@@ -1,8 +1,0 @@
-warning: Unexpected error when getting logged in accounts*
-*
-Traceback (most recent call last):
-  File "test/verify/check-users", line *, in testGroups
-    selectGroupFromMenu("testgroup0", enabled=True)
-  File "test/verify/check-users", line *, in selectGroupFromMenu
-*
-testlib.Error: timeout
