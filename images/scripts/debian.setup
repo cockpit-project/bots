@@ -15,6 +15,7 @@ sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT/# GRUB_CMDLINE_LINUX_DEFAULT/' /etc/default
 COCKPIT_DEPS="\
 cryptsetup \
 libjson-glib-1.0-0 \
+libnss-systemd \
 libosinfo-bin \
 libpcp3 \
 libpolkit-agent-1-0 \
