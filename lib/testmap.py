@@ -55,7 +55,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('rhel-9-4', COCKPIT_SCENARIOS),
             *contexts('rhel-9-5', COCKPIT_SCENARIOS),
             *contexts('centos-10', COCKPIT_SCENARIOS),
-            *contexts('rhel4edge', COCKPIT_SCENARIOS),
+            # no udisks on rhel4edge → skip storage
+            *contexts('rhel4edge', COCKPIT_SCENARIOS - {'storage'}),
         ],
         'rhel-8': [
             *contexts('rhel-8-10', COCKPIT_SCENARIOS),
