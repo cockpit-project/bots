@@ -161,7 +161,7 @@ class S3Destination(Destination, contextlib.AsyncExitStack):
 
     def write(self, filename: str, data: bytes) -> None:
         content_type, content_encoding = mimetypes.guess_type(filename)
-        headers = {**self.session.headers, 'Content-Type': content_type or 'text/plain'}
+        headers = {**self.session.headers, 'Content-Type': content_type or 'text/plain; charset=utf-8'}
         if content_encoding:
             headers['Content-Encoding'] = content_encoding
 
