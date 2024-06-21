@@ -1,0 +1,4 @@
+  File "test/verify/check-sosreport", line *, in testAppStream
+    b.wait_not_present(".app-list .pf-v5-c-data-list__item-row div[rowId='Diagnostic reports']")
+*
+testlib.Error: timeout
