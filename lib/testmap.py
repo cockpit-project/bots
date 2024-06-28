@@ -67,6 +67,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'opensuse-tumbleweed',
+            'rhel-10-0',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -82,6 +83,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-9-bootc',
             'rhel-9-5',
+            'rhel-10-0',
         ]
     },
     'cockpit-project/cockpit-ostree': {
@@ -116,6 +118,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
+            'rhel-10-0',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -142,6 +145,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
+            'rhel-10-0',
         ],
     },
     'cockpit-project/cockpit-files': {
@@ -156,6 +160,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             TEST_OS_DEFAULT,
             'rhel-9-4',
+            'rhel-10-0',
         ],
     },
     'osbuild/cockpit-composer': {
@@ -170,6 +175,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'fedora-40',
+            'rhel-10-0',
         ],
     },
     'candlepin/subscription-manager': {
@@ -202,6 +208,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'rhel-8-10',
             'rhel-9-5',
+            'rhel-10-0',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -214,6 +221,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'rhel-9-5',
+            'rhel-10-0',
         ],
     },
     'rhinstaller/anaconda-webui': {
