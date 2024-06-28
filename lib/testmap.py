@@ -110,6 +110,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10',
             'rhel-9-4',
             'rhel-9-5',
+            'rhel-10-0',
             'rhel4edge',
             'ubuntu-2204',
             'ubuntu-stable',
@@ -118,7 +119,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
-            'rhel-10-0',
         ],
     },
     'cockpit-project/cockpit-machines': {
