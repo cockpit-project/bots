@@ -159,7 +159,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             TEST_OS_DEFAULT,
-            'rhel-9-4',
+            'rhel-9-5',
+            'centos-10',
             'rhel-10-0',
         ],
     },
