@@ -135,24 +135,16 @@ if [ "$IMAGE" = "debian-testing" ]; then
     echo 'deb http://deb.debian.org/debian testing main' > /etc/apt/sources.list
     RELEASE=testing
 
-    # too buggy and uninstallable even in unstable, see https://tracker.debian.org/pkg/freeipa
-    IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client/}"
-
-    # HACK: some packages fell out of testing, get them from unstable
-    echo 'deb http://deb.debian.org/debian unstable main' >> /etc/apt/sources.list
-    cat <<EOF > /etc/apt/preferences.d/unstable
-Package: *
-Pin: release a=unstable
-Pin-Priority: -1
-
-Package: *sss*
-Pin: release a=unstable
-Pin-Priority: 10
-
-Package: *pcp*
-Pin: release a=unstable
-Pin-Priority: 10
-EOF
+    # some packages have been RC buggy for a long time and fell out of testing
+    # https://tracker.debian.org/pkg/freeipa
+    IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
+    # https://tracker.debian.org/pkg/sssd
+    IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/sssd-tools /}"
+    TEST_PACKAGES="${TEST_PACKAGES/sssd-dbus /}"
+    TEST_PACKAGES="${TEST_PACKAGES/sssd-proxy /}"
+    # https://tracker.debian.org/pkg/pcp
+    COCKPIT_DEPS="${COCKPIT_DEPS/libpcp3 /}"
+    COCKPIT_DEPS="${COCKPIT_DEPS/pcp /}"
 fi
 
 if [ "${IMAGE#ubuntu}" != "$IMAGE" ]; then
@@ -371,7 +363,7 @@ if [ "$IMAGE" = "ubuntu-stable" ]; then
 fi
 
 # pmlogger.service sometimes causes long shutdown hangs; disable all PCP services and timers
-systemctl --all --legend=false list-units 'pm*' | awk '{print $1}' | xargs systemctl disable
+systemctl --all --legend=false list-units 'pm*' | awk '{print $1}' | xargs --no-run-if-empty systemctl disable
 
 # reduce image size; don't keep old kernels
 sed -i '/linux/d' /etc/apt/apt.conf.d/01autoremove
