@@ -66,6 +66,7 @@ iproute2 \
 krb5-user \
 lastlog2 \
 libnss-myhostname \
+libpam-pwquality \
 ltrace \
 mdadm \
 nfs-server \
