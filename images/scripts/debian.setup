@@ -83,6 +83,7 @@ socat \
 sosreport \
 strace \
 systemd-coredump \
+systemd-cryptsetup \
 tang \
 targetcli-fb \
 tcsh \
@@ -159,6 +160,11 @@ Package: passwd
 Pin: version 1:4.13+dfsg1-4ubuntu3.1
 Pin-Priority: -1
 EOF
+fi
+
+# systemd-cryptsetup was split out in 256.1-2, older releases don't have it yet
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-stable" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES/systemd-cryptsetup /}"
 fi
 
 # smaller and faster initrd; see https://launchpad.net/bugs/1592684
