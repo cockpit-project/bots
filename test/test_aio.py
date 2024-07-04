@@ -2,7 +2,7 @@ import hashlib
 import json
 import re
 import time
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Iterator, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -126,7 +126,7 @@ def test_lru_cache() -> None:
 
 
 @pytest.fixture
-async def service() -> AsyncIterator[GitHubService]:
+def service() -> Iterator[GitHubService]:
     server = GitHubService()
     with aioresponses() as mock:
         mock.post(re.compile(''), callback=server.post, repeat=True)
