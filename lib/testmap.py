@@ -55,8 +55,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('rhel-9-4', COCKPIT_SCENARIOS),
             *contexts('rhel-9-5', COCKPIT_SCENARIOS),
             *contexts('centos-10', COCKPIT_SCENARIOS),
-            # no udisks on rhel4edge → skip storage
-            *contexts('rhel4edge', COCKPIT_SCENARIOS - {'storage'}),
         ],
         'rhel-8': [
             *contexts('rhel-8-10', COCKPIT_SCENARIOS),
@@ -91,7 +89,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-9-bootc',
             'fedora-coreos',
             'fedora-coreos/devel',
-            'rhel4edge',
         ],
         '_manual': [
             'rhel-9-5',
@@ -111,7 +108,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-4',
             'rhel-9-5',
             'rhel-10-0',
-            'rhel4edge',
             'ubuntu-2204',
             'ubuntu-stable',
         ],
@@ -240,7 +236,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
 OSTREE_BUILD_IMAGE = {
     "centos-9-bootc": "centos-9-stream",
     "fedora-coreos": "fedora-39",
-    "rhel4edge": "rhel-9-2",
 }
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
