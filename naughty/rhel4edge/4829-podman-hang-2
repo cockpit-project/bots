@@ -1,4 +1,0 @@
-  File "test/check-application", line *, in testPruneUnusedContainers*
-*
-RuntimeError: Timed out on '
-            podman run --name inpodrunning --pod pod -tid localhost/test-busybox sh -c 'sleep infinity''
