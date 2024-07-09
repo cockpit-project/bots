@@ -441,6 +441,9 @@ printf '[Manager]\nDefaultLimitCORE=infinity:infinity\n' > /etc/systemd/system.c
 # Prevent SSH from hanging for a long time when no external network access
 echo 'UseDNS no' >> /etc/ssh/sshd_config
 
+# pmlogger.service sometimes causes long shutdown hangs; disable all PCP services and timers
+systemctl --all --legend=false list-units 'pm*' | awk '{print $1}' | xargs --no-run-if-empty systemctl disable
+
 # clean up old kernels after upgrading
 dnf repoquery --installonly --latest-limit=-1 -q | xargs --no-run-if-empty rpm -e --verbose
 
