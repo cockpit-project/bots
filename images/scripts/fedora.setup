@@ -72,6 +72,7 @@ sscg \
 system-logos \
 subscription-manager \
 tuned \
+virtiofsd \
 /usr/bin/kdumpctl \
 "
 
@@ -152,20 +153,6 @@ if ! getent passwd admin >/dev/null; then
     echo foobar | passwd --stdin admin
 fi
 
-if [ "${IMAGE%-i386}" != "$IMAGE" ]; then
-    TEST_PACKAGES="${TEST_PACKAGES/podman /}"
-fi
-
-if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
-    dnf config-manager --set-enabled updates-testing
-fi
-
-if [ "$VERSION_ID" -lt "39" ]; then
-    COCKPIT_DEPS="$COCKPIT_DEPS qemu-virtiofsd"
-else
-    COCKPIT_DEPS="$COCKPIT_DEPS virtiofsd"
-fi
-
 # man-db cache update is a CPU/memory hog
 rpm -e --verbose man-db
 
@@ -207,11 +194,6 @@ dnf remove -y cloud-init
 dnf $DNF_OPTS -y install mock dnf-plugins-core rpm-build
 useradd -c Builder -G mock builder
 
-if [ "${IMAGE%-testing}" != "$IMAGE" ]; then
-    # Enable updates-testing in mock
-    echo "config_opts['dnf.conf'] += '[updates-testing]\nenabled=1'" >>/etc/mock/default.cfg
-fi
-
 # don't use a bootstrap chroot to save time and space; everything is offline, and we always just do exactly one build
 echo "config_opts['use_bootstrap'] = False" >>/etc/mock/site-defaults.cfg
 su builder -c "/usr/bin/mock --no-bootstrap-chroot --verbose -i $(/var/lib/testvm/build-deps.sh "${ID} ${VERSION_ID} ${VARIANT_ID}")"
@@ -229,19 +211,11 @@ su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
 # host system gets the versions with fedora-updates enabled
 dnf install -y $selinux_pkgs
 
-# eln image fails on running podman with:
-# error running container: did not get container start message from parent: EOF
-# fedora-eln is not used in podman tests, so we can just skip this section
-if [ "$VARIANT_ID" != "eln" ]; then
-    # for containers.install and cockpit's container/* tests
-    podman build --tag cockpit/base --build-arg VERSION=${VERSION_ID} /var/tmp/cockpit-base
+# for containers.install and cockpit's container/* tests
+podman build --tag cockpit/base --build-arg VERSION=${VERSION_ID} /var/tmp/cockpit-base
 
-    # for c-podman tests
-    /var/lib/testvm/podman-images.setup
-fi
-
-ln -sf ../selinux/config /etc/sysconfig/selinux
-printf "SELINUX=enforcing\nSELINUXTYPE=targeted\n" > /etc/selinux/config
+# for c-podman tests
+/var/lib/testvm/podman-images.setup
 
 # Prevent SSH from hanging for a long time when no external network access
 echo 'UseDNS no' >> /etc/ssh/sshd_config
