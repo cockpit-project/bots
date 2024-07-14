@@ -1,3 +1,0 @@
-*TestMachinesVirtualization.testLibvirt*
-testlib.Error: FAIL: Test completed, but found unexpected browser errors:
-error: Failed to get libvirt version from the dbus API: *internal error: Cannot find start time for pid
