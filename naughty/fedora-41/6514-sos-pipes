@@ -1,6 +1,0 @@
-> error: Failed to call sos report: {"problem":null,"exit_status":1,"exit_signal":null,"message":""}
-*
-  File "test/verify/check-sosreport", line *
-    b.wait_not_present("#sos-dialog")
-*
-testlib.Error: timeout
