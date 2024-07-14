@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-system-realms", line *, in testClientCertAuthentication
-    b.become_superuser(passwordless=True)
-  File "test/common/testlib.py", line *, in become_superuser
-    self.wait_in_text("div[role=dialog]:contains('Administrative access')", "You now have administrative access.")
-*
-testlib.Error: timeout
