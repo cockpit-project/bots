@@ -235,7 +235,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
 # their non-Atomic siblings.
 OSTREE_BUILD_IMAGE = {
     "centos-9-bootc": "centos-9-stream",
-    "fedora-coreos": "fedora-39",
+    "fedora-coreos": "fedora-40",
 }
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
