@@ -330,7 +330,9 @@ fi
 dnf --setopt=install_weak_deps=False install -y cockpit
 
 # For debugging udisks/storaged crashes
-debuginfo-install -y udisks2
+if [ "${IMAGE#rhel}" != "$IMAGE" ]; then
+    debuginfo-install -y udisks2
+fi
 
 # Prepare for building
 
