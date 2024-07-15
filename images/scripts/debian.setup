@@ -28,7 +28,6 @@ libvirt-dbus \
 network-manager \
 packagekit \
 pcp \
-policykit-1 \
 python3-dbus \
 qemu-block-extra \
 realmd \
@@ -45,6 +44,13 @@ xdg-utils \
 # udisks >= 2.10 depends on libblockdev-mdraid, so add it manually only for older OSes
 if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
     COCKPIT_DEPS="$COCKPIT_DEPS libblockdev-mdraid2"
+fi
+
+# policykit-1 was split into multiple packages on debian, ubuntu-2204 kept the old name
+if [ "$IMAGE" = "ubuntu-2204" ]; then
+    COCKPIT_DEPS="$COCKPIT_DEPS policykit-1"
+else
+    COCKPIT_DEPS="$COCKPIT_DEPS pkexec"
 fi
 
 # We also install the packages necessary to join a FreeIPA domain so
