@@ -333,7 +333,7 @@ mkdir -p /var/log/journal
 # Allow root login with password
 sed -i 's/^[# ]*PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-# At least debian-9 virt-install image only has RSA key
+# At least debian-9 cloud image only has RSA key
 [ -e /etc/ssh/ssh_host_ed25519_key ] || ssh-keygen -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519
 [ -e /etc/ssh/ssh_host_ecdsa_key ] || ssh-keygen -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa
 
