@@ -318,13 +318,6 @@ systemctl disable apt-daily.timer apt-daily-upgrade.timer fstrim.timer man-db.ti
 echo "kernel.core_pattern=|/lib/systemd/systemd-coredump %P %u %g %s %t %c %e" > /etc/sysctl.d/50-coredump.conf
 printf 'DefaultLimitCORE=infinity\n' >> /etc/systemd/system.conf
 
-# disable udev network names, our tests expect the kernel schema
-sed -i '/GRUB_CMDLINE_LINUX=/ s/"$/ net.ifnames=0 biosdevname=0"/' /etc/default/grub
-rm -f /etc/udev/rules.d/70-persistent-net.rules /etc/udev/rules.d/75-cloud-ifupdown.rules
-update-grub
-sed -i 's/ens[^[:space:]:]*/eth0/' /etc/network/interfaces /etc/network/interfaces.d/* /etc/netplan/*.yaml || true
-update-initramfs -u
-
 # We want to use/test NetworkManager instead of netplan/networkd for ethernets
 printf 'network:\n  renderer: NetworkManager\n' > /etc/netplan/10-nm.yaml
 mkdir -p /etc/NetworkManager/conf.d
