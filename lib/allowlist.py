@@ -7,31 +7,39 @@ ALLOWLIST = {
     'osbuild',
     'rhinstaller',
 
-    # humans
-    'KKoukiou',
-    'M4rtinK',
-    'adamkankovsky',
-    'allisonkarlitskaya',
-    'croissanne',
-    'garrett',
-    'jelly',
-    'jexposit',
-    'jkonecny12',
-    'jkozol',
-    'jscotka',
-    'lucasgarfield',
-    'martinpitt',
-    'marusak',
-    'mvollmer',
-    'ptoscano',
-    'regexowl',
-    'rvykydal',
-    'subhoghoshX',
-    'supakeen',
-    'tomasmatus',
-    'yunmingyang',
-
     # bots
     'cockpituous',
     'github-actions[bot]',
+
+    # humans
+
+    # cockpit team + contributors
+    'allisonkarlitskaya',
+    'garrett',
+    'jelly',
+    'jscotka',
+    'martinpitt',
+    'marusak',
+    'mvollmer',
+    'subhoghoshX',
+    'tomasmatus',
+    'yunmingyang',
+
+    # installer team + contributors
+    'KKoukiou',
+    'M4rtinK',
+    'adamkankovsky',
+    'jexposit',
+    'jkonecny12',
+    'rvykydal',
+
+    # osbuild team + contributors
+    'croissanne',
+    'jkozol',
+    'lucasgarfield',
+    'regexowl',
+    'supakeen',
+
+    # candlepin team + contributors
+    'ptoscano',
 }
