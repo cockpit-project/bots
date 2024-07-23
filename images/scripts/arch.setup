@@ -78,6 +78,10 @@ wireguard-tools \
 xfsprogs \
 "
 
+# HACK: libosinfo requires gsettings-desktop-schemas but does not depend on it.
+# https://gitlab.archlinux.org/archlinux/packaging/packages/libosinfo/-/issues/1
+TEST_PACKAGES="$TEST_PACKAGES gsettings-desktop-schemas"
+
 # iptables-nft (which provides ebtables) is required for libvirt NAT networking
 # but provides iptables and therefore conflicts. First remove it before installing iptables-nft.
 pacman -Rdd --noconfirm iptables
