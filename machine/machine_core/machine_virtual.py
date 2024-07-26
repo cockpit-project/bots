@@ -269,14 +269,12 @@ class VirtMachine(Machine):
         memory_mb: int | None = None,
         cpus: int | None = None,
         capture_console: bool = False,
-        graphics: bool = False,
         **kwargs: Any
     ):
         self.maintain = maintain
 
         self.memory_mb = memory_mb or VirtMachine.memory_mb or MEMORY_MB
         self.cpus = cpus or VirtMachine.cpus or 1
-        self.graphics = graphics
         if capture_console:
             console_file = tempfile.NamedTemporaryFile(suffix='.log', prefix='console-')
         else:
