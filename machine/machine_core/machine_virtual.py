@@ -260,6 +260,8 @@ class VirtMachine(Machine):
     memory_mb: int | None = None
     cpus: int | None = None
     is_efi: bool = False
+    image_file: str
+    run_dir: str
 
     def __init__(
         self,
