@@ -22,6 +22,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from lib.constants import TEST_OS_DEFAULT
 
 COCKPIT_SCENARIOS = {'networking', 'storage', 'expensive', 'other'}
+ANACONDA_SCENARIOS = {'expensive', 'other'}
 
 
 def contexts(image: str, *scenarios: Iterable[str], repo: str | None = None) -> Sequence[str]:
@@ -223,7 +224,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     },
     'rhinstaller/anaconda-webui': {
         'main': [
-            'fedora-rawhide-boot',
+            *contexts('fedora-rawhide-boot', ANACONDA_SCENARIOS),
         ],
         '_manual': [
             'fedora-eln-boot',
@@ -252,11 +253,11 @@ IMAGE_REFRESH_TRIGGERS = {
     ],
     # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
     "fedora-rawhide": [
-        "fedora-rawhide-boot@rhinstaller/anaconda-webui"
+        *contexts("fedora-rawhide-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
     ],
     # Anaconda payload updates can affect tests
     "fedora-rawhide-anaconda-payload": [
-        "fedora-rawhide-boot@rhinstaller/anaconda-webui"
+        *contexts("fedora-rawhide-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
     ],
 }
 
