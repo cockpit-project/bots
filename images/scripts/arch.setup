@@ -115,6 +115,10 @@ no-auto-default=*
 unmanaged-devices=interface-name:eth0
 EOL
 
+# Disable PerSourcePenalties, they interfere with the rapid failed
+# logins performed by some tests.
+echo "PerSourcePenalties no" >/etc/ssh/sshd_config.d/99-no-penalties.conf
+
 # Disable mDNS for systemd-resolved, mDNS always times out in our testing setup which makes
 # multi machine tests time out as the resolved timeout is ~ 7 seconds.
 mkdir -p /etc/systemd/resolved.conf.d
