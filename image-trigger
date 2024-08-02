@@ -54,7 +54,6 @@ REFRESH = {
     "ubuntu-stable": {},
     "rhel-8-8": REFRESH_30,
     "rhel-8-10": {},
-    "rhel-9-0": REFRESH_30,
     "rhel-9-2": REFRESH_30,
     "rhel-9-3": {},
     "rhel-9-4": {},

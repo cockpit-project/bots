@@ -233,13 +233,6 @@ class Machine(ssh_connection.SSHConnection):
             # yes, this ignores all crash info; we can't help it
             allowed.append("^(Module|ELF|Stack trace|#[0-9]).*")
 
-        if self.image in ["rhel-9-0"]:
-            # https://bugzilla.redhat.com/show_bug.cgi?id=2124550 / https://bugzilla.redhat.com/show_bug.cgi?id=2124549
-            allowed.append(
-                'audit.*denied  { read .* for.*comm="gpg" .* tcontext=unconfined_u:object_r:admin_home_t.*'
-            )
-            allowed.append("Error importing insights.client.*newest.egg: No module named 'insights'")
-
         return allowed
 
     def get_admin_group(self) -> str:
