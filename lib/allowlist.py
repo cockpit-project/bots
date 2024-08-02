@@ -32,6 +32,7 @@ ALLOWLIST = {
     'jexposit',
     'jkonecny12',
     'rvykydal',
+    'vojtechtrefny',
 
     # osbuild team + contributors
     'croissanne',
