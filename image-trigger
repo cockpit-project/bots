@@ -52,7 +52,6 @@ REFRESH = {
     "opensuse-tumbleweed": {},
     "ubuntu-2204": {},
     "ubuntu-stable": {},
-    "rhel-8-4": REFRESH_30,
     "rhel-8-6": REFRESH_30,
     "rhel-8-8": REFRESH_30,
     "rhel-8-9": {},
