@@ -178,47 +178,40 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     },
     'candlepin/subscription-manager': {
         'main': [
-            'rhel-9-0',
-            'rhel-9-2',
-            'rhel-9-3',
-            'rhel-9-4',
+            'rhel-9-5',
             'fedora-39',
             'fedora-40',
         ],
         'subscription-manager-1.28': [
-            'rhel-8-4',
-            'rhel-8-6',
             'rhel-8-8',
-            'rhel-8-9',
-        ],
-        'subscription-manager-1.28.29': [
-            'rhel-8-6',
+            'rhel-8-10',
         ],
         'subscription-manager-1.28.36': [
             'rhel-8-8',
         ],
-        'subscription-manager-1.29.26': [
-            'rhel-9-0',
+        'subscription-manager-1.29': [
+            'rhel-9-2',
+            'rhel-9-4',
+            'rhel-9-5',
         ],
         'subscription-manager-1.29.33': [
             'rhel-9-2',
         ],
+        'subscription-manager-1.29.40': [
+            'rhel-9-4',
+        ],
         '_manual': [
-            'rhel-8-10',
-            'rhel-9-5',
             'rhel-10-0',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
         'main': [
-            'centos-9-stream',
-            'rhel-9-3',
-            'rhel-9-4',
+            'centos-9-stream/subscription-manager-1.29',
+            'rhel-9-5/subscription-manager-1.29',
             'fedora-39',
             'fedora-40',
         ],
         '_manual': [
-            'rhel-9-5',
             'rhel-10-0',
         ],
     },
@@ -248,8 +241,8 @@ IMAGE_REFRESH_TRIGGERS = {
         *contexts('debian-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('rhel-9-4', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         "rhel-8-10@cockpit-project/cockpit/rhel-8",
-        "rhel-8-8@candlepin/subscription-manager/subscription-manager-1.28",
-        "rhel-9-4@candlepin/subscription-manager-cockpit",
+        "rhel-8-10@candlepin/subscription-manager/subscription-manager-1.28",
+        "rhel-9-5@candlepin/subscription-manager-cockpit",
     ],
     # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
     "fedora-rawhide": [
