@@ -174,6 +174,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'candlepin/subscription-manager': {
         'main': [
             'rhel-9-5',
+            'rhel-10-0',
             'fedora-39',
             'fedora-40',
         ],
@@ -196,18 +197,17 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-4',
         ],
         '_manual': [
-            'rhel-10-0',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
         'main': [
             'centos-9-stream/subscription-manager-1.29',
             'rhel-9-5/subscription-manager-1.29',
+            'rhel-10-0',
             'fedora-39',
             'fedora-40',
         ],
         '_manual': [
-            'rhel-10-0',
         ],
     },
     'rhinstaller/anaconda-webui': {
