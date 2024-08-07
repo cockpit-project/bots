@@ -53,7 +53,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
             # no udisks on CoreOS → skip storage
             *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
-            *contexts('rhel-9-4', COCKPIT_SCENARIOS),
             *contexts('rhel-9-5', COCKPIT_SCENARIOS),
             *contexts('centos-10', COCKPIT_SCENARIOS),
         ],
@@ -106,7 +105,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-40',
             'fedora-coreos',
             'rhel-8-10',
-            'rhel-9-4',
             'rhel-9-5',
             'rhel-10-0',
             'ubuntu-2204',
@@ -131,13 +129,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             f'{TEST_OS_DEFAULT}/firefox',
             'opensuse-tumbleweed',
             'rhel-8-10',
-            'rhel-9-4',
             'rhel-9-5',
         ],
         'rhel-8': [
             'rhel-8-10',
-            'rhel-9-4',
-            'rhel-9-4/firefox',
         ],
         '_manual': [
             'centos-10',
@@ -239,7 +234,7 @@ IMAGE_REFRESH_TRIGGERS = {
         *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('debian-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *contexts('rhel-9-4', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *contexts('rhel-9-5', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         "rhel-8-10@cockpit-project/cockpit/rhel-8",
         "rhel-8-10@candlepin/subscription-manager/subscription-manager-1.28",
         "rhel-9-5@candlepin/subscription-manager-cockpit",
