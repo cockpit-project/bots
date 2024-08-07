@@ -111,6 +111,7 @@ chmod 755 /root/run-samba-domain
 podman run -d --name candlepin \
     --uts=host \
     -p 8443:8443 \
+    -p 8080:8080 \
     ghcr.io/ptoscano/candlepin-unofficial
 
 # give systemd the time to start in the container
@@ -134,6 +135,7 @@ sleep 5
 
 # validate that it works
 until curl --insecure --fail --head https://localhost:8443/candlepin/status; do sleep 5; done
+curl --insecure --fail --head http://localhost:8080/RPM-GPG-KEY-candlepin
 
 # copy the certificate to where the tests expect them
 mkdir -p /home/admin/candlepin
