@@ -164,10 +164,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10',
             'rhel-9-4',
         ],
-        # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
             'fedora-40',
+            'rhel-9-5',
             'rhel-10-0',
         ],
     },
