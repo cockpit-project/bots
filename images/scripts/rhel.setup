@@ -349,13 +349,13 @@ if [ "$DO_BUILD" -eq 1 ]; then
         cat <<EOF > /etc/yum.repos.d/fedora.repo
 [fedora]
 name=Fedora
-baseurl=http://download.fedoraproject.org/pub/fedora/linux/releases/40/Everything/\$basearch/os/
+metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-40&arch=\$basearch
 enabled=1
 gpgcheck=0
 
 [fedora-updates]
 name=Fedora
-baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/40/Everything/\$basearch/
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f40&arch=\$basearch
 enabled=1
 gpgcheck=0
 EOF
