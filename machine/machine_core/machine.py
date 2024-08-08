@@ -260,24 +260,26 @@ class Machine(ssh_connection.SSHConnection):
             self.wait_for_cockpit_running(atomic_wait_for_host or "localhost")
         elif tls:
             self.execute("""
-            rm -f /etc/systemd/system/cockpit.service.d/notls.conf &&
-            systemctl reset-failed 'cockpit*' &&
-            systemctl daemon-reload &&
-            systemctl stop --quiet cockpit.service &&
+            systemctl stop --quiet cockpit.service
+            rm -f /etc/systemd/system/cockpit.service.d/notls.conf
+            systemctl reset-failed cockpit.socket 2>/dev/null || true
+            systemctl reset-failed cockpit.service 2>/dev/null || true
+            systemctl daemon-reload
             systemctl start cockpit.socket
             """)
         else:
             self.execute("""
-            mkdir -p /etc/systemd/system/cockpit.service.d/ &&
-            rm -f /etc/systemd/system/cockpit.service.d/notls.conf &&
+            systemctl stop --quiet cockpit.service
+            mkdir -p /etc/systemd/system/cockpit.service.d/
+            rm -f /etc/systemd/system/cockpit.service.d/notls.conf
             printf "[Service]
             ExecStartPre=-/bin/sh -c 'echo 0 > /proc/sys/kernel/yama/ptrace_scope'
             ExecStart=
             %s --no-tls" `grep ExecStart= /lib/systemd/system/cockpit.service` \
-                    > /etc/systemd/system/cockpit.service.d/notls.conf &&
-            systemctl reset-failed 'cockpit*' &&
-            systemctl daemon-reload &&
-            systemctl stop --quiet cockpit.service &&
+                    > /etc/systemd/system/cockpit.service.d/notls.conf
+            systemctl reset-failed cockpit.socket 2>/dev/null || true
+            systemctl reset-failed cockpit.service 2>/dev/null || true
+            systemctl daemon-reload
             systemctl start cockpit.socket
             """)
 
