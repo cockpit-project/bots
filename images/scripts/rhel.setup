@@ -415,8 +415,13 @@ fi
 
 dnf clean all || true
 
-# disable eth1 to avoid long boot hang on NetworkManager-wait-online.service
-nmcli con add con-name "eth1" ifname eth1 type ethernet ipv4.method disabled ipv6.method ignore
+# disable second eth to avoid long boot hang on NetworkManager-wait-online.service
+# cover kernel and systemd interface names
+for iface in eth1 ens15; do
+    if [ -e /sys/class/net/$iface ]; then
+        nmcli con add con-name $iface ifname $iface type ethernet ipv4.method disabled ipv6.method ignore
+    fi
+done
 
 # our cloud-init.iso does not set up the host name
 echo "127.0.1.1 $(hostname)" >> /etc/hosts
