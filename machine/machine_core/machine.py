@@ -262,8 +262,7 @@ class Machine(ssh_connection.SSHConnection):
             self.execute("""
             systemctl stop --quiet cockpit.service
             rm -f /etc/systemd/system/cockpit.service.d/notls.conf
-            systemctl reset-failed cockpit.socket 2>/dev/null || true
-            systemctl reset-failed cockpit.service 2>/dev/null || true
+            systemctl reset-failed 'cockpit*'
             systemctl daemon-reload
             systemctl start cockpit.socket
             """)
@@ -277,8 +276,7 @@ class Machine(ssh_connection.SSHConnection):
             ExecStart=
             %s --no-tls" `grep ExecStart= /lib/systemd/system/cockpit.service` \
                     > /etc/systemd/system/cockpit.service.d/notls.conf
-            systemctl reset-failed cockpit.socket 2>/dev/null || true
-            systemctl reset-failed cockpit.service 2>/dev/null || true
+            systemctl reset-failed 'cockpit*'
             systemctl daemon-reload
             systemctl start cockpit.socket
             """)
