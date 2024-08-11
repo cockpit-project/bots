@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "test/check-machines-create", line *, in testConfigureBeforeInstall
-    testlib.wait(lambda: "VmNotInstalled" in m.execute("virsh list --persistent"), delay=3)
-*
-    raise Error(msg or "Condition did not become true.")
-testlib.Error: Condition did not become true.
