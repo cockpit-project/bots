@@ -146,9 +146,6 @@ def normalize_traceback(trace: str) -> str:
     trace = re.sub(r'audit\([0-9.:]+\)', 'audit(0)', trace)
     trace = re.sub(r'\b(pid|ino)=[0-9]+ ', r'\1=0 ', trace)
 
-    # testlib API change: move ph_*() test-functions to window object
-    trace = re.sub(r'\bwindow.ph_', r'ph_', trace)
-
     # in Python 3, testlib.Error is shown with namespace
     trace = re.sub(r'testlib\.Error', 'Error', trace)
     return trace
