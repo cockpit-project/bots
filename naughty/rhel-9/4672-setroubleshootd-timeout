@@ -1,4 +1,4 @@
-> warning: Unable to delete alert *
+> warn*: Unable to delete alert *
 *
   File "test/verify/check-selinux", line *, in testTroubleshootAlerts
 *
