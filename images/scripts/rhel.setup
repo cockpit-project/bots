@@ -225,7 +225,6 @@ kpatch-dnf \
 libvirt-daemon-config-network \
 ltrace \
 nmap-ncat \
-python3-tracer \
 qemu-kvm \
 socat \
 strace \
@@ -273,6 +272,11 @@ fi
 if [ "${IMAGE#rhel-[89]}" != "$IMAGE" ] || [ "${IMAGE#centos-[89]}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/ valkey / }"
     TEST_PACKAGES="$TEST_PACKAGES redis"
+fi
+
+# RHEL 8/9 had tracer
+if [ "${IMAGE#rhel-[89]}" != "$IMAGE" ] || [ "${IMAGE#centos-[89]}" != "$IMAGE" ]; then
+    TEST_PACKAGES="$TEST_PACKAGES python3-tracer"
 fi
 
 # These packages are downloaded to the image so that the tests can
