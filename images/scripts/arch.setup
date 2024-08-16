@@ -153,7 +153,8 @@ xmlto \
 python-installer \
 python-pip \
 python-wheel \
-python-build
+python-build \
+systemd \
 "
 
 # Create build chroot for cockpit projects for offline builds, the base chroot
