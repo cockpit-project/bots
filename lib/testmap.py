@@ -64,6 +64,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'fedora-41',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -80,6 +81,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-0',
         ],
         '_manual': [
+            'fedora-41',
             'centos-9-bootc',
             'rhel-9-5',
         ]
@@ -111,6 +113,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'ubuntu-stable',
         ],
         '_manual': [
+            'fedora-41',
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
@@ -135,6 +138,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10',
         ],
         '_manual': [
+            'fedora-41',
             'centos-10',
             'fedora-rawhide',
             'rhel-10-0',
@@ -151,6 +155,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             TEST_OS_DEFAULT,
+            'fedora-41',
             'rhel-9-5',
             'centos-10',
             'rhel-10-0',
@@ -169,7 +174,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'fedora-rawhide',
-            'fedora-40',
+            'fedora-41',
             'rhel-9-5',
             'rhel-10-0',
         ],
@@ -211,6 +216,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-40',
         ],
         '_manual': [
+            'fedora-41',
         ],
     },
     'rhinstaller/anaconda-webui': {
