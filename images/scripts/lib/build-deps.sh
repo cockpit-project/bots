@@ -40,6 +40,10 @@ case "$OS_VER" in
     *suse*)
         EXTRA_DEPS="appstream-glib rpmlint gettext-runtime desktop-file-utils nodejs-default"
         ;;
+    rhel*10|centos*10)
+        # no rpmlint in RHEL 10: https://pkgs.devel.redhat.com/cgit/rpms/rpmlint/commit/?h=rhel-10-main&id=9a9efcbfd844
+        EXTRA_DEPS="libappstream-glib gettext desktop-file-utils nodejs"
+        ;;
     *)
         EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs"
         ;;
