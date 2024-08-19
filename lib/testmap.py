@@ -150,15 +150,14 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'debian-testing',
             'fedora-39',
             'fedora-40',
+            'fedora-41',
             f'{TEST_OS_DEFAULT}/devel',
             'fedora-rawhide',
-        ],
-        '_manual': [
-            TEST_OS_DEFAULT,
-            'fedora-41',
-            'rhel-9-5',
             'centos-10',
             'rhel-10-0',
+        ],
+        '_manual': [
+            'rhel-9-5',
         ],
     },
     'osbuild/cockpit-composer': {
