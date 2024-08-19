@@ -58,8 +58,7 @@ def build_policy(repo: str, requested_contexts: Collection[str]) -> Policy:
 
 
 def is_internal_context(context: str) -> bool:
-    # HACK: CentOS CI doesn't like firefox, browser fails to start way too often
-    for pattern in ["rhel", "edge", "vmware", "openstack", "/firefox"]:
+    for pattern in ["rhel"]:
         if pattern in context:
             return True
     return False
