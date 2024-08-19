@@ -105,6 +105,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'debian-testing',
             'fedora-39',
             'fedora-40',
+            'fedora-41',
             'fedora-coreos',
             'rhel-8-10',
             'rhel-9-5',
@@ -113,7 +114,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'ubuntu-stable',
         ],
         '_manual': [
-            'fedora-41',
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
