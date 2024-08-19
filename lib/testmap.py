@@ -149,10 +149,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             f'{TEST_OS_DEFAULT}/devel',
             'fedora-rawhide',
             'centos-10',
+            'rhel-9-5',
             'rhel-10-0',
         ],
         '_manual': [
-            'rhel-9-5',
         ],
     },
     'osbuild/cockpit-composer': {
