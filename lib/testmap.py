@@ -169,8 +169,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'fedora-41',
-            'rhel-9-5',
-            'rhel-10-0',
         ],
     },
     'candlepin/subscription-manager': {
