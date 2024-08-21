@@ -97,6 +97,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'cockpit-project/cockpit-podman': {
         'main': [
             f'{TEST_OS_DEFAULT}/devel',
+            f'{TEST_OS_DEFAULT}/firefox',
             'arch',
             'centos-9-bootc',
             'debian-stable',
