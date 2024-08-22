@@ -182,6 +182,7 @@ openssl \
 PackageKit \
 pcp-libs \
 pcp \
+python3-pcp \
 podman \
 realmd \
 redhat-logos \
@@ -246,6 +247,11 @@ fi
 # wireguard-tools not available on rhel-8*
 if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/wireguard-tools /}"
+fi
+
+# RHEL 8 still uses the C pcp bridge 
+if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
+    COCKPIT_DEPS="${COCKPIT_DEPS/python3-pcp /}"
 fi
 
 # vdo not available on centos/rhel 10
