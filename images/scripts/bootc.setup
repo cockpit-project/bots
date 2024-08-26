@@ -28,5 +28,4 @@ rm /var/cache/bootc.oci.tar
 systemctl disable bootc-fetch-apply-updates.timer fstrim.timer logrotate.timer raid-check.timer
 
 # reduce image size
-rm -rf /var/log/journal/*
 /var/lib/testvm/zero-disk.setup

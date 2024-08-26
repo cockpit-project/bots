@@ -45,5 +45,4 @@ done
 
 # reduce image size
 rpm-ostree cleanup --repomd
-rm -rf /var/log/journal/*
 /var/lib/testvm/zero-disk.setup
