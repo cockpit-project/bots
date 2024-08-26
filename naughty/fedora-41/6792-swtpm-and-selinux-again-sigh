@@ -1,0 +1,5 @@
+*internal error: Could not run '/usr/bin/swtpm_setup'.*
+*
+Traceback (most recent call last):
+  File "check-machines-create", line *, in testConfigureBeforeInstall
+    testlib.wait(lambda: "VmNotInstalled" in m.execute("virsh list --persistent"), delay=3)
