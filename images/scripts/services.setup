@@ -207,7 +207,5 @@ chmod 755 /root/run-grafana
 # disable automatic updates
 systemctl disable --now zincati.service
 
-rm -rf /var/log/journal/*
-
 # reduce image size
 /var/lib/testvm/zero-disk.setup
