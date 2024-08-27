@@ -55,8 +55,50 @@ lvm2
 
 KICKSTART_PATH = "/tmp/payload.ks"
 
+WEBUI_PAYLOAD_SPEC = """
+Name: webui_payload
+Version: 1
+Release: 1
+Summary: Inject what's needed to Web UI image.
+License: FIXME
 
-def build_payload(image: str, output: str) -> None:
+%description
+Inject what's needed to Web UI image.
+
+%source0 webui-payload.tar.gz
+
+%prep
+
+    # we have no source, so nothing here
+    ls -lah
+    cp /root/webui-payload.tar.gz .
+
+%build
+cat > custom_interactive-defaults.ks <<EOF
+
+    use local live payload tarball for the Web UI
+    liveimg --url="file://live.tar.xz"
+    EOF
+
+%install
+mkdir -p %{buildroot}/usr/bin/
+mkdir -p %{buildroot}/usr/share/anaconda/
+
+install -m 755 webui-payload.tar.gz %{buildroot}/live.tar.xz
+install -m 755 custom_interactive-defaults.ks %{buildroot}/usr/share/anaconda/custom_interactive-defaults.ks
+
+%files
+/live.tar.xz
+/usr/share/anaconda/custom_interactive-defaults.ks
+
+%posttrans
+cp /usr/share/anaconda/custom_interactive-defaults.ks /usr/share/anaconda/interactive-defaults.ks
+
+%changelog
+"""
+
+
+def build_payload_rpm(image: str, output: str) -> None:
     subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), image])
     machine = testvm.VirtMachine(image=image, memory_mb=4096)
     try:
@@ -72,9 +114,19 @@ def build_payload(image: str, output: str) -> None:
         )
 
         # Change directory to /mnt/sysimage/ and create archive
-        machine.execute("cd /mnt/sysimage && tar --selinux --acls --xattrs -zcvf /root/payload.tar.gz *", timeout=100)
+        machine.execute(
+            "cd /mnt/sysimage && tar --selinux --acls --xattrs -zcvf /root/webui-payload.tar.gz *",
+            timeout=100
+        )
 
-        machine.download("/root/payload.tar.gz", output)
+        # Create the payload RPM Spec file
+        machine.execute("echo '%s' > /root/webui-payload.spec" % WEBUI_PAYLOAD_SPEC)
+
+        # Build the RPM
+        machine.execute("rpmbuild -bb /root/webui-payload.spec", timeout=300)
+
+        # Download the RPM
+        machine.download("/root/rpmbuild/RPMS/x86_64/webui_payload-1-1.x86_64.rpm", output)
     finally:
         machine.stop()
 
@@ -88,7 +140,7 @@ def main() -> None:
     if not args.output:
         raise RuntimeError("Output path not specified")
 
-    build_payload(args.image, args.output)
+    build_payload_rpm(args.image, args.output)
 
 
 main()
