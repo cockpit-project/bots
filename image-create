@@ -60,7 +60,7 @@ class MachineBuilder:
         if self.iso:
             self.suffix = ".iso"
         elif self.payload:
-            self.suffix = ".tar.gz"
+            self.suffix = ".rpm"
         else:
             self.suffix = ".qcow2"
 

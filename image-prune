@@ -64,7 +64,7 @@ def get_images_in_branches(merge_target: str, *branch_patterns: str, cwd: str = 
         _rev, _kind, ref = ref_line.split()
         logger.debug('Considering images changed in %s...', ref)
         for patch_line in git('diff', f'{merge_target}...{ref}', '--', 'images/', cwd=cwd).splitlines():
-            if match := re.search(r'^\+([-0-9a-z]+-[0-9a-f]+.(qcow2|iso|tar.gz))', patch_line):
+            if match := re.search(r'^\+([-0-9a-z]+-[0-9a-f]+.(qcow2|iso|rpm))', patch_line):
                 image = match.group(1)
                 logger.debug('  - %s', image)
                 yield image
@@ -121,7 +121,7 @@ class ImageCache:
 
         # Sort by mtime, oldest first.
         for mtime, image in sorted(self.list_files()):
-            if not image.endswith(('.iso', 'tar.gz', '.qcow2', '.partial')):
+            if not image.endswith(('.iso', '.rpm', '.qcow2', '.partial')):
                 logger.debug('Skipping file %s with unknown extension', image)
                 continue
 

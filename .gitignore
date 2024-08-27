@@ -3,6 +3,7 @@
 *.pyc
 *.qcow2
 *.tar.??
+*.rpm
 *.xz
 *~
 /*.log
