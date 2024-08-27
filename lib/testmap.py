@@ -110,13 +110,13 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-5',
             'rhel-10-0',
             'ubuntu-2204',
+            'ubuntu-2404',
             'ubuntu-stable',
         ],
         '_manual': [
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
-            'ubuntu-2404',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -125,6 +125,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'debian-stable',
             'debian-testing',
             'ubuntu-2204',
+            'ubuntu-2404',
             'ubuntu-stable',
             'fedora-40',
             'fedora-41',
@@ -141,7 +142,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'rhel-10-0',
-            'ubuntu-2404',
         ],
     },
     'cockpit-project/cockpit-files': {
