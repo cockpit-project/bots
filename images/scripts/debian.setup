@@ -105,7 +105,7 @@ if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
 fi
 
 # introduced in util-linux 2.40.1-5
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ] || [ "$IMAGE" = "ubuntu-stable" ]; then
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/lastlog2/}"
 fi
 
@@ -154,7 +154,8 @@ if [ "$IMAGE" = "debian-testing" ]; then
     COCKPIT_DEPS="${COCKPIT_DEPS/pcp /}"
 fi
 
-if [ "${IMAGE#ubuntu}" != "$IMAGE" ]; then
+# Attention: Enable proposed for ubuntu-stable after 24.10 release
+if [ "${IMAGE#ubuntu}" != "$IMAGE" ] && [ "$IMAGE" != "ubuntu-stable" ]; then
     echo "deb http://archive.ubuntu.com/ubuntu ${RELEASE}-proposed main restricted universe" > /etc/apt/sources.list.d/proposed.list
     cat <<EOF > /etc/apt/preferences.d/all-proposed
 Package: *
@@ -169,7 +170,7 @@ EOF
 fi
 
 # systemd-cryptsetup was split out in 256.1-2, older releases don't have it yet
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ] || [ "$IMAGE" = "ubuntu-stable" ]; then
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/systemd-cryptsetup /}"
 fi
 
@@ -362,7 +363,7 @@ if [ "$RELEASE" = "testing" ]; then
 fi
 
 # HACK: https://launchpad.net/bugs/2040483
-if [ "$IMAGE" = "ubuntu-2404" ] || [ "$IMAGE" = "ubuntu-stable" ]; then
+if [ "$IMAGE" = "ubuntu-2404" ]; then
     mkdir -p /etc/containers/containers.conf.d
     printf '[CONTAINERS]\napparmor_profile=""\n' > /etc/containers/containers.conf.d/disable-apparmor.conf
 fi
