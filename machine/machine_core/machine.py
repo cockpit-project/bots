@@ -221,13 +221,13 @@ class Machine(ssh_connection.SSHConnection):
             allowed.append('----')
             allowed.append('type=(PROCTITLE|SYSCALL|EXECVE|PATH|CWD).*')
 
-        if self.image in ["debian-testing", "ubuntu-stable"]:
+        if self.image in ["debian-testing", "ubuntu-2404", "ubuntu-stable"]:
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
             allowed.append('audit.* apparmor="DENIED" operation="open" class="file" '
                            'profile=".*" name="/sys/devices/system/cpu/possible" .* '
                            'comm="qemu-system-x86" requested_mask="r" denied_mask="r".*')
 
-        if self.image in ["debian-testing", "ubuntu-stable"]:
+        if self.image in ["debian-testing", "ubuntu-2404", "ubuntu-stable"]:
             # https://bugs.debian.org/1053706
             allowed.append(r"Process.*\(w\) .*dumped core.")
             # yes, this ignores all crash info; we can't help it

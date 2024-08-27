@@ -52,6 +52,7 @@ REFRESH = {
     "fedora-rawhide-live-boot": REFRESH_30,
     "opensuse-tumbleweed": {},
     "ubuntu-2204": {},
+    "ubuntu-2404": {},
     "ubuntu-stable": {},
     "rhel-8-8": REFRESH_30,
     "rhel-8-10": {},

@@ -105,7 +105,7 @@ if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
 fi
 
 # introduced in util-linux 2.40.1-5
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-stable" ]; then
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ] || [ "$IMAGE" = "ubuntu-stable" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/lastlog2/}"
 fi
 
@@ -169,7 +169,7 @@ EOF
 fi
 
 # systemd-cryptsetup was split out in 256.1-2, older releases don't have it yet
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-stable" ]; then
+if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ] || [ "$IMAGE" = "ubuntu-stable" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/systemd-cryptsetup /}"
 fi
 
@@ -362,7 +362,7 @@ if [ "$RELEASE" = "testing" ]; then
 fi
 
 # HACK: https://launchpad.net/bugs/2040483
-if [ "$IMAGE" = "ubuntu-stable" ]; then
+if [ "$IMAGE" = "ubuntu-2404" ] || [ "$IMAGE" = "ubuntu-stable" ]; then
     mkdir -p /etc/containers/containers.conf.d
     printf '[CONTAINERS]\napparmor_profile=""\n' > /etc/containers/containers.conf.d/disable-apparmor.conf
 fi
