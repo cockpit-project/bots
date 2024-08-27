@@ -45,6 +45,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('debian-stable', COCKPIT_SCENARIOS),
             *contexts('debian-testing', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2204', COCKPIT_SCENARIOS),
+            *contexts('ubuntu-2404', COCKPIT_SCENARIOS),
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
             *contexts('fedora-40', COCKPIT_SCENARIOS),
             *contexts('fedora-41', COCKPIT_SCENARIOS),
@@ -66,7 +67,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'opensuse-tumbleweed',
-            'ubuntu-2404',
         ],
     },
     'cockpit-project/starter-kit': {
