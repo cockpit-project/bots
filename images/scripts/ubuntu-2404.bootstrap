@@ -1,0 +1,3 @@
+#! /bin/sh -ex
+
+exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "https://cloud-images.ubuntu.com/daily/server/noble/current/noble-server-cloudimg-amd64.img"
