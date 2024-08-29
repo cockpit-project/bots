@@ -170,7 +170,7 @@ class SSHConnection:
     def _start_ssh_master(self) -> None:
         self._kill_ssh_master()
 
-        control = os.path.join(tempfile.gettempdir(), ".cockpit-test-resources", "ssh-%h-%p-%r-" + str(os.getpid()))
+        control = os.path.join(tempfile.gettempdir(), ".cockpit-test-resources", "ssh-%C-" + str(os.getpid()))
         os.makedirs(os.path.dirname(control), exist_ok=True)
 
         cmd = (
