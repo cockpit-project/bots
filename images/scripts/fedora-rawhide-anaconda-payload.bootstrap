@@ -3,4 +3,4 @@ set -eux
 
 OUTPUT="$1"
 
-python3 create-anaconda-payload --output=$OUTPUT
+PYTHONPATH=. python3 images/scripts/create-anaconda-payload --output=$OUTPUT
