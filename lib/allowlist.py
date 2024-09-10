@@ -14,6 +14,7 @@ ALLOWLIST = {
     # humans
 
     # cockpit team + contributors
+    'ashley-cui',
     'allisonkarlitskaya',
     'garrett',
     'jelly',
