@@ -28,6 +28,7 @@ libvirt-dbus \
 network-manager \
 packagekit \
 pcp \
+python3-pcp \
 python3-dbus \
 qemu-block-extra \
 realmd \
@@ -152,6 +153,7 @@ if [ "$IMAGE" = "debian-testing" ]; then
     # https://tracker.debian.org/pkg/pcp
     COCKPIT_DEPS="${COCKPIT_DEPS/libpcp3 /}"
     COCKPIT_DEPS="${COCKPIT_DEPS/pcp /}"
+    COCKPIT_DEPS="${COCKPIT_DEPS/python3-pcp /}"
 fi
 
 # Attention: Enable proposed for ubuntu-stable after 24.10 release
