@@ -1,1 +1,0 @@
-*avc:  denied  { create } for  pid=* comm="systemd-network" name=".*" scontext=system_u:system_r:systemd_network_generator_t:s0 tcontext=system_u:object_r:init_var_run_t:s0 tclass=file permissive=0
