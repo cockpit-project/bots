@@ -1,4 +1,0 @@
-testBasic (__main__.TestLogin.testBasic)
-*
-    self.assertRegex(m.execute("who"), r"(^|\n)admin *web.*(\d+\.\d+|::)")
-AssertionError: Regex didn't match*
