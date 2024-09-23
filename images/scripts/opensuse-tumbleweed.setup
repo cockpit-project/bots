@@ -32,7 +32,6 @@ libvirt-daemon-driver-qemu \
 libvirt-daemon-driver-network \
 libvirt-daemon-driver-nodedev \
 libvirt-daemon-driver-storage-core \
-libvirt-daemon-driver-interface \
 libvirt-daemon-driver-storage-disk \
 libvirt-daemon-qemu \
 libvirt-client \
