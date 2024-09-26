@@ -136,6 +136,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10',
             'rhel-9-5',
             'rhel-9-6',
+            'rhel-10-0',
         ],
         'rhel-8': [
             'rhel-8-10',
@@ -143,7 +144,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
-            'rhel-10-0',
         ],
     },
     'cockpit-project/cockpit-files': {
