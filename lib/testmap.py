@@ -55,6 +55,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             # no udisks on CoreOS → skip storage
             *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
             *contexts('rhel-9-5', COCKPIT_SCENARIOS),
+            *contexts('rhel-9-6', COCKPIT_SCENARIOS),
             *contexts('rhel-10-0', COCKPIT_SCENARIOS),
             *contexts('centos-10', COCKPIT_SCENARIOS),
         ],
@@ -67,7 +68,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'opensuse-tumbleweed',
-            'rhel-9-6',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -83,7 +83,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-9-bootc',
-            'rhel-9-5',
             'rhel-9-6',
         ]
     },
@@ -109,6 +108,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-coreos',
             'rhel-8-10',
             'rhel-9-5',
+            'rhel-9-6',
             'rhel-10-0',
             'ubuntu-2204',
             'ubuntu-2404',
@@ -118,7 +118,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
-            'rhel-9-6',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -136,6 +135,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'opensuse-tumbleweed',
             'rhel-8-10',
             'rhel-9-5',
+            'rhel-9-6',
         ],
         'rhel-8': [
             'rhel-8-10',
@@ -144,7 +144,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'rhel-10-0',
-            'rhel-9-6',
         ],
     },
     'cockpit-project/cockpit-files': {
@@ -182,6 +181,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             'centos-10',
             'rhel-9-5',
+            'rhel-9-6',
             'rhel-10-0',
             'fedora-39',
             'fedora-40',
@@ -206,7 +206,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-4',
         ],
         '_manual': [
-            'rhel-9-6',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -214,13 +213,13 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-9-stream/subscription-manager-1.29',
             'centos-10',
             'rhel-9-5/subscription-manager-1.29',
+            'rhel-9-6/subscription-manager-1.29',
             'rhel-10-0',
             'fedora-39',
             'fedora-40',
             'fedora-41',
         ],
         '_manual': [
-            'rhel-9-6',
         ],
     },
     'rhinstaller/anaconda-webui': {
