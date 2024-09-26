@@ -67,6 +67,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'opensuse-tumbleweed',
+            'rhel-9-6',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -83,6 +84,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-9-bootc',
             'rhel-9-5',
+            'rhel-9-6',
         ]
     },
     'cockpit-project/cockpit-ostree': {
@@ -92,7 +94,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-coreos/devel',
         ],
         '_manual': [
-            'rhel-9-5',
         ]
     },
     'cockpit-project/cockpit-podman': {
@@ -117,6 +118,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
+            'rhel-9-6',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -142,6 +144,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'rhel-10-0',
+            'rhel-9-6',
         ],
     },
     'cockpit-project/cockpit-files': {
@@ -157,6 +160,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-0',
         ],
         '_manual': [
+            'rhel-9-6',
         ],
     },
     'osbuild/cockpit-composer': {
@@ -171,6 +175,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'fedora-41',
+            'rhel-9-6',
         ],
     },
     'candlepin/subscription-manager': {
@@ -201,6 +206,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-4',
         ],
         '_manual': [
+            'rhel-9-6',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -214,6 +220,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-41',
         ],
         '_manual': [
+            'rhel-9-6',
         ],
     },
     'rhinstaller/anaconda-webui': {
