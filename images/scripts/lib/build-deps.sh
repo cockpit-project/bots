@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Download cockpit.spec, replace `npm-version` macro and then query all build requires
-# also re-enable building of optional packages by default, so that we get libssh-devel
 
 set -eu
 # Guard against GitHub outages, redirects etc., and let this script fail on rpmspec failures
