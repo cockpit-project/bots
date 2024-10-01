@@ -29,7 +29,7 @@ Development of the bots happens on GitHub at https://github.com/cockpit-project/
 
 There are static code and syntax checks which you should run often:
 
-    $ test/run
+    test/run
 
 You will need to either use the tasks container to run this script or install:
 
@@ -42,4 +42,4 @@ You will need to either use the tasks container to run this script or install:
 It is highly recommended to set this up as a git pre-push hook, to avoid
 pushing PRs that will fail on trivial errors:
 
-    $ ln -s ../../test/run .git/hooks/pre-push
+    ln -s ../../test/run .git/hooks/pre-push
