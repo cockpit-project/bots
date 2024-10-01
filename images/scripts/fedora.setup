@@ -55,7 +55,6 @@ glibc-langpack-pt \
 glib-networking \
 grubby \
 json-glib \
-libssh \
 NetworkManager-team \
 openssl \
 PackageKit \
