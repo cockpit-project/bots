@@ -5,7 +5,7 @@ Most bots are python scripts. Shared code is in the tasks/ directory.
 ## Environment
 
 The bots work in containers that are built in the [cockpituous](https://github.com/cockpit-project/cockpituous)
-repository. New dependencies should be added there in the `tasks/Dockerfile`
+repository. New dependencies should be added there in the `tasks/container/Containerfile`
 file in that repository.
 
 ## Bots filing issues
