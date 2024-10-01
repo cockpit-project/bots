@@ -14,7 +14,6 @@ binutils \
 edk2-ovmf \
 json-glib \
 krb5 \
-libssh \
 accountsservice \
 cpio \
 cdrtools \
@@ -144,7 +143,6 @@ gtk-doc \
 intltool \
 json-glib \
 krb5 \
-libssh \
 libvirt-dbus \
 networkmanager \
 npm \
