@@ -26,7 +26,6 @@ glibc-locale \
 glib-networking \
 json-glib \
 kexec-tools \
-libssh2-1 \
 libvirt-daemon-config-network \
 libvirt-daemon-driver-qemu \
 libvirt-daemon-driver-network \
