@@ -305,7 +305,18 @@ class VirtMachine(Machine):
 
         Machine.__init__(self, image=image, **kwargs)
 
-        self.run_dir = os.path.join(os.getenv("TEST_OVERLAY_DIR", "/var/tmp"), "bots-run")
+        overlay_dir = os.getenv("TEST_OVERLAY_DIR")
+        if not overlay_dir:
+            # toolbox compatibility: /tmp is shared with the host, but may be too small for big overlays (tmpfs!)
+            # $HOME is shared, but we don't want to put our junk there (NFS, backups)
+            # /var/tmp is not shared with the host but the right place; just in case session libvirtd is already
+            # running, use the shared path so that the daemon can actually see our overlay.
+            # But this only makes sense if the host also has /run/host set up (toolbox ships a tmpfiles.d)
+            if os.path.exists("/run/host/var/tmp") and os.path.exists("/run/host/run/host"):
+                overlay_dir = "/run/host/var/tmp"
+            else:
+                overlay_dir = "/var/tmp"
+        self.run_dir = os.path.join(overlay_dir, "bots-run")
         os.makedirs(self.run_dir, 0o700, exist_ok=True)
 
         self.virt_connection = self._libvirt_connection(hypervisor="qemu:///session")
