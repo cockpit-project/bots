@@ -58,9 +58,12 @@ def run(context, verbose=False, **kwargs):
     with tempfile.TemporaryDirectory('cockpit-repo') as tmpdir:
         tmpdir = Path(tmpdir)
         clone_dir = 'cockpit'
+        commit = cockpit_repo_commit.partition('#')[0].strip()
         subprocess.check_call(['git', 'clone', cockpit_repo_url, clone_dir], cwd=tmpdir)
         git_describe = subprocess.check_output(['git', 'describe'], cwd=tmpdir / clone_dir).decode().strip()
         git_head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=tmpdir / clone_dir).decode().strip()
+        git_shortlog = subprocess.check_output(['git', 'shortlog', f'{commit}...'],
+                                               cwd=tmpdir / clone_dir).decode().strip()
 
     try:
         # when HEAD is not tagged, this looks like "290-9-g4a6d86f5b"
@@ -81,6 +84,7 @@ def run(context, verbose=False, **kwargs):
     title = f"Makefile: Update Cockpit lib to {git_head[:32]}"
     branch = task.branch('cockpit-lib', title, pathspec=makefile, **kwargs)
     kwargs["title"] = title
+    kwargs["body"] = git_shortlog
     task.pull(branch, **kwargs)
 
 
