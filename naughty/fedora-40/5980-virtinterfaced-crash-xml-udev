@@ -1,3 +1,0 @@
-#* remoteDispatchInterfaceGetXMLDescHelper*
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
-Process *virtinterfaced* dumped core.
