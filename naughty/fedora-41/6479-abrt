@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-system-journal", line *, in testAbrt*
-    b.*sleep_crash_list_sel)
-*
-testlib.Error: timeout
-wait_js_cond(ph_is_present("#journal-box .cockpit-logline .cockpit-log-message:contains('(sleep) crashed in')*: condition did not become true
