@@ -51,6 +51,10 @@ gpgcheck=0
 EOF
 
     elif [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
+        # download.devel uses RH internal certificate
+        curl -o /etc/pki/ca-trust/source/anchors/IT-Root-CA.pem https://certs.corp.redhat.com/certs/2022-IT-Root-CA.pem
+        update-ca-trust
+
         VERSION=${IMAGE#rhel-}
         MAJOR=${VERSION%%-*}
         VERSION=${VERSION/-/.}
@@ -469,6 +473,8 @@ fi
 mkdir -p /var/log/journal
 
 /var/lib/testvm/podman-images.setup
+
+rm -f /etc/pki/ca-trust/source/anchors/IT-Root-CA.pem
 
 # Final tweaks
 
