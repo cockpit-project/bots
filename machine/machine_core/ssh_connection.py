@@ -55,7 +55,8 @@ class SSHConnection:
         ssh_port: int | str,
         identity_file: str,
         verbose: bool = False,
-        label: str | None = None
+        label: str | None = None,
+        jumphost: str | None = None,
     ):
         self.verbose = verbose
 
@@ -69,6 +70,7 @@ class SSHConnection:
         self.ssh_process = None
         self.ssh_reachable = False
         self.label = label if label else f"{self.ssh_user}@{self.ssh_address}:{self.ssh_port}"
+        self.jumphost = jumphost
 
     def disconnect(self) -> None:
         self.ssh_reachable = False
@@ -173,11 +175,29 @@ class SSHConnection:
         control = os.path.join(tempfile.gettempdir(), ".cockpit-test-resources", "ssh-%C-" + str(os.getpid()))
         os.makedirs(os.path.dirname(control), exist_ok=True)
 
+        if self.jumphost:
+            host, _, port = self.jumphost.partition(":")
+            if not port:
+                port = "22"
+            proxy_command = [
+                "ssh", "-A",
+                *self.ssh_default_opts,
+                "-i", self.identity_file,
+                "-p", port,
+                "-l", self.ssh_user,
+                "-W", "%h:%p",
+                host,
+            ]
+            jumphost_opts = ['-o', 'ProxyCommand=' + ' '.join(proxy_command)]
+        else:
+            jumphost_opts = []
+
         cmd = (
             "ssh",
             "-p", str(self.ssh_port),
             "-i", self.identity_file,
             *self.ssh_default_opts,
+            *jumphost_opts,
             "-M",  # ControlMaster, no stdin
             "-o", "ControlPath=" + control,
             "-o", "LogLevel=ERROR",

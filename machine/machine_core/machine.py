@@ -67,7 +67,8 @@ class Machine(ssh_connection.SSHConnection):
         identity_file: str | None = None,
         arch: str = "x86_64",
         ssh_port: int | str = 22,
-        web_port: int | str = 9090
+        web_port: int | str = 9090,
+        jumphost: str | None = None,
     ):
         identity_file_old = identity_file
         identity_file = identity_file or DEFAULT_IDENTITY_FILE
@@ -84,7 +85,7 @@ class Machine(ssh_connection.SSHConnection):
         if not label and image != "unknown":
             label = f"{image}-{ssh_address}-{ssh_port}"
 
-        super().__init__(user, ssh_address, ssh_port, identity_file, verbose=verbose, label=label)
+        super().__init__(user, ssh_address, ssh_port, identity_file, verbose=verbose, label=label, jumphost=jumphost)
 
         self.arch = arch
         self.image = image
@@ -357,3 +358,93 @@ class Machine(ssh_connection.SSHConnection):
         for key, value in headers.items():
             cmd.extend(['--header', f'{key}: {value}'])
         return self.execute(cmd + list(args))
+
+    def clone_container(self) -> "NspawnMachine":
+        """Clone the host OS/file system into a container
+
+        This uses nspawn to boot the host OS in a container running on the same machine, with
+        an ephemeral file system overlay. This is useful for tests which need multiple
+        independent machines in terms of network/file system/package separation, but no
+        kernel modules or hardware access.
+        """
+        return NspawnMachine(self, self.verbose)
+
+
+class NspawnMachine(Machine):
+    def __init__(
+        self,
+        parent: Machine,
+        verbose: bool = False,
+    ):
+        self.parent = parent
+
+        # find a free container name
+        machines = []
+        for line in parent.execute("machinectl list --no-legend").strip().splitlines():
+            machines.append(line.split()[0])
+
+        # FIXME: the SSHConnection master gets confused with more than one container,
+        # so disallow this for now until this gets fixed
+        if machines:
+            raise RuntimeError("Only one container is supported at the moment")
+
+        for i in range(10):
+            label = f"nspawn{i}"
+            if label not in machines:
+                break
+        else:
+            raise RuntimeError("did not find a free nspawn machine label")
+
+        self.nspawn_label = label
+
+        # networkd auto-configures host and guest veth
+        parent.execute("systemctl enable --now systemd-networkd")
+
+        # we already have to start the container here (as opposed to start()) to figure out its address
+        # ideally we could just use --ephemeral here, but it's way too inefficient on non-btrfs
+        overlays = [f"--overlay {d}:$O/{d}:{d}" for d in ["/etc", "/var", "/usr", "/home", "/root"]]
+        self.nspawn_pid = parent.spawn(
+            f"O=/var/tmp/overlay-{self.nspawn_label}; "
+            "mkdir -p $O/etc $O/var $O/usr $O/home $O/root; "
+            f"systemd-nspawn --machine={label} --network-veth --directory=/ --boot --volatile=yes " +
+            " ".join(overlays),
+            label)
+
+        # wait until the network initialized, and get the container address
+        # this is horrible.. is there a better way? `machinectl show` doesn't have the address
+        address = parent.execute(f"""while true; do
+                                        A=$(machinectl list | sed -rn '/^{label}.* [0-9.]+$/ {{ s/^.* //; p }}');
+                                        [ -z "$A" ] || break;
+                                        sleep 0.5;
+                                    done;
+                                    echo $A""", timeout=20).strip()
+
+        # wait until SSH is up, so that the ProxyCommand doesn't get stuck
+        parent.execute(f"until timeout 1 nc -z {address} 22; do sleep 1; done")
+
+        super().__init__(
+            address, parent.image, verbose, parent.label + "-" + label,
+            user=parent.ssh_user,
+            identity_file=parent.identity_file,
+            arch=parent.arch,
+            ssh_port=22,
+            browser="not-supported",  # no port forwarding yet
+            web_port=0,
+            jumphost=f"{parent.ssh_address}:{parent.ssh_port}"
+        )
+        self.message(f"started nspawn container {label} on {parent.label} with address {address}")
+
+    def __del__(self) -> None:
+        self.kill()
+
+    def kill(self) -> None:
+        self.message(f"killing nspawn container {self.nspawn_label} on {self.parent.label}")
+        self.disconnect()
+        self.parent.execute(f"machinectl terminate {self.nspawn_label}")
+        self.parent.execute(f"rm -rf /var/tmp/overlay-{self.nspawn_label}")
+
+    def start(self) -> None:
+        raise NotImplementedError
+
+    def stop(self) -> None:
+        raise NotImplementedError
