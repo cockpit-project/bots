@@ -68,6 +68,7 @@ libvirt-daemon-driver-storage-logical \
 libxml2-tools \
 ltrace \
 nginx \
+nfs-kernel-server \
 podman \
 redis \
 socat \
