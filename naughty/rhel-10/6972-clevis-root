@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "test/verify/check-storage-luks", line *, in testRootReboot
+    m.reboot(timeout_sec=300)
+*
+machine.machine_core.exceptions.Failure: Timeout waiting for system to reboot properly
