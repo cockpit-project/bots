@@ -54,7 +54,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
             # no udisks on CoreOS → skip storage
             *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
-            *contexts('rhel-9-5', COCKPIT_SCENARIOS),
             *contexts('rhel-9-6', COCKPIT_SCENARIOS),
             *contexts('rhel-10-0', COCKPIT_SCENARIOS),
             *contexts('centos-10', COCKPIT_SCENARIOS),
@@ -107,7 +106,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-41',
             'fedora-coreos',
             'rhel-8-10',
-            'rhel-9-5',
             'rhel-9-6',
             'rhel-10-0',
             'ubuntu-2204',
@@ -134,7 +132,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             f'{TEST_OS_DEFAULT}/firefox',
             'opensuse-tumbleweed',
             'rhel-8-10',
-            'rhel-9-5',
             'rhel-9-6',
             'rhel-10-0',
         ],
@@ -155,11 +152,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             f'{TEST_OS_DEFAULT}/devel',
             'fedora-rawhide',
             'centos-10',
-            'rhel-9-5',
+            'rhel-9-6',
             'rhel-10-0',
         ],
         '_manual': [
-            'rhel-9-6',
         ],
     },
     'osbuild/cockpit-composer': {
@@ -245,10 +241,10 @@ IMAGE_REFRESH_TRIGGERS = {
         *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('debian-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *contexts('rhel-9-5', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *contexts('rhel-9-6', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         "rhel-8-10@cockpit-project/cockpit/rhel-8",
         "rhel-8-10@candlepin/subscription-manager/subscription-manager-1.28",
-        "rhel-9-5@candlepin/subscription-manager-cockpit",
+        "rhel-9-6@candlepin/subscription-manager-cockpit",
     ],
     # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
     "fedora-rawhide": [
