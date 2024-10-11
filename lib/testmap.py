@@ -167,14 +167,13 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-40',
             'fedora-40/firefox',
             'centos-9-stream',
-            'rhel-9-5',
             'centos-10',
+            'rhel-9-6',
             'rhel-10-0',
         ],
         '_manual': [
             'fedora-rawhide',
             'fedora-41',
-            'rhel-9-6',
         ],
     },
     'candlepin/subscription-manager': {
