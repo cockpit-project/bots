@@ -1,9 +1,0 @@
-*TestFiles.testSorting*
-asyncio-ERROR: Exception in callback None()
-handle: <Handle cancelled>
-Traceback (most recent call last):
-*
-self.router.endpoints[self].remove(channel)
-*
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
-asyncio-ERROR: Exception in callback None()
