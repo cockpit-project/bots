@@ -156,7 +156,7 @@ if [ "$IMAGE" = "debian-testing" ]; then
 fi
 
 # Attention: Enable proposed for ubuntu-stable after 24.10 release
-if [ "${IMAGE#ubuntu}" != "$IMAGE" ] && [ "$IMAGE" != "ubuntu-stable" ]; then
+if [ "${IMAGE#ubuntu}" != "$IMAGE" ]; then
     echo "deb http://archive.ubuntu.com/ubuntu ${RELEASE}-proposed main restricted universe" > /etc/apt/sources.list.d/proposed.list
     cat <<EOF > /etc/apt/preferences.d/all-proposed
 Package: *

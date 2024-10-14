@@ -15,9 +15,4 @@ fi
 # release name is the last part of the URL
 rel=${rel##*/}
 
-# noble == 24.04 LTS, which we already have as ubuntu-2404; test the upcoming release
-if [ "$rel" = "noble" ]; then
-    rel="oracular"
-fi
-
 exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "https://cloud-images.ubuntu.com/daily/server/$rel/current/$rel-server-cloudimg-amd64.img"
