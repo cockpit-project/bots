@@ -162,11 +162,6 @@ if [ "${IMAGE#ubuntu}" != "$IMAGE" ] && [ "$IMAGE" != "ubuntu-stable" ]; then
 Package: *
 Pin: release a=*-proposed
 Pin-Priority: 600
-
-# broken update: https://launchpad.net/bugs/2063200
-Package: passwd
-Pin: version 1:4.13+dfsg1-4ubuntu3.1
-Pin-Priority: -1
 EOF
 fi
 
