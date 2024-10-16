@@ -1,0 +1,5 @@
+# testHistory (__main__.TestPages.testHistory)
+*
+> error: NS_ERROR_FAILURE:
+*
+AssertionError: Cockpit shows an Oops
