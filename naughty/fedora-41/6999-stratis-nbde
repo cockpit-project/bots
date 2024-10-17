@@ -1,0 +1,8 @@
+> warn: Either thumbprints for all Tang servers or a directive to trust all Tang servers is required
+*
+Traceback (most recent call last):
+  File "test/verify/check-storage-stratis", line *, in testBasic
+    self.dialog_wait_close()
+*
+testlib.Error: timeout
+wait_js_cond(!ph_is_present("#dialog")): Error: condition did not become true
