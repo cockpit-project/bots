@@ -1,0 +1,82 @@
+#!/usr/bin/python3
+
+# This file is part of Cockpit.
+#
+# Copyright (C) 2024 Red Hat, Inc.
+#
+# Cockpit is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# Cockpit is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+
+# Update COCKPIT_REPO_COMMIT to cockpit HEAD automatically, defaults to
+# Makefile as input optionally the full path can be provided. (For example
+# Anaconda uses ui/webui/Makefile.am).
+
+import os
+import sys
+import time
+from typing import Optional
+
+import task
+from lib.aio.jsonutil import get_dict, get_int, get_str
+
+sys.dont_write_bytecode = True
+
+
+def main() -> None:
+    assert os.getenv('GITHUB_BASE') is not None, 'GITHUB_BASE must be set'
+
+    api = task.github.GitHub()
+    for pull in api.pulls(state="open"):
+        number = get_int(pull, 'number')
+        if number is None:
+            continue
+
+        user = get_dict(pull, 'user')
+        if get_str(user, 'login') != 'dependabot[bot]':
+            continue
+
+        pull_details = api.get(f'pulls/{number}')
+
+        # Ignore dependabot PR's with multiple commits, they might be work in progress.
+        if get_int(pull_details, 'commits') > 1:
+            print(f'Skipping pull {number}, it is being worked on')
+            continue
+
+        mergeable: Optional[bool] = pull_details['mergeable']
+        # State is unknown, retry with a timeout
+        if mergeable is None:
+            for retry in range(5):
+                pull_details = api.get(f'pulls/{number}')
+                mergeable = pull_details['mergeable']
+                if mergeable is not None:
+                    break
+
+                print(f'Retrying to obtain mergeable status for pull={number}, retry={retry}')
+                time.sleep(60)
+            else:
+                print(f'Reached timeout mergeable status still unknown for pull={number}')
+                return
+
+        if mergeable:
+            print(f'Skipping pull {number}, it is in a mergeable state')
+            continue
+        else:
+            # Not mergeable and a dependabot PR, add a `node_modules` label and re-create the PR.
+            task.label(pull_details, ('node_modules'))  # type: ignore[no-untyped-call]
+
+            # Stop at the first dependabot PR as we can only land one at a time.
+            break
+
+
+if __name__ == '__main__':
+    main()
