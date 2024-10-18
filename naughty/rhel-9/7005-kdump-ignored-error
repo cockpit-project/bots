@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "test/verify/check-kdump", line *, in testBasic
+    b.wait_in_text("#kdump-settings-dialog h4.pf-v5-c-alert__title", "Unable to save settings")
+*
+testlib.Error: timeout
