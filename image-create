@@ -89,8 +89,6 @@ class MachineBuilder:
             self.machine.wait_boot(timeout_sec=300)
             self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib/")], "/var/lib/testvm")
             self.machine.upload([script], "/var/tmp/SETUP")
-            self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib", "base/")],
-                                "/var/tmp/cockpit-base")
 
             env = {
                 "TEST_OS": self.machine.image,
