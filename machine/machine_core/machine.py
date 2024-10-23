@@ -285,12 +285,7 @@ class Machine(ssh_connection.SSHConnection):
         """Restart Cockpit.
         """
         if self.ostree_image:
-            # HACK: podman restart is broken (https://bugzilla.redhat.com/show_bug.cgi?id=1780161)
-            # self.execute("podman restart `podman ps --quiet --filter ancestor=cockpit/ws`")
-            inspect_res = self.execute(f"podman inspect {self.get_cockpit_container()}")
-            tls = "--no-tls" not in inspect_res
-            self.stop_cockpit()
-            self.start_cockpit(tls=tls)
+            self.execute(f"podman restart {self.get_cockpit_container()}")
             self.wait_for_cockpit_running()
         else:
             self.execute("systemctl reset-failed 'cockpit*'; systemctl restart cockpit")
