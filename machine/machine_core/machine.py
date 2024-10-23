@@ -244,7 +244,7 @@ class Machine(ssh_connection.SSHConnection):
     def get_cockpit_container(self) -> str:
         return self.execute("podman ps --quiet --all --filter name=ws").strip()
 
-    def start_cockpit(self, atomic_wait_for_host: str | None = None, tls: bool = False) -> None:
+    def start_cockpit(self, *, tls: bool = False) -> None:
         """Start Cockpit.
 
         Cockpit is not running when the test virtual machine starts up, to
@@ -257,7 +257,7 @@ class Machine(ssh_connection.SSHConnection):
             if not tls:
                 cmd += " -- --no-tls"
             self.execute(cmd)
-            self.wait_for_cockpit_running(atomic_wait_for_host or "localhost")
+            self.wait_for_cockpit_running()
         elif tls:
             self.execute("""
             systemctl stop --quiet cockpit.service
