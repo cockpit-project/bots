@@ -89,6 +89,9 @@ class Machine(ssh_connection.SSHConnection):
         self.arch = arch
         self.image = image
         self.ostree_image = self.image in OSTREE_IMAGES
+        # start via cockpit/ws container on OSTree or when explicitly requested
+        self.ws_container = self.ostree_image or "ws-container" in os.getenv("TEST_SCENARIO", "")
+
         if ":" in browser:
             self.web_address, _, self.web_port = browser.rpartition(":")
         else:
@@ -250,8 +253,7 @@ class Machine(ssh_connection.SSHConnection):
         Cockpit is not running when the test virtual machine starts up, to
         allow you to make modifications before it starts.
         """
-
-        if self.ostree_image:
+        if self.ws_container:
             self.stop_cockpit()
             cmd = "podman container runlabel RUN cockpit/ws"
             if not tls:
@@ -284,7 +286,7 @@ class Machine(ssh_connection.SSHConnection):
     def restart_cockpit(self) -> None:
         """Restart Cockpit.
         """
-        if self.ostree_image:
+        if self.ws_container:
             self.execute(f"podman restart {self.get_cockpit_container()}")
             self.wait_for_cockpit_running()
         else:
@@ -293,7 +295,7 @@ class Machine(ssh_connection.SSHConnection):
     def stop_cockpit(self) -> None:
         """Stop Cockpit.
         """
-        if self.ostree_image:
+        if self.ws_container:
             self.execute(f"echo {self.get_cockpit_container()} | xargs --no-run-if-empty podman rm -f")
         else:
             self.execute("systemctl stop cockpit.socket cockpit.service")
