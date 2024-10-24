@@ -62,7 +62,8 @@ def run(context, verbose=False, **kwargs):
         subprocess.check_call(['git', 'clone', cockpit_repo_url, clone_dir], cwd=tmpdir)
         git_describe = subprocess.check_output(['git', 'describe'], cwd=tmpdir / clone_dir).decode().strip()
         git_head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=tmpdir / clone_dir).decode().strip()
-        git_shortlog = subprocess.check_output(['git', 'shortlog', f'{commit}...'],
+        git_shortlog = subprocess.check_output(['git', 'shortlog', f'{commit}...', '--',
+                                                'pkg/lib', 'test/common', 'test/static-code', 'tools/node-modules'],
                                                cwd=tmpdir / clone_dir).decode().strip()
 
     try:
