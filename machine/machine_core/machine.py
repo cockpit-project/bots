@@ -265,6 +265,8 @@ class Machine(ssh_connection.SSHConnection):
             systemctl stop --quiet cockpit.service
             rm -f /etc/systemd/system/cockpit.service.d/notls.conf
             systemctl reset-failed 'cockpit*'
+            # unpredictable, see https://bugzilla.redhat.com/show_bug.cgi?id=2303828
+            systemctl reset-failed cockpit.socket 2>/dev/null || true
             systemctl daemon-reload
             systemctl start cockpit.socket
             """)
@@ -279,6 +281,7 @@ class Machine(ssh_connection.SSHConnection):
             %s --no-tls" `grep ExecStart= /lib/systemd/system/cockpit.service` \
                     > /etc/systemd/system/cockpit.service.d/notls.conf
             systemctl reset-failed 'cockpit*'
+            systemctl reset-failed cockpit.socket 2>/dev/null || true
             systemctl daemon-reload
             systemctl start cockpit.socket
             """)
