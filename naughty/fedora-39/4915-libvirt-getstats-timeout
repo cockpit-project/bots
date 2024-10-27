@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "*", line *, in testVsock
-*
-testlib.Error: timeout
-wait_js_cond(ph_in_text("#vm-subVmTest1-system-state","Shut off"))*
