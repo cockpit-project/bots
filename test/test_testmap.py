@@ -82,7 +82,8 @@ def test_cockpit_contexts() -> None:
     # no three-part scenarios, no scenario-less contexts
     for context in main_tests:
         assert context.count("/") == 1, f"malformed context {context}"
-        assert context.split("/")[1].count("-") in [0, 1], \
+        # ws-container is the scenario name, but we want to count it as 1
+        assert context.split("/")[1].replace("ws-container", "ws_container").count("-") in [0, 1], \
             f"context {context} has unexpected number of scenarios"
     # standard image with standard scenarios
     assert "arch/networking" in main_tests
