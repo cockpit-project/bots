@@ -253,11 +253,6 @@ if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/wireguard-tools /}"
 fi
 
-# RHEL 8 still uses the C pcp bridge
-if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
-    COCKPIT_DEPS="${COCKPIT_DEPS/python3-pcp /}"
-fi
-
 # vdo not available on centos/rhel 10
 if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/ kmod-kvdo / }"
