@@ -60,7 +60,7 @@ def image_refresh(image: str, **kwargs: Any) -> int | tuple[int, str]:
             old_image = None
 
         # create the new image
-        run('./image-create', '--verbose', '--capture-console', image,
+        run('./image-create', '--verbose', image,
             env={**os.environ, 'VIRT_BUILDER_NO_CACHE': "yes"})
 
         # upload the new image

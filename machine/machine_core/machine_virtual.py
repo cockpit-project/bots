@@ -270,7 +270,7 @@ class VirtMachine(Machine):
         maintain: bool = False,
         memory_mb: int | None = None,
         cpus: int | None = None,
-        capture_console: bool = False,
+        capture_console: bool = True,
         **kwargs: Any
     ):
         self.maintain = maintain

@@ -37,7 +37,6 @@ parser.add_argument('-v', '--verbose', action='store_true', help='Display verbos
 parser.add_argument('-s', '--sit', action='store_true', help='Sit and wait if setup script fails')
 parser.add_argument('-n', '--no-save', action='store_true', help='Don\'t save the new image')
 parser.add_argument('-u', '--upload', action='store_true', help='Upload the image after creation')
-parser.add_argument('--capture-console', action='store_true', help='Capture VM console to stderr')
 parser.add_argument('--no-build', action='store_true', dest='no_build',
                     help="Don't build packages and create the vm without build capabilities")
 parser.add_argument("--store", default=None, help="Where to send images")
@@ -191,7 +190,6 @@ try:
         memory_mb = 2048
 
     machine = testvm.VirtMachine(verbose=args.verbose,
-                                 capture_console=args.capture_console,
                                  image=args.image,
                                  memory_mb=memory_mb,
                                  maintain=True)
