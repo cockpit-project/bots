@@ -53,7 +53,8 @@ try:
 
     machine = testvm.VirtMachine(verbose=args.verbose, image=args.image, maintain=args.maintain,
                                  networking=network.host(restrict=args.no_network),
-                                 memory_mb=args.memory, cpus=args.cpus)
+                                 memory_mb=args.memory, cpus=args.cpus,
+                                 capture_console=False)
 
     # Check that image is downloaded
     if not os.path.exists(machine.image_file):
