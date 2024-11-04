@@ -177,9 +177,6 @@ locale-gen
 # Update the kernel as last step.
 pacman -Syu --noconfirm
 
-# Reduce image size, clear package cache (/var/cache/pacman/pkg)
-pacman -Scc --noconfirm
-
 # Reduce image size, remove cloud-init
 pacman -R --noconfirm cloud-init
 
@@ -187,8 +184,8 @@ pacman -R --noconfirm cloud-init
 # https://github.com/cockpit-project/bots/issues/3901#issuecomment-1260579703
 systemctl disable systemd-time-wait-sync.service
 
-# Reduce image size, clear package cache
-pacman -Scc
+# Reduce image size, clear package cache (/var/cache/pacman/pkg)
+rm -f /var/cache/pacman/pkg/*
 
 /var/lib/testvm/podman-images.setup
 /var/lib/testvm/zero-disk.setup
