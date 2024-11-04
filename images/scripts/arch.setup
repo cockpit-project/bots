@@ -134,7 +134,9 @@ useradd -c Builder builder
 echo "builder ALL = NOPASSWD: /usr/sbin/makechrootpkg, /usr/sbin/mkarchroot, /usr/bin/*-x86_64-build" > /etc/sudoers.d/90-archbuild
 
 BUILD_DEPS="\
+accountsservice \
 base-devel \
+cockpit \
 git \
 glib-networking \
 glib2-devel \
@@ -152,6 +154,7 @@ python-installer \
 python-pip \
 python-wheel \
 python-build \
+podman \
 systemd \
 "
 
