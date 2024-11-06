@@ -69,6 +69,7 @@ nfs-utils \
 sssd \
 stratisd \
 stratis-cli \
+swtpm \
 tang \
 tpm2-tools \
 jq \
