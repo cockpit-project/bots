@@ -290,8 +290,10 @@ class Machine(ssh_connection.SSHConnection):
         """Restart Cockpit.
         """
         if self.ws_container:
-            self.execute(f"podman restart {self.get_cockpit_container()}")
-            self.wait_for_cockpit_running()
+            cockpit_container = self.get_cockpit_container()
+            if cockpit_container != "":
+                self.execute(f"podman restart {cockpit_container}")
+                self.wait_for_cockpit_running()
         else:
             self.execute("systemctl reset-failed 'cockpit*'; systemctl restart cockpit")
 
