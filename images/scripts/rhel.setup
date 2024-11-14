@@ -297,6 +297,12 @@ stratisd
 
 dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
 
+# HACK: broken kernel which oopses with FIPS (https://issues.redhat.com/browse/RHEL-65498); failing and recovering
+# takes ages, so too expensive/intrusive for a naughty to work around; install the proposed fix instead
+if  [ "$IMAGE" = "rhel-10-0" ] && [ "$(uname -r)" = "6.11.0-28.el10.x86_64" ]; then
+    dnf update -y https://artifacts.internal.cki-project.org/arr-cki-prod-internal-artifacts/internal-artifacts/1538040565/publish_x86_64/8332871928/artifacts/repo/6.11.0-29.3_1538040423.el10.x86_64/kernel-6.11.0-29.3_1538040423.el10.x86_64.rpm https://artifacts.internal.cki-project.org/arr-cki-prod-internal-artifacts/internal-artifacts/1538040565/publish_x86_64/8332871928/artifacts/repo/6.11.0-29.3_1538040423.el10.x86_64/kernel-core-6.11.0-29.3_1538040423.el10.x86_64.rpm https://artifacts.internal.cki-project.org/arr-cki-prod-internal-artifacts/internal-artifacts/1538040565/publish_x86_64/8332871928/artifacts/repo/6.11.0-29.3_1538040423.el10.x86_64/kernel-modules-6.11.0-29.3_1538040423.el10.x86_64.rpm https://artifacts.internal.cki-project.org/arr-cki-prod-internal-artifacts/internal-artifacts/1538040565/publish_x86_64/8332871928/artifacts/repo/6.11.0-29.3_1538040423.el10.x86_64/kernel-modules-core-6.11.0-29.3_1538040423.el10.x86_64.rpm https://artifacts.internal.cki-project.org/arr-cki-prod-internal-artifacts/internal-artifacts/1538040565/publish_x86_64/8332871928/artifacts/repo/6.11.0-29.3_1538040423.el10.x86_64/kernel-tools-6.11.0-29.3_1538040423.el10.x86_64.rpm https://artifacts.internal.cki-project.org/arr-cki-prod-internal-artifacts/internal-artifacts/1538040565/publish_x86_64/8332871928/artifacts/repo/6.11.0-29.3_1538040423.el10.x86_64/kernel-tools-libs-6.11.0-29.3_1538040423.el10.x86_64.rpm https://artifacts.internal.cki-project.org/arr-cki-prod-internal-artifacts/internal-artifacts/1538040565/publish_x86_64/8332871928/artifacts/repo/6.11.0-29.3_1538040423.el10.x86_64/python3-perf-6.11.0-29.3_1538040423.el10.x86_64.rpm
+fi
+
 # HACK: wireguard-tools pulls in systemd-resolved, but installing that doesn't start the service,
 # thus breaking DNS; https://issues.redhat.com/browse/RHEL-37686
 if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10*}" != "$IMAGE" ]; then
