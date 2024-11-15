@@ -43,6 +43,10 @@ done
 
 ! test -e /etc/kdump.conf || echo "force_no_rebuild 1" >>/etc/kdump.conf
 
+# Disable PerSourcePenalties, they interfere with the rapid failed
+# logins performed by some tests.
+echo "PerSourcePenalties no" >/etc/ssh/sshd_config.d/99-no-penalties.conf
+
 # reduce image size
 rpm-ostree cleanup --repomd
 /var/lib/testvm/zero-disk.setup
