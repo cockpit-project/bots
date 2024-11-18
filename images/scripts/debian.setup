@@ -323,6 +323,19 @@ systemctl disable --now systemd-networkd-wait-online.service
 
 # Final tweaks
 
+# Prevent longish shutdown delays with broken inhibitor lock holders
+# like https://gitlab.com/libvirt/libvirt/-/issues/705.
+#
+# "unattended-upgrades" changes the default of 5 seconds to 30
+# seconds. Let's override that.
+
+mkdir -p /etc/systemd/logind.conf.d
+cat >/etc/systemd/logind.conf.d/zz-quick.conf <<EOF
+[Login]
+InhibitDelayMaxSec=5
+EOF
+systemctl reload systemd-logind
+
 # Enable persistent journal
 mkdir -p /var/log/journal
 
