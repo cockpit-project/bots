@@ -505,4 +505,7 @@ if [ "${IMAGE#rhel-10*}" != "$IMAGE" ] || [ "${IMAGE#centos-10}" != "$IMAGE" ]; 
   echo "PerSourcePenalties no" >/etc/ssh/sshd_config.d/99-no-penalties.conf
 fi
 
+# https://issues.redhat.com/browse/RHEL-68081
+sed -i -e 's/log_driver = "file"/#log_driver = "file"/' /usr/share/containers/containers.conf
+
 /var/lib/testvm/zero-disk.setup --keep-mock-cache
