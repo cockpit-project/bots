@@ -264,7 +264,7 @@ class Machine(ssh_connection.SSHConnection):
             self.execute("""
             systemctl stop --quiet cockpit.service
             rm -f /etc/systemd/system/cockpit.service.d/notls.conf
-            systemctl reset-failed 'cockpit*'
+            systemctl reset-failed 'cockpit*' || true
             systemctl daemon-reload
             systemctl start cockpit.socket
             """)
@@ -278,7 +278,7 @@ class Machine(ssh_connection.SSHConnection):
             ExecStart=
             %s --no-tls" `grep ExecStart= /lib/systemd/system/cockpit.service` \
                     > /etc/systemd/system/cockpit.service.d/notls.conf
-            systemctl reset-failed 'cockpit*'
+            systemctl reset-failed 'cockpit*' || true
             systemctl daemon-reload
             systemctl start cockpit.socket
             """)
@@ -292,7 +292,7 @@ class Machine(ssh_connection.SSHConnection):
                 self.execute(f"podman restart {cockpit_container}")
                 self.wait_for_cockpit_running()
         else:
-            self.execute("systemctl reset-failed 'cockpit*'; systemctl restart cockpit")
+            self.execute("systemctl reset-failed 'cockpit*' || true; systemctl restart cockpit")
 
     def stop_cockpit(self) -> None:
         """Stop Cockpit.
