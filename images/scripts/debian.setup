@@ -329,12 +329,14 @@ systemctl disable --now systemd-networkd-wait-online.service
 # "unattended-upgrades" changes the default of 5 seconds to 30
 # seconds. Let's override that.
 
-mkdir -p /etc/systemd/logind.conf.d
-cat >/etc/systemd/logind.conf.d/zz-quick.conf <<EOF
+if [ "$1" != "debian-stable" ] && [ "$1" != "ubuntu-2204" ]; then
+    mkdir -p /etc/systemd/logind.conf.d
+    cat >/etc/systemd/logind.conf.d/zz-quick.conf <<EOF
 [Login]
 InhibitDelayMaxSec=5
 EOF
-systemctl reload systemd-logind
+    systemctl reload systemd-logind
+fi
 
 # Enable persistent journal
 mkdir -p /var/log/journal
