@@ -1,0 +1,3 @@
+*__main__.TestMachinesDisks.testAddDiskNFS*
+error: Failed to start pool nfs-pool
+*Job for rpc-statd.service failed because the control process exited with error code.
