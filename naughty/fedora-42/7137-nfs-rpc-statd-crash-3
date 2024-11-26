@@ -1,0 +1,3 @@
+*TestMachinesStoragePools*
+*
+subprocess.CalledProcessError: *virsh pool-start nfs-pool*returned non-zero exit status 1.
