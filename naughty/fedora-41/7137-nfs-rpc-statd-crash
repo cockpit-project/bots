@@ -1,3 +1,2 @@
-*nsm_atomic_write*
 *Error: FAIL: Test completed, but found unexpected journal messages:
-Process * (rpc.statd) of user 0 dumped core.
+Process * (rpc.statd) of user 0 terminated abnormally with signal 6/ABRT*
