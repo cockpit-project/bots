@@ -78,6 +78,14 @@ wireguard-tools \
 xfsprogs \
 "
 
+# HACK: enable systemd rc release repository
+
+cat >> /etc/pacman.conf << EOL
+[eworm-testing]
+SigLevel = Required
+Server = https://pkgbuild.com/~eworm/\$repo/\$arch/
+EOL
+
 # HACK: libosinfo requires gsettings-desktop-schemas but does not depend on it.
 # https://gitlab.archlinux.org/archlinux/packaging/packages/libosinfo/-/issues/1
 TEST_PACKAGES="$TEST_PACKAGES gsettings-desktop-schemas"
@@ -176,7 +184,7 @@ echo 'C.UTF-8 UTF-8' >> /etc/locale.gen
 locale-gen
 
 # Update the kernel as last step.
-pacman -Syu --noconfirm
+pacman -Syu --noconfirm eworm-testing/systemd eworm-testing/systemd-libs eworm-testing/systemd-sysvcompat
 
 # Reduce image size, remove cloud-init
 pacman -R --noconfirm cloud-init
