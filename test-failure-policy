@@ -192,6 +192,9 @@ def update_known_issue(api: github.GitHub, number: int, err: str, context: str) 
     if revision:
         occ = f"{occ} | revision {revision}"
 
+    # comments are limited to 65.000 characters, but some tests ouputs can be quite large
+    err = '\n'.join(err.splitlines()[-30:])
+
     comments = api.issue_comments(number)
 
     # try to find an existing comment to update; extract the traceback from the
