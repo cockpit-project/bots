@@ -220,6 +220,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'rhinstaller/anaconda-webui': {
         'main': [
             *contexts('fedora-rawhide-boot', ANACONDA_SCENARIOS),
+            *contexts('fedora-rawhide-boot', ['efi'], ANACONDA_SCENARIOS),
         ],
         '_manual': [
             'fedora-eln-boot',
