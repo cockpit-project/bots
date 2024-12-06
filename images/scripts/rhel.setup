@@ -134,30 +134,6 @@ EOF
     if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
         dnf module enable -y idm:client
     fi
-
-    # see centos-10.bootstrap: development composes still lack cloud images, but production
-    # composes are way too infrequent and outdated
-    if [ "$IMAGE" = "centos-10" ]; then
-        cat <<EOF > /etc/yum.repos.d/devel.repo
-[baseos-devel]
-name=CentOS Stream 10 - BaseOS
-baseurl=https://composes.stream.centos.org/stream-10/development/latest-CentOS-Stream/compose/BaseOS/x86_64/os/
-gpgcheck=0
-repo_gpgcheck=0
-metadata_expire=6h
-countme=1
-enabled=1
-
-[appstream-devel]
-name=CentOS Stream $releasever - AppStream
-baseurl=https://composes.stream.centos.org/stream-10/development/latest-CentOS-Stream/compose/AppStream/x86_64/os/
-gpgcheck=0
-repo_gpgcheck=0
-metadata_expire=6h
-countme=1
-enabled=1
-EOF
-    fi
 fi
 
 # man-db cache update is a CPU/memory hog
