@@ -298,7 +298,14 @@ class Machine(ssh_connection.SSHConnection):
         """Stop Cockpit.
         """
         if self.ws_container:
-            self.execute(f"echo {self.get_cockpit_container()} | xargs --no-run-if-empty podman rm -f")
+            clean = f"echo {self.get_cockpit_container()} | xargs --no-run-if-empty podman rm -f"
+            try:
+                self.execute(clean)
+            except subprocess.CalledProcessError:
+                # HACK: this sometimes fails the first time due to
+                # netavark: failed to delete container veth eth0: Netlink error: No such device
+                # if it didn't actually succeed, it should work the second time
+                self.execute(clean)
         else:
             self.execute("systemctl stop cockpit.socket cockpit.service")
 
