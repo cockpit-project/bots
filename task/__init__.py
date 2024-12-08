@@ -292,7 +292,7 @@ def branch(context, message, pathspec=".", issue=None, push=True, branch=None, d
 
     if not branch:
         branch = f'{name}-{context or ""}-{datetime.now(tz=timezone.utc):%Y%m%d-%H%M%S}'
-        branch = re.sub('[^A-Za-z0-9]+', '-', branch)
+        branch = re.sub(r'[^A-Za-z0-9]+', '-', branch)
         execute("git", "checkout", "-b", branch)
 
     # Tell git about our github token for authentication

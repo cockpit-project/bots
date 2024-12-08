@@ -200,7 +200,7 @@ def update_known_issue(api: github.GitHub, number: int, err: str, context: str) 
     # try to find an existing comment to update; extract the traceback from the
     # whole output; also ensure to remove the "# duration: XXs" trailer
     err_key = normalize_traceback(err).strip()
-    m = re.search("^(Traceback.*^not ok[^#\\n]*)", err_key, re.S | re.M)
+    m = re.search(r"^(Traceback.*^not ok[^#\\n]*)", err_key, re.S | re.M)
     if m:
         err_key = m.group(1)
     comment_key = f"{context}\n"
