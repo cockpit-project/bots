@@ -21,7 +21,7 @@ from pathlib import Path
 
 from yarl import URL
 
-from .abc import Destination, LogDriver
+from .base import Destination, LogDriver
 from .jsonutil import JsonObject, get_str
 
 logger = logging.getLogger(__name__)

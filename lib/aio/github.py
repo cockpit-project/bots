@@ -24,7 +24,7 @@ from typing import NamedTuple, Self
 import aiohttp
 from yarl import URL
 
-from .abc import Forge, Status, Subject, SubjectSpecification
+from .base import Forge, Status, Subject, SubjectSpecification
 from .jsonutil import JsonError, JsonObject, JsonValue, get_bool, get_dict, get_nested, get_str, typechecked
 from .util import LRUCache, T, create_http_session
 

@@ -11,7 +11,7 @@ import pytest
 from aioresponses import CallbackResult, aioresponses
 from yarl import URL
 
-from lib.aio.abc import SubjectSpecification
+from lib.aio.base import SubjectSpecification
 from lib.aio.github import GitHub
 from lib.aio.jobcontext import JobContext
 from lib.aio.jsonutil import JsonObject, JsonValue, json_merge_patch
