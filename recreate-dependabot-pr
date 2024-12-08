@@ -72,7 +72,7 @@ def main() -> None:
             continue
         else:
             # Not mergeable and a dependabot PR, add a `node_modules` label and re-create the PR.
-            task.label(pull_details, ('node_modules'))  # type: ignore[no-untyped-call]
+            task.label(pull_details, ('node_modules',))  # type: ignore[no-untyped-call]
 
             # Stop at the first dependabot PR as we can only land one at a time.
             break
