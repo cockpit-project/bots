@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "test/check-machines-disks", line *, in testAddDiskNFS
-*
-RuntimeError: Timed out on '
-        systemctl restart nfs-server
-        virsh pool-define-as nfs-pool --type netfs --target /var/lib/cockpittest/nfs_pool --source-host 127.0.0.1 --source-path /var/lib/cockpittest/mnt_exports
-        virsh pool-start nfs-pool
-        '
