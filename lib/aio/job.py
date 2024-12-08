@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Never
 
 from ..constants import BOTS_DIR
-from .abc import Forge, Subject, SubjectSpecification
+from .base import Forge, Subject, SubjectSpecification
 from .jobcontext import JobContext
 from .jsonutil import JsonObject, get_dict, get_int, get_object, get_str, get_str_map, get_strv
 from .s3streamer import Index, LogStreamer

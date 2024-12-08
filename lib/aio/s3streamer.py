@@ -24,7 +24,7 @@ from collections.abc import Collection
 from typing import ClassVar
 
 from ..constants import LIB_DIR
-from .abc import Destination
+from .base import Destination
 
 logger = logging.getLogger(__name__)
 

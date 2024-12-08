@@ -27,7 +27,7 @@ from typing import NamedTuple, Self
 import aiohttp
 from yarl import URL
 
-from .abc import Destination, LogDriver
+from .base import Destination, LogDriver
 from .jsonutil import JsonError, JsonObject, get_nested, get_str
 from .util import AsyncQueue, create_http_session
 

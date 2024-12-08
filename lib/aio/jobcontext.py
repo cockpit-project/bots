@@ -24,7 +24,7 @@ from typing import AsyncContextManager, Self
 
 from ..constants import BOTS_DIR
 from ..directories import xdg_config_home
-from .abc import Forge, LogDriver
+from .base import Forge, LogDriver
 from .github import GitHub
 from .jsonutil import (
     JsonError,
