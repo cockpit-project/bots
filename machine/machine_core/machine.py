@@ -162,7 +162,7 @@ class Machine(ssh_connection.SSHConnection):
         self.execute("sleep 1; journalctl --sync")
 
         # Prepend "SYSLOG_IDENTIFIER=" as a default field, for backwards compatibility
-        filters = (m if re.match("[a-zA-Z0-9_]+=", m) else "SYSLOG_IDENTIFIER=" + m for m in matches)
+        filters = (m if re.match(r"[a-zA-Z0-9_]+=", m) else "SYSLOG_IDENTIFIER=" + m for m in matches)
 
         # Some versions of journalctl terminate unsuccessfully when
         # the output is empty.  We work around this by ignoring the

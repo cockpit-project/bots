@@ -129,8 +129,8 @@ def test_lru_cache() -> None:
 def service() -> Iterator[GitHubService]:
     server = GitHubService()
     with aioresponses() as mock:
-        mock.post(re.compile(''), callback=server.post, repeat=True)
-        mock.get(re.compile(''), callback=server.get, repeat=True)
+        mock.post(re.compile(r''), callback=server.post, repeat=True)
+        mock.get(re.compile(r''), callback=server.get, repeat=True)
         yield server
 
 

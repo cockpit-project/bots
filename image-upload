@@ -47,7 +47,7 @@ def upload(store: str, source: str, public: bool, prune: bool = False) -> bool:
     headers = {s3.ACL: s3.PUBLIC} if public else {}
 
     # slightly magic: we already know the checksum: it's part of the filename
-    match = re.search('[0-9a-f]{64}', source)
+    match = re.search(r'[0-9a-f]{64}', source)
     assert match is not None
     hash_value = match.group(0)
 
