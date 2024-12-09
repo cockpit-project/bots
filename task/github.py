@@ -126,7 +126,7 @@ def get_origin_repo() -> str | None:
     except subprocess.CalledProcessError:
         return None
     url = res.decode('utf-8').strip()
-    m = re.fullmatch(r"(git@github.com:|https://github.com/)(.*?)(\\.git)?", url)
+    m = re.fullmatch(r"(git@github.com:|https://github.com/)(.*?)(\.git)?", url)
     if m:
         return m.group(2).rstrip("/")
     raise RuntimeError("Not a GitHub repo: %s" % url)
