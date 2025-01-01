@@ -1,3 +1,0 @@
-> warn*: Error resizing logical volume: Process reported exit code 5:   File system device usage is not available from libblkid.
-*
-  File "check-storage-stratis", line *, in testPoolResize
