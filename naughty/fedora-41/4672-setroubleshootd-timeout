@@ -1,5 +1,0 @@
-> warn*: Unable to delete alert *
-*
-  File "test/verify/check-selinux", line *, in testTroubleshootAlerts
-*
-testlib.Error: timeout
