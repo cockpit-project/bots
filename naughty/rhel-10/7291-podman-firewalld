@@ -1,0 +1,3 @@
+Error: trying to reuse blob * pinging container registry localhost:5000: Get \"http://localhost:5000/v2/\": dial tcp [::1]:5000: connect: connection refused"
+*
+subprocess.CalledProcessError: *podman push*
