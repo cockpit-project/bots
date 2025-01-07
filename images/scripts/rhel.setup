@@ -422,11 +422,6 @@ EOF
         ln -sf centos-stream-${major}-x86_64.cfg /etc/mock/default.cfg
     fi
 
-    # HACK: SELinux b0rkage https://issues.redhat.com/browse/RHEL-49567
-    if [ "${IMAGE#rhel-10*}" != "$IMAGE" ] || [ "${IMAGE#centos-10}" != "$IMAGE" ]; then
-        setenforce 0
-    fi
-
     useradd -c Builder -G mock builder
     opsys=$(cut -d '-' -f 1 <<< "$IMAGE")
     version=$(cut -d '-' -f 2 <<< "$IMAGE")
@@ -436,11 +431,6 @@ EOF
     mkdir /tmp/selinux-policy-rpms
     dnf download --downloaddir /tmp/selinux-policy-rpms selinux-policy{,-devel,-targeted}
     su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
-
-    # undo the hack above
-    if [ "${IMAGE#rhel-10*}" != "$IMAGE" ] || [ "${IMAGE#centos-10}" != "$IMAGE" ]; then
-        setenforce 1
-    fi
 fi
 
 dnf clean all || true

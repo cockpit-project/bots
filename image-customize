@@ -172,10 +172,6 @@ class BuildAction(ActionBase):
         if opt_build_options:
             mock_opts += ' ' + opt_build_options
 
-        # HACK: SELinux b0rkage https://issues.redhat.com/browse/RHEL-49567
-        if machine.image in ['rhel-10-0', 'centos-10']:
-            machine.execute("setenforce 0")
-
         # build source package, unless this is running against an srpm already
         if vm_source.endswith(".src.rpm"):
             srpm = vm_source
