@@ -155,6 +155,15 @@ fi
 # man-db cache update is a CPU/memory hog
 rpm -e --verbose man-db
 
+# HACK: https://bugzilla.redhat.com/show_bug.cgi?id=2333743
+if [ "${IMAGE#fedora-rawhide}" != "$IMAGE" ]; then
+    mkdir -p /etc/systemd/system/systemd-resolved.service.d
+    printf '[Service]\nRestartSec=1s\n' > /etc/systemd/system/systemd-resolved.service.d/restart-wait.conf
+    systemctl daemon-reload
+    systemctl reset-failed systemd-resolved
+    systemctl start systemd-resolved
+fi
+
 # fedora-eln image is just used for building/fetching the anaconda-webui RPM dependencies
 # no need to install all dependencies there
 ALL_DEPS="$COCKPIT_DEPS"
