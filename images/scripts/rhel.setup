@@ -374,29 +374,9 @@ if [ "$DO_BUILD" -eq 1 ]; then
     minor=$(cut -d '-' -f 3 <<< "$IMAGE")
     dnf install -y rpm-build
 
-    if [ "${IMAGE#rhel-10*}" != "$IMAGE" ] || [ "${IMAGE#centos-10}" != "$IMAGE" ]; then
-        # RHEL 10 has no EPEL yet, install from Fedora 40
-        cat <<EOF > /etc/yum.repos.d/fedora.repo
-[fedora]
-name=Fedora
-metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-40&arch=\$basearch
-enabled=1
-gpgcheck=0
-
-[fedora-updates]
-name=Fedora
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f40&arch=\$basearch
-enabled=1
-gpgcheck=0
-EOF
-        dnf install -y --setopt=install_weak_deps=False mock
-        rm  /etc/yum.repos.d/fedora.repo
-    else
-        # RHEL/CentOS 8/9 has EPEL
-        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-${major}.noarch.rpm
-        dnf install -y mock
-        dnf config-manager --set-disabled epel
-    fi
+    dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-${major}.noarch.rpm
+    dnf install -y mock
+    dnf config-manager --set-disabled epel
 
     if [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
         if [ "${IMAGE#rhel-11}" != "$IMAGE" ]; then
