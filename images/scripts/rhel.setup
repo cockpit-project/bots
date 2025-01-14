@@ -399,10 +399,10 @@ EOF
     fi
 
     if [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
-        if [ "${IMAGE#rhel-10}" != "$IMAGE" ]; then
+        if [ "${IMAGE#rhel-11}" != "$IMAGE" ]; then
             zversion="-beta"
         else
-            zversion=".0"
+            zversion=""
         fi
         cat <<EOF > /etc/mock/default.cfg
 config_opts['chroothome'] = '/builddir'
