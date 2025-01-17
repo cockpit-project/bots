@@ -74,8 +74,12 @@ def consume_webhook_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResu
             sha = pull_request['head']['sha']
             db = os.path.join(get_images_data_dir(), "test-results.db")
             body = {
-                "command": (f"./store-tests --db {db} --repo {repo} {sha} && "
-                            f"./prometheus-stats --db {db} --s3 {os.path.join(LOG_STORE, 'prometheus')}")
+                "command": (
+                    f"./store-tests --db {db} --repo {repo} {sha} && "
+                    # prune the db if it gets too big; 14 days weighs about 15 MB
+                    f"if [ $(stat +%c {db}) -gt 25000000 ]; then ./prometheus-stats --db {db} --prune 14; fi &&"
+                    f"./prometheus-stats --db {db} --s3 {os.path.join(LOG_STORE, 'prometheus')}"
+                )
             }
             dq.channel.basic_publish('', 'statistics', json.dumps(body),
                                      properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
