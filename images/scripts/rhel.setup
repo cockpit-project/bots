@@ -381,8 +381,11 @@ if [ "$DO_BUILD" -eq 1 ]; then
     if [ "${IMAGE#rhel-*}" != "$IMAGE" ]; then
         if [ "${IMAGE#rhel-11}" != "$IMAGE" ]; then
             zversion="-beta"
-        else
+        elif [ "${IMAGE#rhel-10}" != "$IMAGE" ]; then
             zversion=""
+        else
+            # RHEL 8 and 9
+            zversion=".0"
         fi
         cat <<EOF > /etc/mock/default.cfg
 config_opts['chroothome'] = '/builddir'
