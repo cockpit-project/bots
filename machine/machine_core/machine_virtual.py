@@ -80,7 +80,7 @@ TEST_DOMAIN_XML = """
     <disk type='file'>
       <driver name='qemu' type='qcow2' cache='unsafe'/>
       <source file='{drive}'/>
-      <target dev='vda' bus='virtio'/>
+      <target dev='{disk_dev}' bus='{disk_bus}'/>
       <serial>ROOT</serial>
       <boot order='2'/>
     </disk>
@@ -262,6 +262,8 @@ class VirtMachine(Machine):
     is_efi: bool = False
     image_file: str
     run_dir: str
+    disk_bus: str = 'virtio'
+    disk_dev: str = 'vda'
 
     def __init__(
         self,
@@ -287,6 +289,11 @@ class VirtMachine(Machine):
         # Set up some temporary networking info if necessary
         if networking is None:
             networking = VirtNetwork(image=image).host()
+
+        if "disk_bus" in kwargs:
+            self.disk_bus = str(kwargs.pop("disk_bus"))
+        if "disk_dev" in kwargs:
+            self.disk_dev = str(kwargs.pop("disk_dev"))
 
         # Allocate network information about this machine
         self.networking = networking
@@ -378,6 +385,8 @@ class VirtMachine(Machine):
             "iso": os.path.join(BOTS_DIR, "machine", "cloud-init.iso"),
             "console_type": "file" if self.console_file else "pty",
             "console_source": f"<source path='{self.console_file.name}'/>" if self.console_file else "",
+            "disk_bus": self.disk_bus,
+            "disk_dev": self.disk_dev,
         }
 
         if self.is_efi:
