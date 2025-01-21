@@ -36,7 +36,9 @@ SSH ACCESS
   $ ssh -p {ssh_port} -i bots/machine/identity {ssh_user}@{ssh_address}
 
 COCKPIT
-  http://{web_address}:{web_port}
+  https://{web_address}:{web_port}
+  Username: admin
+  Password: foobar
 """
 
 RESOLV_SCRIPT = """
