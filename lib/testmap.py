@@ -84,6 +84,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-9-bootc',
             'rhel-9-6',
+            'rhel-8-10/ws-container',
         ]
     },
     'cockpit-project/cockpit-ostree': {
@@ -157,6 +158,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-0',
         ],
         '_manual': [
+            'rhel-8-10/ws-container',
         ],
     },
     'osbuild/cockpit-composer': {
