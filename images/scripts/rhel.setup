@@ -447,6 +447,11 @@ mkdir -p /var/log/journal
 
 /var/lib/testvm/podman-images.setup
 
+# pre-install cockpit/ws container for /ws-container scenario
+if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
+     podman pull quay.io/cockpit/ws:latest
+fi
+
 rm -f /etc/pki/ca-trust/source/anchors/IT-Root-CA.pem
 
 # Final tweaks
