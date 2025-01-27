@@ -223,7 +223,6 @@ dnf install -y $selinux_pkgs
 /var/lib/testvm/podman-images.setup
 
 # pre-install cockpit/ws container for /ws-container scenario
-CF=https://raw.githubusercontent.com/cockpit-project/cockpit/main/containers/ws/Dockerfile
 podman pull quay.io/cockpit/ws:latest
 
 # Prevent SSH from hanging for a long time when no external network access
