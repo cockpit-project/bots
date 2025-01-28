@@ -20,6 +20,7 @@ import os
 import re
 import subprocess
 from collections.abc import Collection, Mapping, Sequence
+from functools import cached_property
 
 from lib.constants import BOTS_DIR, DEFAULT_IDENTITY_FILE, OSTREE_IMAGES
 
@@ -91,9 +92,6 @@ class Machine(ssh_connection.SSHConnection):
         self.arch = arch
         self.image = image
         self.ostree_image = self.image in OSTREE_IMAGES
-        # start via cockpit/ws container on OSTree or when explicitly requested
-        self.ws_container = self.ostree_image or "ws-container" in os.getenv("TEST_SCENARIO", "")
-
         if ":" in browser:
             self.web_address, _, self.web_port = browser.rpartition(":")
         else:
@@ -102,6 +100,23 @@ class Machine(ssh_connection.SSHConnection):
 
         # The Linux kernel boot_id
         self.boot_id = None
+
+    @cached_property
+    def ws_container(self) -> bool:
+        """Return if image uses the cockpit/ws container
+
+        True → ws container; False: cockpit-ws package
+
+        Tests can force using the ws container by setting TEST_SCENARIO=ws-container
+        Otherwise this does runtime detection.
+
+        A project's test image preparation should ensure that only one is installed
+        to avoid confusion.
+        """
+        if "ws-container" in os.getenv("TEST_SCENARIO", ""):
+            return True
+        else:
+            return not self.execute("ls /usr/share/cockpit/static", check=False).strip()
 
     def diagnose(self, tty: bool = True) -> str:
         keys = {
