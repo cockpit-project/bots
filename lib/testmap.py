@@ -66,6 +66,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'centos-9-bootc',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
