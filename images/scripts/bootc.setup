@@ -3,6 +3,9 @@ set -eux
 
 IMAGE="$1"
 
+# config.json cannot set GECOS
+usermod -c Administrator admin
+
 podman pull quay.io/cockpit/ws
 podman pull quay.io/jitesoft/nginx
 
