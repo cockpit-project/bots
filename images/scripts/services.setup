@@ -176,12 +176,15 @@ apps:
   - type: performancecopilot-pcp-app
 EOF
 
+# TEMP HACK: https://quay.io/repository/cockpit/grafana has a copy of the 2025-01-29 docker.io/bitnami/grafana image
 podman run -d --rm --name grafana -p 3000:3000 \
     -v /root/grafana.ini:/opt/bitnami/grafana/conf/grafana.ini:ro,z \
     -v grafana-data-plugins:/opt/bitnami/grafana/data/plugins \
     -e GF_SECURITY_ADMIN_PASSWORD=foobar \
     -e GF_INSTALL_PLUGINS="redis-datasource,performancecopilot-pcp-app" \
-    docker.io/bitnami/grafana
+    quay.io/cockpit/grafana
+
+podman tag quay.io/cockpit/grafana docker.io/bitnami/grafana
 
 # wait until set up completed
 until curl http://localhost:3000; do sleep 5; done
