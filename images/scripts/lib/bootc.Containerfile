@@ -3,6 +3,7 @@ FROM $base_image
 
 # pre-install the distro version, which is useful for testing extensions and manual experiments
 RUN \
+    dnf update -y --exclude='kernel*' && \
     dnf install -y --setopt install_weak_deps=False cockpit-system cockpit-networkmanager && \
     dnf clean all
 
