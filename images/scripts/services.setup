@@ -17,7 +17,7 @@ hostnamectl set-hostname services.cockpit.lan
 #############
 
 # see https://quay.io/repository/freeipa/freeipa-server
-# and https://github.com/freeipa/freeipa-container/issues/346
+# we want centos-9-stream tag here, but newer versions have a time-bomb crash: https://issues.redhat.com/browse/RHEL-76748
 setsebool -P container_manage_cgroup 1
 mkdir /var/lib/ipa-data
 
@@ -27,7 +27,7 @@ podman run -d --rm --name freeipa -ti -h f0.cockpit.lan \
     -p $SERVER_IP:53:53/udp -p $SERVER_IP:53:53 -p 80:80 -p 443:443 -p 389:389 -p 636:636 -p 88:88 -p 464:464 -p 88:88/udp -p 464:464/udp -p 123:123/udp \
     -v /var/lib/ipa-data:/data:Z \
     -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-    quay.io/freeipa/freeipa-server:centos-9-stream \
+    quay.io/freeipa/freeipa-server:centos-9-stream-4.12.0 \
     -U -p foobarfoo -a foobarfoo -n cockpit.lan -r COCKPIT.LAN --setup-dns --no-forwarders --no-ntp
 EOF
 chmod 755 /root/run-freeipa
