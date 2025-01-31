@@ -42,6 +42,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'cockpit-project/cockpit': {
         'main': [
             *contexts('arch', COCKPIT_SCENARIOS),
+            # cockpit-storaged not yet installed and tests not yet enabled
+            *contexts('centos-9-bootc', COCKPIT_SCENARIOS - {'storage'}),
             *contexts('debian-stable', COCKPIT_SCENARIOS),
             *contexts('debian-testing', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2204', COCKPIT_SCENARIOS),
@@ -66,7 +68,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'centos-9-bootc',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
