@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-storage-mdraid", line *, in testBitmap
-    self.assertIn("Consistency Policy : bitmap", m.execute("mdadm --misc -D /dev/md/md0"))
-*
-AssertionError: 'Consistency Policy : bitmap' not found in *Consistency Policy : resync*
