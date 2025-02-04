@@ -23,8 +23,8 @@ if [ "$IMAGE" == "fedora-coreos" ]; then
     systemctl disable --now zincati.service
 
     # pre-install the distro version, which is useful for testing extensions and manual experiments
-    # also install Python for future pybridge, until c-bridge package grows that package dependency
-    rpm-ostree install cockpit-system cockpit-bridge cockpit-networkmanager python3
+    # also install glib-networking, so that tests can install cockpit-ws (as long as it has that dependency)
+    rpm-ostree install cockpit-system cockpit-bridge cockpit-networkmanager glib-networking
 fi
 
 # Wait for all systemd jobs to finish before cleaning up.  In
