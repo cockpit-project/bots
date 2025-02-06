@@ -176,7 +176,8 @@ apps:
   - type: performancecopilot-pcp-app
 EOF
 
-# TEMP HACK: https://quay.io/repository/cockpit/grafana has a copy of the 2025-01-29 docker.io/bitnami/grafana image
+# https://quay.io/repository/cockpit/grafana is a mirror to avoid pull rate limits in the RH VPN
+# https://github.com/cockpit-project/cockpit/actions/workflows/docker-mirors.yml
 podman run -d --rm --name grafana -p 3000:3000 \
     -v /root/grafana.ini:/opt/bitnami/grafana/conf/grafana.ini:ro,z \
     -v grafana-data-plugins:/opt/bitnami/grafana/data/plugins \
