@@ -1,0 +1,2 @@
+  File "check-storage-stratis", line *, in testBasic
+    b.wait_text(self.card_row_col("Stratis filesystems", 1, 1), "fsys1")  # should be started after boot

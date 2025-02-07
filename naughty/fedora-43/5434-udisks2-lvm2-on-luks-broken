@@ -1,0 +1,2 @@
+  File "check-storage-lvm2", line *, in testLvmOnLuks
+    b.wait_in_text(self.card_desc("LVM2 logical volume", "Physical volumes"), bn(disk))

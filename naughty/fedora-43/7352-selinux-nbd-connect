@@ -1,0 +1,6 @@
+> error: spawn 'vm creation' returned error: *internal error: process exited while connecting to monitor*nbdkit*
+Traceback (most recent call last):
+  File "test/check-machines-create", line *, in testCreateUrlSource
+*
+testlib.Error: timeout
+wait_js_cond(ph_text_is("#vm-subVmTestCreate8-system-state","Running")): Error: #vm-subVmTestCreate8-system-state not found
