@@ -29,7 +29,8 @@ libvirt-python \
 libvirt-dbus \
 libblockdev-mdraid \
 libpwquality \
-tracer
+tracer \
+tuned \
 virt-install \
 udisks2 \
 udisks2-btrfs \
