@@ -143,7 +143,7 @@ async def api(service: GitHubService) -> AsyncIterator[GitHub]:
 async def test_github_404(service: GitHubService, api: GitHub) -> None:
     # Make sure 4xx errors get raised immediately without retries
     service.add('x', status=404, reason='Not Found')
-    with pytest.raises(aiohttp.ClientResponseError, match='404.*Not Found'):
+    with pytest.raises(aiohttp.ClientResponseError, match=r'404.*Not Found'):
         assert await api.get('x') == {}
     service.assert_hits(1, 1)
 
