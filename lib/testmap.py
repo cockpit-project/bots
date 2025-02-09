@@ -168,9 +168,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-40',
             'fedora-40/firefox',
             'centos-9-stream',
-            'centos-10',
             'rhel-9-6',
-            'rhel-10-0',
         ],
         '_manual': [
             'fedora-rawhide',
