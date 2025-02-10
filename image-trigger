@@ -44,6 +44,7 @@ REFRESH = {
     "debian-stable": {},
     "fedora-40": {},
     "fedora-41": {},
+    "fedora-42": {},
     "fedora-coreos": {},
     "fedora-rawhide": {},
     "fedora-rawhide-boot": {},
