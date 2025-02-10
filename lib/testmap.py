@@ -68,6 +68,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'fedora-42',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -85,6 +86,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-9-bootc',
+            'fedora-42',
             'rhel-9-6',
             'rhel-8-10/ws-container',
         ]
@@ -118,6 +120,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-10',
+            'fedora-42',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -144,6 +147,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-10',
+            'fedora-42',
             'fedora-rawhide',
         ],
     },
@@ -161,6 +165,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-0',
         ],
         '_manual': [
+            'fedora-42',
         ],
     },
     'osbuild/cockpit-composer': {
@@ -173,6 +178,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'fedora-41',
+            'fedora-42',
         ],
     },
     'candlepin/subscription-manager': {
@@ -203,6 +209,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-4',
         ],
         '_manual': [
+            'fedora-42',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -215,6 +222,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-41',
         ],
         '_manual': [
+            'fedora-42',
         ],
     },
     'rhinstaller/anaconda-webui': {
