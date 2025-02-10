@@ -1,8 +1,5 @@
 #! /bin/bash
 set -eux
 
-# FIXME: Move to /development once that gets cloud images
-URL='https://composes.stream.centos.org/stream-10/production/latest-CentOS-Stream/compose/BaseOS/x86_64/images/'
-IMAGE="$(curl -L -s "$URL" | grep -o '"CentOS-Stream-GenericCloud-10-[^"]*.x86_64.qcow2"' | tr -d '"' | tail -n1)"
-[ -n "$IMAGE" ]
-exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL/$IMAGE"
+URL="https://cloud.centos.org/centos/10-stream/x86_64/images/CentOS-Stream-GenericCloud-10-latest.x86_64.qcow2"
+exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL"
