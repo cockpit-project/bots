@@ -49,7 +49,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('ubuntu-2204', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2404', COCKPIT_SCENARIOS),
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
-            *contexts('fedora-40', COCKPIT_SCENARIOS),
             *contexts('fedora-41', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
             *contexts(TEST_OS_DEFAULT, ['devel']),
@@ -76,7 +75,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'cockpit-project/starter-kit': {
         'main': [
             TEST_OS_DEFAULT,
-            'fedora-40',
             'fedora-41',
             'fedora-42',
             'centos-9-stream',
@@ -108,7 +106,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-9-bootc',
             'debian-stable',
             'debian-testing',
-            'fedora-40',
             'fedora-41',
             'fedora-coreos',
             'rhel-8-10',
@@ -133,7 +130,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'ubuntu-2204',
             'ubuntu-2404',
             'ubuntu-stable',
-            'fedora-40',
             'fedora-41',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
@@ -155,7 +151,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             'arch',
             'debian-testing',
-            'fedora-40',
             'fedora-41',
             f'{TEST_OS_DEFAULT}/devel',
             'fedora-rawhide',
