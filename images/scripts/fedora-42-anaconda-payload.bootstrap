@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eux
+
+OUTPUT="$1"
+
+PYTHONPATH=. python3 images/scripts/create-anaconda-payload --image=fedora-42 --output=$OUTPUT
