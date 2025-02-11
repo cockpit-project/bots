@@ -154,6 +154,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-41',
             'fedora-42',
             f'{TEST_OS_DEFAULT}/devel',
+            f'{TEST_OS_DEFAULT}/firefox',
             'fedora-rawhide',
             'centos-10',
             'rhel-8-10/ws-container',
