@@ -118,7 +118,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-10',
-            'fedora-42',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -162,7 +161,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-0',
         ],
         '_manual': [
-            'fedora-42',
         ],
     },
     'osbuild/cockpit-composer': {
