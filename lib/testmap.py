@@ -50,6 +50,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('ubuntu-2404', COCKPIT_SCENARIOS),
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
             *contexts('fedora-41', COCKPIT_SCENARIOS),
+            *contexts('fedora-42', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
             *contexts(TEST_OS_DEFAULT, ['devel']),
             *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
@@ -67,7 +68,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'fedora-42',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
