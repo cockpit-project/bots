@@ -241,6 +241,10 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
                 env["BASE_BRANCH"] = branch
             if number:
                 env["TEST_PULL"] = f'{number}'
+            # for updating naughty trackers and downloading private images
+            secrets = ["github-token", "image-download"]
+            if api.repo == "rhinstaller/anaconda-webui":
+                secrets.append("fedora-wiki")
 
             yield {
                 "job": {
@@ -258,8 +262,7 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
                     },
                     "slug": slug,
                     "env": env,
-                    # for updating naughty trackers and downloading private images
-                    "secrets": ["github-token", "image-download"],
+                    "secrets": secrets,
                 },
                 "human": "{name:11} {context:25} {revision:10} {repo}{bots_ref}{branches}".format(
                     revision=revision[0:7],
