@@ -79,6 +79,12 @@ GITHUB_DATA = {
         "statuses": [],
         "sha": "9988aa",
     },
+    # anaconda SHA without a PR
+    "/repos/rhinstaller/anaconda-webui/commits/112233/status?page=1&per_page=100": {
+        "state": "pending",
+        "statuses": [],
+        "sha": "112233",
+    },
     "/users/user/repos": [{"full_name": "project/repo"}],
 }
 
@@ -304,6 +310,45 @@ class TestTestsScan(unittest.TestCase):
                 "env": {
                     "COCKPIT_BOTS_REF": "main",
                     'TEST_REVISION': "9988aa",
+                    "TEST_OS": "fedora",
+                    "TEST_SCENARIO": "nightly",
+                }
+            }
+        }
+
+    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    def test_anaconda_secrets(self, mock_queue):
+        """anaconda-webui gets extra secrets"""
+        # SHA without PR
+        args = ["--dry", "--repo", "rhinstaller/anaconda-webui", "--context", self.context,
+                "--sha", "112233", "--amqp", "amqp.example.com:1234"]
+        self.run_success(args, "")
+
+        mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
+        channel = mock_queue.return_value.__enter__.return_value.channel
+
+        channel.basic_publish.assert_called_once()
+        self.assertEqual(channel.basic_publish.call_args[0][0], "")
+        self.assertEqual(channel.basic_publish.call_args[0][1], "public")
+        request = json.loads(channel.basic_publish.call_args[0][2])
+
+        assert request == {
+            "human": "pull-0      fedora/nightly            112233       (rhinstaller/anaconda-webui) [bots@main]",
+            "job": {
+                "context": "fedora/nightly",
+                "repo": "rhinstaller/anaconda-webui",
+                "sha": "112233",
+                "slug": "pull-0-112233-20240102-030405-fedora-nightly",
+                "pull": None,
+                "report": {
+                    "title": "Tests failed on 112233",
+                    "labels": ["nightly"],
+                },
+                "command_subject": None,
+                "secrets": ["github-token", "image-download", "fedora-wiki"],
+                "env": {
+                    "COCKPIT_BOTS_REF": "main",
+                    'TEST_REVISION': "112233",
                     "TEST_OS": "fedora",
                     "TEST_SCENARIO": "nightly",
                 }
