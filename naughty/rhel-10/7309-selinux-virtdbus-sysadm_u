@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "test/check-machines-lifecycle", line *, in testBasicSysadmU
-*
-  File "test/check-machines-lifecycle", line *, in _testBasic
-    self.waitVmRow("subVmTest1")
-*
-testlib.Error: timeout
