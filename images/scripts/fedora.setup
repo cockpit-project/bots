@@ -120,14 +120,6 @@ valkey \
 wireguard-tools \
 "
 
-ABRT_PACKAGES="\
-abrt \
-abrt-addon-ccpp \
-reportd \
-libreport-plugin-bugzilla \
-libreport-fedora
-"
-
 # These packages are downloaded to the image so that the tests can
 # install them on-demand.
 
@@ -169,10 +161,6 @@ fi
 ALL_DEPS="$COCKPIT_DEPS"
 if [ "fedora-eln" != "$IMAGE" ]; then
     ALL_DEPS="$COCKPIT_MACHINES_DEPS $COCKPIT_STORAGE_DEPS $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $TEST_PACKAGES"
-
-    if [ "$VERSION_ID" -le "40" ]; then
-        ALL_DEPS="$ALL_DEPS $ABRT_PACKAGES"
-    fi
 fi
 dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $ALL_DEPS
