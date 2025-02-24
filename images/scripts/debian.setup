@@ -99,6 +99,10 @@ wireguard-tools \
 xfsprogs \
 "
 
+# These are the packages we don't want.
+DENIED_PACKAGES="\
+"
+
 # older libvirt have this builtin
 if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/virtiofsd/}"
@@ -153,6 +157,9 @@ if [ "$IMAGE" = "debian-testing" ]; then
     COCKPIT_DEPS="${COCKPIT_DEPS/libpcp3 /}"
     COCKPIT_DEPS="${COCKPIT_DEPS/pcp /}"
     COCKPIT_DEPS="${COCKPIT_DEPS/python3-pcp /}"
+
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1098793
+    DENIED_PACKAGES="$DENIED_PACKAGES selinux-policy-default-"
 fi
 
 # Attention: Enable proposed for ubuntu-stable after 24.10 release
@@ -214,7 +221,7 @@ $APT dist-upgrade
 systemctl restart systemd-networkd.service || true
 
 # install our dependencies
-$APT install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
+$APT install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $DENIED_PACKAGES
 
 # download package sets
 
