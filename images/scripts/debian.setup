@@ -99,6 +99,11 @@ wireguard-tools \
 xfsprogs \
 "
 
+# These are the packages we don't want.
+DENIED_PACKAGES="\
+selinux-policy-default-
+"
+
 # older libvirt have this builtin
 if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/virtiofsd/}"
@@ -214,7 +219,7 @@ $APT dist-upgrade
 systemctl restart systemd-networkd.service || true
 
 # install our dependencies
-$APT install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
+$APT install $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $DENIED_PACKAGES
 
 # download package sets
 
