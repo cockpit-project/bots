@@ -269,7 +269,7 @@ if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10*}" != "$IMAGE" ]; then
 fi
 
 if [ "${IMAGE#rhel-9*}" != "$IMAGE" ]; then
-    TEST_PACKAGES="${TEST_PACKAGES} zram-generator"
+    TEST_PACKAGES="${TEST_PACKAGES} zram-generator criu criu-libs"
 fi
 
 # RHEL 8/9 had redis
