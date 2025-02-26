@@ -22,7 +22,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from lib.constants import TEST_OS_DEFAULT
 
 COCKPIT_SCENARIOS = {'networking', 'storage', 'expensive', 'other'}
-ANACONDA_SCENARIOS = {'cockpit', 'storage', 'expensive', 'other'}
+ANACONDA_SCENARIOS = {'efi', 'cockpit', 'storage', 'expensive', 'other'}
 
 
 def contexts(image: str, *scenarios: Iterable[str], repo: str | None = None) -> Sequence[str]:
@@ -224,9 +224,9 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'rhinstaller/anaconda-webui': {
         'main': [
             *contexts('fedora-42-boot', ANACONDA_SCENARIOS),
-            *contexts('fedora-42-boot', ['efi'], ANACONDA_SCENARIOS),
+            *contexts('fedora-42-boot', ANACONDA_SCENARIOS),
             *contexts('fedora-rawhide-boot', ANACONDA_SCENARIOS),
-            *contexts('fedora-rawhide-boot', ['efi'], ANACONDA_SCENARIOS),
+            *contexts('fedora-rawhide-boot', ANACONDA_SCENARIOS),
         ],
         '_manual': [
             'fedora-eln-boot',
