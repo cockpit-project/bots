@@ -345,7 +345,7 @@ class TestTestsScan(unittest.TestCase):
                     "labels": ["nightly"],
                 },
                 "command_subject": None,
-                "secrets": ["github-token", "image-download", "fedora-wiki"],
+                "secrets": ["github-token", "image-download", "fedora-wiki", "fedora-wiki-staging"],
                 "env": {
                     "COCKPIT_BOTS_REF": "main",
                     'TEST_REVISION': "112233",

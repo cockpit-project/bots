@@ -245,6 +245,7 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
             secrets = ["github-token", "image-download"]
             if api.repo == "rhinstaller/anaconda-webui":
                 secrets.append("fedora-wiki")
+                secrets.append("fedora-wiki-staging")
 
             yield {
                 "job": {
