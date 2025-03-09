@@ -1,6 +1,0 @@
-TestKdumpNFS.testBasic*
-Traceback (most recent call last):
-  File "test/verify/check-kdump", line *, in testBasic
-    b.wait_visible(".pf-v5-c-switch__input:checked")
-*
-wait_js_cond(ph_is_present(".pf-v5-c-switch__input:checked")): * condition did not become true

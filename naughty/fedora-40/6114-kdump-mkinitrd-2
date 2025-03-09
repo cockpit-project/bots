@@ -1,6 +1,0 @@
-TestKdumpAnsible.testBasic*
-Traceback (most recent call last):
-  File "test/verify/check-kdump", line *, in testBasic
-    kdump_machine.execute("until systemctl is-active kdump; do sleep 1; done")
-*
-RuntimeError: Timed out on 'until systemctl is-active kdump; do sleep 1; done'
