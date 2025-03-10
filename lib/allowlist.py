@@ -24,6 +24,7 @@ ALLOWLIST = {
     'mvollmer',
     'subhoghoshX',
     'tomasmatus',
+    'Venefilyn',
     'yunmingyang',
 
     # installer team + contributors
