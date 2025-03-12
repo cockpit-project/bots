@@ -1,0 +1,9 @@
+curl: (58) could not load PEM client certificate from                               , OpenSSL error error:80000002:system library::No such file or directory, (no key found, wrong pass phrase, or wrong file format?)
+*
+Traceback (most recent call last):
+  File "test/verify/check-static-login", line *, in testClientCertAuthentication
+    do_test(alice_cert_key, ["HTTP/1.1 401 Authentication failed"])
+*
+    output = m.execute(['curl', '-ksS', '-D-', *authopts, 'https://localhost:9090/cockpit/login'])
+*
+subprocess.CalledProcessError: Command *curl -ksS -D- --cert /var/lib/cockpittest/alice.pem --key /var/lib/cockpittest/alice.key https://localhost:9090/cockpit/login')' returned non-zero exit status 58.
