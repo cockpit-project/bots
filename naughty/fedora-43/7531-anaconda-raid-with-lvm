@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "*check-storage-mountpoints-raid-e2e", line *, in testLVMOnRAID
-*
-    raise AssertionError('Error during installation')
-AssertionError: Error during installation
