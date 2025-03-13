@@ -562,7 +562,7 @@ class VirtMachine(Machine):
 
     def add_disk(
         self,
-        size: int | None = None,
+        size: str | None = None,
         serial: str | None = None,
         path: str | None = None,
         image_type: str = 'raw',
@@ -584,7 +584,7 @@ class VirtMachine(Machine):
             name = f"disk-{self._domain.name()}"
             fd, image = tempfile.mkstemp(suffix='qcow2', prefix=name, dir=self.run_dir)
             os.close(fd)
-            subprocess.check_call(["qemu-img", "create", "-q", "-f", "raw", image, str(size)])
+            subprocess.check_call(["qemu-img", "create", "-q", "-f", "raw", image, size])
 
         if not serial:
             serial = f"DISK{index}"
