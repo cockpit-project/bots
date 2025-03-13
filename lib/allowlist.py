@@ -32,7 +32,6 @@ ALLOWLIST = {
     'M4rtinK',
     'adamkankovsky',
     'elkoniu',
-    'jexposit',
     'jkonecny12',
     'rvykydal',
     'vojtechtrefny',
