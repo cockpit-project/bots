@@ -390,8 +390,19 @@ class VirtMachine(Machine):
         }
 
         if self.is_efi:
-            # path for Fedora/RHEL (our tasks container)
-            keys["firmware"] = "<qemu:arg value='-bios' /><qemu:arg value='/usr/share/OVMF/OVMF_CODE.fd' />"
+            candidates = [
+                # path for Fedora/RHEL (our tasks container)
+                '/usr/share/OVMF/OVMF_CODE.fd',
+                # path for Ubuntu (GitHub Actions runners)
+                '/usr/share/ovmf/OVMF.fd',
+            ]
+
+            for path in candidates:
+                if os.path.exists(path):
+                    keys["firmware"] = f"<qemu:arg value='-bios' /><qemu:arg value={path!r} />"
+                    break
+            else:
+                raise FileNotFoundError('Unable to find OVMF UEFI BIOS')
         else:
             keys["firmware"] = ""
 
