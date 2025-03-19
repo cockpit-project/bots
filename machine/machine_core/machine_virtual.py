@@ -395,6 +395,8 @@ class VirtMachine(Machine):
                 '/usr/share/OVMF/OVMF_CODE.fd',
                 # path for Ubuntu (GitHub Actions runners)
                 '/usr/share/ovmf/OVMF.fd',
+                # path for Arch
+                '/usr/share/edk2/x64/OVMF.4m.fd',
             ]
 
             for path in candidates:
