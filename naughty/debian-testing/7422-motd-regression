@@ -1,3 +1,0 @@
-testSocket (__main__.TestConnection.testSocket)
-*
-AssertionError: 'systemctl' unexpectedly found in*
