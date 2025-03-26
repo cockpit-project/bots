@@ -86,6 +86,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-9-bootc',
             'rhel-9-6',
+            'rhel-9-7',
             'rhel-8-10/ws-container',
         ]
     },
@@ -117,6 +118,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'ubuntu-stable',
         ],
         '_manual': [
+            'rhel-9-7',
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
@@ -143,6 +145,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10',
         ],
         '_manual': [
+            'rhel-9-7',
             'centos-10',
             'fedora-rawhide',
         ],
@@ -162,6 +165,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-0',
         ],
         '_manual': [
+            'rhel-9-7',
         ],
     },
     'osbuild/cockpit-composer': {
