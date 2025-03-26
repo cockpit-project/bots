@@ -61,7 +61,6 @@ EOF
         # current development version uses /nightly, released ones /rel-eng + updates
         case "$VERSION" in
             10.0)
-                VERSION=10
                 TREE=nightly;
                 UPDATES="" ;;
 
@@ -71,10 +70,10 @@ EOF
                 UPDATES="" ;;
             *)
                 TREE=rel-eng
-                UPDATES="rhel-${MAJOR}/${TREE}/updates/RHEL-${MAJOR}/latest-RHEL-${VERSION}.0/compose" ;;
+                UPDATES="rhel-${MAJOR}/${TREE}/updates/RHEL-${MAJOR}/latest-RHEL-${VERSION}/compose" ;;
         esac
 
-        REPO="rhel-${MAJOR}/${TREE}/RHEL-${MAJOR}${RELSUFFIX:-}/latest-RHEL-${VERSION}.0/compose"
+        REPO="rhel-${MAJOR}/${TREE}/RHEL-${MAJOR}${RELSUFFIX:-}/latest-RHEL-${VERSION}/compose"
 
         cat <<EOF > /etc/yum.repos.d/devel.repo
 [RHEL-BaseOS]
