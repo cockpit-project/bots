@@ -70,6 +70,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'opensuse-tumbleweed',
+            'rhel-9-7',
+            'rhel-10-1',
         ],
     },
     'cockpit-project/starter-kit': {
@@ -85,9 +87,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-9-bootc',
+            'rhel-8-10/ws-container',
             'rhel-9-6',
             'rhel-9-7',
-            'rhel-8-10/ws-container',
+            'rhel-10-1',
         ]
     },
     'cockpit-project/cockpit-ostree': {
@@ -118,10 +121,11 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'ubuntu-stable',
         ],
         '_manual': [
-            'rhel-9-7',
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
+            'rhel-9-7',
+            'rhel-10-1',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -145,9 +149,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10',
         ],
         '_manual': [
-            'rhel-9-7',
             'centos-10',
             'fedora-rawhide',
+            'rhel-9-7',
+            'rhel-10-1',
         ],
     },
     'cockpit-project/cockpit-files': {
@@ -166,6 +171,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'rhel-9-7',
+            'rhel-10-1',
         ],
     },
     'osbuild/cockpit-composer': {
@@ -217,6 +223,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-0',
         ],
         '_manual': [
+            'rhel-9-7',
+            'rhel-10-1',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -241,6 +249,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'fedora-eln-boot',
+            'rhel-9-7',
+            'rhel-10-1',
         ]
     },
 }
