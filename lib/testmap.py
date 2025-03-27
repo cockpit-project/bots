@@ -137,7 +137,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             'opensuse-tumbleweed',
-            'rhel-8-10',
+            'rhel-8-10/ws-container',
             'rhel-9-7',
             'rhel-10-1',
         ],
