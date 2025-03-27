@@ -162,12 +162,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-rawhide',
             'centos-10',
             'rhel-8-10/ws-container',
-            'rhel-9-6',
-            'rhel-10-0',
-        ],
-        '_manual': [
             'rhel-9-7',
             'rhel-10-1',
+        ],
+        '_manual': [
         ],
     },
     'osbuild/cockpit-composer': {
