@@ -259,10 +259,10 @@ IMAGE_REFRESH_TRIGGERS = {
         *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('debian-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *contexts('rhel-9-6', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *contexts('rhel-9-7', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         "rhel-8-10@cockpit-project/cockpit/rhel-8",
         "rhel-8-10@candlepin/subscription-manager/subscription-manager-1.28",
-        "rhel-9-6@candlepin/subscription-manager-cockpit",
+        "rhel-9-7@candlepin/subscription-manager-cockpit",
     ],
     # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
     "fedora-rawhide": [
