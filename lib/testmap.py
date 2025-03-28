@@ -168,15 +168,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     },
     'osbuild/cockpit-composer': {
         'main': [
-            'fedora-40',
-            'fedora-40/firefox',
             'centos-9-stream',
             'rhel-9-6',
         ],
         '_manual': [
-            'fedora-rawhide',
-            'fedora-41',
-            'fedora-42',
         ],
     },
     'candlepin/subscription-manager': {
