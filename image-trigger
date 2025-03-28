@@ -42,7 +42,6 @@ REFRESH = {
     "centos-10": {},
     "debian-testing": {},
     "debian-stable": {},
-    "fedora-40": {},
     "fedora-41": {},
     "fedora-42": {},
     "fedora-42-boot": {},
