@@ -63,10 +63,14 @@ ${host_key}
   rsa_public: ${host_key_pub}
 
 # Disable systemd-time-wait-sync as it can block reacing network.target and activating ssh.
-# On our test environment NTP is blocked so on Arch Linux systemd-timesyncd hangs forever 
+# On our test environment NTP is blocked so on Arch Linux systemd-timesyncd hangs forever
 # blocking systemd-time-wait-sync from completing.
 bootcmd:
  - [ sh, -c, "systemctl disable --now systemd-time-wait-sync.service || true"]
+ # HACK: set the content of /etc/ssh/sshd_config on tumbleweed till
+ # https://github.com/canonical/cloud-init/pull/6105 makes it downstream
+ # https://bugzilla.suse.com/show_bug.cgi?id=1237764
+ - [ sh, -c, "grep -q opensuse-tumbleweed /etc/os-release && echo 'Include /usr/etc/ssh/sshd_config' > /etc/ssh/sshd_config"]
 
 # make sure that our user script runs on every boot
 cloud_final_modules:
