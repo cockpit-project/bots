@@ -112,6 +112,7 @@ socat \
 strace \
 stratis-cli \
 stratisd \
+stratisd-tools \
 tang \
 targetcli \
 tcsh \
