@@ -1,5 +1,0 @@
-*internal error: Could not run '/usr/bin/swtpm_setup'.*
-*
-Traceback (most recent call last):
-  File "check-machines-create", line *, in testConfigureBeforeInstallBiosTPM
-    b.wait_in_text(f"#vm-{vmName}-system-state", "Running")

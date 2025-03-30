@@ -1,6 +1,0 @@
-*internal error: Could not run '/usr/bin/swtpm_setup'.*
-*
-Traceback (most recent call last):
-  File "check-machines-settings", line *, in testMultipleSettings
-*
-wait_js_cond(ph_in_text("#vm-subVmTest1-system-state","Running")): Error: actual text: Shut off
