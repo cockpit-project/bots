@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "test/check-machines-disks", line *, in testAddDiskPool
-*
-  File "test/check-machines-disks", line *, in verify_disk_added
-    b.wait_not_present(f"#vm-{self.vm_name}-disks-adddisk-dialog-modal-window")
-*
-testlib.Error: timeout
-wait_js_cond(!ph_is_present("#vm-subVmTest1-disks-adddisk-dialog-modal-window")): Error: condition did not become true

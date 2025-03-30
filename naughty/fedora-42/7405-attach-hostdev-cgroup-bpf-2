@@ -1,5 +1,0 @@
-error: failed to load cgroup BPF prog: Operation not permitted
-*
-Traceback (most recent call last):
-  File "check-machines-hostdevs", line *, in testHostDevicesList
-    m.execute("virsh attach-device --domain subVmTest1 --file /tmp/usbhostedxml")
