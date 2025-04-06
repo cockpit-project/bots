@@ -1,2 +1,0 @@
-*apparmor="DENIED" operation="open" class="file" profile="rsyslogd" name="/proc/sys/net/ipv6/conf/all/disable_ipv6" * comm="rsyslogd" requested_mask="r" denied_mask="r"*
-testlib.Error: FAIL: Test completed, but found unexpected journal messages
