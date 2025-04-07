@@ -1,0 +1,3 @@
+Traceback (most recent call last):
+  File "check-kdump", line *, in testBasic
+    b.wait_visible(".pf-v6-c-switch__input:checked")
