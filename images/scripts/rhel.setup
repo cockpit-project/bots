@@ -67,9 +67,11 @@ EOF
             # drop 9.5 after official release
             9.5 | 9.6 | 9.7)
                 TREE=nightly;
+                VERSION="${VERSION}.0";
                 UPDATES="" ;;
             *)
                 TREE=rel-eng
+                VERSION="${VERSION}.0";
                 UPDATES="rhel-${MAJOR}/${TREE}/updates/RHEL-${MAJOR}/latest-RHEL-${VERSION}/compose" ;;
         esac
 
