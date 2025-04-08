@@ -151,6 +151,7 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
 
             finally:
                 await run([*ctx.container_cmd, 'rm', '--force', '--time=0', f'--cidfile={tmpdir}/cidfile'],
+                          stderr=asyncio.subprocess.STDOUT,
                           stdout=asyncio.subprocess.DEVNULL)  # don't show container ID output
 
 
