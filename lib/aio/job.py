@@ -138,6 +138,8 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
                 except FileNotFoundError as exc:
                     raise RuntimeError('Failed to create container') from exc
 
+                logger.debug('started container: %s', cid)
+
                 # Upload all attachments
                 # TODO: live updates
                 # TODO: invent async tarfile for StreamReader
@@ -150,6 +152,7 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
                     raise Failure(f'Container exited with code {returncode}')
 
             finally:
+                logger.debug('force removing container')
                 await run([*ctx.container_cmd, 'rm', '--force', '--time=0', f'--cidfile={tmpdir}/cidfile'],
                           stderr=asyncio.subprocess.STDOUT,
                           stdout=asyncio.subprocess.DEVNULL)  # don't show container ID output
