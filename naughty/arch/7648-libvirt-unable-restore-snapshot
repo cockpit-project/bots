@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "test/check-machines-snapshots", line *, in testSnapshotRevert
+    b.wait_not_present("#vm-subVmTest1-snapshot-1-current")
+*
+  File "test/common/testlib.py", line *, in wait_not_present
+    self.wait_js_func('!ph_is_present', selector)
+*
+  File "test/common/testlib.py", line *, in wait_js_func
+    self.wait_js_cond("%s(%s)" % (func, ','.join(map(jsquote, args))))
+*
+  File "test/common/testlib.py", line *, in wait_js_cond
+    raise Error(f"timeout\nwait_js_cond({cond}): {last_error.msg}") from None
+testlib.Error: timeout
+wait_js_cond(!ph_is_present("#vm-subVmTest1-snapshot-1-current")): Error: condition did not become true
