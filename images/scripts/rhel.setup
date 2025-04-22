@@ -284,6 +284,12 @@ if [ "${IMAGE#rhel-[89]}" != "$IMAGE" ] || [ "${IMAGE#centos-[89]}" != "$IMAGE" 
     TEST_PACKAGES="$TEST_PACKAGES python3-tracer"
 fi
 
+# Centos 10 has audit-rules but doesn't install them by default. Let's
+# test with them explicitly.
+if [ "${IMAGE#centos-10*}" != "$IMAGE" ]; then
+    TEST_PACKAGES="$TEST_PACKAGES audit-rules"
+fi
+
 # These packages are downloaded to the image so that the tests can
 # install them on-demand.
 
