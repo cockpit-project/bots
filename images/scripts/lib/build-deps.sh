@@ -20,7 +20,7 @@ case "$OS_VER" in
     *suse*)
         # macro for determining suse version is %suse_version
         spec=$($GET "$COCKPIT_GIT/main/tools/cockpit.spec")
-        OS_VER_NO_VARIANT="suse_version $(awk '/%suse_version/{ print $2 }' /usr/lib/rpm/suse/macros)"
+        OS_VER_NO_VARIANT="suse_version $(rpm --eval '%suse_version')"
         ;;
     *)
         spec=$($GET "$COCKPIT_GIT/main/tools/cockpit.spec")
