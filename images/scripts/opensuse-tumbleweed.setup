@@ -86,6 +86,7 @@ podman \
 valkey \
 socat \
 strace \
+python313-targetcli-fb \
 targetcli \
 tcsh \
 bzip2 \
@@ -135,10 +136,11 @@ zypper install -y cockpit
 
 zypper addrepo https://download.opensuse.org/repositories/system:packagemanager/openSUSE_Tumbleweed/system:packagemanager.repo
 zypper --non-interactive --gpg-auto-import-keys  refresh
-zypper install -y mock mock-core-configs sudo
+zypper install -y mock mock-core-configs sudo dnf-plugins-core
 
 echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/90-cockpit-wheel
 echo "builder ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-susebuild
+echo "config_opts['use_bootstrap'] = False" >>/etc/mock/site-defaults.cfg
 useradd -c Builder -G mock builder
 
 su builder -c "sudo mock --verbose -i $(/var/lib/testvm/build-deps.sh "${ID} ${VERSION_ID}")"
