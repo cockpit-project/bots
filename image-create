@@ -165,6 +165,8 @@ class MachineBuilder:
 
         name = self.machine.image + "-" + sha + self.suffix
         data_file = os.path.join(data_dir, name)
+        subprocess.check_call(["ls", "-ld", data_dir])
+        subprocess.check_call(["ls", "-l", data_dir])
         shutil.move(self.machine.image_file if (self.iso or self.payload) else rebuild, data_file)
 
         if not self.iso and not self.payload:
