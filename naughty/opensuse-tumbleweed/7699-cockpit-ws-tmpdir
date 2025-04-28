@@ -1,0 +1,4 @@
+File "/usr/lib/python*/site-packages/cockpit/beiboot.py", line *, in __init__
+self.tmpdir = tempfile.TemporaryDirectory()
+*
+FileNotFoundError: [Errno 2] No usable temporary directory found in ['/tmp', '/var/tmp', '/usr/tmp', '/']
