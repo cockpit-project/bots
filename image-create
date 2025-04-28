@@ -165,6 +165,10 @@ class MachineBuilder:
 
         name = self.machine.image + "-" + sha + self.suffix
         data_file = os.path.join(data_dir, name)
+        if os.path.exists(data_file):
+            # shutil.move has trouble when the destination exists but
+            # has too restrictive permissions to be overwritten.
+            os.unlink(data_file)
         shutil.move(self.machine.image_file if (self.iso or self.payload) else rebuild, data_file)
 
         if not self.iso and not self.payload:
