@@ -99,7 +99,7 @@ def run(context, verbose=False, **kwargs):
             current_linguas = lngs.read().strip().split()
 
     # Remove all files that have less than X% coverage
-    # By default 50% is used but can be overridden by COVERAGE_THRESHOLD env variable
+    # By default 80% is used but can be overridden by COVERAGE_THRESHOLD env variable
     for po in glob.glob("po/*.po"):
         all_types = output_with_stderr("msgfmt", "--statistics", po).split(", ")
         translated = int(all_types[0].split(" ")[0])
@@ -107,11 +107,11 @@ def run(context, verbose=False, **kwargs):
         for u in all_types[1:]:
             untranslated += int(u.split(" ")[0])
         coverage = translated / (translated + untranslated)
-        coverage_limit = os.getenv("COVERAGE_THRESHOLD", 0.5)
+        coverage_limit = os.getenv("COVERAGE_THRESHOLD", 0.8)
         if coverage < float(coverage_limit):
             output("rm", po)
 
-    # Remove languages that fall under 50% translated
+    # Remove languages that fall under 80% translated
     files = output("git", "ls-files", "--deleted", "po/")
     for name in files.splitlines():
         if name.endswith(".po"):
@@ -127,7 +127,7 @@ def run(context, verbose=False, **kwargs):
     # Removing all semicolons is safe way around this
     output('sed', '-ri', r'/^"Plural-Forms:/ s/;(\\n")$/\1/', *glob.glob("po/*.po"))
 
-    # Add languages that got over 50% translated
+    # Add languages that got over 80% translated
     files = output("git", "ls-files", "--others", "--exclude-standard", "po/")
     for name in files.splitlines():
         if name.endswith(".po"):
