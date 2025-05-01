@@ -1,0 +1,11 @@
+* Error (criu/vdso.c:*): vdso: Unexpected rt vDSO area bounds
+* Error (criu/vdso.c:*): vdso: Failed to fill self vdso symtable
+* Error (criu/kerndat.c:*): kerndat_vdso_fill_symtable failed when initializing kerndat.
+*
+Traceback (most recent call last):
+  File "test/check-application", line *, in testCheckpointRestore
+    b.wait(lambda: self.getContainerAttr("swamped-crate", "State") in NOT_RUNNING)
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "*", line *, in wait
+    raise Error('timed out waiting for predicate to become true')
+testlib.Error: timed out waiting for predicate to become true
