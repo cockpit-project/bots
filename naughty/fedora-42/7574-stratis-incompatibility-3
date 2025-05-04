@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-storage-stratis", line *, in testEncrypted
-    self.dialog_set_val('passphrase', "wrong-passphrase")
-*
-testlib.Error: timeout
-wait_js_cond(ph_is_present("#dialog [data-field=\"passphrase\"]")): Error: condition did not become true
