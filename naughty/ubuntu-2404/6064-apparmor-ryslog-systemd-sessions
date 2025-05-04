@@ -1,1 +1,0 @@
-apparmor="DENIED" operation="open" class="file" profile="rsyslogd" name="/run/systemd/sessions/" * requested_mask="r" denied_mask="r"
