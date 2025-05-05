@@ -81,14 +81,13 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
-            'rhel-10-0',
+            'rhel-10-1',
         ],
         '_manual': [
             'centos-9-bootc',
             'rhel-8-10/ws-container',
             'rhel-9-6',
             'rhel-9-7',
-            'rhel-10-1',
         ]
     },
     'cockpit-project/cockpit-ostree': {
