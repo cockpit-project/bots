@@ -145,21 +145,6 @@ if [ "$IMAGE" = "debian-testing" ]; then
     rm --verbose -f /etc/apt/sources.list.d/*
     echo 'deb http://deb.debian.org/debian testing main' > /etc/apt/sources.list
     RELEASE=testing
-
-    # some packages have been RC buggy for a long time and fell out of testing
-    # https://tracker.debian.org/pkg/freeipa
-    IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/freeipa-client /}"
-    # https://tracker.debian.org/pkg/sssd
-    IPA_CLIENT_PACKAGES="${IPA_CLIENT_PACKAGES/sssd-tools /}"
-    TEST_PACKAGES="${TEST_PACKAGES/sssd-dbus /}"
-    TEST_PACKAGES="${TEST_PACKAGES/sssd-proxy /}"
-    # https://tracker.debian.org/pkg/pcp
-    COCKPIT_DEPS="${COCKPIT_DEPS/libpcp3 /}"
-    COCKPIT_DEPS="${COCKPIT_DEPS/pcp /}"
-    COCKPIT_DEPS="${COCKPIT_DEPS/python3-pcp /}"
-
-    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1098793
-    DENIED_PACKAGES="$DENIED_PACKAGES selinux-policy-default-"
 fi
 
 # Attention: Enable proposed for ubuntu-stable after 24.10 release
