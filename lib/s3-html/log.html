@@ -123,60 +123,75 @@
         </script>
         <script id="TestingOverview" type="text/template">
             <div id="testing">
-                <span class="pf-v6-c-label pf-m-filled pf-m-custom">
-                    <span class="pf-v6-c-label__content">
-                        <span class="pf-v6-c-label__icon">
-                        <i class="fas fa-fw fa-bell" aria-hidden="true"></i>
+                <div class="pf-v6-c-label-group pf-m-category">
+                    <div class="pf-v6-c-label-group__main">
+                        <span
+                        class="pf-v6-c-label-group__label"
+                        aria-hidden="true"
+                        id="label-group-category-label"
+                        >
+                            {{total}} tests{{#left}}, {{left}} left{{/left}}
                         </span>
-                        <span class="pf-v6-c-label__text">{{total}} tests</span>
-                    </span>
-                </span>
-                <span class="pf-v6-c-label pf-m-filled pf-m-success">
-                    <span class="pf-v6-c-label__content">
-                        <span class="pf-v6-c-label__icon">
-                            <i class="fas fa-fw fa-check-circle" aria-hidden="true"></i>
-                        </span>
-                        <span class="pf-v6-c-label__text">{{passed}} passed</span>
-                    </span>
-                </span>
-                <span class="pf-v6-c-label pf-m-filled pf-m-yellow">
-                    <span class="pf-v6-c-label__content">
-                        <span class="pf-v6-c-label__icon">
-                            <i class="fas fa-fw fa-exclamation-triangle" aria-hidden="true"></i>
-                        </span>
-                        <span class="pf-v6-c-label__text">{{skipped}} skipped</span>
-                    </span>
-                </span>
-                <span class="pf-v6-c-label pf-m-filled pf-m-danger">
-                    <span class="pf-v6-c-label__content">
-                        <span class="pf-v6-c-label__icon">
-                            <i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i>
-                        </span>
-                        <span class="pf-v6-c-label__text">{{failed}} failed</span>
-                    </span>
-                </span>
-                {{#retries}}
-                <span class="pf-v6-c-label pf-m-filled pf-m-info">
-                    <span class="pf-v6-c-label__content">
-                        <span class="pf-v6-c-label__icon">
-                            <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
-                        </span>
-                        <span class="pf-v6-c-label__text">{{retries}} retries of failures</span>
-                    </span>
-                </span>
-                {{/retries}}
-                {{#affected_retries}}
-                <span class="pf-v6-c-label pf-m-filled pf-m-info">
-                    <span class="pf-v6-c-label__content">
-                        <span class="pf-v6-c-label__icon">
-                            <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
-                        </span>
-                        <span class="pf-v6-c-label__text">{{affected_retries}} retries of successes</span>
-                    </span>
-                </span>
-                {{/affected_retries}}
-                {{#total_test_time}}
+                        <ul class="pf-v6-c-label-group__list" role="list" aria-labelledby="label-group-category-label">
+                            <li class="pf-v6-c-label-group__list-item">
+                            <span class="pf-v6-c-label pf-m-filled pf-m-success">
+                                <span class="pf-v6-c-label__content">
+                                    <span class="pf-v6-c-label__icon">
+                                        <i class="fas fa-fw fa-check-circle" aria-hidden="true"></i>
+                                    </span>
+                                    <span class="pf-v6-c-label__text">{{passed}} passed</span>
+                                </span>
+                            </span>
+                            </li>
+                            <li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled {{#skipped}}pf-m-yellow{{/skipped}}">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-exclamation-triangle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">{{skipped}} skipped</span>
+                                    </span>
+                                </span>
+                            </li>
+                            <li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled {{#failed}}pf-m-danger{{/failed}}">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">{{failed}} failed</span>
+                                    </span>
+                                </span>
+                            </li>
+                            {{#retries}}
+                            <li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled pf-m-info">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">{{retries}} retries of failures</span>
+                                    </span>
+                                </span>
+                            </li>
+                            {{/retries}}
+                            {{#affected_retries}}
+                            <li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled pf-m-info">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">{{affected_retries}} retries of successes</span>
+                                    </span>
+                                </span>
+                            </li>
+                            {{/affected_retries}}
+                        </ul>
+                    </div>
+                </div>
                 <br/>
+                {{#total_test_time}}
                 <span class="pf-v6-c-timestamp">
                     <time class="pf-v6-c-timestamp__text" datetime="{{total_test_time}}m">
                         took {{total_test_time}} minutes to run
