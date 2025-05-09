@@ -106,15 +106,18 @@
             <pre class="card-body">{{text}}</pre>
         </script>
         <script id="TestProgress" type="text/template">
-            <div class="progress" style="width: 40%">
-                <div class="progress-bar bg-success" role="progressbar" style="width: {{percentage_passed}}%">
-                    {{num_passed}}
+            <div class="pf-v6-c-progress pf-m-lg pf-m-inside">
+                <div
+                    class="pf-v6-c-progress__bar"
+                    role="progressbar"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="{{percentage_total}}"
+                    aria-labelledby="progress-inside-example-description"
+                >
+                    <div class="pf-v6-c-progress__indicator" style="width:{{percentage_total}}%;">
+                        <span class="pf-v6-c-progress__measure">{{ finished }} / {{ total }}</span>
                 </div>
-                <div class="progress-bar bg-warning" role="progressbar" style="width: {{percentage_skipped}}%">
-                    {{num_skipped}}
-                </div>
-                <div class="progress-bar bg-danger" role="progressbar" style="width: {{percentage_failed}}%">
-                    {{num_failed}}
                 </div>
             </div>
         </script>
@@ -383,6 +386,8 @@ function extract(text) {
                 else
                     return 1;
             });
+        const finished = passed + failed + skipped;
+        const left = total - finished;
         testingElem.innerHTML = Mustache.render(overview_template, { tests: entries,
                                                                 passed,
                                                                 failed,
@@ -390,16 +395,19 @@ function extract(text) {
                                                                 retries,
                                                                 affected_retries: affected_retries,
                                                                 total,
-                                                                left: total - passed - failed - skipped,
+                                                                left,
                                                                 total_test_time,
                                                               });
         testingProgressElem.innerHTML = Mustache.render(progress_template,
                                                         { percentage_passed: 100*passed/total,
                                                           percentage_skipped: 100*skipped/total,
                                                           percentage_failed: 100*failed/total,
+                                                          percentage_total: 100*finished/total,
                                                           num_passed: passed,
                                                           num_skipped: skipped,
-                                                          num_failed: failed
+                                                          num_failed: failed,
+                                                          total,
+                                                          finished
                                                         });
     } else {
         while(testingElem.firstChild)
