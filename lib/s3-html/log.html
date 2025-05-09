@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <base href="https://cockpit-logs.us-east-1.linodeobjects.com/pull-21983-96115728-20250508-130907-fedora-41-other/log.html" />
         <title>Cockpit Integration Tests</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-IUOUHAPazai08QFs7W4MbzTlwEWFo7z/4zw8YmxEiko=" crossorigin="anonymous">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js" integrity="sha256-h1OMS35Ij1pJ0S+Y1qBK/GHQDyankPMZVpeZrNQ062U="crossorigin="anonymous"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" integrity="sha256-8M+b2Hj+vy/2J5tZ9pYDHeuPD59KsaEZn1XXj3xVhjg=" crossorigin="anonymous">
+        <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-IUOUHAPazai08QFs7W4MbzTlwEWFo7z/4zw8YmxEiko=" crossorigin="anonymous"> -->
+        <link href="https://cdn.jsdelivr.net/npm/@patternfly/patternfly/patternfly.css" rel="stylesheet">
+        <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js" integrity="sha256-h1OMS35Ij1pJ0S+Y1qBK/GHQDyankPMZVpeZrNQ062U="crossorigin="anonymous"></script> -->
+        <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" integrity="sha256-8M+b2Hj+vy/2J5tZ9pYDHeuPD59KsaEZn1XXj3xVhjg=" crossorigin="anonymous"> -->
         <script src="https://cdn.jsdelivr.net/npm/mustache@4.2.0/mustache.min.js" integrity="sha256-1/0GA1EkYejtvYFoa+rSq4LfM4m5zKI13Z1bQIhI4Co=" crossorigin="anonymous"></script>
         <!-- nicer arrows for the collapsible panels and preformatted text-->
         <style>
         * {
          font-family: "Open Sans";
-         font-size
         }
         body {
             margin: 10px;
@@ -48,7 +49,7 @@
         }
         </style>
         <script id="Tests" type="text/template">
-            <div id="accordion" class="accordion">
+            <div class="pf-v6-c-accordion pf-m-bordered">
                 {{#tests}} {{{html}}} {{/tests}}
             </div>
         </script>
@@ -58,38 +59,45 @@
                 {{label}}
             </a>
         </script>
-        <script id="TestEntry" type="text/template">
-        <div class="accordion-item" id="{{id}}">
-             <h2 class="accordion-header
-                 style="cursor: pointer">
-                <button class="accordion-button collapsed
-                        {{#collapsed}}collapsed{{/collapsed}} {{^passed}}failed{{/passed}} {{#retried}}retried{{/retried}} {{#skipped}}skipped{{/skipped}}"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#collapse{{id}}"
-                        aria-expanded="false"
-                        aria-controls="collapse{{id}}">
-                    {{#failed}}
-                        <span class="bi bi-exclamation-circle" aria-hidden="true"></span>
-                    {{/failed}}
-                    {{#retried}}
-                        <span class="bi bi-question-circle" aria-hidden="true"></span>
-                    {{/retried}}
-                    <span>
-                      {{title}}
+        <script type="text/javascript">
+            addEventListener("click", (event) => { })
+        </script>
+        <script id="TestEntry" type="text/template" type="x-tmpl-mustache">
+            <div class="pf-v6-c-accordion__item accordion-item {{#collapsed}}collapsed{{/collapsed}} {{^passed}}failed{{/passed}} {{#retried}}retried{{/retried}} {{#skipped}}skipped{{/skipped}}" id="{{id}}">
+                <h3>
+                <button
+                    class="pf-v6-c-accordion__toggle accordion-toggle"
+                    type="button"
+                    aria-expanded="false"
+                >
+                    <span class="pf-v6-c-accordion__toggle-text">
+                        {{#failed}}
+                            <span class="bi bi-exclamation-circle" aria-hidden="true"></span>
+                        {{/failed}}
+                        {{#retried}}
+                            <span class="bi bi-question-circle" aria-hidden="true"></span>
+                        {{/retried}}
+                        <span>
+                        {{title}}
+                        </span>
+                        {{#reason}}<span>-- skipped: {{reason}}</span>{{/reason}}
+                        {{#links}}
+                            {{{link_html}}}
+                        {{/links}}
                     </span>
-                    {{#reason}}<span>-- skipped: {{reason}}</span>{{/reason}}
-                    {{#links}}
-                        {{{link_html}}}
-                    {{/links}}
-                 </button>
-             </h2>
-             <div id="collapse{{id}}" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                  <div class="accordion-body">
-                  <pre>{{text}}</pre>
-                  </div>
-             </div>
-        </div>
+                    <span class="pf-v6-c-accordion__toggle-icon">
+                        <i class="fas fa-angle-right" aria-hidden="true"></i>
+                    </span>
+                </button>
+                </h3>
+                <div class="pf-v6-c-accordion__expandable-content accordion-content" hidden>
+                    <div
+                        class="pf-v6-c-accordion__expandable-content-body"
+                    >
+                        <pre>{{text}}</pre>
+                    </div>
+                </div>
+            </div>
         </script>
         <script id="TextOnly" type="text/template">
             <pre class="card-body">{{text}}</pre>
@@ -401,7 +409,21 @@ function extract(text) {
 }
 
 function set_content(text) {
-    document.querySelector('#log').innerHTML = extract(text);
+    const log = document.querySelector('#log');
+    log.innerHTML = extract(text);
+    console.log(log.getElementsByClassName("accordion-item"))
+    Array.from(log.getElementsByClassName("accordion-item")).forEach(function (el) {
+        const toggle = el.getElementsByClassName("accordion-toggle")[0];
+        const content = el.getElementsByClassName("accordion-content")[0];
+        toggle.addEventListener(
+            "click",
+            () => {
+                el.classList.toggle("pf-m-expanded")
+                toggle.toggleAttribute("aria-expanded");
+                content.toggleAttribute("hidden")
+            }
+        )
+    })
 }
 
 function sleep(seconds) {
