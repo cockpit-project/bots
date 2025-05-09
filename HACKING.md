@@ -43,3 +43,19 @@ It is highly recommended to set this up as a git pre-push hook, to avoid
 pushing PRs that will fail on trivial errors:
 
     ln -s ../../test/run .git/hooks/pre-push
+
+### Updating pixel tests code
+ 
+> [!NOTE]
+> This will only update the `log.html` page and redirect all links there to the log URL set in `<head>`. For `pixeldiff.html` there is currently no written dev guide.
+
+
+* Easiest way to develop is to go to `./lib/s3-html/log.html` and within `<head>` add a test URL for what you want to improve layout for. 
+``html
+<script type="text/javascript" src="https://livejs.com/live.js"></script>
+<base href="https://log-url/log.html" />
+<meta http-equiv="refresh" content="5" >
+```
+* Start a server for the `lib/` directory with `python -m http.server -d ./lib/s3-html`
+* Open up the URL echoed in terminal and go to `/log.html`
+* Make changes in `log.html` and see changes refresh live in the browser
