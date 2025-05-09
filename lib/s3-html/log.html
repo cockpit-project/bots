@@ -4,15 +4,11 @@
         <title>Cockpit Integration Tests</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-IUOUHAPazai08QFs7W4MbzTlwEWFo7z/4zw8YmxEiko=" crossorigin="anonymous">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js" integrity="sha256-h1OMS35Ij1pJ0S+Y1qBK/GHQDyankPMZVpeZrNQ062U="crossorigin="anonymous"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" integrity="sha256-8M+b2Hj+vy/2J5tZ9pYDHeuPD59KsaEZn1XXj3xVhjg=" crossorigin="anonymous">
+        <link href="https://cdn.jsdelivr.net/npm/@patternfly/patternfly/patternfly.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/mustache@4.2.0/mustache.min.js" integrity="sha256-1/0GA1EkYejtvYFoa+rSq4LfM4m5zKI13Z1bQIhI4Co=" crossorigin="anonymous"></script>
-        <!-- nicer arrows for the collapsible panels and preformatted text-->
         <style>
         * {
          font-family: "Open Sans";
-         font-size
         }
         body {
             margin: 10px;
@@ -22,116 +18,257 @@
             text-decoration: none;
         }
 
-        .accordion-button {
-            gap: 5px;
+        body > div {
+            margin-block-end: var(--pf-t--global--spacer--sm);
         }
 
-        .accordion-button.failed {
-            color: #A94442;
-            background-color: #F2DEDE;
-            border-color: #EBCCD1;
+        /* Filters start */
+        /* Only show failed */
+        body.c-filter-only-failed .test-entry:not(.failed:not(.skipped,.retried)) {
+            display: none;
         }
-        .accordion-button.retried {
-            background-color: #f7bd7f;
-            border-color: #b35c00;
+        body.c-filter-only-failed-retried .test-entry:not(.failed:not(.skipped), .retried) {
+            display: none;
         }
-        .accordion-button.skipped {
-            color: #8A6D3B;
-            background-color: #FCF8E3;
-            border-color: #FAEBCC;
-        }
+        /* Filters end */
 
-        li.failed {
-            color: #A94442;
-            background-color: #F2DEDE;
-            border-color: #EBCCD1;
+        .test-entry.failed .test-entry-toggle{
+            background-color: var(--pf-t--global--color--nonstatus--red--default);
+        }
+        .test-entry.retried .test-entry-toggle{
+            background-color: var(--pf-t--global--color--nonstatus--orangered--default);
+        }
+        .test-entry.skipped .test-entry-toggle{
+            background-color: var(--pf-t--global--color--nonstatus--orange--default);
+        }
+        .pf-v6-c-data-list.pf-m-compact {
+            --pf-v6-c-data-list--m-compact--FontSize: var(--pf-t--global--font--size--body--md);
         }
         </style>
-        <script id="Tests" type="text/template">
-            <div id="accordion" class="accordion">
+        <script id="Tests" type="text/template" type="x-tmpl-mustache">
+            <ul class="pf-v6-c-data-list pf-m-compact">
                 {{#tests}} {{{html}}} {{/tests}}
-            </div>
+            </ul>
         </script>
-        <script id="Link" type="text/template">
-            <a href="./{{url}}" title="{{title}}">
-                <span class="{{icon}}" aria-hidden="true"></span>
-                {{label}}
-            </a>
-        </script>
-        <script id="TestEntry" type="text/template">
-        <div class="accordion-item" id="{{id}}">
-             <h2 class="accordion-header
-                 style="cursor: pointer">
-                <button class="accordion-button collapsed
-                        {{#collapsed}}collapsed{{/collapsed}} {{^passed}}failed{{/passed}} {{#retried}}retried{{/retried}} {{#skipped}}skipped{{/skipped}}"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#collapse{{id}}"
-                        aria-expanded="false"
-                        aria-controls="collapse{{id}}">
-                    {{#failed}}
-                        <span class="bi bi-exclamation-circle" aria-hidden="true"></span>
-                    {{/failed}}
-                    {{#retried}}
-                        <span class="bi bi-question-circle" aria-hidden="true"></span>
-                    {{/retried}}
-                    <span>
-                      {{title}}
+        <script id="LinkCategory" type="text/template" type="x-tmpl-mustache">
+            <div class="pf-v6-c-label-group pf-m-category" data-links-row>
+                <div class="pf-v6-c-label-group__main">
+                  <span
+                    class="pf-v6-c-label-group__label"
+                    aria-hidden="true"
+                    id="label-group-category-label"
+                  >
+                    <span class="pf-v6-c-label pf-m-filled  pf-m-clickable pf-m-info">
+                        <button class="pf-v6-c-label__content pf-m-clickable" type="button" data-links-open>
+                            <span class="pf-v6-c-label__icon">
+                                <i class="fas fa-fw fa-external-link-alt" aria-hidden="true"></i>
+                            </span>
+                            <span class="pf-v6-c-label__text">Open all</span>
+                        </button>
+                        </span>
                     </span>
-                    {{#reason}}<span>-- skipped: {{reason}}</span>{{/reason}}
-                    {{#links}}
-                        {{{link_html}}}
-                    {{/links}}
-                 </button>
-             </h2>
-             <div id="collapse{{id}}" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                  <div class="accordion-body">
-                  <pre>{{text}}</pre>
-                  </div>
-             </div>
-        </div>
+                    <ul
+                        class="pf-v6-c-label-group__list"
+                        role="list"
+                        aria-labelledby="label-group-category-label"
+                    >
+                        {{#links}}
+                        <li class="pf-v6-c-label-group__list-item">
+                            {{{link_html}}}
+                        </li>
+                        {{/links}}
+                    </ul>
+                </div>
+            </div>
+            <br>
+        </script>
+        <script id="Link" type="text/template" type="x-tmpl-mustache">
+            <span class="pf-v6-c-label pf-m-filled {{color}} pf-m-clickable">
+                <a
+                    data-links-log
+                    class="pf-v6-c-label__content pf-m-clickable"
+                    title="{{title}}"
+                    href="./{{url}}"
+                    target="_blank"
+                >
+                    <span class="pf-v6-c-label__icon">
+                        <i class="{{icon}}" aria-hidden="true"></i>
+                    </span>
+                    <span class="pf-v6-c-label__text">{{label}}</span>
+                </a>
+            </span>
+        </script>
+        <script type="text/javascript">
+            addEventListener("click", (event) => { })
+        </script>
+        <script id="TestEntry" type="text/template" type="x-tmpl-mustache">
+            <li class="pf-v6-c-data-list__item test-entry {{#collapsed}}collapsed{{/collapsed}} {{^passed}}failed{{/passed}} {{#retried}}retried{{/retried}} {{#skipped}}skipped{{/skipped}}" id="{{id}}">
+                <div class="pf-v6-c-data-list__item-row">
+                    <div class="pf-v6-c-data-list__item-control">
+                        <div class="pf-v6-c-data-list__toggle test-entry-toggle">
+                            <button
+                                class="pf-v6-c-button pf-m-plain"
+                                type="button"
+                                aria-labelledby="data-list-expandable-compact-toggle1 data-list-expandable-compact-item1"
+                                id="data-list-expandable-compact-toggle1"
+                                aria-label="Toggle details for"
+                                aria-expanded="true"
+                                aria-controls="data-list-expandable-compact-content1"
+                            >
+                                <span class="pf-v6-c-button__icon pf-m-start">
+                                    <div class="pf-v6-c-data-list__toggle-icon">
+                                        <i class="fas fa-angle-right" aria-hidden="true"></i>
+                                    </div>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="pf-v6-c-data-list__item-content">
+                        <div class="pf-v6-c-data-list__cell">
+                            <span>
+                                {{title}}
+                            </span>
+                            {{#reason}}<span>-- <mark>skipped:</mark> {{reason}}</span>{{/reason}}
+                            <div>
+                                {{#links}}
+                                    {{{link_html}}}
+                                {{/links}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pf-v6-c-data-list__expandable-content accordion-content" hidden>
+                    <div
+                        class="pf-v6-c-data-list__expandable-content-body"
+                    >
+                        <div class="pf-v6-c-code-block">
+                            <div class="pf-v6-c-code-block__content">
+                                <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">{{text}}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
         </script>
         <script id="TextOnly" type="text/template">
-            <pre class="card-body">{{text}}</pre>
+            <div class="pf-v6-c-code-block">
+                <div class="pf-v6-c-code-block__content">
+                    <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">{{text}}</code></pre>
+                </div>
+            </div>
+        </script>
+        <script id="TestToolbar" type="text/template">
+            <div class="pf-v6-c-toggle-group">
+                <div class="pf-v6-c-toggle-group__item">
+                  <button class="pf-v6-c-toggle-group__button" type="button" data-filter="c-filter-show-all">
+                    <span class="pf-v6-c-toggle-group__text">Show All</span>
+                  </button>
+                </div>
+                <div class="pf-v6-c-toggle-group__item">
+                    <button class="pf-v6-c-toggle-group__button pf-m-selected" type="button" data-filter="c-filter-only-failed-retried">
+                      <span class="pf-v6-c-toggle-group__text">Only show failed and retried tests</span>
+                    </button>
+                  </div>
+                <div class="pf-v6-c-toggle-group__item">
+                  <button class="pf-v6-c-toggle-group__button" type="button" data-filter="c-filter-only-failed">
+                    <span class="pf-v6-c-toggle-group__text">Only show failed</span>
+                  </button>
+                </div>
+              </div>
         </script>
         <script id="TestProgress" type="text/template">
-            <div class="progress" style="width: 40%">
-                <div class="progress-bar bg-success" role="progressbar" style="width: {{percentage_passed}}%">
-                    {{num_passed}}
+            <div class="pf-v6-c-progress pf-m-lg pf-m-inside">
+                <div
+                    class="pf-v6-c-progress__bar"
+                    role="progressbar"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="{{percentage_total}}"
+                    aria-labelledby="progress-inside-example-description"
+                >
+                    <div class="pf-v6-c-progress__indicator" style="width:{{percentage_total}}%;">
+                        <span class="pf-v6-c-progress__measure">{{ finished }} / {{ total }}</span>
                 </div>
-                <div class="progress-bar bg-warning" role="progressbar" style="width: {{percentage_skipped}}%">
-                    {{num_skipped}}
-                </div>
-                <div class="progress-bar bg-danger" role="progressbar" style="width: {{percentage_failed}}%">
-                    {{num_failed}}
                 </div>
             </div>
         </script>
         <script id="TestingOverview" type="text/template">
-            <div id="testing">
-                {{total}} tests, {{passed}} passed, {{failed}} failed,
-                {{skipped}} skipped, {{left}} to go ({{retries}} retries of failures, {{affected_retries}} retries of successes){{#total_test_time}}, took {{total_test_time}} minutes to run{{/total_test_time}}.<br>
-
-                <span>Failed and retried tests:</span>
-                <ul>
-                {{#tests}}
-                    {{#entry.interesting}}
-                        <li
-                        {{^entry.retried}}
-                            class="failed"
-                        {{/entry.retried}}
+            <div id="testing" class="pf-v6-u-mt-m">
+                {{#total_test_time}}
+                <span class="pf-v6-c-timestamp">
+                    <time class="pf-v6-c-timestamp__text" datetime="{{total_test_time}}m">
+                        took {{total_test_time}} minutes to run
+                    </time>
+                </span>
+                <br>
+                {{/total_test_time}}
+                <div class="pf-v6-c-label-group pf-m-category">
+                    <div class="pf-v6-c-label-group__main">
+                        <span
+                        class="pf-v6-c-label-group__label"
+                        aria-hidden="true"
+                        id="label-group-category-label"
                         >
-                        <a href="#{{entry.id}}">
-                        {{entry.title}}
-                        </a>
-                        {{#entry.links}}
-                            {{{link_html}}}
-                        {{/entry.links}}
-                        {{#entry.reason}}<span>-- skipped: {{entry.reason}}</span>{{/entry.reason}}
-                        </li>
-                    {{/entry.interesting}}
-                {{/tests}}
-                </ul>
+                            {{total}} tests{{#left}}, {{left}} left{{/left}}
+                        </span>
+                        <ul class="pf-v6-c-label-group__list" role="list" aria-labelledby="label-group-category-label">
+                            <li class="pf-v6-c-label-group__list-item">
+                            <span class="pf-v6-c-label pf-m-filled pf-m-success">
+                                <span class="pf-v6-c-label__content">
+                                    <span class="pf-v6-c-label__icon">
+                                        <i class="fas fa-fw fa-check-circle" aria-hidden="true"></i>
+                                    </span>
+                                    <span class="pf-v6-c-label__text">{{passed}} passed</span>
+                                </span>
+                            </span>
+                            </li>
+                            <li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled {{#skipped}}pf-m-yellow{{/skipped}}">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-exclamation-triangle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">{{skipped}} skipped</span>
+                                    </span>
+                                </span>
+                            </li>
+                            <li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled {{#failed}}pf-m-danger{{/failed}}">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">{{failed}} failed</span>
+                                    </span>
+                                </span>
+                            </li>
+                            {{#retries}}
+                            <li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled pf-m-info">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">{{retries}} retries of failures</span>
+                                    </span>
+                                </span>
+                            </li>
+                            {{/retries}}
+                            {{#affected_retries}}
+                            <li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled pf-m-info">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">{{affected_retries}} retries of successes</span>
+                                    </span>
+                                </span>
+                            </li>
+                            {{/affected_retries}}
+                        </ul>
+                    </div>
+                </div>
             </div>
         </script>
         <script>
@@ -148,10 +285,14 @@ const tests_template = document.querySelector("#Tests").innerHTML;
 Mustache.parse(tests_template);
 const text_only_template = document.querySelector("#TextOnly").innerHTML;
 Mustache.parse(text_only_template);
+const test_filter_toolbar = document.querySelector("#TestToolbar").innerHTML;
+Mustache.parse(test_filter_toolbar);
 const progress_template = document.querySelector("#TestProgress").innerHTML;
 Mustache.parse(progress_template);
 const overview_template = document.querySelector("#TestingOverview").innerHTML;
 Mustache.parse(overview_template);
+const link_category_template = document.querySelector("#LinkCategory").innerHTML;
+Mustache.parse(link_category_template);
 const link_template = document.querySelector("#Link").innerHTML;
 Mustache.parse(link_template);
 
@@ -166,16 +307,23 @@ Mustache.parse(link_template);
 
 let link_patterns = [
     {
+        "label": "changed pixels",
+        "pattern": "Differences in pixel test ([A-Za-z0-9\\-\\.]+)$",
+        "url": "pixeldiff.html#$1"
+    },
+    {
         "label": "screenshot",
         "pattern": "Wrote screenshot to ([A-Za-z0-9\\-\\.]+\\.png)$",
         "url": "$1",
-        "icon": "bi bi-camera-fill"
+        "icon": "fas fa-fw fa-image",
+        "color": "pf-m-teal",
     },
     {
         "label": "html",
         "pattern": "Wrote HTML dump to ([A-Za-z0-9\\-\\.]+\\.html)$",
         "url": "$1",
-        "icon": "bi bi-filetype-html"
+        "icon": "fas fa-fw fa-file",
+        "color": "pf-m-yellow",
     },
     {
         "label": "new pixels",
@@ -186,17 +334,14 @@ let link_patterns = [
         "label": "journal",
         "pattern": "Journal extracted to ([A-Za-z0-9\\-\\.]+\\.log(?:\\.[gx]z)?)$",
         "url": "$1",
-        "icon": "bi bi-card-text"
-    },
-    {
-        "label": "changed pixels",
-        "pattern": "Differences in pixel test ([A-Za-z0-9\\-\\.]+)$",
-        "url": "pixeldiff.html#$1"
+        "icon": "fas fa-fw fa-pencil-alt",
+        "color": "pf-m-yellow",
     },
     {
         "label": "coverage",
         "pattern": "Code coverage report in ([A-Za-z0-9\\-\\.\/]+)$",
-        "url": "$1"
+        "url": "$1",
+        "color": "pf-m-yellow",
     }
 ];
 
@@ -205,23 +350,36 @@ function find_patterns(segment) {
         return tmpl.replace(/\$([0-9]+)/g, function (m, x) { return match[Number(x)]; });
     }
 
-    const links = [];
+    let links = [];
     for (let i = 0; i < link_patterns.length; i++) {
         let p = link_patterns[i];
         if (!p.pattern)
             continue
         let r = new RegExp(p.pattern, 'gm');
         let m;
+        let currentPattern = []
         while (m = r.exec(segment)) {
-            links.push({link_html: Mustache.render(link_template,
-                                                   {
-                                                       url: fmt(p.url || "$0", m),
-                                                       title: fmt(p.title || p.url || "$0", m),
-                                                       icon: p.icon || "bi bi-box-arrow-up-right",
-                                                       label: fmt(p.label || "file")
-                                                   })
-                       });
+            currentPattern.push({
+                link_html: Mustache.render(link_template,
+                                            {
+                                                url: fmt(p.url || "$0", m),
+                                                title: fmt(p.title || p.url || "$0", m),
+                                                icon: p.icon || "fas fa-fw fa-external-link-alt",
+                                                label: fmt(p.label || "file"),
+                                                color: p.color || "pf-m-custom"
+                                            })
+            });
         }
+        if (currentPattern.length) {
+            links.push({
+                link_html: Mustache.render(link_category_template,
+                                            {
+                                                label: fmt(p.label || "file"),
+                                                links: currentPattern,
+                                            })
+        })
+        }
+        // links = [...links, ...currentPattern]
     }
     return links;
 }
@@ -269,7 +427,7 @@ function extract(text) {
         // tap_result RE marks the *end* of a test, so test output is everything until, and including, the match
         for (const m of text_tests.matchAll(tap_result)) {
             const offset = m.index + m[0].length;
-            segments.push(text_tests.slice(last_offset, offset + 1));
+            segments.push(text_tests.slice(last_offset, offset + 1).trim());
             last_offset = offset;
         }
 
@@ -372,6 +530,8 @@ function extract(text) {
                 else
                     return 1;
             });
+        const finished = passed + failed + skipped;
+        const left = total - finished;
         testingElem.innerHTML = Mustache.render(overview_template, { tests: entries,
                                                                 passed,
                                                                 failed,
@@ -379,16 +539,19 @@ function extract(text) {
                                                                 retries,
                                                                 affected_retries: affected_retries,
                                                                 total,
-                                                                left: total - passed - failed - skipped,
+                                                                left,
                                                                 total_test_time,
                                                               });
         testingProgressElem.innerHTML = Mustache.render(progress_template,
                                                         { percentage_passed: 100*passed/total,
                                                           percentage_skipped: 100*skipped/total,
                                                           percentage_failed: 100*failed/total,
+                                                          percentage_total: 100*finished/total,
                                                           num_passed: passed,
                                                           num_skipped: skipped,
-                                                          num_failed: failed
+                                                          num_failed: failed,
+                                                          total,
+                                                          finished
                                                         });
     } else {
         while(testingElem.firstChild)
@@ -401,11 +564,58 @@ function extract(text) {
 }
 
 function set_content(text) {
-    document.querySelector('#log').innerHTML = extract(text);
+    const log = document.querySelector('#log');
+    log.innerHTML = extract(text);
+    Array.from(log.getElementsByClassName("test-entry")).forEach(function (el) {
+        const toggle = el.getElementsByClassName("test-entry-toggle")[0];
+        const content = el.getElementsByClassName("accordion-content")[0];
+        toggle.addEventListener(
+            "click",
+            () => {
+                el.classList.toggle("pf-m-expanded");
+                toggle.toggleAttribute("aria-expanded");
+                content.toggleAttribute("hidden");
+            }
+        )
+    });
+
+    Array.from(log.querySelectorAll("[data-links-row]")).forEach(function (el) {
+        const button = el.querySelector("[data-links-open]");
+        if (button) {
+            button.addEventListener("click", () => {
+                Array.from(el.querySelectorAll("[data-links-log]")).forEach(window.open)
+            })
+        }
+    });
+
+    // We also have CSS based filters for our tests
+    const testingToolbar = document.querySelector('#testing-toolbar')
+    const toggleGroupClass = "pf-v6-c-toggle-group__button";
+    testingToolbar.innerHTML = Mustache.render(test_filter_toolbar);
+    Array.from(testingToolbar.getElementsByClassName(toggleGroupClass)).forEach(function (button) {
+        button.addEventListener(
+            "click",
+            () => {
+                button.classList.toggle("pf-m-selected")
+                const dataFilter = button.getAttribute("data-filter")
+                document.querySelectorAll(`.${toggleGroupClass}:not([data-filter="${dataFilter}"])`)
+                    .forEach( el => {
+                        document.body.classList.remove(el.getAttribute("data-filter"));
+                        el.classList.remove("pf-m-selected");
+                    });
+                document.body.classList.add(dataFilter);
+            }
+        )
+    });
 }
 
 function sleep(seconds) {
     return new Promise(resolve => setTimeout(resolve, 1000 * seconds));
+}
+
+const activeFilters = [];
+function filterTests(selection) {
+
 }
 
 class NotFoundError extends Error { };
@@ -484,17 +694,42 @@ async function fetch_content(filename) {
 fetch_content('log');
   </script>
 </head>
-    <body>
-        <h3 id="test-info">Logs</h3>
-        <p>
-            <a href="index.html">Result directory</a><br>
-            <a href="./log">Raw log</a>
-        </p>
+    <body class="c-filter-only-failed-retried">
+        <h1 id="test-info" class="pf-v6-c-title pf-m-2xl">Logs</h1>
+        <div class="pf-v6-c-toolbar pf-m-no-padding">
+            <div class="pf-v6-c-toolbar__content">
+                <div class="pf-v6-c-toolbar__content-section">
+                    <div class="pf-v6-c-toolbar__item">
+                        <a
+                            class="pf-v6-c-button pf-m-small pf-m-link"
+                            href="./index.html"
+                        >
+                            <span class="pf-v6-c-button__icon pf-m-start">
+                                <i class="fas fa-folder" aria-hidden="true"></i>
+                            </span>
+                            <span class="pf-v6-c-button__text">Result directory</span>
+                        </a>
+                    </div>
+                    <div class="pf-v6-c-toolbar__item">
+                        <a
+                            class="pf-v6-c-button pf-m-small pf-m-link"
+                            href="./log"
+                        >
+                            <span class="pf-v6-c-button__icon pf-m-start">
+                                <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                            </span>
+                            <span class="pf-v6-c-button__text">Raw log</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div id="status" style="display:none">
             Done: <span id="message"></span>.
         </div>
         <div id="testing-progress"></div>
         <div id="testing"></div>
+        <div id="testing-toolbar"></div>
         <div id="log"></div>
     </body>
 </html>
