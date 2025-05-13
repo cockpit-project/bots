@@ -23,9 +23,19 @@
             text-decoration: none;
         }
 
-        .accordion-button {
-            gap: 5px;
+        body > div {
+            margin-block-end: var(--pf-t--global--spacer--sm);
         }
+
+        /* Filters start */
+        /* Only show failed */
+        body.c-filter-only-failed .test-entry:not(.failed:not(.skipped,.retried)) {
+            display: none;
+        }
+        body.c-filter-only-failed-retried .test-entry:not(.failed:not(.skipped), .retried) {
+            display: none;
+        }
+        /* Filters end */
 
         .accordion-button.failed {
             color: #A94442;
@@ -42,72 +52,119 @@
             border-color: #FAEBCC;
         }
 
-        li.failed {
-            color: #A94442;
-            background-color: #F2DEDE;
-            border-color: #EBCCD1;
-        }
-        .pf-v6-c-accordion__item.failed {
+        .test-entry.failed {
             background-color: var(--pf-t--global--color--nonstatus--red--default);
         }
+        .test-entry.retried {
+            background-color: var(--pf-t--global--color--nonstatus--orangered--default);
+        }
+        .test-entry.skipped {
+            background-color: var(--pf-t--global--color--nonstatus--orange--default);
+        }
+        .pf-v6-c-data-list.pf-m-compact {
+            --pf-v6-c-data-list--m-compact--FontSize: var(--pf-t--global--font--size--body--md);
+        }
         </style>
-        <script id="Tests" type="text/template">
-            <div class="pf-v6-c-accordion pf-m-bordered">
+        <script id="Tests" type="text/template" type="x-tmpl-mustache">
+            <ul class="pf-v6-c-data-list pf-m-compact">
                 {{#tests}} {{{html}}} {{/tests}}
-            </div>
+            </ul>
         </script>
-        <script id="Link" type="text/template">
-            <a href="./{{url}}" title="{{title}}">
-                <span class="{{icon}}" aria-hidden="true"></span>
-                {{label}}
+        <script id="Link" type="text/template" type="x-tmpl-mustache">
+            <a
+                class="pf-v6-c-button pf-m-small pf-m-tertiary"
+                title="{{title}}"
+                href="./{{url}}"
+            >
+                <span class="pf-v6-c-button__icon">
+                    <i class="fas {{icon}}" aria-hidden="true"></i>
+                </span>
+                <span class="pf-v6-c-button__text">{{label}}</span>
             </a>
         </script>
         <script type="text/javascript">
             addEventListener("click", (event) => { })
         </script>
         <script id="TestEntry" type="text/template" type="x-tmpl-mustache">
-            <div class="pf-v6-c-accordion__item accordion-item {{#collapsed}}collapsed{{/collapsed}} {{^passed}}failed{{/passed}} {{#retried}}retried{{/retried}} {{#skipped}}skipped{{/skipped}}" id="{{id}}">
-                <h3>
-                <button
-                    class="pf-v6-c-accordion__toggle accordion-toggle"
-                    type="button"
-                    aria-expanded="false"
-                >
-                    <span class="pf-v6-c-accordion__toggle-text">
-                        {{#failed}}
-                            <span class="bi bi-exclamation-circle" aria-hidden="true"></span>
-                        {{/failed}}
-                        {{#retried}}
-                            <span class="bi bi-question-circle" aria-hidden="true"></span>
-                        {{/retried}}
-                        <span>
-                        {{title}}
-                        </span>
-                        {{#reason}}<span>-- skipped: {{reason}}</span>{{/reason}}
-                        {{#links}}
-                            {{{link_html}}}
-                        {{/links}}
-                    </span>
-                    <span class="pf-v6-c-accordion__toggle-icon">
-                        <i class="fas fa-angle-right" aria-hidden="true"></i>
-                    </span>
-                </button>
-                </h3>
-                <div class="pf-v6-c-accordion__expandable-content accordion-content" hidden>
+            <li class="pf-v6-c-data-list__item test-entry {{#collapsed}}collapsed{{/collapsed}} {{^passed}}failed{{/passed}} {{#retried}}retried{{/retried}} {{#skipped}}skipped{{/skipped}}" id="{{id}}">
+                <div class="pf-v6-c-data-list__item-row">
+                    <div class="pf-v6-c-data-list__item-control">
+                        <div class="pf-v6-c-data-list__toggle test-entry-toggle">
+                            <button
+                                class="pf-v6-c-button pf-m-plain"
+                                type="button"
+                                aria-labelledby="data-list-expandable-compact-toggle1 data-list-expandable-compact-item1"
+                                id="data-list-expandable-compact-toggle1"
+                                aria-label="Toggle details for"
+                                aria-expanded="true"
+                                aria-controls="data-list-expandable-compact-content1"
+                            >
+                                <span class="pf-v6-c-button__icon pf-m-start">
+                                    <div class="pf-v6-c-data-list__toggle-icon">
+                                        <i class="fas fa-angle-right" aria-hidden="true"></i>
+                                    </div>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="pf-v6-c-data-list__item-content">
+                        <div class="pf-v6-c-data-list__cell">
+                            {{#failed}}
+                                <span class="bi bi-exclamation-circle" aria-hidden="true"></span>
+                            {{/failed}}
+                            {{#retried}}
+                                <span class="bi bi-question-circle" aria-hidden="true"></span>
+                            {{/retried}}
+                            <span>
+                            {{title}}
+                            </span>
+                            {{#reason}}<span>-- skipped: {{reason}}</span>{{/reason}}
+                            <p>
+                                {{#links}}
+                                    {{{link_html}}}
+                                {{/links}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="pf-v6-c-data-list__expandable-content accordion-content" hidden>
                     <div
-                        class="pf-v6-c-accordion__expandable-content-body"
+                        class="pf-v6-c-data-list__expandable-content-body"
                     >
                         <div class="pf-v6-c-code-block">
                             <div class="pf-v6-c-code-block__content">
-                                <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">{{text}}</pre>
+                                <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">{{text}}</code></pre>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </li>
         </script>
         <script id="TextOnly" type="text/template">
-            <pre class="card-body">{{text}}</pre>
+            <div class="pf-v6-c-code-block">
+                <div class="pf-v6-c-code-block__content">
+                    <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">{{text}}</code></pre>
+                </div>
+            </div>
+        </script>
+        <script id="TestToolbar" type="text/template">
+            <div class="pf-v6-c-toggle-group">
+                <div class="pf-v6-c-toggle-group__item">
+                  <button class="pf-v6-c-toggle-group__button" type="button" data-filter="c-filter-show-all">
+                    <span class="pf-v6-c-toggle-group__text">Show All</span>
+                  </button>
+                </div>
+                <div class="pf-v6-c-toggle-group__item">
+                    <button class="pf-v6-c-toggle-group__button pf-m-selected" type="button" data-filter="c-filter-only-failed-retried">
+                      <span class="pf-v6-c-toggle-group__text">Only show failed and retried tests</span>
+                    </button>
+                  </div>
+                <div class="pf-v6-c-toggle-group__item">
+                  <button class="pf-v6-c-toggle-group__button" type="button" data-filter="c-filter-only-failed">
+                    <span class="pf-v6-c-toggle-group__text">Only show failed</span>
+                  </button>
+                </div>
+              </div>
         </script>
         <script id="TestProgress" type="text/template">
             <div class="pf-v6-c-progress pf-m-lg pf-m-inside">
@@ -126,7 +183,15 @@
             </div>
         </script>
         <script id="TestingOverview" type="text/template">
-            <div id="testing">
+            <div id="testing" class="pf-v6-u-mt-m">
+                {{#total_test_time}}
+                <span class="pf-v6-c-timestamp">
+                    <time class="pf-v6-c-timestamp__text" datetime="{{total_test_time}}m">
+                        took {{total_test_time}} minutes to run
+                    </time>
+                </span>
+                <br>
+                {{/total_test_time}}
                 <div class="pf-v6-c-label-group pf-m-category">
                     <div class="pf-v6-c-label-group__main">
                         <span
@@ -194,14 +259,6 @@
                         </ul>
                     </div>
                 </div>
-                <br/>
-                {{#total_test_time}}
-                <span class="pf-v6-c-timestamp">
-                    <time class="pf-v6-c-timestamp__text" datetime="{{total_test_time}}m">
-                        took {{total_test_time}} minutes to run
-                    </time>
-                </span>
-                {{/total_test_time}}
             </div>
         </script>
         <script>
@@ -218,6 +275,8 @@ const tests_template = document.querySelector("#Tests").innerHTML;
 Mustache.parse(tests_template);
 const text_only_template = document.querySelector("#TextOnly").innerHTML;
 Mustache.parse(text_only_template);
+const test_filter_toolbar = document.querySelector("#TestToolbar").innerHTML;
+Mustache.parse(test_filter_toolbar);
 const progress_template = document.querySelector("#TestProgress").innerHTML;
 Mustache.parse(progress_template);
 const overview_template = document.querySelector("#TestingOverview").innerHTML;
@@ -287,7 +346,7 @@ function find_patterns(segment) {
                                                    {
                                                        url: fmt(p.url || "$0", m),
                                                        title: fmt(p.title || p.url || "$0", m),
-                                                       icon: p.icon || "bi bi-box-arrow-up-right",
+                                                       icon: p.icon || "fa-external-link-alt",
                                                        label: fmt(p.label || "file")
                                                    })
                        });
@@ -339,7 +398,7 @@ function extract(text) {
         // tap_result RE marks the *end* of a test, so test output is everything until, and including, the match
         for (const m of text_tests.matchAll(tap_result)) {
             const offset = m.index + m[0].length;
-            segments.push(text_tests.slice(last_offset, offset + 1));
+            segments.push(text_tests.slice(last_offset, offset + 1).trim());
             last_offset = offset;
         }
 
@@ -478,9 +537,9 @@ function extract(text) {
 function set_content(text) {
     const log = document.querySelector('#log');
     log.innerHTML = extract(text);
-    console.log(log.getElementsByClassName("accordion-item"))
-    Array.from(log.getElementsByClassName("accordion-item")).forEach(function (el) {
-        const toggle = el.getElementsByClassName("accordion-toggle")[0];
+    console.log(log.getElementsByClassName("test-entry"))
+    Array.from(log.getElementsByClassName("test-entry")).forEach(function (el) {
+        const toggle = el.getElementsByClassName("test-entry-toggle")[0];
         const content = el.getElementsByClassName("accordion-content")[0];
         toggle.addEventListener(
             "click",
@@ -491,10 +550,35 @@ function set_content(text) {
             }
         )
     })
+
+    // We also have CSS based filters for our tests
+    const testingToolbar = document.querySelector('#testing-toolbar')
+    const toggleGroupClass = "pf-v6-c-toggle-group__button";
+    testingToolbar.innerHTML = Mustache.render(test_filter_toolbar);
+    Array.from(testingToolbar.getElementsByClassName(toggleGroupClass)).forEach(function (button) {
+        button.addEventListener(
+            "click",
+            () => {
+                const hasClass = button.classList.toggle("pf-m-selected")
+                const dataFilter = button.getAttribute("data-filter")
+                document.querySelectorAll(`.${toggleGroupClass}:not([data-filter="${dataFilter}"])`)
+                    .forEach( el => {
+                        document.body.classList.remove(el.getAttribute("data-filter"));
+                        el.classList.remove("pf-m-selected");
+                    });
+                document.body.classList.add(dataFilter);
+            }
+        )
+    });
 }
 
 function sleep(seconds) {
     return new Promise(resolve => setTimeout(resolve, 1000 * seconds));
+}
+
+const activeFilters = []
+function filterTests(selection) {
+
 }
 
 class NotFoundError extends Error { };
@@ -573,7 +657,7 @@ async function fetch_content(filename) {
 fetch_content('log');
   </script>
 </head>
-    <body>
+    <body class="c-filter-only-failed-retried">
         <h3 id="test-info">Logs</h3>
         <p>
             <a href="index.html">Result directory</a><br>
@@ -584,6 +668,7 @@ fetch_content('log');
         </div>
         <div id="testing-progress"></div>
         <div id="testing"></div>
+        <div id="testing-toolbar"></div>
         <div id="log"></div>
     </body>
 </html>
