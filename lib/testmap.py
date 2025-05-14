@@ -223,9 +223,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     },
     'rhinstaller/anaconda-webui': {
         'main': [
-            *contexts('fedora-42-boot', ANACONDA_SCENARIOS),
-            *contexts('fedora-42-boot', ANACONDA_SCENARIOS),
-            *contexts('fedora-rawhide-boot', ANACONDA_SCENARIOS),
             *contexts('fedora-rawhide-boot', ANACONDA_SCENARIOS),
         ],
         '_manual': [
@@ -259,16 +256,9 @@ IMAGE_REFRESH_TRIGGERS = {
     "fedora-rawhide": [
         *contexts("fedora-rawhide-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
     ],
-    # Anaconda builds in fedora-42 and runs tests in fedora-42-boot
-    "fedora-42": [
-        *contexts("fedora-42-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
-    ],
     # Anaconda payload updates can affect tests
     "fedora-rawhide-anaconda-payload": [
         *contexts("fedora-rawhide-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
-    ],
-    "fedora-42-anaconda-payload": [
-        *contexts("fedora-42-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
     ],
 }
 
