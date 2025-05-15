@@ -46,5 +46,9 @@ pushing PRs that will fail on trivial errors:
 
 ### Updating pixel tests code
  
-* Go to `s3-html/log.html` and within `<head>` add `<base href="https://cockpit-logs.us-east-1.linodeobjects.com/pull-21983-96115728-20250508-130907-fedora-41-other/log.html" />`
+* Go to `s3-html/log.html` and within `<head>` add a test you want to try out
+``html
+<script type="text/javascript" src="https://livejs.com/live.js"></script>
+<base href="https://cockpit-logs.us-east-1.linodeobjects.com/pull-22002-aa3c7753-20250514-150742-fedora-41/log.html" />
+```
 * Start a server with `python -m http.server -d ./lib/s3-html`
