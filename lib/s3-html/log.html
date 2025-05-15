@@ -585,7 +585,6 @@ function extract(text) {
 function set_content(text) {
     const log = document.querySelector('#log');
     log.innerHTML = extract(text);
-    console.log(log.getElementsByClassName("test-entry"))
     Array.from(log.getElementsByClassName("test-entry")).forEach(function (el) {
         const toggle = el.getElementsByClassName("test-entry-toggle")[0];
         const content = el.getElementsByClassName("accordion-content")[0];
@@ -616,7 +615,7 @@ function set_content(text) {
         button.addEventListener(
             "click",
             () => {
-                const hasClass = button.classList.toggle("pf-m-selected")
+                button.classList.toggle("pf-m-selected")
                 const dataFilter = button.getAttribute("data-filter")
                 document.querySelectorAll(`.${toggleGroupClass}:not([data-filter="${dataFilter}"])`)
                     .forEach( el => {
@@ -633,7 +632,7 @@ function sleep(seconds) {
     return new Promise(resolve => setTimeout(resolve, 1000 * seconds));
 }
 
-const activeFilters = []
+const activeFilters = [];
 function filterTests(selection) {
 
 }
