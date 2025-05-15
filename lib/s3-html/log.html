@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <base href="https://cockpit-logs.us-east-1.linodeobjects.com/pull-21983-96115728-20250508-130907-fedora-41-other/log.html" />
+        <script type="text/javascript" src="https://livejs.com/live.js"></script>
+        <base href="https://cockpit-logs.us-east-1.linodeobjects.com/pull-22002-aa3c7753-20250514-150742-fedora-41/log.html" />
         <title>Cockpit Integration Tests</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,13 +53,13 @@
             border-color: #FAEBCC;
         }
 
-        .test-entry.failed {
+        .test-entry.failed .test-entry-toggle{
             background-color: var(--pf-t--global--color--nonstatus--red--default);
         }
-        .test-entry.retried {
+        .test-entry.retried .test-entry-toggle{
             background-color: var(--pf-t--global--color--nonstatus--orangered--default);
         }
-        .test-entry.skipped {
+        .test-entry.skipped .test-entry-toggle{
             background-color: var(--pf-t--global--color--nonstatus--orange--default);
         }
         .pf-v6-c-data-list.pf-m-compact {
@@ -70,17 +71,53 @@
                 {{#tests}} {{{html}}} {{/tests}}
             </ul>
         </script>
+        <script id="LinkCategory" type="text/template" type="x-tmpl-mustache">
+            <div class="pf-v6-c-label-group pf-m-category" data-links-row>
+                <div class="pf-v6-c-label-group__main">
+                  <span
+                    class="pf-v6-c-label-group__label"
+                    aria-hidden="true"
+                    id="label-group-category-label"
+                  >
+                    <span class="pf-v6-c-label pf-m-filled  pf-m-clickable pf-m-info">
+                        <button class="pf-v6-c-label__content pf-m-clickable" type="button" data-links-open>
+                            <span class="pf-v6-c-label__icon">
+                                <i class="fas fa-fw fa-external-link-alt" aria-hidden="true"></i>
+                            </span>
+                            <span class="pf-v6-c-label__text">Open all</span>
+                        </button>
+                        </span>
+                    </span>
+                    <ul
+                        class="pf-v6-c-label-group__list"
+                        role="list"
+                        aria-labelledby="label-group-category-label"
+                    >
+                        {{#links}}
+                        <li class="pf-v6-c-label-group__list-item">
+                            {{{link_html}}}
+                        </li>
+                        {{/links}}
+                    </ul>
+                </div>
+            </div>
+            <br>
+        </script>
         <script id="Link" type="text/template" type="x-tmpl-mustache">
-            <a
-                class="pf-v6-c-button pf-m-small pf-m-tertiary"
-                title="{{title}}"
-                href="./{{url}}"
-            >
-                <span class="pf-v6-c-button__icon">
-                    <i class="fas {{icon}}" aria-hidden="true"></i>
-                </span>
-                <span class="pf-v6-c-button__text">{{label}}</span>
-            </a>
+            <span class="pf-v6-c-label pf-m-filled {{color}} pf-m-clickable">
+                <a
+                    data-links-log
+                    class="pf-v6-c-label__content pf-m-clickable"
+                    title="{{title}}"
+                    href="./{{url}}"
+                    target="_blank"
+                >
+                    <span class="pf-v6-c-label__icon">
+                        <i class="{{icon}}" aria-hidden="true"></i>
+                    </span>
+                    <span class="pf-v6-c-label__text">{{label}}</span>
+                </a>
+            </span>
         </script>
         <script type="text/javascript">
             addEventListener("click", (event) => { })
@@ -109,21 +146,15 @@
                     </div>
                     <div class="pf-v6-c-data-list__item-content">
                         <div class="pf-v6-c-data-list__cell">
-                            {{#failed}}
-                                <span class="bi bi-exclamation-circle" aria-hidden="true"></span>
-                            {{/failed}}
-                            {{#retried}}
-                                <span class="bi bi-question-circle" aria-hidden="true"></span>
-                            {{/retried}}
                             <span>
-                            {{title}}
+                                {{title}}
                             </span>
-                            {{#reason}}<span>-- skipped: {{reason}}</span>{{/reason}}
-                            <p>
+                            {{#reason}}<span>-- <mark>skipped:</mark> {{reason}}</span>{{/reason}}
+                            <div>
                                 {{#links}}
                                     {{{link_html}}}
                                 {{/links}}
-                            </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -281,6 +312,8 @@ const progress_template = document.querySelector("#TestProgress").innerHTML;
 Mustache.parse(progress_template);
 const overview_template = document.querySelector("#TestingOverview").innerHTML;
 Mustache.parse(overview_template);
+const link_category_template = document.querySelector("#LinkCategory").innerHTML;
+Mustache.parse(link_category_template);
 const link_template = document.querySelector("#Link").innerHTML;
 Mustache.parse(link_template);
 
@@ -295,16 +328,23 @@ Mustache.parse(link_template);
 
 let link_patterns = [
     {
+        "label": "changed pixels",
+        "pattern": "Differences in pixel test ([A-Za-z0-9\\-\\.]+)$",
+        "url": "pixeldiff.html#$1"
+    },
+    {
         "label": "screenshot",
         "pattern": "Wrote screenshot to ([A-Za-z0-9\\-\\.]+\\.png)$",
         "url": "$1",
-        "icon": "bi bi-camera-fill"
+        "icon": "fas fa-fw fa-image",
+        "color": "pf-m-teal",
     },
     {
         "label": "html",
         "pattern": "Wrote HTML dump to ([A-Za-z0-9\\-\\.]+\\.html)$",
         "url": "$1",
-        "icon": "bi bi-filetype-html"
+        "icon": "fas fa-fw fa-file",
+        "color": "pf-m-yellow",
     },
     {
         "label": "new pixels",
@@ -315,17 +355,14 @@ let link_patterns = [
         "label": "journal",
         "pattern": "Journal extracted to ([A-Za-z0-9\\-\\.]+\\.log(?:\\.[gx]z)?)$",
         "url": "$1",
-        "icon": "bi bi-card-text"
-    },
-    {
-        "label": "changed pixels",
-        "pattern": "Differences in pixel test ([A-Za-z0-9\\-\\.]+)$",
-        "url": "pixeldiff.html#$1"
+        "icon": "fas fa-fw fa-pencil-alt",
+        "color": "pf-m-yellow",
     },
     {
         "label": "coverage",
         "pattern": "Code coverage report in ([A-Za-z0-9\\-\\.\/]+)$",
-        "url": "$1"
+        "url": "$1",
+        "color": "pf-m-yellow",
     }
 ];
 
@@ -334,23 +371,36 @@ function find_patterns(segment) {
         return tmpl.replace(/\$([0-9]+)/g, function (m, x) { return match[Number(x)]; });
     }
 
-    const links = [];
+    let links = [];
     for (let i = 0; i < link_patterns.length; i++) {
         let p = link_patterns[i];
         if (!p.pattern)
             continue
         let r = new RegExp(p.pattern, 'gm');
         let m;
+        let currentPattern = []
         while (m = r.exec(segment)) {
-            links.push({link_html: Mustache.render(link_template,
-                                                   {
-                                                       url: fmt(p.url || "$0", m),
-                                                       title: fmt(p.title || p.url || "$0", m),
-                                                       icon: p.icon || "fa-external-link-alt",
-                                                       label: fmt(p.label || "file")
-                                                   })
-                       });
+            currentPattern.push({
+                link_html: Mustache.render(link_template,
+                                            {
+                                                url: fmt(p.url || "$0", m),
+                                                title: fmt(p.title || p.url || "$0", m),
+                                                icon: p.icon || "fas fa-fw fa-external-link-alt",
+                                                label: fmt(p.label || "file"),
+                                                color: p.color || "pf-m-custom"
+                                            })
+            });
         }
+        if (currentPattern.length) {
+            links.push({
+                link_html: Mustache.render(link_category_template,
+                                            {
+                                                label: fmt(p.label || "file"),
+                                                links: currentPattern,
+                                            })
+        })
+        }
+        // links = [...links, ...currentPattern]
     }
     return links;
 }
@@ -544,12 +594,21 @@ function set_content(text) {
         toggle.addEventListener(
             "click",
             () => {
-                el.classList.toggle("pf-m-expanded")
+                el.classList.toggle("pf-m-expanded");
                 toggle.toggleAttribute("aria-expanded");
-                content.toggleAttribute("hidden")
+                content.toggleAttribute("hidden");
             }
         )
-    })
+    });
+
+    Array.from(log.querySelectorAll("[data-links-row]")).forEach(function (el) {
+        const button = el.querySelector("[data-links-open]");
+        if (button) {
+            button.addEventListener("click", () => {
+                Array.from(el.querySelectorAll("[data-links-log]")).forEach(window.open)
+            })
+        }
+    });
 
     // We also have CSS based filters for our tests
     const testingToolbar = document.querySelector('#testing-toolbar')
@@ -658,11 +717,35 @@ fetch_content('log');
   </script>
 </head>
     <body class="c-filter-only-failed-retried">
-        <h3 id="test-info">Logs</h3>
-        <p>
-            <a href="index.html">Result directory</a><br>
-            <a href="./log">Raw log</a>
-        </p>
+        <h1 id="test-info" class="pf-v6-c-title pf-m-2xl">Logs</h1>
+        <div class="pf-v6-c-toolbar" id="toolbar-simple-example">
+            <div class="pf-v6-c-toolbar__content">
+                <div class="pf-v6-c-toolbar__content-section">
+                    <div class="pf-v6-c-toolbar__item">
+                        <a
+                            class="pf-v6-c-button pf-m-small pf-m-link"
+                            href="./index.html"
+                        >
+                            <span class="pf-v6-c-button__icon pf-m-start">
+                                <i class="fas fa-folder" aria-hidden="true"></i>
+                            </span>
+                            <span class="pf-v6-c-button__text">Result directory</span>
+                        </a>
+                    </div>
+                    <div class="pf-v6-c-toolbar__item">
+                        <a
+                            class="pf-v6-c-button pf-m-small pf-m-link"
+                            href="./log"
+                        >
+                            <span class="pf-v6-c-button__icon pf-m-start">
+                                <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                            </span>
+                            <span class="pf-v6-c-button__text">Raw log</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div id="status" style="display:none">
             Done: <span id="message"></span>.
         </div>
