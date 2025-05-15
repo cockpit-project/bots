@@ -253,10 +253,10 @@ if [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/wireguard-tools /}"
 fi
 
-# vdo not available on centos/rhel 10
+# kmod-kvdo has been replaced with dm-vdo on centos/rhel 10
+# https://issues.redhat.com/browse/RHELDOCS-19842
 if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/ kmod-kvdo / }"
-    TEST_PACKAGES="${TEST_PACKAGES/ vdo / }"
 fi
 
 # NM-team dropped in RHEL 10
