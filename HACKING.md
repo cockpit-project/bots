@@ -43,3 +43,12 @@ It is highly recommended to set this up as a git pre-push hook, to avoid
 pushing PRs that will fail on trivial errors:
 
     ln -s ../../test/run .git/hooks/pre-push
+
+### Updating pixel tests code
+ 
+* Go to `s3-html/log.html` and within `<head>` add a test you want to try out
+``html
+<script type="text/javascript" src="https://livejs.com/live.js"></script>
+<base href="https://cockpit-logs.us-east-1.linodeobjects.com/pull-22002-aa3c7753-20250514-150742-fedora-41/log.html" />
+```
+* Start a server with `python -m http.server -d ./lib/s3-html`
