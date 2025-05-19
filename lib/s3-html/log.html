@@ -24,10 +24,10 @@
 
         /* Filters start */
         /* Only show failed */
-        body.c-filter-only-failed .test-entry:not(.failed:not(.skipped,.retried)) {
+        body.c-filter-only-failed .test-entry:not(.failed:not(.skipped,.retried),#initialization) {
             display: none;
         }
-        body.c-filter-only-failed-retried .test-entry:not(.failed:not(.skipped), .retried) {
+        body.c-filter-only-failed-retried .test-entry:not(.failed:not(.skipped), .retried, #initialization) {
             display: none;
         }
         /* Filters end */
