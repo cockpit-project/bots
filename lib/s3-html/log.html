@@ -165,7 +165,7 @@
                   </button>
                 </div>
                 <div class="pf-v6-c-toggle-group__item">
-                    <button class="pf-v6-c-toggle-group__button pf-m-selected" type="button" data-filter="c-filter-only-failed-retried">
+                    <button class="pf-v6-c-toggle-group__button" type="button" data-filter="c-filter-only-failed-retried">
                       <span class="pf-v6-c-toggle-group__text">Only show failed and retried tests</span>
                     </button>
                   </div>
@@ -589,24 +589,36 @@ function set_content(text) {
     });
 
     // We also have CSS based filters for our tests
+    const selectedModifier = "pf-m-selected";
     const testingToolbar = document.querySelector('#testing-toolbar')
     const toggleGroupClass = "pf-v6-c-toggle-group__button";
     testingToolbar.innerHTML = Mustache.render(test_filter_toolbar);
-    Array.from(testingToolbar.getElementsByClassName(toggleGroupClass)).forEach(function (button) {
+    const dataFilters = testingToolbar.getElementsByClassName(toggleGroupClass);
+    function handleFilterSelection(originElement) {
+        // Toggle selected modifier if a button triggered this
+        originElement.classList.toggle(selectedModifier)
+        // Remove all other selected items
+        const dataFilter = originElement.getAttribute("data-filter")
+        Array.from(dataFilters)
+            .forEach( el => {
+                // Apply the clicked filter and add it to localStorage
+                if (el === originElement && originElement.classList.contains(selectedModifier)) {
+                    document.body.classList.add(dataFilter);
+                    localStorage.setItem("c-filter", dataFilter);
+                    return;
+                }
+                document.body.classList.remove(el.getAttribute("data-filter"));
+                el.classList.remove(selectedModifier);
+            });
+    };
+    Array.from(dataFilters).forEach(function (button) {
         button.addEventListener(
             "click",
-            () => {
-                button.classList.toggle("pf-m-selected")
-                const dataFilter = button.getAttribute("data-filter")
-                document.querySelectorAll(`.${toggleGroupClass}:not([data-filter="${dataFilter}"])`)
-                    .forEach( el => {
-                        document.body.classList.remove(el.getAttribute("data-filter"));
-                        el.classList.remove("pf-m-selected");
-                    });
-                document.body.classList.add(dataFilter);
-            }
+            () => handleFilterSelection(button)
         )
     });
+    const storageFilter = localStorage.getItem("c-filter") || "c-filter-only-failed-retried";
+    handleFilterSelection(testingToolbar.querySelector(`[data-filter="${storageFilter}"]`))
 }
 
 function sleep(seconds) {
@@ -694,7 +706,7 @@ async function fetch_content(filename) {
 fetch_content('log');
   </script>
 </head>
-    <body class="c-filter-only-failed-retried">
+    <body>
         <h1 id="test-info" class="pf-v6-c-title pf-m-2xl">Logs</h1>
         <div class="pf-v6-c-toolbar pf-m-no-padding">
             <div class="pf-v6-c-toolbar__content">
