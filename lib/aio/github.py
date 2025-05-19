@@ -85,15 +85,15 @@ class GitHub(Forge, contextlib.AsyncExitStack):
 
         return await retry(post_once)
 
-    async def get(self, resource: str) -> JsonValue:
+    async def get(self, resource: str, parameters: Mapping[str, str] | None = None) -> JsonValue:
         async def get_once() -> JsonValue:
             headers = {**self.session.headers}
             cache_entry = self.cache.get(resource)
             if cache_entry is not None:
                 headers.update(cache_entry.conditions)
 
-            logger.debug('get %r %r', resource, cache_entry)
-            async with self.session.get(self.api / resource, headers=headers) as response:
+            logger.debug('get %r %r %r', resource, parameters, cache_entry)
+            async with self.session.get(self.api / resource % parameters, headers=headers) as response:
                 condition_map = {'etag': 'if-none-match', 'last-modified': 'if-modified-since'}
                 conditions = {c: response.headers[h] for h, c in condition_map.items() if h in response.headers}
 
@@ -110,8 +110,8 @@ class GitHub(Forge, contextlib.AsyncExitStack):
 
         return await retry(get_once)
 
-    async def get_obj(self, resource: str) -> JsonObject:
-        return typechecked(await self.get(resource), dict)
+    async def get_obj(self, resource: str, parameters: Mapping[str, str] | None = None) -> JsonObject:
+        return typechecked(await self.get(resource, parameters), dict)
 
     async def check_pr_changed(self, repo: str, pull_nr: int, expected_sha: str) -> str | None:
         try:
