@@ -36,7 +36,6 @@ class GitHubService:
         self.config: JsonObject = {
             'api-url': str(self.API_URL),
             'clone-url': str(self.CLONE_URL),
-            'content-url': str(self.CONTENT_URL),
             'post': True,
             'token': self.TOKEN,
             'user-agent': self.USER_AGENT,
