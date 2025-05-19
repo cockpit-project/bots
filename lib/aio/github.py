@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+import base64
 import contextlib
 import json
 import logging
@@ -60,7 +61,6 @@ class GitHub(Forge, contextlib.AsyncExitStack):
         self.config = config
         self.clone = URL(get_str(config, 'clone-url'))
         self.api = URL(get_str(config, 'api-url'))
-        self.content = URL(get_str(config, 'content-url'))
         self.dry_run = not get_bool(config, 'post')
 
     async def __aenter__(self) -> Self:
@@ -133,17 +133,15 @@ class GitHub(Forge, contextlib.AsyncExitStack):
         await self.post(f'repos/{repo}/issues', issue)
 
     async def read_file(self, subject: Subject, filename: str) -> str | None:
-        async def read_once() -> str | None:
-            try:
-                async with self.session.get(self.content / subject.repo / subject.sha / filename) as response:
-                    logger.debug('response %r', response)
-                    return await response.text()
-            except aiohttp.ClientResponseError as exc:
-                if exc.status == 404:
-                    return None
-                raise
+        try:
+            contents = await self.get_obj(f'repos/{subject.repo}/contents/{filename}', {'ref': subject.sha})
+        except aiohttp.ClientResponseError as exc:
+            if exc.status == 404:
+                return None
+            raise
 
-        return await retry(read_once)
+        content = get_str(contents, 'content')
+        return base64.b64decode(content).decode().strip()
 
     def get_status(self, repo: str, sha: str, context: str | None, location: URL) -> Status:
         return GitHubStatus(self, repo, sha, context, location)

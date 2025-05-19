@@ -50,7 +50,6 @@ driver='github'
 [forge.github]
 clone-url = 'https://github.com/'
 api-url = 'https://api.github.com/'
-content-url = 'https://raw.githubusercontent.com/'
 post = true  # whether to post statuses, open issues, etc.
 user-agent = 'job-runner (cockpit-project/bots)'
 # (at least) one of `token` or `post = false` must be set
