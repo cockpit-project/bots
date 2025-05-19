@@ -384,7 +384,7 @@ if [ "$DO_BUILD" -eq 1 ]; then
             zversion=""
         else
             # RHEL 8 and 9
-            if [ "$IMAGE" = "rhel-8-8" ]; then
+            if [ "$IMAGE" = "rhel-8-8" ] || [ "$IMAGE" = "rhel-9-2" ] || [ "$IMAGE" = "rhel-9-4" ]; then
                 zversion=".0-z"
             else
                 zversion=".0"
