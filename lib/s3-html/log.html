@@ -24,9 +24,6 @@
 
         /* Filters start */
         /* Only show failed */
-        body.c-filter-only-failed .test-entry:not(.failed:not(.skipped,.retried)) {
-            display: none;
-        }
         body.c-filter-only-failed-retried .test-entry:not(.failed:not(.skipped), .retried) {
             display: none;
         }
@@ -158,23 +155,24 @@
             </div>
         </script>
         <script id="TestToolbar" type="text/template">
-            <div class="pf-v6-c-toggle-group">
-                <div class="pf-v6-c-toggle-group__item">
-                  <button class="pf-v6-c-toggle-group__button" type="button" data-filter="c-filter-show-all">
-                    <span class="pf-v6-c-toggle-group__text">Show All</span>
-                  </button>
-                </div>
-                <div class="pf-v6-c-toggle-group__item">
-                    <button class="pf-v6-c-toggle-group__button pf-m-selected" type="button" data-filter="c-filter-only-failed-retried">
-                      <span class="pf-v6-c-toggle-group__text">Only show failed and retried tests</span>
-                    </button>
-                  </div>
-                <div class="pf-v6-c-toggle-group__item">
-                  <button class="pf-v6-c-toggle-group__button" type="button" data-filter="c-filter-only-failed">
-                    <span class="pf-v6-c-toggle-group__text">Only show failed</span>
-                  </button>
-                </div>
-              </div>
+            <label class="pf-v6-c-switch" for="switch-for-failed-filtering">
+                <input
+                    class="pf-v6-c-switch__input"
+                    type="checkbox"
+                    role="switch"
+                    id="switch-for-failed-filtering"
+                    aria-labelledby="switch-for-failed-filtering-text"
+                    checked
+                />
+
+                <span class="pf-v6-c-switch__toggle"></span>
+
+                <span
+                    class="pf-v6-c-switch__label"
+                    id="switch-for-failed-filtering-text"
+                    aria-hidden="true"
+                >Show only failed</span>
+            </label>
         </script>
         <script id="TestProgress" type="text/template">
             <div class="pf-v6-c-progress pf-m-lg pf-m-inside">
@@ -589,24 +587,31 @@ function set_content(text) {
     });
 
     // We also have CSS based filters for our tests
+    const selectorTestRetried = "c-filter-only-failed-retried"
     const testingToolbar = document.querySelector('#testing-toolbar')
-    const toggleGroupClass = "pf-v6-c-toggle-group__button";
     testingToolbar.innerHTML = Mustache.render(test_filter_toolbar);
-    Array.from(testingToolbar.getElementsByClassName(toggleGroupClass)).forEach(function (button) {
-        button.addEventListener(
-            "click",
-            () => {
-                button.classList.toggle("pf-m-selected")
-                const dataFilter = button.getAttribute("data-filter")
-                document.querySelectorAll(`.${toggleGroupClass}:not([data-filter="${dataFilter}"])`)
-                    .forEach( el => {
-                        document.body.classList.remove(el.getAttribute("data-filter"));
-                        el.classList.remove("pf-m-selected");
-                    });
-                document.body.classList.add(dataFilter);
-            }
-        )
-    });
+    const failedFilter = testingToolbar.querySelector("#switch-for-failed-filtering");
+
+    function handleFilterSelection(checkbox) {
+        // Apply the clicked filter
+        if (checkbox.checked) {
+            document.body.classList.add(selectorTestRetried);
+        } else {
+            document.body.classList.remove(selectorTestRetried);
+        }
+    };
+
+    failedFilter.addEventListener(
+        "click",
+        () => handleFilterSelection(failedFilter)
+    );
+
+    if (log.querySelectorAll(".test-entry.failed:not(.skipped)").length) {
+        failedFilter.checked = true;
+    } else {
+        failedFilter.checked = false;
+    }
+    handleFilterSelection(failedFilter)
 }
 
 function sleep(seconds) {
@@ -694,7 +699,7 @@ async function fetch_content(filename) {
 fetch_content('log');
   </script>
 </head>
-    <body class="c-filter-only-failed-retried">
+    <body>
         <h1 id="test-info" class="pf-v6-c-title pf-m-2xl">Logs</h1>
         <div class="pf-v6-c-toolbar pf-m-no-padding">
             <div class="pf-v6-c-toolbar__content">
