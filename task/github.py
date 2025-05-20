@@ -213,29 +213,6 @@ class GitHub:
             return self.url.path
         return urllib.parse.urljoin(f"{self.url.path}/", resource)
 
-    def fetch_file(self, revision: str, filename: str) -> 'str | None':
-        netloc = self.url.netloc
-
-        # For the mock server, we just hit the same URL.  For GitHub, it's different.
-        if netloc == 'api.github.com':
-            netloc = 'raw.githubusercontent.com'
-
-        url = f'{self.url.scheme}://{netloc}/{self.repo}/{revision}/{filename}'
-
-        for retry in range(5):
-            try:
-                req = urllib.request.Request(url)
-                with urllib.request.urlopen(req) as response:
-                    data: bytes = response.read()
-                    return data.decode().strip()
-            except urllib.error.HTTPError as exc:
-                if exc.code == 404:
-                    return None
-            except (ConnectionResetError, http.client.BadStatusLine, OSError, SSLEOFError) as e:
-                logging.warning("Transient error during GitHub request, attempt #%s: %s", retry, e)
-
-        raise OSError(f"Repeated failure to fetch to {url}, giving up")
-
     def request(
         self, method: str, resource: str | None, data: str = "", headers: Mapping[str, str] = {}
     ) -> Response:
