@@ -33,6 +33,7 @@ ALLOWLIST = {
     'adamkankovsky',
     'elkoniu',
     'jkonecny12',
+    'pkratoch',
     'rvykydal',
     'vojtechtrefny',
 
