@@ -486,24 +486,4 @@ if [ "${IMAGE#rhel-10*}" != "$IMAGE" ] || [ "${IMAGE#centos-10}" != "$IMAGE" ]; 
   echo "PerSourcePenalties no" >/etc/ssh/sshd_config.d/99-no-penalties.conf
 fi
 
-# HACK: https://issues.redhat.com/browse/RHEL-72967
-if [ "${IMAGE#rhel-10*}" != "$IMAGE" ] || [ "${IMAGE#centos-10}" != "$IMAGE" ]; then
-    cat <<EOF > hack-systemd-tmp.te
-module hack-systemd-tmp 1.0;
-
-require {
-    type init_var_run_t;
-    type cockpit_ws_t;
-    class dir { add_name create remove_name rmdir setattr write };
-    class file { create getattr ioctl open read unlink write append };
-}
-
-allow cockpit_ws_t init_var_run_t:dir { add_name create remove_name rmdir setattr write };
-allow cockpit_ws_t init_var_run_t:file { create getattr ioctl open read unlink write append };
-EOF
-    checkmodule -M -m -o hack-systemd-tmp.mod hack-systemd-tmp.te
-    semodule_package -o hack-systemd-tmp.pp -m hack-systemd-tmp.mod
-    semodule -X 300 -i hack-systemd-tmp.pp
-fi
-
 /var/lib/testvm/zero-disk.setup --keep-mock-cache
