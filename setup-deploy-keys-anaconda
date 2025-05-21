@@ -43,6 +43,6 @@ deploy_to rhinstaller/anaconda-webui-l10n \
 
 # shared
 deploy_to rhinstaller/node-cache \
-    -- deploy-from \
+    --deploy-from \
         rhinstaller/anaconda-webui/npm-update/NODE_CACHE_DEPLOY_KEY \
         rhinstaller/anaconda-webui/node-cache/DEPLOY_KEY
