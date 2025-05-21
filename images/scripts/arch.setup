@@ -64,7 +64,7 @@ qemu-hw-usb-host \
 qemu-hw-usb-redirect \
 qemu-block-curl \
 nginx \
-redis \
+valkey \
 openbsd-netcat \
 nfs-utils \
 sssd \
