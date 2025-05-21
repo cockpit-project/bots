@@ -100,6 +100,12 @@ TEST_DOMAIN_XML = """
     <rng model='virtio'>
       <backend model='random'>/dev/urandom</backend>
     </rng>
+    <tpm model='tpm-crb'>
+      <backend type='emulator' version='2.0'>
+        <profile name='default-v1'/>
+      </backend>
+      <alias name='tpm0'/>
+    </tpm>
   </devices>
   <qemu:commandline>
     {ethernet}
