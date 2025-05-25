@@ -1,2 +1,0 @@
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
-*apparmor="DENIED" operation="open" class="file" profile="libvirt-*" name="/proc/sys/vm/max_map_count" * comm="qemu-system-x86" requested_mask="r" denied_mask="r"
