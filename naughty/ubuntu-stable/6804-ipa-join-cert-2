@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-system-realms", line *, in testUnqualifiedUsers
-*
-    m.execute(f"echo {self.admin_password} | realm join -vU {self.admin_user} cockpit.lan", timeout=300)
-*
-subprocess.CalledProcessError: Command

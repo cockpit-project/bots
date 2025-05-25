@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-system-realms", line *, in testNegotiate
-    self.configure_kerberos("/etc/cockpit/krb5.keytab")
-*
-  File "test/verify/check-system-realms", line *, in configure_kerberos
-    self.machine.execute(JOIN_SCRIPT % args, timeout=1800)
-*
-subprocess.CalledProcessError
