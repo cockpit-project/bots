@@ -52,7 +52,6 @@ pushing PRs that will fail on trivial errors:
 
 * Easiest way to develop is to go to `./lib/s3-html/log.html` and within `<head>` add a test URL for what you want to improve layout for. 
 ``html
-<script type="text/javascript" src="https://livejs.com/live.js"></script>
 <base href="https://log-url/log.html" />
 <meta http-equiv="refresh" content="5" >
 ```
