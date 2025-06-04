@@ -426,7 +426,6 @@ class GitHub:
 
     def approve_pr(self, pr: int, sha: str) -> None:
         # https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#create-a-review-for-a-pull-request
-
         data = {
             'commit_id': sha,
             'event': 'APPROVE',
