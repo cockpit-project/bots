@@ -195,6 +195,7 @@ subscription-manager \
 sos \
 stratis-cli \
 stratisd \
+stratisd-tools \
 tuned \
 udisks2 \
 udisks2-lvm2 \
@@ -243,6 +244,11 @@ vdo \
 virt-install \
 wireguard-tools \
 "
+
+# No stratisd-tools in rhel-10-0
+if  [ "$IMAGE" = "rhel-10-0" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES/stratisd-tools /}"
+fi
 
 if [ "${IMAGE#rhel*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} subscription-manager-cockpit insights-client"
