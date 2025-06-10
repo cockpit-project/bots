@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -eux
+
+# setup a fake little git hosting world
+rm -rf tmp
+git clone --bare . tmp/projects/cockpit-project/bots
+touch tmp/projects/cockpit-project/bots/git-daemon-export-ok                  # read access...
+git --git-dir tmp/projects/cockpit-project/bots config http.receivepack true  # ... and write
+
+# serve it
+./git-serve -p 4444 tmp/projects&
+sleep 0.1  # avoid races
+
+# client can check out a copy, make changes, push
+(
+   git clone http://localhost:4444/cockpit-project/bots tmp/clone
+   cd tmp/clone
+   git commit --allow-empty -m 'clone, commit, push'
+   git push
+)
+rm -rf tmp/clone
+
+
+# and we can see their changes
+git --git-dir tmp/projects/cockpit-project/bots show
+
+# kill server
+pkill -P $$
