@@ -174,29 +174,26 @@
                 >Show only failed</span>
             </label>
         </script>
-        <script id="TestProgressStep" type="text/template">
-            <li
-                class="pf-v6-c-progress-stepper__step {{ modifierClass }}"
-                role="listitem"
-            >
-                <div class="pf-v6-c-progress-stepper__step-connector">
-                    <span class="pf-v6-c-progress-stepper__step-icon">
-                        <i class="{{ icon }}" aria-hidden="true"></i>
-                    </span>
-                </div>
-                <div class="pf-v6-c-progress-stepper__step-main">
-                    <div class="pf-v6-c-progress-stepper__step-title">
-                        {{ title }}
-                    </div>
-                </div>
-            </li>
-        </script>
         <script id="TestProgress" type="text/template">
-            <ol class="pf-v6-c-progress-stepper" role="list">
-                {{#steps}}
-                    {{{.}}}
-                {{/steps}}
-            </ol>
+            <div class="pf-v6-c-progress pf-m-sm" id="progress-sm-example">
+                <div
+                    class="pf-v6-c-progress__description"
+                    id="progress-sm-example-description"
+                >Test progress</div>
+                <div class="pf-v6-c-progress__status" aria-hidden="true">
+                    <span class="pf-v6-c-progress__measure">{{finished}}/{{total}} ({{percentage_done}}%)</span>
+                </div>
+                <div
+                    class="pf-v6-c-progress__bar"
+                    role="progressbar"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="{{percentage_done}}"
+                    aria-labelledby="progress-sm-example-description"
+                >
+                    <div class="pf-v6-c-progress__indicator" style="width:{{percentage_done}}%;"></div>
+                </div>
+            </div>
         </script>
         <script id="TestingOverview" type="text/template">
             <div id="testing" class="pf-v6-u-mt-m">
@@ -295,8 +292,6 @@ const test_filter_toolbar = document.querySelector("#TestToolbar").innerHTML;
 Mustache.parse(test_filter_toolbar);
 const progress_template = document.querySelector("#TestProgress").innerHTML;
 Mustache.parse(progress_template);
-const progress_step_template = document.querySelector("#TestProgressStep").innerHTML;
-Mustache.parse(progress_step_template);
 const overview_template = document.querySelector("#TestingOverview").innerHTML;
 Mustache.parse(overview_template);
 const link_category_template = document.querySelector("#LinkCategory").innerHTML;
@@ -542,31 +537,6 @@ function extract(text) {
 
         const finished = passed + failed + skipped;
         const left = total - finished;
-        function generateStep({inProgress, done, stepStatusTitle}) {
-            let modifierClass = "";
-            let icon = "";
-            let title = "";
-            if (done) {
-                modifierClass = "pf-m-success";
-                icon = "fas fa-check-circle";
-                title= stepStatusTitle[2];
-            }
-            else if (inProgress) {
-                modifierClass = "pf-m-current";
-                icon = "pf-v6-pficon pf-v6-pficon-in-progress";
-                title= stepStatusTitle[1];
-            }
-            else {
-                modifierClass = "pf-m-pending";
-                icon = "pf-v6-pficon pf-v6-pficon-pending";
-                title= stepStatusTitle[0];
-            }
-            return Mustache.render(progress_step_template, {modifierClass, icon, title});
-        }
-        const progressSteps = [
-            generateStep({ inProgress: finished === 0, done: finished > 0, stepStatusTitle: [undefined, "Queued", "Started"]}),
-            generateStep({ inProgress: finished && finished < total, done: left === 0, stepStatusTitle: ["Pending", "Running tests", "Tests complete"]}),
-        ];
         testingElem.innerHTML = Mustache.render(overview_template, { tests: entries,
                                                                 passed,
                                                                 failed,
@@ -577,9 +547,7 @@ function extract(text) {
                                                                 left,
                                                                 total_test_time,
                                                               });
-        testingProgressElem.innerHTML = Mustache.render(progress_template,
-                                                        { steps: progressSteps
-                                                        });
+        testingProgressElem.innerHTML = Mustache.render(progress_template, {total, finished, percentage_done: ((total-left)/total)*100});
     } else {
         while(testingElem.firstChild)
             testingElem.removeChild(testingElem.firstChild);
