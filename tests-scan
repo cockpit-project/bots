@@ -28,7 +28,7 @@ from typing import Any
 import pika
 
 from lib import ALLOWLIST, testmap
-from lib.aio.jsonutil import JsonObject, get_str
+from lib.aio.jsonutil import JsonObject, get_int, get_nested, get_object, get_str
 from lib.jobqueue import QueueEntry
 from task import distributed_queue, github, labels_of_pull
 
@@ -37,6 +37,25 @@ logging.basicConfig(level=logging.INFO)
 
 
 Policy = Mapping[str, Sequence[str]]
+
+
+# https://docs.github.com/en/rest/users/users?apiVersion=2022-11-28
+class UserObject:
+    def __init__(self, obj: JsonObject) -> None:
+        self.login = get_str(obj, 'login')
+
+
+# 'head' part of https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28
+class HeadObject:
+    def __init__(self, obj: JsonObject) -> None:
+        self.sha = get_str(obj, 'sha')
+        self.user = get_object(obj, 'user', UserObject)
+
+
+# 'base' part of https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28
+class BaseObject:
+    def __init__(self, obj: JsonObject) -> None:
+        self.ref = get_str(obj, 'ref')
 
 
 def build_policy(repo: str, requested_contexts: Collection[str]) -> Policy:
@@ -89,13 +108,12 @@ def update_status(
     return False
 
 
-def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Namespace) -> Iterable[QueueEntry]:
-    pulls: Sequence[Any]
-
+def task_pulls(api: github.GitHub, opts: argparse.Namespace) -> Sequence[JsonObject]:
+    pulls: Sequence[JsonObject]
     if opts.pull_data:
         pulls = [json.loads(opts.pull_data)['pull_request']]
     elif opts.pull_number:
-        pull = api.get(f"pulls/{opts.pull_number}")
+        pull: JsonObject = api.get(f"pulls/{opts.pull_number}")
         if pull:
             pulls = [pull]
         else:
@@ -106,9 +124,11 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
     # Find matching PR for --sha
     if opts.sha:
         for pull in pulls:
-            if pull["head"]["sha"].startswith(opts.sha):
-                pulls = [pull]
-                break
+            with get_nested(pull, 'head') as head:
+                sha = get_str(head, 'sha', None)
+                if sha is not None and sha.startswith(opts.sha):
+                    pulls = [pull]
+                    break
         else:
             logging.info("Processing revision %s without pull request", opts.sha)
             pulls = [{
@@ -123,13 +143,21 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
                 "labels": [],
             }]
 
+    return pulls
+
+
+def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Namespace) -> Iterable[QueueEntry]:
+    pulls = task_pulls(api, opts)
     for pull in pulls:
-        title = pull["title"]
-        number = pull["number"]
-        revision = pull["head"]["sha"]
+        title = get_str(pull, 'title')
+        number = get_int(pull, 'number', None)
+        head = get_object(pull, 'head', HeadObject)
+        revision = head.sha
         statuses = api.statuses(revision)
-        login = pull["head"]["user"]["login"]
-        base = pull.get("base", {}).get("ref")  # The branch this pull request targets (None for direct SHA triggers)
+        login = head.user.login
+        # The branch this pull request targets (None for direct SHA triggers)
+        base_obj = get_object(pull, 'base', BaseObject, None)
+        base = base_obj.ref if base_obj else None
 
         logging.info("Processing #%s titled '%s' on revision %s", number, title, revision)
 
@@ -210,7 +238,7 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
             if project != api.repo:
                 checkout_ref = testmap.get_default_branch(project)
 
-            if base != branch:
+            if base is not None and branch is not None and base != branch:
                 checkout_ref = branch
 
             if api.repo == "cockpit-project/bots":
