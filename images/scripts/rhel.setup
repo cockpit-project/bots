@@ -245,8 +245,8 @@ virt-install \
 wireguard-tools \
 "
 
-# No stratisd-tools in rhel-10-0
-if  [ "$IMAGE" = "rhel-10-0" ]; then
+# No stratisd-tools in rhel-10-0/rhel-9-6 and lower
+if [ "$IMAGE" = "rhel-10-0" ] || [ "${IMAGE#rhel-9-[0246]}" != "$IMAGE" ] || [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/stratisd-tools /}"
 fi
 
