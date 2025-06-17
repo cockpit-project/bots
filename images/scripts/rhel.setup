@@ -195,7 +195,6 @@ subscription-manager \
 sos \
 stratis-cli \
 stratisd \
-stratisd-tools \
 tuned \
 udisks2 \
 udisks2-lvm2 \
@@ -234,6 +233,7 @@ nmap-ncat \
 qemu-kvm \
 socat \
 strace \
+stratisd-tools \
 tang \
 targetcli \
 tcsh \
@@ -247,7 +247,7 @@ wireguard-tools \
 
 # No stratisd-tools in rhel-10-0/rhel-9-6 and lower
 if [ "$IMAGE" = "rhel-10-0" ] || [ "${IMAGE#rhel-9-[0246]}" != "$IMAGE" ] || [ "${IMAGE#rhel-8*}" != "$IMAGE" ]; then
-    COCKPIT_DEPS="${COCKPIT_DEPS/stratisd-tools /}"
+    TEST_PACKAGES="${TEST_PACKAGES/stratisd-tools /}"
 fi
 
 if [ "${IMAGE#rhel*}" != "$IMAGE" ]; then
