@@ -122,6 +122,9 @@
                     </div>
                     <div class="pf-v6-c-data-list__item-content">
                         <div class="pf-v6-c-data-list__cell">
+                            <a href="#{{id}}" class="pf-v6-c-button pf-m-inline pf-m-link">
+                                <span class="pf-v6-c-button__text">{{id}}</span>
+                            </a>:&nbsp;
                             <span>
                                 {{title}}
                             </span>
@@ -458,7 +461,7 @@ function extract(text) {
                     entry.id = m[2] + "-" + r;
                 }
                 ids[entry.id] = true;
-                entry.title = entry.id + ": " + m[3];
+                entry.title = m[3];
                 if (m[4])
                     entry.title += ", duration: " + m[4];
 
