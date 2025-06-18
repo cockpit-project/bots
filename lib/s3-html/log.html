@@ -41,6 +41,9 @@
         .pf-v6-c-data-list.pf-m-compact {
             --pf-v6-c-data-list--m-compact--FontSize: var(--pf-t--global--font--size--body--md);
         }
+        .pf-v6-c-back-to-top {
+            position: fixed;
+        }
         </style>
         <script id="Tests" type="text/template" type="x-tmpl-mustache">
             <ul class="pf-v6-c-data-list pf-m-compact">
@@ -736,5 +739,13 @@ fetch_content('log');
         <div id="testing"></div>
         <div id="testing-toolbar"></div>
         <div id="log"></div>
+        <div class="pf-v6-c-back-to-top">
+            <a class="pf-v6-c-button pf-m-primary" href="#">
+                <span class="pf-v6-c-button__text">Back to top</span>
+                <span class="pf-v6-c-button__icon pf-m-end">
+                <i class="fas fa-angle-up" aria-hidden="true"></i>
+                </span>
+            </a>
+        </div>
     </body>
 </html>
