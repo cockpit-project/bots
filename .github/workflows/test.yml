@@ -2,7 +2,7 @@ name: test
 on: [pull_request]
 jobs:
   bots:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: ghcr.io/cockpit-project/tasks
       options: --user root
@@ -20,7 +20,7 @@ jobs:
         run: test/run
 
   cockpituous:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       # enough permissions for tests-scan to work
       pull-requests: read
@@ -73,15 +73,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y make python3-pytest
-
-      # HACK: Ubuntu 22.04 has podman 3.4, which isn't compatible with podman-remote 4 in our tasks container
-      # This PPA is a backport of podman 4.3 from Debian 12; drop this when moving `runs-on:` to ubuntu-24.04
-      - name: Update to newer podman
-        if: steps.changes.outputs.changed
-        run: |
-          sudo add-apt-repository -y ppa:quarckster/containers
-          sudo apt install -y podman
-          systemctl --user daemon-reload
 
       - name: Test local CI deployment
         if: steps.changes.outputs.changed
