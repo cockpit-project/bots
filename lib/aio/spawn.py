@@ -36,10 +36,11 @@ async def spawn(args: Sequence[str], **kwargs: Any) -> AsyncIterator[asyncio.sub
         logger.debug('spawn: pid %r exited, %r', pid, status)
 
 
-async def run(args: Sequence[str], **kwargs: Any) -> None:
+async def run(args: Sequence[str], **kwargs: Any) -> int:
     logger.debug('run(%r)', args)
     process = await asyncio.create_subprocess_exec(*args, **kwargs)
     pid = process.pid
     logger.debug('run: waiting for pid %r', pid)
     status = await process.wait()
     logger.debug('run: pid %r exited, %r', pid, status)
+    return status
