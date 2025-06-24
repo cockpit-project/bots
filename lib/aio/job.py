@@ -150,8 +150,10 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
                     raise Failure(f'Container exited with code {returncode}')
 
             finally:
-                await run([*ctx.container_cmd, 'rm', '--force', '--time=0', f'--cidfile={tmpdir}/cidfile'],
-                          stdout=asyncio.subprocess.DEVNULL)  # don't show container ID output
+                ret = await run([*ctx.container_cmd, 'rm', '--force', '--time=0', f'--cidfile={tmpdir}/cidfile'],
+                              stdout=asyncio.subprocess.DEVNULL)  # don't show container ID output
+                if ret != 0:
+                    container.kill()
 
 
 async def run_job(job: Job, ctx: JobContext) -> None:
