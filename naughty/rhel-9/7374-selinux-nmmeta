@@ -1,2 +1,0 @@
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
-*avc:  denied  { create } for  * comm="NetworkManager" name="*.nmmeta~" scontext=system_u:system_r:NetworkManager_t:s0 tcontext=system_u:object_r:NetworkManager_etc_rw_t:s0 tclass=lnk_file permissive=0
