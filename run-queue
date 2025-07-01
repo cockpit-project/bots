@@ -131,9 +131,11 @@ def consume_task_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResult:
 
     body = json.loads(message)
     if job := body.get('job'):
+        print(f"\njob: {job}")
         command = ['./job-runner', 'json', json.dumps(job)]
         job_subject = job.get('subject')
     else:
+        print("\nNO JOB :(")
         command = body['command']
         job_subject = None
     return command, method_frame.delivery_tag, job_subject
@@ -197,10 +199,12 @@ failed with exit code %i. Please check the container logs for details.""" % (cmd
         if delivery_tag is not None:
             dq.channel.basic_ack(delivery_tag)
 
+        print(f"\n\n\njob_sub: {job_subj}")
         if job_subj is not None:
             repo = get_str(job_subj, 'repo')
             pull = get_int(job_subj, 'pull')
             sha = get_str(job_subj, 'sha')
+            print(f"\nrepo: {repo},\npull: {pull},\nsha {sha}")
             # skip automerge if jobs don't run against a PR
             if repo is not None and pull is not None and sha is not None:
                 auto_merge_bots_pr(repo, pull, sha)
