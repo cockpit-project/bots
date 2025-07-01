@@ -198,10 +198,11 @@ failed with exit code %i. Please check the container logs for details.""" % (cmd
         if delivery_tag is not None:
             dq.channel.basic_ack(delivery_tag)
 
-        print(f"\n\n\njob_sub: {job_subj}")
         if job_subj is not None:
+            print(f"\n\n\nrepo: {job_subj.repo}\n, pull: {job_subj.pull}\n, sha: {job_subj.sha}\n")
             # skip automerge if jobs don't run against a PR
             if job_subj.repo is not None and job_subj.pull is not None and job_subj.sha is not None:
+                print("starting automerge")
                 auto_merge_bots_pr(job_subj.repo, job_subj.pull, job_subj.sha)
             else:
                 logging.info("Skipping automerge for job: %s", job_subj)

@@ -431,7 +431,8 @@ class GitHub:
             'event': 'APPROVE',
             'comments': 'So cool'
         }
-        self.post(f'pulls/{pr}/reviews', data)
+        rw = self.post(f'pulls/{pr}/reviews', data)
+        print(f"post {rw}")
 
         # let's not write the merge code yet :)
 

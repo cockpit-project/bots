@@ -64,16 +64,19 @@ def all_checks_pass(api: github.GitHub, commit_hash: str) -> bool:
 def auto_merge_bots_pr(repo: str, pr: int, sha: str) -> None:
     api = github.GitHub(repo=repo)
 
+    print(f"is_cu_bot: {is_ci_bot(api, pr)}")
     # Make sure that the PR was made by cockpituous or github actions
-    # if not is_ci_bot(api, pr_num):
+    # if not is_ci_bot(api, pr):
     #     logger.info("PR not made by CI bot, skipping automerge")
     #     return
 
     # check that all checks are green
+    print(f"all_checks_pass: {all_checks_pass(api, sha)}")
     if not all_checks_pass(api, sha):
         logger.info("Not every check has passed, skipping automerge")
         return
 
     logger.info("All checks green, can automerge")
+    print("All checks green, can automerge")
     # merge the PR
     api.approve_pr(pr, sha)
