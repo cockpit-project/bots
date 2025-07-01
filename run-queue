@@ -31,6 +31,7 @@ from collections.abc import Sequence
 
 import pika
 
+from lib.aio.base import SubjectSpecification
 from lib.aio.jsonutil import JsonObject, get_int, get_str
 from lib.bots_automerge import auto_merge_bots_pr
 from lib.directories import get_images_data_dir
@@ -45,9 +46,7 @@ statistics_queue = os.environ.get("RUN_STATISTICS_QUEUE")
 # as per pika docs
 DeliveryTag = int
 
-JobSubject = JsonObject
-
-ConsumeResult = tuple[Sequence[str] | str | None, DeliveryTag | None, JobSubject | None]
+ConsumeResult = tuple[Sequence[str] | str | None, DeliveryTag | None, SubjectSpecification | None]
 
 
 # Returns a command argv to execute and the delivery tag needed to ack the message
@@ -133,7 +132,7 @@ def consume_task_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResult:
     if job := body.get('job'):
         print(f"\njob: {job}")
         command = ['./job-runner', 'json', json.dumps(job)]
-        job_subject = job.get('subject')
+        job_subject = SubjectSpecification(job)
     else:
         print("\nNO JOB :(")
         command = body['command']
@@ -201,13 +200,9 @@ failed with exit code %i. Please check the container logs for details.""" % (cmd
 
         print(f"\n\n\njob_sub: {job_subj}")
         if job_subj is not None:
-            repo = get_str(job_subj, 'repo')
-            pull = get_int(job_subj, 'pull')
-            sha = get_str(job_subj, 'sha')
-            print(f"\nrepo: {repo},\npull: {pull},\nsha {sha}")
             # skip automerge if jobs don't run against a PR
-            if repo is not None and pull is not None and sha is not None:
-                auto_merge_bots_pr(repo, pull, sha)
+            if job_subj.repo is not None and job_subj.pull is not None and job_subj.sha is not None:
+                auto_merge_bots_pr(job_subj.repo, job_subj.pull, job_subj.sha)
             else:
                 logging.info("Skipping automerge for job: %s", job_subj)
 
