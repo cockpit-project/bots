@@ -36,6 +36,7 @@ COCKPITUOUS = {
 
 def is_ci_bot(api: github.GitHub, pr: int) -> bool:
     author = api.get_author(pr)
+    print(author)
     login = get_str(author, 'login')
     login_id = get_int(author, 'id')
 
@@ -45,16 +46,17 @@ def is_ci_bot(api: github.GitHub, pr: int) -> bool:
 
 def all_checks_pass(api: github.GitHub, commit_hash: str) -> bool:
     statuses = api.statuses(commit_hash)
+    print(f"STATUSES: {statuses}")
 
-    logger.info("Checking statuses:")
+    print("Checking statuses:")
     if len(statuses) == 0:
-        logger.info("No statuses found for commit %s", commit_hash)
+        print("No statuses found for commit %s", commit_hash)
         return False
 
     for context in statuses:
         status = statuses[context]
         status_state = get_str(status, 'state')
-        logger.info("Status for context '%s': %s", context, status_state)
+        print("Status for context '%s': %s", context, status_state)
         if status_state != 'success':
             return False
 
@@ -71,9 +73,10 @@ def auto_merge_bots_pr(repo: str, pr: int, sha: str) -> None:
     #     return
 
     # check that all checks are green
-    print(f"all_checks_pass: {all_checks_pass(api, sha)}")
-    if not all_checks_pass(api, sha):
-        logger.info("Not every check has passed, skipping automerge")
+    all_pass = all_checks_pass(api, sha)
+    print(f"all_checks_pass: {all_pass}")
+    if not all_pass:
+        print("Not every check has passed, skipping automerge")
         return
 
     logger.info("All checks green, can automerge")

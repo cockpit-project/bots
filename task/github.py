@@ -336,8 +336,11 @@ class GitHub:
             data = self.get_obj(f"commits/{revision}/status?page={page}&per_page={count}")
             count = 0
             page += 1
+            print(f"DATA: {data}")
             for status in get_dictv(data, "statuses", ()):
                 context = get_str(status, "context")
+                print(f"CONTEXT: {context}")
+                print(f"REPO: {self.repo}")
                 if is_valid_context(context, self.repo) and context not in result:
                     result[context] = status
                 count += 1
@@ -422,6 +425,7 @@ class GitHub:
 
     def get_author(self, pr: int) -> JsonObject:
         pull = self.get_pr_info(pr)
+        print(f"PR INFO: {pull}")
         return get_dict(pull, "user", {})
 
     def approve_pr(self, pr: int, sha: str) -> None:
