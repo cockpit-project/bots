@@ -50,6 +50,7 @@ udisks2-iscsi \
 
 COCKPIT_DEPS="\
 criu-libs \
+dnf5daemon-server \
 glibc-langpack-de \
 glibc-langpack-pt \
 glib-networking \
