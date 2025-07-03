@@ -18,12 +18,14 @@
 import argparse
 import signal
 
+from lib.constants import DEFAULT_MACHINE_MEMORY_MB
+
 from . import machine_virtual
 
 
 def cmd_cli() -> None:
     parser = argparse.ArgumentParser(description="Run a VM image until SIGTERM or SIGINT")
-    parser.add_argument("--memory", type=int, default=machine_virtual.MEMORY_MB,
+    parser.add_argument("--memory", type=int, default=DEFAULT_MACHINE_MEMORY_MB,
                         help="Memory in MiB to allocate to the VM (default: %(default)s)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument("image", help="Image name")

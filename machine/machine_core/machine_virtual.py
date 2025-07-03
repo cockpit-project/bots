@@ -31,14 +31,12 @@ from typing import IO, Any, TextIO
 import libvirt
 import libvirt_qemu
 
-from lib.constants import BOTS_DIR, TEST_DIR
+from lib.constants import BOTS_DIR, DEFAULT_MACHINE_MEMORY_MB, TEST_DIR
 
 from .exceptions import Failure
 from .machine import Machine
 
 sys.path.insert(1, BOTS_DIR)
-
-MEMORY_MB = 1152
 
 
 # based on http://stackoverflow.com/a/17753573
@@ -283,7 +281,7 @@ class VirtMachine(Machine):
     ):
         self.maintain = maintain
 
-        self.memory_mb = memory_mb or VirtMachine.memory_mb or MEMORY_MB
+        self.memory_mb = memory_mb or VirtMachine.memory_mb or DEFAULT_MACHINE_MEMORY_MB
         self.cpus = cpus or VirtMachine.cpus or 1
         if capture_console:
             console_file = tempfile.NamedTemporaryFile(suffix='.log', prefix='console-')
