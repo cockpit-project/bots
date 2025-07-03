@@ -215,6 +215,7 @@ sssd-dbus \
 
 TEST_PACKAGES="\
 acl \
+ansible-core \
 boom-boot \
 clevis-luks \
 cryptsetup \
@@ -231,6 +232,7 @@ libvirt-daemon-config-network \
 ltrace \
 nmap-ncat \
 qemu-kvm \
+rhel-system-roles \
 socat \
 strace \
 stratisd-tools \
