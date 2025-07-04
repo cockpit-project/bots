@@ -96,7 +96,10 @@ def main() -> None:
         sources.append(source)
 
     for source in sources:
-        public = not os.path.basename(source).startswith('rhel')
+        # Temporarily make all images private, until we figure out if it's images or logs which cause
+        # so much traffic these days (AI scrapers?)
+        # public = not os.path.basename(source).startswith('rhel')
+        public = False
 
         stores = args.store
         if not stores:
