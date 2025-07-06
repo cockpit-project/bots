@@ -1,7 +1,0 @@
-# testAddDiskCustomPath (__main__.TestMachinesDisks.testAddDiskCustomPath)
-*
-#0  * qemuBlockThrottleFiltersDetach (libvirt_driver_qemu.so + *)
-#1  * qemuDomainAttachDiskGeneric (libvirt_driver_qemu.so + *)
-#2  * qemuDomainAttachDeviceLive (libvirt_driver_qemu.so + *)
-*
-testlib.Error: FAIL: Test completed, but found unexpected journal messages:
