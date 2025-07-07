@@ -44,8 +44,7 @@ async def main() -> None:
                     print(f"Note: {repo}/{branch} uses tag {tag}", file=sys.stderr)
                     used_tags.add(tag)
 
-    for tag in sorted(used_tags):
-        print(tag)
+    print(",".join(sorted(used_tags)))
 
 
 if __name__ == '__main__':
