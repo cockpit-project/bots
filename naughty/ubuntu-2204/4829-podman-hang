@@ -1,4 +1,5 @@
   File "test/check-application", line *, in testPruneUnusedContainers*
 *
-RuntimeError: Timed out on '
-            podman run --name inpod --pod pod -tid localhost/test-busybox sh -c 'exit 1''
+    self.execute("podman ps -a >&2", system=auth)
+*
+RuntimeError: Timed out on 'podman ps -a >&2'
