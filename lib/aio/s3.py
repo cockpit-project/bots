@@ -147,10 +147,11 @@ def s3_sign(
 
 
 class S3Destination(Destination, contextlib.AsyncExitStack):
-    def __init__(self, session: aiohttp.ClientSession, url: URL, key: S3Key) -> None:
+    def __init__(self, session: aiohttp.ClientSession, url: URL, proxy_url: URL, key: S3Key) -> None:
         super().__init__()
         self.session = session
-        self.location = url
+        self.location = url  # Used for S3 operations
+        self.proxy_location = proxy_url  # Used for external links (GitHub status)
         self.key = key
 
     def url(self, filename: str) -> URL:
@@ -182,6 +183,8 @@ class S3LogDriver(LogDriver, contextlib.AsyncExitStack):
         super().__init__()
         self.config = config
         self.url = URL(get_str(config, 'url'))
+        # proxy_url is optional, not needed for public S3 buckets
+        self.proxy_url = URL(get_str(config, 'proxy_url', str(self.url)))
         try:
             access, secret = get_str(config, 'key').split()
             self.key = S3Key(access, secret)
@@ -190,8 +193,8 @@ class S3LogDriver(LogDriver, contextlib.AsyncExitStack):
                 self.key = S3Key(get_str(key, 'access'), get_str(key, 'secret'))
 
     def get_destination(self, slug: str) -> contextlib.AbstractAsyncContextManager[S3Destination]:
-        url = self.url / slug.replace('//', '--').replace(':', '-')
-        return S3Destination(self.session, url, self.key)
+        quoted_slug = slug.replace('//', '--').replace(':', '-')
+        return S3Destination(self.session, self.url / quoted_slug, self.proxy_url / quoted_slug, self.key)
 
     async def __aenter__(self) -> Self:
         headers = {'x-amz-acl': get_str(self.config, 'acl')}
