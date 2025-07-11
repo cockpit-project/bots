@@ -23,6 +23,8 @@ import textwrap
 from collections.abc import Collection
 from typing import ClassVar
 
+from yarl import URL
+
 from ..constants import LIB_DIR
 from .base import Destination
 
@@ -91,7 +93,7 @@ class LogStreamer:
     suffixes: set[str]
     send_at: float | None
 
-    def __init__(self, index: Index) -> None:
+    def __init__(self, index: Index, proxy_url: URL | None = None) -> None:
         assert locale.getpreferredencoding() == 'UTF-8'
         self.input_decoder = codecs.getincrementaldecoder('UTF-8')(errors='replace')
         self.suffixes = {'chunks'}
@@ -100,7 +102,8 @@ class LogStreamer:
         self.destination = index.destination
         self.pending = b''
         self.timer: asyncio.TimerHandle | None = None
-        self.url = self.destination.location / 'log.html'
+        # Use proxy URL for external links (GitHub status), fallback to destination location
+        self.url = (proxy_url or self.destination.location) / 'log.html'
 
     def clear_timer(self) -> None:
         if self.timer:

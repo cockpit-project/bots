@@ -35,6 +35,8 @@ driver='local'   # 's3' or 'local'
 [logs.s3]
 # hint: podman run --rm --net=host quay.io/minio/minio server /var
 url = 'http://127.0.0.1:9000/tmp/'
+# different URL for GitHub status links if the S3 `url` above is not publicly accessible
+# proxy_url = 'http://logs.example.com/tmp/'
 key = {access='minioadmin', secret='minioadmin'}
 user-agent = 'job-runner (cockpit-project/bots)'
 acl = 'public-read'
