@@ -164,7 +164,7 @@ async def run_job(job: Job, ctx: JobContext) -> None:
 
     async with ctx.logs.get_destination(slug) as destination:
         index = Index(destination)
-        log = LogStreamer(index)
+        log = LogStreamer(index, destination.proxy_location)
 
         status = ctx.forge.get_status(job.subject.repo, subject.sha, job.context, log.url)
         logger.info('Log: %s', log.url)

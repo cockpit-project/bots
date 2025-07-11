@@ -2,7 +2,7 @@ import asyncio
 import json
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncGenerator, Generator, NamedTuple
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Generator, NamedTuple
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -102,9 +102,18 @@ def log_streamer_mocks() -> Generator[LogStreamerMocks, None, None]:
         mock_index_instance = Mock()
         mock_log_streamer_instance = Mock()
         mock_index_class.return_value = mock_index_instance
-        mock_log_streamer_class.return_value = mock_log_streamer_instance
 
-        mock_log_streamer_instance.url = URL('http://localhost:9000/test-job/log.html')
+        # Mock LogStreamer to handle proxy URL parameter
+        def mock_log_streamer_init(index: Any, proxy_url: URL | None = None) -> Mock:
+            mock_log_streamer_instance.index = index
+            if proxy_url:
+                mock_log_streamer_instance.url = proxy_url / 'log.html'
+            else:
+                mock_log_streamer_instance.url = URL('http://localhost:9000/test-job/log.html')
+            return mock_log_streamer_instance
+
+        mock_log_streamer_class.side_effect = mock_log_streamer_init
+
         mock_log_streamer_instance.start = Mock()
         mock_log_streamer_instance.write = Mock()
         mock_log_streamer_instance.close = Mock()
@@ -242,7 +251,7 @@ class TestRunJob:
         mock_run_container.assert_called_once()
 
         # LogStreamer was created with index only (no log contents)
-        log_streamer_mocks.log_streamer_class.assert_called_once_with(log_streamer_mocks.index_instance)
+        log_streamer_mocks.log_streamer_class.assert_called_once_with(log_streamer_mocks.index_instance, None)
 
         # Verify status posts were made
         post_calls = MockGitHubHandler.get_post_calls()
@@ -399,3 +408,51 @@ class TestRunJob:
         assert failure_data['state'] == 'failure'
         assert failure_data['description'].startswith('Timeout after 42 minutes')
         assert failure_data['target_url'] == 'http://localhost:9000/test-job/log.html'
+
+    @patch('lib.aio.job.run_container')
+    async def test_run_job_success_with_proxy_url(
+        self,
+        mock_run_container: AsyncMock,
+        basic_job: Job,
+        log_streamer_mocks: LogStreamerMocks,
+        mock_job_context: Mock,
+    ) -> None:
+        """Test job execution with proxy URL support"""
+        mock_run_container.return_value = None
+
+        # Mock destination with proxy URL
+        mock_destination = Mock()
+        mock_destination.proxy_location = URL('http://proxy.example.com:8080/test-job')
+
+        # Patch the get_destination method to return our mock destination
+        with patch.object(mock_job_context.logs, 'get_destination') as mock_get_destination:
+            mock_get_destination.return_value.__aenter__ = AsyncMock(return_value=mock_destination)
+            mock_get_destination.return_value.__aexit__ = AsyncMock(return_value=None)
+
+            await run_job(basic_job, mock_job_context)
+            mock_run_container.assert_called_once()
+
+            # Verify LogStreamer was created with proxy URL
+            log_streamer_mocks.log_streamer_class.assert_called_once_with(
+                log_streamer_mocks.index_instance,
+                mock_destination.proxy_location
+            )
+
+            # Verify status posts were made with proxy URL
+            post_calls = MockGitHubHandler.get_post_calls()
+            assert len(post_calls) == 2
+
+            # First call is the 'pending' status
+            pending_path, pending_data = post_calls[0]
+            assert pending_path == '/repos/cockpit-project/cockpit/statuses/abc123'
+            assert isinstance(pending_data, dict)
+            assert pending_data['state'] == 'pending'
+            # Should use proxy URL for GitHub status links
+            assert pending_data['target_url'] == 'http://proxy.example.com:8080/test-job/log.html'
+
+            # Second call is the 'success' status
+            success_path, success_data = post_calls[1]
+            assert success_path == '/repos/cockpit-project/cockpit/statuses/abc123'
+            assert isinstance(success_data, dict)
+            assert success_data['state'] == 'success'
+            assert success_data['target_url'] == 'http://proxy.example.com:8080/test-job/log.html'

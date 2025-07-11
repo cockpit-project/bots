@@ -78,6 +78,7 @@ class Forge:
 
 class Destination:
     location: URL
+    proxy_location: URL | None = None
 
     def has(self, filename: str) -> bool:
         raise NotImplementedError
