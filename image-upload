@@ -38,8 +38,7 @@ def upload(store: str, source: str, public: bool, prune: bool = False) -> bool:
 
     if not s3.is_key_present(url):
         # No credentials?  That's not going to work...
-        sys.stderr.write(f"image-upload: no credentials for {dest}")
-        return False
+        raise SystemExit(f"image-upload: no credentials for {dest}")
 
     # Start building the command
     cmd = ["curl", "--no-progress-meter", "--fail", "--upload-file", source, *get_curl_ca_arg(url.netloc)]
