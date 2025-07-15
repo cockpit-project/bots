@@ -326,13 +326,23 @@ class Machine(ssh_connection.SSHConnection):
         else:
             self.execute("systemctl stop cockpit.socket cockpit.service")
 
-    def set_address(self, address: str, mac: str = '52:54:01') -> None:
+    def set_address(self, address: str | None = None, address6: str | None = None, mac: str = '52:54:01') -> None:
         """Set IP address for the network interface with given mac prefix"""
         # HACK: ':' causes some trouble, escape it: https://bugzilla.redhat.com/show_bug.cgi?id=2151504
         name = f"static-{mac.replace(':', '-')}"
+
+        if address is None and address6 is None:
+            raise ValueError("Both address and address6 are None")
+
+        addresses = ""
+        if address is not None:
+            addresses += f" ip4 {address}"
+        if address6 is not None:
+            addresses += f" ip6 {address6}"
+
         self.execute(f"""set -eu
              iface=$(grep -l '{mac}' /sys/class/net/*/address | cut -d / -f 5)
-             nmcli con add type ethernet autoconnect yes con-name {name} ifname $iface ip4 {address}
+             nmcli con add type ethernet autoconnect yes con-name {name} ifname $iface {addresses}
              nmcli con delete $iface || true # may not have an active connection
              nmcli con up {name}""")
 
