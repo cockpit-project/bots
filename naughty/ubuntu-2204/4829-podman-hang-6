@@ -4,6 +4,6 @@
 testlib.Error: timeout
 *
   File "test/check-application", line *, in tearDown
-    self.execute(auth, "podman ps -a >&2")
+    self.execute("podman ps -a >&2", system=auth)
 *
 RuntimeError: Timed out on 'podman ps -a >&2'
