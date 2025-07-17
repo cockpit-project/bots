@@ -111,7 +111,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-42',
             'fedora-coreos',
             'opensuse-tumbleweed',
-            'rhel-8-10',
+            'rhel-8-10/ws-container',
             'rhel-9-7',
             'rhel-10-1',
             'ubuntu-2204',
