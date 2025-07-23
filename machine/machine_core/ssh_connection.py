@@ -443,7 +443,6 @@ class SSHConnection:
         The directory of dest is created automatically.
         """
         assert dest
-        assert self.ssh_address
 
         self.execute(["mkdir", "-p", os.path.dirname(dest)])
         self.execute(f"cat {'>>' if append else '>'} {shlex.quote(dest)}", input=content)
