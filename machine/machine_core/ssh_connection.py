@@ -45,7 +45,7 @@ class SSHConnection:
         "-o", "StrictHostKeyChecking=no",
         "-o", "UserKnownHostsFile=/dev/null",
     )
-    ssh_master: str | None
+    ssh_control_path: str | None
     ssh_process: subprocess.Popen[bytes] | None
     boot_id: str | None
 
@@ -66,7 +66,7 @@ class SSHConnection:
         self.identity_file = identity_file
         self.ssh_address = address
         self.ssh_port = ssh_port
-        self.ssh_master = None
+        self.ssh_control_path = None
         self.ssh_process = None
         self.ssh_reachable = False
         self.label = label if label else f"{self.ssh_user}@{self.ssh_address}:{self.ssh_port}"
@@ -217,20 +217,20 @@ class SSHConnection:
             else:
                 raise exceptions.Failure(f"SSH master process exited with code: {proc.returncode}")
 
-        self.ssh_master = control
+        self.ssh_control_path = control
         self.ssh_process = proc
 
         if not self._check_ssh_master():
             raise exceptions.Failure("Couldn't launch an SSH master process")
 
     def _kill_ssh_master(self) -> None:
-        if self.ssh_master:
+        if self.ssh_control_path:
             try:
-                os.unlink(self.ssh_master)
+                os.unlink(self.ssh_control_path)
             except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise
-            self.ssh_master = None
+            self.ssh_control_path = None
         if self.ssh_process:
             self.message("killing ssh master process", str(self.ssh_process.pid))
             assert self.ssh_process.stdin is not None
@@ -243,14 +243,14 @@ class SSHConnection:
             self.ssh_process = None
 
     def _check_ssh_master(self) -> bool:
-        if not self.ssh_master:
+        if not self.ssh_control_path:
             return False
         cmd = (
             "ssh",
             "-q",
             "-p", str(self.ssh_port),
             *self.ssh_default_opts,
-            "-S", self.ssh_master,
+            "-S", self.ssh_control_path,
             "-O", "check",
             "-l", self.ssh_user,
             self.ssh_address
@@ -274,8 +274,8 @@ class SSHConnection:
         if direct:
             return ("-i", self.identity_file)
         else:
-            assert self.ssh_master is not None
-            return ("-o", "ControlPath=" + self.ssh_master)
+            assert self.ssh_control_path is not None
+            return ("-o", "ControlPath=" + self.ssh_control_path)
 
     def execute(
         self,

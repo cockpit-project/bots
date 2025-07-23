@@ -42,7 +42,7 @@ def cmd_cli() -> None:
 
     # print ssh command
     print("ssh -o ControlPath=%s -p %s %s@%s" %
-          (machine.ssh_master, machine.ssh_port, machine.ssh_user, machine.ssh_address))
+          (machine.ssh_control_path, machine.ssh_port, machine.ssh_user, machine.ssh_address))
     # print Cockpit web address
     print(f"http://{machine.web_address}:{machine.web_port}")
     # print marker that the VM is ready; tests can poll for this to wait for the VM
