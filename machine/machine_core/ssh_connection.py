@@ -261,20 +261,20 @@ class SSHConnection:
                 return True
         return False
 
-    def _ensure_ssh_master(self) -> None:
-        if not self._check_ssh_master():
-            self._start_ssh_master()
+    def _get_ssh_opts(self, direct: bool = False) -> Sequence[str]:
+        direct = bool(os.getenv("TEST_SSH_DIRECT", direct))
 
-    def __ssh_direct_opt_var(self, direct: bool = False) -> bool:
-        return bool(os.getenv("TEST_SSH_DIRECT", direct))
+        args: tuple[str, ...]
 
-    def __execution_opts(self, direct: bool = False) -> Sequence[str]:
-        direct = self.__ssh_direct_opt_var(direct=direct)
         if direct:
-            return ("-i", self.identity_file)
+            args = ("-i", self.identity_file)
         else:
+            if not self._check_ssh_master():
+                self._start_ssh_master()
             assert self.ssh_control_path is not None
-            return ("-o", "ControlPath=" + self.ssh_control_path)
+            args = ("-o", f"ControlPath={self.ssh_control_path}")
+
+        return args
 
     def execute(
         self,
@@ -300,9 +300,6 @@ class SSHConnection:
         assert command
         assert self.ssh_address
 
-        if not self.__ssh_direct_opt_var(direct=direct):
-            self._ensure_ssh_master()
-
         if not isinstance(command, str):
             command = shlex.join(command)
 
@@ -316,7 +313,7 @@ class SSHConnection:
             *self.ssh_default_opts,
             "-o", "LogLevel=ERROR",
             "-l", self.ssh_user,
-            *self.__execution_opts(direct=direct),
+            *self._get_ssh_opts(direct=direct),
             self.ssh_address,
             'set -e;',
             *(f'export {name}={shlex.quote(value)}; ' for name, value in environment.items()),
@@ -340,14 +337,11 @@ class SSHConnection:
         assert sources and dest
         assert self.ssh_address
 
-        if not self.__ssh_direct_opt_var():
-            self._ensure_ssh_master()
-
         cmd = [
             "rsync",
             "--recursive", "--perms", "--copy-links",
             "-e",
-            f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self.__execution_opts()]),
+            f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self._get_ssh_opts()]),
         ]
         if self.verbose:
             cmd += ["--verbose"]
@@ -368,13 +362,11 @@ class SSHConnection:
         assert source and dest
         assert self.ssh_address
 
-        if not self.__ssh_direct_opt_var():
-            self._ensure_ssh_master()
         dest = os.path.join(relative_dir, dest)
 
         cmd = [
             "rsync",
-            "-e", f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self.__execution_opts()]),
+            "-e", f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self._get_ssh_opts()]),
         ]
         if self.verbose:
             cmd += ["--verbose"]
@@ -390,14 +382,12 @@ class SSHConnection:
         assert source and dest
         assert self.ssh_address
 
-        if not self.__ssh_direct_opt_var():
-            self._ensure_ssh_master()
         dest = os.path.join(relative_dir, dest)
 
         cmd = [
             "rsync",
             "--recursive", "--copy-links",
-            "-e", f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self.__execution_opts()]),
+            "-e", f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self._get_ssh_opts()]),
         ]
         if self.verbose:
             cmd += ["--verbose"]
