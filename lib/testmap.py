@@ -84,6 +84,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-1',
         ],
         '_manual': [
+            'arch',
             'centos-9-bootc',
             'rhel-8-10/ws-container',
             'rhel-9-6',
