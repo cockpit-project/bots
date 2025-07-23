@@ -261,7 +261,7 @@ class SSHConnection:
                 return True
         return False
 
-    def _get_ssh_opts(self, direct: bool = False) -> Sequence[str]:
+    def _get_ssh_command(self, direct: bool = False) -> Sequence[str]:
         direct = bool(os.getenv("TEST_SSH_DIRECT", direct))
 
         args: tuple[str, ...]
@@ -274,7 +274,15 @@ class SSHConnection:
             assert self.ssh_control_path is not None
             args = ("-o", f"ControlPath={self.ssh_control_path}")
 
-        return args
+        return (
+            "ssh",
+            *self.ssh_default_opts,
+            "-o", "LogLevel=ERROR",
+            *args,
+            "-p", f"{self.ssh_port}",
+            "-l", self.ssh_user,
+            self.ssh_address
+        )
 
     def execute(
         self,
@@ -308,13 +316,7 @@ class SSHConnection:
 
         command_line = (
             *ssh_env,
-            "ssh",
-            "-p", str(self.ssh_port),
-            *self.ssh_default_opts,
-            "-o", "LogLevel=ERROR",
-            "-l", self.ssh_user,
-            *self._get_ssh_opts(direct=direct),
-            self.ssh_address,
+            *self._get_ssh_command(direct=direct),
             'set -e;',
             *(f'export {name}={shlex.quote(value)}; ' for name, value in environment.items()),
             command
@@ -336,17 +338,9 @@ class SSHConnection:
         """
         assert self.ssh_address
 
-        rsh_command = shlex.join((
-            "ssh",
-            "-p", f"{self.ssh_port}",
-            *self._get_ssh_opts(),
-            "-l", self.ssh_user,
-            self.ssh_address
-        ))
-
         cmd = (
             "rsync",
-            "-e", rsh_command,
+            "-e", shlex.join(self._get_ssh_command()),
             *(["--verbose"] if self.verbose else ()),
             *args
         )
