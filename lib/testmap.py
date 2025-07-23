@@ -75,6 +75,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'cockpit-project/starter-kit': {
         'main': [
             TEST_OS_DEFAULT,
+            'arch',
             'fedora-41',
             'fedora-42',
             'centos-9-stream',
@@ -84,7 +85,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-1',
         ],
         '_manual': [
-            'arch',
             'centos-9-bootc',
             'rhel-8-10/ws-container',
             'rhel-9-6',
