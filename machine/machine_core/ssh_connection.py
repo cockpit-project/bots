@@ -327,6 +327,32 @@ class SSHConnection:
 
         return '' if res.stdout is None else res.stdout.decode("UTF-8", "replace")
 
+    def rsync(self, *args: str) -> None:
+        """Perform an rsync command with the test machine.
+
+        The args should be the arguments you'd normally pass to rsync.  Paths
+        on the test machine must be specified with a single leading `:`
+        character (ie: the usual hostname component is the empty string).
+        """
+        assert self.ssh_address
+
+        rsh_command = shlex.join((
+            "ssh",
+            "-p", f"{self.ssh_port}",
+            *self._get_ssh_opts(),
+            "-l", self.ssh_user,
+            self.ssh_address
+        ))
+
+        cmd = (
+            "rsync",
+            "-e", rsh_command,
+            *(["--verbose"] if self.verbose else ()),
+            *args
+        )
+        self.message(shlex.join(cmd))
+        subprocess.check_call(cmd)
+
     def upload(self, sources: Sequence[str], dest: str, relative_dir: str = TEST_DIR) -> None:
         """Upload a file into the test machine
 
@@ -335,68 +361,34 @@ class SSHConnection:
             dest: the file path in the machine to upload to
         """
         assert sources and dest
-        assert self.ssh_address
-
-        cmd = [
-            "rsync",
-            "--recursive", "--perms", "--copy-links",
-            "-e",
-            f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self._get_ssh_opts()]),
-        ]
-        if self.verbose:
-            cmd += ["--verbose"]
-
-        def relative_to_test_dir(path: str) -> str:
-            return os.path.join(relative_dir, path)
-        cmd += map(relative_to_test_dir, sources)
-
-        cmd += [f"{self.ssh_user}@[{self.ssh_address}]:{dest}"]
 
         self.message("Uploading", ", ".join(sources))
-        self.message(" ".join([shlex.quote(a) for a in cmd]))
-        subprocess.check_call(cmd)
+        self.rsync(
+            "--recursive", "--perms", "--copy-links",
+            *(os.path.join(relative_dir, path) for path in sources),
+            f":{dest}"
+        )
 
     def download(self, source: str, dest: str, relative_dir: str = TEST_DIR) -> None:
         """Download a file from the test machine.
         """
         assert source and dest
-        assert self.ssh_address
-
-        dest = os.path.join(relative_dir, dest)
-
-        cmd = [
-            "rsync",
-            "-e", f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self._get_ssh_opts()]),
-        ]
-        if self.verbose:
-            cmd += ["--verbose"]
-        cmd += [f"{self.ssh_user}@[{self.ssh_address}]:{source}", dest]
 
         self.message("Downloading", source)
-        self.message(" ".join(cmd))
-        subprocess.check_call(cmd)
+        self.rsync(f":{source}", os.path.join(relative_dir, dest))
 
     def download_dir(self, source: str, dest: str, relative_dir: str = TEST_DIR) -> None:
         """Download a directory from the test machine, recursively.
         """
         assert source and dest
-        assert self.ssh_address
-
-        dest = os.path.join(relative_dir, dest)
-
-        cmd = [
-            "rsync",
-            "--recursive", "--copy-links",
-            "-e", f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self._get_ssh_opts()]),
-        ]
-        if self.verbose:
-            cmd += ["--verbose"]
-        cmd += [f"{self.ssh_user}@[{self.ssh_address}]:{source}", dest]
 
         self.message("Downloading", source)
-        self.message(" ".join(cmd))
         try:
-            subprocess.check_call(cmd)
+            self.rsync(
+                "--recursive", "--copy-links",
+                f":{source}",
+                os.path.join(relative_dir, dest)
+            )
         except subprocess.CalledProcessError:
             self.message(f"Error while downloading directory '{source}'")
 
