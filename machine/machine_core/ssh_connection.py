@@ -38,6 +38,7 @@ from lib.constants import TEST_DIR
 
 class SSHConnection:
     ssh_default_opts = (
+        "-F", "none",
         "-o", "BatchMode=yes",
         "-o", "IdentitiesOnly=yes",
         "-o", "PKCS11Provider=none",
@@ -261,27 +262,34 @@ class SSHConnection:
                 return True
         return False
 
-    def _get_ssh_command(self, direct: bool = False) -> Sequence[str]:
+    def _get_ssh_options(self, direct: bool = False) -> Sequence[str]:
+        """Get the ssh options for connecting to the test machine.
+
+        These options are good for use with either ssh or scp and cover
+        everything required to connect to the guest.  The hostname used with
+        the ssh or scp command is irrelevant because the options override it.
+        """
         direct = bool(os.getenv("TEST_SSH_DIRECT", direct))
 
-        args: tuple[str, ...]
+        # We can't use `-p` or `-l` because of scp. Use `-o` for everything.
+        options = {
+            "LogLevel": "ERROR",
+            "Port": self.ssh_port,
+            "User": self.ssh_user,
+            "Hostname": self.ssh_address,
+        }
 
         if direct:
-            args = ("-i", self.identity_file)
+            options["IdentityFile"] = self.identity_file
         else:
             if not self._check_ssh_master():
                 self._start_ssh_master()
             assert self.ssh_control_path is not None
-            args = ("-o", f"ControlPath={self.ssh_control_path}")
+            options["ControlPath"] = self.ssh_control_path
 
         return (
-            "ssh",
             *self.ssh_default_opts,
-            "-o", "LogLevel=ERROR",
-            *args,
-            "-p", f"{self.ssh_port}",
-            "-l", self.ssh_user,
-            self.ssh_address
+            *(f"-o{k}={v}" for k, v in options.items()),
         )
 
     def execute(
@@ -316,7 +324,9 @@ class SSHConnection:
 
         command_line = (
             *ssh_env,
-            *self._get_ssh_command(direct=direct),
+            'ssh',
+            *self._get_ssh_options(direct=direct),
+            'vm',
             'set -e;',
             *(f'export {name}={shlex.quote(value)}; ' for name, value in environment.items()),
             command
@@ -329,19 +339,19 @@ class SSHConnection:
 
         return '' if res.stdout is None else res.stdout.decode("UTF-8", "replace")
 
-    def rsync(self, *args: str) -> None:
-        """Perform an rsync command with the test machine.
+    def scp(self, *args: str) -> None:
+        """Perform an scp command with the test machine.
 
-        The args should be the arguments you'd normally pass to rsync.  Paths
-        on the test machine must be specified with a single leading `:`
-        character (ie: the usual hostname component is the empty string).
+        The args should be the arguments you'd normally pass to scp.  The
+        remote hostname is ignored, so you should specify something like "vm:"
+        as a prefix for remote paths.
         """
         assert self.ssh_address
 
         cmd = (
-            "rsync",
-            "-e", shlex.join(self._get_ssh_command()),
-            *(["--verbose"] if self.verbose else ()),
+            "scp",
+            *self._get_ssh_options(),
+            *(["-v"] if self.verbose else ()),
             *args
         )
         self.message(shlex.join(cmd))
@@ -357,10 +367,10 @@ class SSHConnection:
         assert sources and dest
 
         self.message("Uploading", ", ".join(sources))
-        self.rsync(
-            "--recursive", "--perms", "--copy-links",
+        self.scp(
+            "-r", "-p",
             *(os.path.join(relative_dir, path) for path in sources),
-            f":{dest}"
+            f"vm:{dest}"
         )
 
     def download(self, source: str, dest: str, relative_dir: str = TEST_DIR) -> None:
@@ -369,7 +379,7 @@ class SSHConnection:
         assert source and dest
 
         self.message("Downloading", source)
-        self.rsync(f":{source}", os.path.join(relative_dir, dest))
+        self.scp(f"vm:{source}", os.path.join(relative_dir, dest))
 
     def download_dir(self, source: str, dest: str, relative_dir: str = TEST_DIR) -> None:
         """Download a directory from the test machine, recursively.
@@ -378,11 +388,7 @@ class SSHConnection:
 
         self.message("Downloading", source)
         try:
-            self.rsync(
-                "--recursive", "--copy-links",
-                f":{source}",
-                os.path.join(relative_dir, dest)
-            )
+            self.scp("-r", f"vm:{source}", os.path.join(relative_dir, dest))
         except subprocess.CalledProcessError:
             self.message(f"Error while downloading directory '{source}'")
 
