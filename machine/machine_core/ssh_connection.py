@@ -38,13 +38,14 @@ from lib.constants import TEST_DIR
 
 class SSHConnection:
     ssh_default_opts = (
+        "-F", "none",
         "-o", "BatchMode=yes",
         "-o", "IdentitiesOnly=yes",
         "-o", "PKCS11Provider=none",
         "-o", "StrictHostKeyChecking=no",
         "-o", "UserKnownHostsFile=/dev/null",
     )
-    ssh_master: str | None
+    ssh_control_path: str | None
     ssh_process: subprocess.Popen[bytes] | None
     boot_id: str | None
 
@@ -65,7 +66,7 @@ class SSHConnection:
         self.identity_file = identity_file
         self.ssh_address = address
         self.ssh_port = ssh_port
-        self.ssh_master = None
+        self.ssh_control_path = None
         self.ssh_process = None
         self.ssh_reachable = False
         self.label = label if label else f"{self.ssh_user}@{self.ssh_address}:{self.ssh_port}"
@@ -216,20 +217,20 @@ class SSHConnection:
             else:
                 raise exceptions.Failure(f"SSH master process exited with code: {proc.returncode}")
 
-        self.ssh_master = control
+        self.ssh_control_path = control
         self.ssh_process = proc
 
         if not self._check_ssh_master():
             raise exceptions.Failure("Couldn't launch an SSH master process")
 
     def _kill_ssh_master(self) -> None:
-        if self.ssh_master:
+        if self.ssh_control_path:
             try:
-                os.unlink(self.ssh_master)
+                os.unlink(self.ssh_control_path)
             except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise
-            self.ssh_master = None
+            self.ssh_control_path = None
         if self.ssh_process:
             self.message("killing ssh master process", str(self.ssh_process.pid))
             assert self.ssh_process.stdin is not None
@@ -242,14 +243,14 @@ class SSHConnection:
             self.ssh_process = None
 
     def _check_ssh_master(self) -> bool:
-        if not self.ssh_master:
+        if not self.ssh_control_path:
             return False
         cmd = (
             "ssh",
             "-q",
             "-p", str(self.ssh_port),
             *self.ssh_default_opts,
-            "-S", self.ssh_master,
+            "-S", self.ssh_control_path,
             "-O", "check",
             "-l", self.ssh_user,
             self.ssh_address
@@ -261,20 +262,35 @@ class SSHConnection:
                 return True
         return False
 
-    def _ensure_ssh_master(self) -> None:
-        if not self._check_ssh_master():
-            self._start_ssh_master()
+    def _get_ssh_options(self, direct: bool = False) -> Sequence[str]:
+        """Get the ssh options for connecting to the test machine.
 
-    def __ssh_direct_opt_var(self, direct: bool = False) -> bool:
-        return bool(os.getenv("TEST_SSH_DIRECT", direct))
+        These options are good for use with either ssh or scp and cover
+        everything required to connect to the guest.  The hostname used with
+        the ssh or scp command is irrelevant because the options override it.
+        """
+        direct = bool(os.getenv("TEST_SSH_DIRECT", direct))
 
-    def __execution_opts(self, direct: bool = False) -> Sequence[str]:
-        direct = self.__ssh_direct_opt_var(direct=direct)
+        # We can't use `-p` or `-l` because of scp. Use `-o` for everything.
+        options = {
+            "LogLevel": "ERROR",
+            "Port": self.ssh_port,
+            "User": self.ssh_user,
+            "Hostname": self.ssh_address,
+        }
+
         if direct:
-            return ("-i", self.identity_file)
+            options["IdentityFile"] = self.identity_file
         else:
-            assert self.ssh_master is not None
-            return ("-o", "ControlPath=" + self.ssh_master)
+            if not self._check_ssh_master():
+                self._start_ssh_master()
+            assert self.ssh_control_path is not None
+            options["ControlPath"] = self.ssh_control_path
+
+        return (
+            *self.ssh_default_opts,
+            *(f"-o{k}={v}" for k, v in options.items()),
+        )
 
     def execute(
         self,
@@ -300,9 +316,6 @@ class SSHConnection:
         assert command
         assert self.ssh_address
 
-        if not self.__ssh_direct_opt_var(direct=direct):
-            self._ensure_ssh_master()
-
         if not isinstance(command, str):
             command = shlex.join(command)
 
@@ -311,13 +324,9 @@ class SSHConnection:
 
         command_line = (
             *ssh_env,
-            "ssh",
-            "-p", str(self.ssh_port),
-            *self.ssh_default_opts,
-            "-o", "LogLevel=ERROR",
-            "-l", self.ssh_user,
-            *self.__execution_opts(direct=direct),
-            self.ssh_address,
+            'ssh',
+            *self._get_ssh_options(direct=direct),
+            'vm',
             'set -e;',
             *(f'export {name}={shlex.quote(value)}; ' for name, value in environment.items()),
             command
@@ -330,7 +339,25 @@ class SSHConnection:
 
         return '' if res.stdout is None else res.stdout.decode("UTF-8", "replace")
 
-    def upload(self, sources: Sequence[str], dest: str, relative_dir: str = TEST_DIR, use_scp: bool = False) -> None:
+    def scp(self, *args: str) -> None:
+        """Perform an scp command with the test machine.
+
+        The args should be the arguments you'd normally pass to scp.  The
+        remote hostname is ignored, so you should specify something like "vm:"
+        as a prefix for remote paths.
+        """
+        assert self.ssh_address
+
+        cmd = (
+            "scp",
+            *self._get_ssh_options(),
+            *(["-v"] if self.verbose else ()),
+            *args
+        )
+        self.message(shlex.join(cmd))
+        subprocess.check_call(cmd)
+
+    def upload(self, sources: Sequence[str], dest: str, relative_dir: str = TEST_DIR) -> None:
         """Upload a file into the test machine
 
         Arguments:
@@ -338,92 +365,30 @@ class SSHConnection:
             dest: the file path in the machine to upload to
         """
         assert sources and dest
-        assert self.ssh_address
-
-        if not self.__ssh_direct_opt_var():
-            self._ensure_ssh_master()
-
-        if use_scp:
-            cmd = [
-                "scp",
-                "-r", "-p",
-                "-P", str(self.ssh_port),
-                *self.__execution_opts(),
-            ]
-            if not self.verbose:
-                cmd += ["-q"]
-        else:
-            cmd = [
-                "rsync",
-                "--recursive", "--perms", "--copy-links",
-                "-e",
-                f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self.__execution_opts()]),
-            ]
-            if self.verbose:
-                cmd += ["--verbose"]
-
-        def relative_to_test_dir(path: str) -> str:
-            return os.path.join(relative_dir, path)
-        cmd += map(relative_to_test_dir, sources)
-
-        cmd += [f"{self.ssh_user}@[{self.ssh_address}]:{dest}"]
 
         self.message("Uploading", ", ".join(sources))
-        self.message(" ".join([shlex.quote(a) for a in cmd]))
-        try:
-            subprocess.check_call(cmd)
-        except subprocess.CalledProcessError as e:
-            if not use_scp and e.returncode == 127:
-                self.message("rsync not available, falling back to scp")
-                self.upload(sources, dest, relative_dir, use_scp=True)
-            else:
-                raise
+        self.scp(
+            "-r", "-p",
+            *(os.path.join(relative_dir, path) for path in sources),
+            f"vm:{dest}"
+        )
 
     def download(self, source: str, dest: str, relative_dir: str = TEST_DIR) -> None:
         """Download a file from the test machine.
         """
         assert source and dest
-        assert self.ssh_address
-
-        if not self.__ssh_direct_opt_var():
-            self._ensure_ssh_master()
-        dest = os.path.join(relative_dir, dest)
-
-        cmd = [
-            "rsync",
-            "-e", f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self.__execution_opts()]),
-        ]
-        if self.verbose:
-            cmd += ["--verbose"]
-        cmd += [f"{self.ssh_user}@[{self.ssh_address}]:{source}", dest]
 
         self.message("Downloading", source)
-        self.message(" ".join(cmd))
-        subprocess.check_call(cmd)
+        self.scp(f"vm:{source}", os.path.join(relative_dir, dest))
 
     def download_dir(self, source: str, dest: str, relative_dir: str = TEST_DIR) -> None:
         """Download a directory from the test machine, recursively.
         """
         assert source and dest
-        assert self.ssh_address
-
-        if not self.__ssh_direct_opt_var():
-            self._ensure_ssh_master()
-        dest = os.path.join(relative_dir, dest)
-
-        cmd = [
-            "rsync",
-            "--recursive", "--copy-links",
-            "-e", f"ssh -p {self.ssh_port} " + " ".join([shlex.quote(o) for o in self.__execution_opts()]),
-        ]
-        if self.verbose:
-            cmd += ["--verbose"]
-        cmd += [f"{self.ssh_user}@[{self.ssh_address}]:{source}", dest]
 
         self.message("Downloading", source)
-        self.message(" ".join(cmd))
         try:
-            subprocess.check_call(cmd)
+            self.scp("-r", f"vm:{source}", os.path.join(relative_dir, dest))
         except subprocess.CalledProcessError:
             self.message(f"Error while downloading directory '{source}'")
 
@@ -442,7 +407,6 @@ class SSHConnection:
         The directory of dest is created automatically.
         """
         assert dest
-        assert self.ssh_address
 
         self.execute(["mkdir", "-p", os.path.dirname(dest)])
         self.execute(f"cat {'>>' if append else '>'} {shlex.quote(dest)}", input=content)
