@@ -1,3 +1,0 @@
-Traceback (most recent call last):
-  File "check-kdump", line *, in testBasic
-    b.wait_not_present(pathInput)
