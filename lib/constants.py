@@ -18,7 +18,7 @@
 import os
 
 # Images which are OSTree based
-OSTREE_IMAGES = ("centos-9-bootc", "fedora-coreos")
+OSTREE_IMAGES = ("centos-9-bootc", "centos-10-bootc", "fedora-coreos")
 
 LIB_DIR = os.path.dirname(__file__)
 BOTS_DIR = os.path.dirname(LIB_DIR)
