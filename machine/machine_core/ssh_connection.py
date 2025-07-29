@@ -38,6 +38,7 @@ from lib.constants import TEST_DIR
 
 class SSHConnection:
     ssh_default_opts = (
+        "-F", "none",
         "-o", "BatchMode=yes",
         "-o", "IdentitiesOnly=yes",
         "-o", "PKCS11Provider=none",
