@@ -184,7 +184,7 @@
                     id="progress-sm-example-description"
                 >Test progress</div>
                 <div class="pf-v6-c-progress__status" aria-hidden="true">
-                    <span class="pf-v6-c-progress__measure">{{finished}}/{{total}} ({{percentage_done}}%)</span>
+                    <span class="pf-v6-c-progress__measure">{{finished}}/{{total}} ({{Math.floor(percentage_done)}}%)</span>
                 </div>
                 <div
                     class="pf-v6-c-progress__bar"
