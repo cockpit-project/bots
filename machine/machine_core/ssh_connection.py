@@ -262,20 +262,37 @@ class SSHConnection:
                 return True
         return False
 
-    def _ensure_ssh_master(self) -> None:
-        if not self._check_ssh_master():
-            self._start_ssh_master()
+    def _get_ssh_options(self, direct: bool = False) -> Sequence[str]:
+        """Get the ssh options for connecting to the test machine.
 
-    def __ssh_direct_opt_var(self, direct: bool = False) -> bool:
-        return bool(os.getenv("TEST_SSH_DIRECT", direct))
+        These options are good for use with either ssh or scp and cover
+        everything required to connect to the guest.  The hostname used with
+        the ssh or scp command is irrelevant because the options override it.
+        """
+        assert self.ssh_address
 
-    def __execution_opts(self, direct: bool = False) -> Sequence[str]:
-        direct = self.__ssh_direct_opt_var(direct=direct)
+        direct = bool(os.getenv("TEST_SSH_DIRECT", direct))
+
+        # We can't use `-p` or `-l` because of scp. Use `-o` for everything.
+        options = {
+            "Hostname": self.ssh_address,
+            "LogLevel": "ERROR",
+            "Port": self.ssh_port,
+            "User": self.ssh_user,
+        }
+
         if direct:
-            return ("-i", self.identity_file)
+            options["IdentityFile"] = self.identity_file
         else:
+            if not self._check_ssh_master():
+                self._start_ssh_master()
             assert self.ssh_control_path is not None
-            return ("-o", "ControlPath=" + self.ssh_control_path)
+            options["ControlPath"] = self.ssh_control_path
+
+        return (
+            *self.ssh_default_opts,
+            *(f"-o{k}={v}" for k, v in options.items()),
+        )
 
     def execute(
         self,
@@ -299,10 +316,6 @@ class SSHConnection:
             The command output as a string.
         """
         assert command
-        assert self.ssh_address
-
-        if not self.__ssh_direct_opt_var(direct=direct):
-            self._ensure_ssh_master()
 
         if not isinstance(command, str):
             command = shlex.join(command)
@@ -312,13 +325,9 @@ class SSHConnection:
 
         command_line = (
             *ssh_env,
-            "ssh",
-            "-p", str(self.ssh_port),
-            *self.ssh_default_opts,
-            "-o", "LogLevel=ERROR",
-            "-l", self.ssh_user,
-            *self.__execution_opts(direct=direct),
-            self.ssh_address,
+            'ssh',
+            *self._get_ssh_options(direct=direct),
+            'vm',
             'set -e;',
             *(f'export {name}={shlex.quote(value)}; ' for name, value in environment.items()),
             command
@@ -338,18 +347,11 @@ class SSHConnection:
         remote hostname is ignored, so you should specify something like "vm:"
         as a prefix for remote paths.
         """
-        assert self.ssh_address
-
-        if not self.__ssh_direct_opt_var():
-            self._ensure_ssh_master()
 
         cmd = (
             "scp",
-            *self.__execution_opts(),
+            *self._get_ssh_options(),
             *(("-q",) if not self.verbose else ()),
-            f"-oUser={self.ssh_user}",
-            f"-oHostname={self.ssh_address}",
-            f"-oPort={self.ssh_address}",
             *args
         )
         self.message(shlex.join(cmd))
