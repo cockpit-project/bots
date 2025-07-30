@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "test/check-subscriptions", line *, in testInsights
+    b.wait_visible("#overview a:contains('3 hits, including important')")
+*
+testlib.Error: timeout
+wait_js_cond(ph_is_present("#overview a:contains('3 hits, including important')")): Error: condition did not become true

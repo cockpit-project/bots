@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "test/verify/check-system-info", line *, in testInsightsStatus
+    b.wait_in_text(".system-health-insights a", "3 hits, including important")
+*
+testlib.Error: timeout
+wait_js_cond(ph_is_present(".system-health-insights a")): Error: condition did not become true
