@@ -184,7 +184,7 @@
                     id="progress-sm-example-description"
                 >Test progress</div>
                 <div class="pf-v6-c-progress__status" aria-hidden="true">
-                    <span class="pf-v6-c-progress__measure">{{finished}}/{{total}} ({{Math.floor(percentage_done)}}%)</span>
+                    <span class="pf-v6-c-progress__measure">{{finished}}/{{total}} ({{percentage_done}}%)</span>
                 </div>
                 <div
                     class="pf-v6-c-progress__bar"
@@ -550,7 +550,7 @@ function extract(text) {
                                                                 left,
                                                                 total_test_time,
                                                               });
-        testingProgressElem.innerHTML = Mustache.render(progress_template, {total, finished, percentage_done: ((total-left)/total)*100});
+        testingProgressElem.innerHTML = Mustache.render(progress_template, {total, finished, percentage_done: Math.floor(((total-left)/total)*100)});
     } else {
         while(testingElem.firstChild)
             testingElem.removeChild(testingElem.firstChild);
