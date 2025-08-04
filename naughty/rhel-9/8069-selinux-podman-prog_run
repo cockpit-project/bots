@@ -1,0 +1,2 @@
+testlib.Error: FAIL: Test completed, but found unexpected journal messages:
+audit: type=1400 audit(*): avc:  denied  { prog_run } for  pid=1 comm="systemd" scontext=system_u:system_r:init_t:s0
