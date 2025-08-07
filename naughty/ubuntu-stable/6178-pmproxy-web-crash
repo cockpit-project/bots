@@ -1,0 +1,3 @@
+TestHistoryMetrics.testPmProxySettings*
+*FAIL: Test completed, but found unexpected journal messages:
+Process * (pmproxy) of user 997 dumped core.
