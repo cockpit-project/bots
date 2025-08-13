@@ -21,8 +21,12 @@ from lib.directories import xdg_config_home
 
 # hosted on public internet
 PUBLIC_STORES: Sequence[str] = (
-    "https://cockpit-images.eu-central-1.linodeobjects.com/",
     "https://cockpit-images.us-east-1.linodeobjects.com/",
+)
+
+# hosted on the public internet, only accessible with a private token
+PRIVATE_STORES: Sequence[str] = (
+    "https://cockpit-images.eu-central-1.linodeobjects.com/",
 )
 
 # hosted behind the Red Hat VPN

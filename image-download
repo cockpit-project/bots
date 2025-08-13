@@ -47,7 +47,7 @@ from lib import s3
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
 from lib.network import get_curl_ca_arg, redhat_network
-from lib.stores import PUBLIC_STORES, REDHAT_STORES
+from lib.stores import PRIVATE_STORES, PUBLIC_STORES, REDHAT_STORES
 from lib.testmap import get_test_image
 
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
@@ -133,7 +133,11 @@ def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[
     name = os.path.basename(dest)
 
     if not stores:
-        stores = list(PUBLIC_STORES)
+        # Due to AI scraper-bot mitigation all public stores currently require
+        # an access token: if we don't have one, then don't bother.
+        stores = [
+            store for store in (*PUBLIC_STORES, *PRIVATE_STORES) if s3.is_key_present(urllib.parse.urlparse(store))
+        ]
         if redhat_network():
             stores += REDHAT_STORES
         image_upload_store = os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE')
@@ -142,6 +146,11 @@ def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[
             # testing.  Compare with image-upload which *only* uploads to this
             # store, if it's present.
             stores += [image_upload_store]
+
+    # Could be that we have no stores due to missing tokens.  Print a helpful message for new contributors.
+    if not stores:
+        sys.exit("Due to excessive bandwidth usage caused by AI scrapers, it's not currently possible to download "
+                 "testing images without a token.  Please ask in the Cockpit Matrix channel if you need a token.")
 
     # The time condition for If-Modified-Since
     exists = not force and os.path.exists(dest)
