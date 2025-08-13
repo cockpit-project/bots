@@ -37,6 +37,7 @@ ALLOWLIST = {
     'rvykydal',
     'vojtechtrefny',
     'abadger',
+    'bruno-fs',
 
     # osbuild team + contributors
     'croissanne',
