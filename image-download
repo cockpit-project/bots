@@ -147,11 +147,6 @@ def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[
             # store, if it's present.
             stores += [image_upload_store]
 
-    # Could be that we have no stores due to missing tokens.  Print a helpful message for new contributors.
-    if not stores:
-        sys.exit("Due to excessive bandwidth usage caused by AI scrapers, it's not currently possible to download "
-                 "testing images without a token.  Please ask in the Cockpit Matrix channel if you need a token.")
-
     # The time condition for If-Modified-Since
     exists = not force and os.path.exists(dest)
     if exists:

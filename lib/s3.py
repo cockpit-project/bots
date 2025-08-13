@@ -61,6 +61,14 @@ def get_key(url: urllib.parse.ParseResult) -> tuple[str, str]:
             pass
         _, _, hostname = hostname.partition('.')  # strip a leading component
 
+    # Fallback to the "public" secret key if no other keys are configured.
+    # This key will work only for the cockpit-images.us-east-1 bucket.
+    if url.hostname == 'cockpit-images.us-east-1.linodeobjects.com':
+        return (
+            '2RI8J2WQEIC8NI5YS85Z',
+            'V6N8xbuIIDUGXlkHtIXRnje2e9HpIdCGK9nmxaM4'
+        )
+
     raise KeyError
 
 
