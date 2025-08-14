@@ -176,7 +176,11 @@ class BuildAction(ActionBase):
         if vm_source.endswith(".src.rpm"):
             srpm = vm_source
         else:
-            machine.execute(f'''su builder -c 'rpmbuild --define "_topdir /var/tmp/build" -ts "{vm_source}"' ''')
+            machine.execute(f"""
+                set -eu
+                rm -rf /var/tmp/build
+                su builder -c 'rpmbuild --define "_topdir /var/tmp/build" -ts "{vm_source}"'
+            """)
             srpm = "/var/tmp/build/SRPMS/*.src.rpm"
 
         # HACK: mock in openSUSE must be called through sudo (but still originally as builder)
