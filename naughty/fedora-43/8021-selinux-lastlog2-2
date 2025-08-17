@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-users", line *, in testBasic
-    b.wait_in_text("#accounts-list tbody tr:contains('paul')", m.execute("date +'%b %-d, %Y'").strip())
-*
-testlib.Error: timeout
-wait_js_cond(ph_in_text("#accounts-list tbody tr:contains('paul')","*")): Error: actual text: paul*Never logged inpaul
