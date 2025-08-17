@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "verify/check-users", line *, in testUserPasswords
-    b.wait_in_text("#account-last-login", year)
-*
-testlib.Error: timeout
-wait_js_cond(ph_in_text("#account-last-login","202*")): Error: actual text: Never
