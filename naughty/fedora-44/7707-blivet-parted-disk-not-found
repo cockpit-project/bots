@@ -1,0 +1,2 @@
+testlib.Error: timeout
+wait_js_cond(ph_in_text("#cockpit-storage-integration-check-storage-dialog","'biosboot' partition on MDRAID device SOMERAID found. Bootloader partitions on MDRAID devices are not supported.")):*
