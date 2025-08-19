@@ -72,6 +72,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
+            'debian-trixie',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -125,6 +126,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-10',
+            'debian-trixie',
             'fedora-rawhide',
         ],
     },
@@ -150,6 +152,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-10',
+            'debian-trixie',
             'fedora-rawhide',
         ],
     },
@@ -168,6 +171,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-1',
         ],
         '_manual': [
+            'debian-trixie',
         ],
     },
     'osbuild/cockpit-composer': {
