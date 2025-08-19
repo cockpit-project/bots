@@ -45,6 +45,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('centos-9-bootc', COCKPIT_SCENARIOS),
             *contexts('debian-stable', COCKPIT_SCENARIOS),
             *contexts('debian-testing', COCKPIT_SCENARIOS),
+            *contexts('debian-trixie', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2204', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2404', COCKPIT_SCENARIOS),
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
@@ -72,7 +73,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
-            'debian-trixie',
             'fedora-rawhide',
             'opensuse-tumbleweed',
         ],
@@ -160,6 +160,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             'arch',
             'debian-testing',
+            'debian-trixie',
             'fedora-41',
             'fedora-42',
             f'{TEST_OS_DEFAULT}/devel',
@@ -171,7 +172,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-1',
         ],
         '_manual': [
-            'debian-trixie',
         ],
     },
     'osbuild/cockpit-composer': {
