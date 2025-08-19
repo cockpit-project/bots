@@ -113,6 +113,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-9-bootc',
             'debian-stable',
             'debian-testing',
+            'debian-trixie',
             'fedora-41',
             'fedora-42',
             'fedora-coreos',
@@ -126,7 +127,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-10',
-            'debian-trixie',
             'fedora-rawhide',
         ],
     },
