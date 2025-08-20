@@ -236,8 +236,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'fedora-eln-boot',
-            'rhel-9-7',
-            'rhel-10-1',
         ]
     },
 }
