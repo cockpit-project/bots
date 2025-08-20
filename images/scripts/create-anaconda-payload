@@ -30,7 +30,7 @@ cmdline
 timezone Europe/Prague --utc
 keyboard --vckeymap=us --xlayouts='us'
 lang en_US.UTF-8
-url --url https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/x86_64/os/
+url --url https://dl.fedoraproject.org/pub/fedora/linux/development/{fedora_version}/Everything/x86_64/os/
 rootpw test # root gets locked anyway
 %packages --excludedocs --exclude-weakdeps --inst-langs en
 openssh
@@ -57,6 +57,8 @@ KICKSTART_PATH = "/tmp/payload.ks"
 
 
 def build_payload(image: str, output: str) -> None:
+    fedora_version = image.split('-')[1]
+
     subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), image])
     machine = testvm.VirtMachine(image=image, memory_mb=4096)
     try:
@@ -65,7 +67,7 @@ def build_payload(image: str, output: str) -> None:
         machine.execute("dnf install -y anaconda", timeout=300)
 
         # Create directory /mnt/sysimage and start installation
-        machine.write(KICKSTART_PATH, KICKSTART)
+        machine.write(KICKSTART_PATH, KICKSTART.format(fedora_version=fedora_version))
         machine.execute(
             f"mkdir -p /mnt/sysimage && anaconda --kickstart {KICKSTART_PATH} --dirinstall /mnt/sysimage",
             timeout=600
