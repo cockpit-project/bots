@@ -135,6 +135,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'arch',
             'debian-stable',
             'debian-testing',
+            'debian-trixie',
             'ubuntu-2204',
             'ubuntu-2404',
             'ubuntu-stable',
@@ -152,7 +153,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'centos-10',
-            'debian-trixie',
             'fedora-rawhide',
         ],
     },
@@ -255,6 +255,7 @@ IMAGE_REFRESH_TRIGGERS = {
         *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('debian-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *contexts('debian-trixie', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('rhel-9-7', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         "rhel-8-10@cockpit-project/cockpit/rhel-8",
         "rhel-8-10@candlepin/subscription-manager/subscription-manager-1.28",
