@@ -42,7 +42,7 @@ xdg-utils \
 "
 
 # udisks >= 2.10 depends on libblockdev-mdraid, so add it manually only for older OSes
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
+if [ "$IMAGE" = "ubuntu-2204" ] ; then
     COCKPIT_DEPS="$COCKPIT_DEPS libblockdev-mdraid2"
 fi
 
@@ -104,12 +104,12 @@ DENIED_PACKAGES="\
 "
 
 # older libvirt have this builtin
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
+if [ "$IMAGE" = "ubuntu-2204" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/virtiofsd/}"
 fi
 
 # introduced in util-linux 2.40.1-5
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
+if [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/lastlog2/}"
 fi
 
@@ -127,7 +127,7 @@ tzdata-legacy
 "
 
 # introduced in debian 13 (trixie) and Ubuntu 23.10
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
+if [ "$IMAGE" = "ubuntu-2204" ] ; then
     PACKAGE_SET_CHRONYD="${PACKAGE_SET_CHRONYD/tzdata-legacy/}"
 fi
 
@@ -158,7 +158,7 @@ EOF
 fi
 
 # systemd-cryptsetup was split out in 256.1-2, older releases don't have it yet
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
+if [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/systemd-cryptsetup /}"
 fi
 
@@ -264,7 +264,7 @@ $APT install dpkg-dev pbuilder
 pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
 # our static build deps approach cannot resolve alternate build dependencies,
 # so hide systemd-dev on older releases which don't have it yet
-if [ "$IMAGE" = "debian-stable" ] || [ "$IMAGE" = "ubuntu-2204" ] ; then
+if [ "$IMAGE" = "ubuntu-2204" ] ; then
     sed -i 's/systemd-dev |.*,/systemd,/' /tmp/out/tools/debian/control
 fi
 # HACK: pcp fell out of testing, get it from unstable
@@ -321,7 +321,7 @@ systemctl disable --now systemd-networkd-wait-online.service
 # "unattended-upgrades" changes the default of 5 seconds to 30
 # seconds. Let's override that.
 
-if [ "$1" != "debian-stable" ] && [ "$1" != "ubuntu-2204" ]; then
+if [ "$1" != "ubuntu-2204" ]; then
     mkdir -p /etc/systemd/logind.conf.d
     cat >/etc/systemd/logind.conf.d/zz-quick.conf <<EOF
 [Login]

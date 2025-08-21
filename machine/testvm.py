@@ -53,7 +53,7 @@ __all__ = (
 # This can be used as helper program for tests not written in Python: Run given
 # image name until SIGTERM or SIGINT; the image must exist in test/images/;
 # use image-prepare or image-customize to create that. For example:
-# $ bots/image-customize -v -i cockpit debian-stable
-# $ bots/machine/testvm.py debian-stable
+# $ bots/image-customize -v -i cockpit arch
+# $ bots/machine/testvm.py arch
 if __name__ == "__main__":
     cmd_cli()
