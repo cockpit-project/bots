@@ -42,6 +42,7 @@ REFRESH = {
     "centos-10": {},
     "debian-testing": {},
     "debian-stable": {},
+    "debian-trixie": {},
     "fedora-41": {},
     "fedora-42": {},
     "fedora-coreos": {},
