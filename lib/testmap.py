@@ -74,6 +74,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'opensuse-tumbleweed',
+            *contexts('fedora-43', COCKPIT_SCENARIOS),
         ],
     },
     'cockpit-project/starter-kit': {
@@ -93,6 +94,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10/ws-container',
             'rhel-9-6',
             'rhel-9-7',
+            'fedora-43',
         ]
     },
     'cockpit-project/cockpit-ostree': {
@@ -126,6 +128,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
+            'fedora-43',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -151,6 +154,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
+            'fedora-43',
         ],
     },
     'cockpit-project/cockpit-files': {
@@ -169,6 +173,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-1',
         ],
         '_manual': [
+            'fedora-43',
         ],
     },
     'osbuild/cockpit-composer': {
