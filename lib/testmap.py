@@ -43,7 +43,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             *contexts('arch', COCKPIT_SCENARIOS),
             *contexts('centos-9-bootc', COCKPIT_SCENARIOS),
-            *contexts('debian-stable', COCKPIT_SCENARIOS),
             *contexts('debian-testing', COCKPIT_SCENARIOS),
             *contexts('debian-trixie', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2204', COCKPIT_SCENARIOS),
@@ -111,7 +110,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             f'{TEST_OS_DEFAULT}/firefox',
             'arch',
             'centos-9-bootc',
-            'debian-stable',
             'debian-testing',
             'debian-trixie',
             'fedora-41',
@@ -133,7 +131,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'cockpit-project/cockpit-machines': {
         'main': [
             'arch',
-            'debian-stable',
             'debian-testing',
             'debian-trixie',
             'ubuntu-2204',
@@ -254,7 +251,6 @@ IMAGE_REFRESH_TRIGGERS = {
         *contexts(TEST_OS_DEFAULT, COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *contexts('debian-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('debian-trixie', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('rhel-9-7', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         "rhel-8-10@cockpit-project/cockpit/rhel-8",
