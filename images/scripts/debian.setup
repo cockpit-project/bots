@@ -86,7 +86,7 @@ rsync \
 sssd-dbus \
 sssd-proxy \
 socat \
-sosreport \
+sos \
 strace \
 systemd-coredump \
 systemd-cryptsetup \
@@ -108,9 +108,11 @@ if [ "$IMAGE" = "ubuntu-2204" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/virtiofsd/}"
 fi
 
-# introduced in util-linux 2.40.1-5
 if [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
+    # introduced in util-linux 2.40.1-5
     TEST_PACKAGES="${TEST_PACKAGES/lastlog2/}"
+    # renamed at some point
+    TEST_PACKAGES="${TEST_PACKAGES/sos/sosreport}"
 fi
 
 # These packages are downloaded to the image so that the tests can
