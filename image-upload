@@ -28,8 +28,8 @@ import urllib.parse
 from lib import s3
 from lib.constants import BOTS_DIR, IMAGES_DIR
 from lib.directories import get_images_data_dir
-from lib.network import get_curl_ca_arg, redhat_network
-from lib.stores import PRIVATE_STORES, PUBLIC_STORES, REDHAT_STORES
+from lib.network import get_curl_ca_arg
+from lib.stores import LOCAL_STORES, PRIVATE_STORES, PUBLIC_STORES
 
 
 def upload(store: str, source: str, public: bool, prune: bool = False) -> bool:
@@ -105,14 +105,12 @@ def main() -> None:
                 # adds this to the list, if it's present.
                 stores = [image_upload_store]
         if not stores:
-            stores = list(PRIVATE_STORES)
+            stores = list(LOCAL_STORES) + list(PRIVATE_STORES)
             if public:
                 # NB: We currently have a well-known S3 token which is capable
                 # of accessing all data uploaded to these buckets, regardless
                 # of ACL.  Only upload public images here.
                 stores += PUBLIC_STORES
-            if redhat_network():
-                stores += REDHAT_STORES
         success = False
         for store in stores:
             success |= upload(store, source, public, prune=args.prune_s3)
