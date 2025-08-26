@@ -1,0 +1,4 @@
+error: Failed to start pool poolDisk
+error: internal error: Failed to create disk pool geometry
+Traceback (most recent call last):
+  File "test/check-machines-create", line *, in testCreateThenInstall
