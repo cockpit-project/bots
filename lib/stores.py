@@ -29,21 +29,15 @@ PRIVATE_STORES: Sequence[str] = (
     "https://cockpit-images.eu-central-1.linodeobjects.com/",
 )
 
-# hosted behind the Red Hat VPN
-REDHAT_STORES: Sequence[str] = (
-    # e2e down for maintenance
-    # "https://cockpit-11.apps.cnfdb2.e2e.bos.redhat.com/images/",
-)
-
-# local stores
+# locally configured stores in ~/.config/cockpit-dev/image-stores or $COCKPIT_IMAGE_STORES_FILE
 try:
     with open(xdg_config_home('cockpit-dev', 'image-stores', envvar='COCKPIT_IMAGE_STORES_FILE')) as fp:
         data = fp.read().strip()
-        if data:
-            PUBLIC_STORES = (*PUBLIC_STORES, *data.split("\n"))
 except FileNotFoundError:
     # that config file is optional
-    pass
+    data = ""
+
+LOCAL_STORES: Sequence[str] = data.splitlines()
 
 
 LOG_STORE = "https://cockpit-logs.us-east-1.linodeobjects.com/"

@@ -46,8 +46,8 @@ from collections.abc import Iterator, Sequence
 from lib import s3
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
-from lib.network import get_curl_ca_arg, redhat_network
-from lib.stores import PRIVATE_STORES, PUBLIC_STORES, REDHAT_STORES
+from lib.network import get_curl_ca_arg
+from lib.stores import LOCAL_STORES, PRIVATE_STORES, PUBLIC_STORES
 from lib.testmap import get_test_image
 
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
@@ -136,10 +136,9 @@ def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[
         # Due to AI scraper-bot mitigation all public stores currently require
         # an access token: if we don't have one, then don't bother.
         stores = [
-            store for store in (*PUBLIC_STORES, *PRIVATE_STORES) if s3.is_key_present(urllib.parse.urlparse(store))
+            store for store in (*LOCAL_STORES, *PUBLIC_STORES, *PRIVATE_STORES)
+            if s3.is_key_present(urllib.parse.urlparse(store))
         ]
-        if redhat_network():
-            stores += REDHAT_STORES
         image_upload_store = os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE')
         if image_upload_store:
             # NB: This is an *addition* to the built-in stores, used for
