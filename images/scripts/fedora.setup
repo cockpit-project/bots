@@ -149,6 +149,9 @@ fi
 # man-db cache update is a CPU/memory hog
 rpm -e --verbose man-db
 
+# we only need cloud-init for the initial boot, afterwards it just slows down booting
+dnf remove -y cloud-init
+
 # fedora-eln image is just used for building/fetching the anaconda-webui RPM dependencies
 # no need to install all dependencies there
 ALL_DEPS="$COCKPIT_DEPS"
@@ -157,6 +160,9 @@ if [ "fedora-eln" != "$IMAGE" ]; then
 fi
 dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $ALL_DEPS
+
+# clean up old kernels
+dnf remove --oldinstallonly -y || true
 
 # create/run this as a script, so that it can be re-run at image-prepare time with different repos
 cat > /var/lib/download-package-sets.sh <<EOF
@@ -174,11 +180,6 @@ chmod +x /var/lib/download-package-sets.sh
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 dnf --setopt=install_weak_deps=False install -y cockpit
-
-# clean up old kernels
-dnf remove --oldinstallonly -y || true
-# we only need cloud-init for the initial boot, afterwards it just slows down booting
-dnf remove -y cloud-init
 
 dnf $DNF_OPTS -y install mock dnf-plugins-core rpm-build
 useradd -c Builder -G mock builder
