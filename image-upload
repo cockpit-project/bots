@@ -113,7 +113,9 @@ def main() -> None:
                 stores += PUBLIC_STORES
         success = False
         for store in stores:
-            success |= upload(store, source, public, prune=args.prune_s3)
+            # Temporarily make all images private, until we figure out if it's
+            # images or logs which cause so much traffic these days (AI scrapers?)
+            success |= upload(store, source, public=False, prune=args.prune_s3)
 
         if not success:
             sys.exit('Failed to upload to any image store')
