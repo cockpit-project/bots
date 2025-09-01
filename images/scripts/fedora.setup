@@ -220,6 +220,26 @@ systemctl --all --legend=false list-units 'pm*' | awk '{print $1}' | xargs syste
 # logins performed by some tests.
 echo "PerSourcePenalties no" >/etc/ssh/sshd_config.d/99-no-penalties.conf
 
+# HACK: https://bugzilla.redhat.com/show_bug.cgi?id=2374928
+if [ "${IMAGE}" = 'fedora-43' ] || [ "${IMAGE}" = 'fedora-rawhide' ]; then
+    cat <<EOF > hack-ssh-credentials.te
+module hack-ssh-credentials 1.0;
+require {
+    type init_var_run_t;
+    type sshd_t;
+    class file { getattr open read };
+}
+allow sshd_t init_var_run_t:file { getattr open read };
+EOF
+    checkmodule -M -m -o hack-ssh-credentials.mod hack-ssh-credentials.te
+    semodule_package -o hack-ssh-credentials.pp -m hack-ssh-credentials.mod
+    semodule -X 300 -i hack-ssh-credentials.pp
+
+    # This is rwxrwxr-x by default and then we see:
+    #   sshd-session[1582]: Authentication refused: bad ownership or modes for directory /
+    chmod 755 /
+fi
+
 # reduce image size
 dnf clean all
 rm -rf /var/lib/mock/*-bootstrap
