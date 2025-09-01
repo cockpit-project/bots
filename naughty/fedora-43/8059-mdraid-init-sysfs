@@ -1,0 +1,7 @@
+> warn: Error starting RAID array: Process reported exit code 1: mdadm: Unable to initialize sysfs
+*
+  File "/source/test/verify/check-storage-mdraid",*
+    b.wait_text(self.card_desc("MDRAID device", "State"), "Running")
+*
+testlib.Error: timeout
+wait_js_cond(ph_text_is("*","Running")): Error: actual text: Not running
