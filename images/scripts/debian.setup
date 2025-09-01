@@ -376,6 +376,13 @@ fi
 # pmlogger.service sometimes causes long shutdown hangs; disable all PCP services and timers
 systemctl --all --legend=false list-units 'pm*' | awk '{print $1}' | xargs --no-run-if-empty systemctl disable
 
+# test.thing enablement
+# Upstream: https://codeberg.org/lis/test.thing/src/branch/main/workarounds/debian
+# Downstream: https://salsa.debian.org/ssh-team/openssh/-/merge_requests/34
+cat <<EOF > /etc/default/ssh
+SSHD_OPTS=-o "AuthorizedKeysFile /run/credentials/@system/ssh.ephemeral-authorized_keys-all .ssh/authorized_keys"
+EOF
+
 # reduce image size; don't keep old kernels
 sed -i '/linux/d' /etc/apt/apt.conf.d/01autoremove
 $APT autoremove --purge || true
