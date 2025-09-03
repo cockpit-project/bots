@@ -19,7 +19,7 @@
 
 set -eux
 
-URL='https://america.mirror.pkgbuild.com/images/latest/'
+URL='https://geo.mirror.pkgbuild.com/images/latest/'
 IMAGE="$(curl -L -s "$URL" | grep -o '"Arch-Linux-x86_64-cloudimg-[^"]*.qcow2"' | tr -d '"' | tail -n1)"
 [ -n "$IMAGE" ]
 
