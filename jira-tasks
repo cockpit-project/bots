@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+
+# Generate a Jira token on https://issues.redhat.com/secure/ViewProfile.jspa → Personal Access Tokens
+# and put it into ~/.config/cockpit-dev/jira-token
+
+import argparse
+import json
+import sys
+import urllib.error
+import urllib.request
+
+from lib.aio.jsonutil import JsonObject, get_str
+from lib.directories import xdg_config_home
+
+
+class JiraClient:
+    def __init__(self, token: str) -> None:
+        self.token = token
+        self.base_url = "https://issues.redhat.com"
+
+    def get_fields(self) -> list[JsonObject]:
+        url = f"{self.base_url}/rest/api/2/field"
+
+        request = urllib.request.Request(
+            url,
+            headers={"Authorization": f"Bearer {self.token}"}
+        )
+
+        try:
+            with urllib.request.urlopen(request) as response:
+                return json.loads(response.read().decode('utf-8'))
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode('utf-8')
+            print(f"Error fetching fields: {e.code} {e.reason}")
+            print(f"Response: {error_body}")
+            sys.exit(1)
+
+    def create_issue(self, project: str,
+                     issue_type: str,
+                     summary: str, description: str,
+                     components: list[str] | None = None,
+                     fix_versions: list[str] | None = None) -> JsonObject:
+        url = f"{self.base_url}/rest/api/2/issue"
+
+        fields: dict[str, object] = {
+            "project": {"key": project},
+            "issuetype": {"name": issue_type},
+            "summary": summary,
+            "description": description,
+            "priority": {"name": "Normal"},
+            # Story Points
+            "customfield_12310243": 2,
+            # Preliminary Testing
+            "customfield_12321540": {"value": "Pass"},
+            # Test Coverage
+            "customfield_12320940": [{"value": "Automated"}]
+        }
+
+        if components:
+            fields["components"] = [{"name": comp} for comp in components]
+
+        if fix_versions:
+            fields["fixVersions"] = [{"name": version} for version in fix_versions]
+
+        data = {"fields": fields}
+
+        request = urllib.request.Request(
+            url,
+            data=json.dumps(data).encode('utf-8'),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.token}"
+            },
+            method="POST"
+        )
+
+        try:
+            with urllib.request.urlopen(request) as response:
+                result = json.loads(response.read().decode('utf-8'))
+                return result
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode('utf-8')
+            print(f"Error creating issue: {e.code} {e.reason}")
+            print(f"Response: {error_body}")
+            sys.exit(1)
+
+
+def get_jira_token() -> str:
+    token_path = xdg_config_home("cockpit-dev/jira-token")
+    try:
+        with open(token_path) as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        print(f"Error: Jira token not found at {token_path}")
+        sys.exit(1)
+
+
+def cmd_find_field(args: argparse.Namespace) -> None:
+    token = get_jira_token()
+    client = JiraClient(token)
+
+    fields = client.get_fields()
+
+    matching_fields = []
+    search_term = args.name.lower()
+
+    for field in fields:
+        field_name = get_str(field, 'name', None)
+        if field_name and search_term in field_name.lower():
+            matching_fields.append(field)
+
+    if not matching_fields:
+        print(f"No fields found matching '{args.name}'")
+        return
+
+    print(f"Found {len(matching_fields)} field(s) matching '{args.name}':")
+    for field in matching_fields:
+        print(f"  ID: {field['id']}")
+        print(f"  Name: {field['name']}")
+        print(f"  Custom: {field.get('custom', False)}")
+        print()
+
+
+def cmd_rhel_rebase_issue(args: argparse.Namespace) -> None:
+    token = get_jira_token()
+    client = JiraClient(token)
+
+    summary = f"Rebase {args.package} in RHEL {args.release}"
+    description = f"Meta-bug to keep {args.package} up to date with upstream."
+    fix_version = f"rhel-{args.release}"
+
+    result = client.create_issue(
+        project="RHEL",
+        issue_type="Bug",
+        summary=summary,
+        description=description,
+        components=[args.package],
+        fix_versions=[fix_version]
+    )
+
+    issue_key = result.get("key")
+    print(f"Created issue: {issue_key}")
+    print(f"URL: https://issues.redhat.com/browse/{issue_key}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Jira task management utilities")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # find-field command
+    find_parser = subparsers.add_parser(
+        "find-field",
+        help="Find Jira field by name"
+    )
+    find_parser.add_argument("name", help="Field name to search for")
+    find_parser.set_defaults(func=cmd_find_field)
+
+    # rhel-rebase-issue command
+    rebase_parser = subparsers.add_parser(
+        "rhel-rebase-issue",
+        help="Create a RHEL rebase issue"
+    )
+    rebase_parser.add_argument("package", help="Package name")
+    rebase_parser.add_argument("release", help="RHEL release version")
+    rebase_parser.set_defaults(func=cmd_rhel_rebase_issue)
+
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        sys.exit(1)
+
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

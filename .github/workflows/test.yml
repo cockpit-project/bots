@@ -49,6 +49,7 @@ jobs:
               ':!image-create' \
               ':!image-customize' \
               ':!image-trigger' \
+              ':!jira-tasks' \
               ':!naughty' \
               ':!machine/machine_core' \
               ':!lib/allowlist.py' \
