@@ -64,8 +64,7 @@ EOF
                 TREE=nightly;
                 UPDATES="" ;;
 
-            # drop 9.5 after official release
-            9.5 | 9.6 | 9.7)
+            9.7 | 9.8)
                 TREE=nightly;
                 VERSION="${VERSION}.0";
                 UPDATES="" ;;
