@@ -57,6 +57,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
             *contexts('rhel-8-10', ['ws-container'], COCKPIT_SCENARIOS),
             *contexts('rhel-9-7', COCKPIT_SCENARIOS),
+            *contexts('rhel-9-8', COCKPIT_SCENARIOS),
             *contexts('rhel-10-1', COCKPIT_SCENARIOS),
             *contexts('centos-10', COCKPIT_SCENARIOS),
         ],
@@ -86,6 +87,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
+            'rhel-9-8',
             'rhel-10-1',
         ],
         '_manual': [
@@ -118,6 +120,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'opensuse-tumbleweed',
             'rhel-8-10/ws-container',
             'rhel-9-7',
+            'rhel-9-8',
             'rhel-10-1',
             'ubuntu-2204',
             'ubuntu-2404',
@@ -143,6 +146,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'opensuse-tumbleweed',
             'rhel-8-10/ws-container',
             'rhel-9-7',
+            'rhel-9-8',
             'rhel-10-1',
         ],
         'rhel-8': [
@@ -166,6 +170,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'rhel-8-10/ws-container',
             'rhel-9-7',
+            'rhel-9-8',
             'rhel-10-1',
         ],
         '_manual': [
@@ -183,6 +188,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             'centos-10',
             'rhel-9-7',
+            'rhel-9-8',
             'rhel-10-1',
             'fedora-42',
         ],
@@ -220,6 +226,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-9-stream/subscription-manager-1.29',
             'centos-10',
             'rhel-9-7/subscription-manager-1.29',
+            'rhel-9-8/subscription-manager-1.29',
             'rhel-10-1',
             'fedora-42',
         ],
