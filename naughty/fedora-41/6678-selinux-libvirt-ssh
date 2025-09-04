@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "test/check-machines-migrate", line *, in test*
-    self._testMigrationGeneric(*
-  File "test/check-machines-migrate", line *, in _testMigrationGeneric
-    b.wait_not_present("#migrate-modal")
-*
-testlib.Error: timeout
