@@ -346,11 +346,6 @@ if grep -q 'ID=ubuntu' /etc/os-release; then
     snap install hello-world
 fi
 
-# HACK: https://bugs.debian.org/1032990
-if [ "$RELEASE" = "testing" ]; then
-    sed -i '/subid:.*sss/d' /etc/nsswitch.conf
-fi
-
 # HACK: https://launchpad.net/bugs/2040483
 if [ "$IMAGE" = "ubuntu-2404" ]; then
     mkdir -p /etc/containers/containers.conf.d
