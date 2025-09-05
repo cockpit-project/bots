@@ -269,22 +269,6 @@ pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
 if [ "$IMAGE" = "ubuntu-2204" ] ; then
     sed -i 's/systemd-dev |.*,/systemd,/' /tmp/out/tools/debian/control
 fi
-# HACK: pcp fell out of testing, get it from unstable
-if [ "$IMAGE" = "debian-testing" ]; then
-    cat <<EOS > /tmp/pbuilder_script
-    echo 'deb http://deb.debian.org/debian unstable main' >> /etc/apt/sources.list
-    cat <<EOF > /etc/apt/preferences.d/unstable
-Package: *
-Pin: release a=unstable
-Pin-Priority: -1
-
-Package: *pcp*
-Pin: release a=unstable
-Pin-Priority: 10
-EOF
-apt-get update
-EOS
-fi
 
 cat <<EOS >> /tmp/pbuilder_script
 $(/usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get)
