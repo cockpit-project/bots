@@ -159,48 +159,43 @@ chmod 755 /root/run-candlepin
 #
 #############################
 
-# This does not actually prevent the "Failed to fetch plugins from catalog" error, but at least we try..
-cat <<EOF > /root/grafana.ini
-[analytics]
-enabled = false
-reporting_enabled = false
-check_for_updates = false
-check_for_plugin_updates = false
-EOF
-chmod 644 /root/grafana.ini
+# use mirror to avoid pull rate limits in the RH VPN
+podman pull quay.io/glueops/mirror/grafana/grafana:12.1.0
+podman tag quay.io/glueops/mirror/grafana/grafana:12.1.0 docker.io/grafana/grafana:latest
 
-# enable PCP plugin
-cat <<EOF > /root/pcp.yaml
-apiVersion: 1
-apps:
-  - type: performancecopilot-pcp-app
-EOF
+cat <<EOF > /root/run-grafana
+#!/bin/sh
+if [ -e /root/pcp.yaml ]; then
+    PCP_CONFIG="-v /root/pcp.yaml:/etc/grafana/provisioning/plugins/pcp.yaml:ro,z"
+fi
 
-# https://quay.io/repository/cockpit/grafana is a mirror to avoid pull rate limits in the RH VPN
-# https://github.com/cockpit-project/cockpit/actions/workflows/docker-mirors.yml
 podman run -d --rm --name grafana -p 3000:3000 \
-    -v /root/grafana.ini:/opt/bitnami/grafana/conf/grafana.ini:ro,z \
-    -v grafana-data-plugins:/opt/bitnami/grafana/data/plugins \
+    -v grafana-storage:/var/lib/grafana \
+    \$PCP_CONFIG \
     -e GF_SECURITY_ADMIN_PASSWORD=foobar \
-    -e GF_INSTALL_PLUGINS="redis-datasource,performancecopilot-pcp-app" \
-    quay.io/cockpit/grafana
+    -e GF_ANALYTICS_ENABLED=false \
+    -e GF_ANALYTICS_REPORTING_ENABLED=false \
+    -e GF_ANALYTICS_CHECK_FOR_UPDATES=false \
+    -e GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES=false \
+    -e GF_PLUGINS_PREINSTALL="redis-datasource,performancecopilot-pcp-app" \
+    docker.io/grafana/grafana:latest
+EOF
+chmod 755 /root/run-grafana
 
-podman tag quay.io/cockpit/grafana docker.io/bitnami/grafana
+# run it once to initialize and download plugin; still without pcp.yaml, as the
+# plugin isn't installed yet, so it can't be enabled yet
+/root/run-grafana
 
 # wait until set up completed
 until curl http://localhost:3000; do sleep 5; done
 podman stop grafana
 
-cat <<EOF > /root/run-grafana
-#!/bin/sh
-podman run -d --rm --name grafana -p 3000:3000 \
-    -v /root/grafana.ini:/opt/bitnami/grafana/conf/grafana.ini:z \
-    -v /root/pcp.yaml:/opt/bitnami/grafana/conf/provisioning/plugins/pcp.yaml:ro,z \
-    -v grafana-data-plugins:/opt/bitnami/grafana/data/plugins \
-    -e GF_SECURITY_ADMIN_PASSWORD=foobar \
-    docker.io/bitnami/grafana
+# create PCP plugin enablement config, for next start
+cat <<EOF > /root/pcp.yaml
+apiVersion: 1
+apps:
+  - type: performancecopilot-pcp-app
 EOF
-chmod 755 /root/run-grafana
 
 #############################
 #
