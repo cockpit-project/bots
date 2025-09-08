@@ -1,0 +1,10 @@
+# test.thing polyfill for systems that lack support for sshd-vsock.socket
+#
+# If you use this, you also need to use tt-sshd-vsock@.service
+
+[Socket]
+ListenStream=vsock::22
+Accept=yes
+
+[Install]
+WantedBy=sockets.target

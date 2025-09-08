@@ -10,6 +10,7 @@ RUN \
     dnf install -y --setopt install_weak_deps=False cockpit-system cockpit-networkmanager && \
     dnf install -y dnsmasq pcp python3-pcp rsync sscg strace system-logos wireguard-tools && \
     dnf install -y glib-networking tlog udisks2-lvm2 && \
+    dnf install -y checkpolicy policycoreutils && \
     dnf clean all
 
 ADD lib/mcast1.nmconnection /usr/lib/NetworkManager/system-connections/
