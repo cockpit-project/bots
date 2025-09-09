@@ -60,7 +60,7 @@ EOF
         VERSION=${VERSION/-/.}
         # current development version uses /nightly, released ones /rel-eng + updates
         case "$VERSION" in
-            10.0|10.1)
+            10.0|10.1|10.2)
                 TREE=nightly;
                 UPDATES="" ;;
 
