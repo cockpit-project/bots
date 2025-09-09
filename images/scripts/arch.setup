@@ -184,6 +184,11 @@ pacman -R --noconfirm cloud-init
 # https://github.com/cockpit-project/bots/issues/3901#issuecomment-1260579703
 systemctl disable systemd-time-wait-sync.service
 
+# https://gitlab.archlinux.org/archlinux/packaging/packages/openssh/-/issues/16
+# https://github.com/openssh/openssh-portable/pull/388
+# https://github.com/openssh/openssh-portable/pull/593
+echo 100::55:4e4b:4e4f:574e UNKNOWN | tee -a /etc/hosts
+
 # Reduce image size, clear package cache (/var/cache/pacman/pkg)
 rm -f /var/cache/pacman/pkg/*
 
