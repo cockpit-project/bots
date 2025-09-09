@@ -93,6 +93,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-9-bootc',
             'rhel-8-10/ws-container',
+            'rhel-10-2',
         ]
     },
     'cockpit-project/cockpit-ostree': {
@@ -126,6 +127,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
+            'rhel-10-2',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -151,6 +153,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
+            'rhel-10-2',
         ],
     },
     'cockpit-project/cockpit-files': {
@@ -169,6 +172,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-1',
         ],
         '_manual': [
+            'rhel-10-2',
         ],
     },
     'osbuild/cockpit-composer': {
@@ -214,6 +218,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'fedora-43',
+            'rhel-10-2',
         ],
     },
     'candlepin/subscription-manager-cockpit': {
@@ -227,6 +232,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'fedora-43',
+            'rhel-10-2',
         ],
     },
     'rhinstaller/anaconda-webui': {
