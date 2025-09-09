@@ -98,6 +98,7 @@ ntfsprogs \
 multipath-tools \
 systemd-coredump \
 kdump \
+systemd-experimental \
 "
 
 NETWORK_PACKAGES="\
