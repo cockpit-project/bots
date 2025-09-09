@@ -56,7 +56,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             # no udisks on CoreOS → skip storage
             *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
             *contexts('rhel-8-10', ['ws-container'], COCKPIT_SCENARIOS),
-            *contexts('rhel-9-7', COCKPIT_SCENARIOS),
             *contexts('rhel-9-8', COCKPIT_SCENARIOS),
             *contexts('rhel-10-2', COCKPIT_SCENARIOS),
             *contexts('centos-10', COCKPIT_SCENARIOS),
@@ -182,7 +181,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'candlepin/subscription-manager': {
         'main': [
             'centos-10',
-            'rhel-9-7',
             'rhel-9-8',
             'rhel-10-1',
             'fedora-42',
@@ -221,7 +219,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             'centos-9-stream/subscription-manager-1.29',
             'centos-10',
-            'rhel-9-7/subscription-manager-1.29',
             'rhel-9-8/subscription-manager-1.29',
             'rhel-10-1',
             'fedora-42',
@@ -256,10 +253,10 @@ IMAGE_REFRESH_TRIGGERS = {
         *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *contexts('debian-trixie', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *contexts('rhel-9-7', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *contexts('rhel-9-8', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         "rhel-8-10@cockpit-project/cockpit/rhel-8",
         "rhel-8-10@candlepin/subscription-manager/subscription-manager-1.28",
-        "rhel-9-7@candlepin/subscription-manager-cockpit",
+        "rhel-9-8@candlepin/subscription-manager-cockpit",
     ],
     # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
     "fedora-rawhide": [
