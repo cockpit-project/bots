@@ -93,8 +93,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-9-bootc',
             'rhel-8-10/ws-container',
-            'rhel-9-6',
-            'rhel-9-7',
         ]
     },
     'cockpit-project/cockpit-ostree': {
@@ -119,7 +117,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-coreos',
             'opensuse-tumbleweed',
             'rhel-8-10/ws-container',
-            'rhel-9-7',
             'rhel-9-8',
             'rhel-10-1',
             'ubuntu-2204',
@@ -145,7 +142,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             f'{TEST_OS_DEFAULT}/firefox',
             'opensuse-tumbleweed',
             'rhel-8-10/ws-container',
-            'rhel-9-7',
             'rhel-9-8',
             'rhel-10-1',
         ],
@@ -169,7 +165,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-rawhide',
             'centos-10',
             'rhel-8-10/ws-container',
-            'rhel-9-7',
             'rhel-9-8',
             'rhel-10-1',
         ],
