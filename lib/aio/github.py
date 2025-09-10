@@ -146,6 +146,15 @@ class GitHub(Forge, contextlib.AsyncExitStack):
     def get_status(self, repo: str, sha: str, context: str | None, location: URL) -> Status:
         return GitHubStatus(self, repo, sha, context, location)
 
+    async def get_branch_info(self, repo: str, branch: str) -> JsonObject:
+        branch_info = await self.get(f'repos/{repo}/git/refs/heads/{branch}')
+
+        # Forgejo returns a list
+        if isinstance(branch_info, list):
+            branch_info = branch_info[0]
+
+        return typechecked(branch_info, dict)
+
     async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
         if spec.pull is not None:
             pull = await self.get_obj(f'repos/{spec.repo}/pulls/{spec.pull}')
@@ -159,8 +168,9 @@ class GitHub(Forge, contextlib.AsyncExitStack):
 
         else:
             branch = spec.branch or get_str(await self.get_obj(f'repos/{spec.repo}'), 'default_branch')
+            assert branch is not None  # help mypy see the light
 
-            with get_nested(await self.get_obj(f'repos/{spec.repo}/git/refs/heads/{branch}'), 'object') as obj:
+            with get_nested(await self.get_branch_info(spec.repo, branch), 'object') as obj:
                 return Subject(self, spec.repo, get_str(obj, 'sha'), spec.target)
 
 
