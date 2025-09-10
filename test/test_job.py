@@ -159,13 +159,13 @@ async def mock_job_context(tmp_path: Path) -> AsyncGenerator[Mock, None]:
 
         # Create mock context with real forge and logs
         mock_ctx = Mock()
-        mock_ctx.forge = forge
         mock_ctx.logs = logs
         mock_ctx.debug = False
         mock_ctx.default_image = 'registry.fedoraproject.org/fedora:latest'
         mock_ctx.container_cmd = ['podman']
         mock_ctx.container_run_args = ['--pull=newer']
         mock_ctx.secrets_args = {}
+        mock_ctx.resolve_subject = AsyncMock(wraps=forge.resolve_subject)
 
         yield mock_ctx
 
