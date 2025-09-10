@@ -82,7 +82,7 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
 
         container_image = (
             job.container or
-            await ctx.forge.read_file(subject, '.cockpit-ci/container') or
+            await subject.read_file('.cockpit-ci/container') or
             ctx.default_image
         ).strip()
 
@@ -166,7 +166,7 @@ async def run_job(job: Job, ctx: JobContext) -> None:
         index = Index(destination)
         log = LogStreamer(index, destination.proxy_location)
 
-        status = ctx.forge.get_status(job.subject.repo, subject.sha, job.context, log.url)
+        status = subject.forge.get_status(job.subject.repo, subject.sha, job.context, log.url)
         logger.info('Log: %s', log.url)
 
         try:
@@ -187,7 +187,7 @@ async def run_job(job: Job, ctx: JobContext) -> None:
                 tasks.add(timeout_minutes(job.timeout))
 
             if job.subject.pull is not None:
-                tasks.add(poll_pr(ctx.forge, job.subject.repo, job.subject.pull, subject.sha))
+                tasks.add(poll_pr(subject.forge, job.subject.repo, job.subject.pull, subject.sha))
 
             await gather_and_cancel(tasks)
 
@@ -205,7 +205,7 @@ async def run_job(job: Job, ctx: JobContext) -> None:
                     """).lstrip(),
                     **job.report
                 }
-                await ctx.forge.open_issue(job.subject.repo, issue)
+                await subject.forge.open_issue(job.subject.repo, issue)
 
         except asyncio.CancelledError:
             await status.post('error', 'Cancelled')

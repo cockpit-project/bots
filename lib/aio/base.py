@@ -40,9 +40,8 @@ class Subject(NamedTuple):
     def clone_url(self) -> URL:
         return self.forge.clone / self.repo
 
-    @property
-    def content_url(self) -> URL:
-        return self.forge.content / self.repo
+    async def read_file(self, filename: str) -> str | None:
+        return await self.forge.read_file(self, filename)
 
 
 class Status:
@@ -54,7 +53,6 @@ class Status:
 
 class Forge:
     clone: URL
-    content: URL
 
     async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
         raise NotImplementedError
