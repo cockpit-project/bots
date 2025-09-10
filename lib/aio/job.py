@@ -158,7 +158,7 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
 
 
 async def run_job(job: Job, ctx: JobContext) -> None:
-    subject = await ctx.forge.resolve_subject(job.subject)
+    subject = await ctx.resolve_subject(job.subject)
     title = job.title or f'{job.context}@{job.subject.repo}#{subject.sha[:12]}'
     slug = job.slug or f'{job.subject.repo}/{job.context or "-"}/{subject.sha[:12]}'
 
@@ -178,7 +178,7 @@ async def run_job(job: Job, ctx: JobContext) -> None:
             await status.post('pending', 'In progress')
 
             if job.command_subject is not None:
-                command_subject = await ctx.forge.resolve_subject(job.command_subject)
+                command_subject = await ctx.resolve_subject(job.command_subject)
             else:
                 command_subject = subject
             tasks = {run_container(job, command_subject, ctx, log)}

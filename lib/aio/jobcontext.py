@@ -24,7 +24,7 @@ from typing import AsyncContextManager, Self
 
 from ..constants import BOTS_DIR
 from ..directories import xdg_config_home
-from .base import Forge, LogDriver
+from .base import Forge, LogDriver, Subject, SubjectSpecification
 from .github import GitHub
 from .jsonutil import (
     JsonError,
@@ -55,7 +55,7 @@ LOG_DRIVERS: Mapping[str, Callable[[JsonObject], AsyncContextManager[LogDriver]]
 class JobContext(contextlib.AsyncExitStack):
     config: JsonObject = {}  # noqa:RUF012  # JsonObject is immutable
     logs: LogDriver
-    forge: Forge
+    _forge: Forge
 
     def load_config(self, path: Path, name: str, *, missing_ok: bool = False) -> None:
         logger.debug('Loading %s configuration from %s', name, str(path))
@@ -117,7 +117,7 @@ class JobContext(contextlib.AsyncExitStack):
                 if driver not in FORGES:
                     sys.exit(f'Unknown forge driver {driver}')
                 with get_nested(forge, driver) as driver_config:
-                    self.forge = await self.enter_async_context(FORGES[driver](driver_config))
+                    self._forge = await self.enter_async_context(FORGES[driver](driver_config))
         except JsonError as exc:
             await self.__aexit__(exc.__class__, exc, None)
             sys.exit(f'Configuration error: {exc}')
@@ -126,3 +126,6 @@ class JobContext(contextlib.AsyncExitStack):
             raise
 
         return self
+
+    async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
+        return await self._forge.resolve_subject(spec)
