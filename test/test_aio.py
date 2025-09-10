@@ -275,8 +275,8 @@ async def test_config(tmp_path: Path) -> None:
         # test file loading
         assert config['test']['text'] == 'xyz'
 
-        assert isinstance(context._forge, GitHub)
-        assert context._forge.session.headers['Authorization'] == 'token tok_ABCDEFG'
+        assert isinstance(context._forges['github'], GitHub)
+        assert context._forges['github'].session.headers['Authorization'] == 'token tok_ABCDEFG'
 
         assert isinstance(context.logs, S3LogDriver)
         assert context.logs.key == S3Key('ACC', 'SEC')

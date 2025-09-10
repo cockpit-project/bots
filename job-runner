@@ -41,6 +41,7 @@ async def main() -> None:
 
     run_parser = subprograms.add_parser("run", help="Run a single job provided on the command line")
     run_parser.add_argument('repo', help="The repository (like `cockpit-project/cockpit`)")
+    run_parser.add_argument('--forge', help="The forge to interact with (default: first)")
     run_parser.add_argument('--pull', type=int, help="The pull request number to run tests on")
     run_parser.add_argument('--sha', help="The revision sha, exactly 40 hex digits")
     run_parser.add_argument('--context', help="The status we're reporting against the sha")
