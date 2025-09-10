@@ -47,12 +47,20 @@ dir = '~/.cache/cockpit-dev/job-runner-logs'
 link = 'http://127.0.0.1:8000/'
 
 [forge]
-driver='github'
+default = 'github'
 
 [forge.github]
+driver = 'github'
 clone-url = 'https://github.com/'
 api-url = 'https://api.github.com/'
 post = true  # whether to post statuses, open issues, etc.
 user-agent = 'job-runner (cockpit-project/bots)'
 # (at least) one of `token` or `post = false` must be set
 # token = 'ghp_XXX'
+
+[forge.codeberg]
+driver = 'github'
+clone-url = 'https://codeberg.org/'
+api-url = 'https://codeberg.org/api/v1'
+post = false
+user-agent = 'job-runner (cockpit-project/bots)'

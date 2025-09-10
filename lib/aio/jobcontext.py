@@ -42,7 +42,7 @@ from .s3 import S3LogDriver
 logger = logging.getLogger(__name__)
 
 # __init__ is weird on types, so typecheck this as a callable to enforce correctness
-FORGES: Mapping[str, Callable[[JsonObject], AsyncContextManager[Forge]]] = {
+FORGE_DRIVERS: Mapping[str, Callable[[JsonObject], AsyncContextManager[Forge]]] = {
     'github': GitHub,
 }
 
@@ -55,7 +55,8 @@ LOG_DRIVERS: Mapping[str, Callable[[JsonObject], AsyncContextManager[LogDriver]]
 class JobContext(contextlib.AsyncExitStack):
     config: JsonObject = {}  # noqa:RUF012  # JsonObject is immutable
     logs: LogDriver
-    _forge: Forge
+    _forges: dict[str, Forge]
+    _default_forge: str
 
     def load_config(self, path: Path, name: str, *, missing_ok: bool = False) -> None:
         logger.debug('Loading %s configuration from %s', name, str(path))
@@ -112,12 +113,26 @@ class JobContext(contextlib.AsyncExitStack):
                 with get_nested(logs, driver) as driver_config:
                     self.logs = await self.enter_async_context(LOG_DRIVERS[driver](driver_config))
 
-            with get_nested(self.config, 'forge') as forge:
-                driver = get_str(forge, 'driver')
-                if driver not in FORGES:
-                    sys.exit(f'Unknown forge driver {driver}')
-                with get_nested(forge, driver) as driver_config:
-                    self._forge = await self.enter_async_context(FORGES[driver](driver_config))
+            # NB: The Forge class contains a per-instance cache which prevents
+            # us from being banned for exceeding rate limits.  It's critical
+            # that we have only one instance of the forge driver per forge.
+            self._forges = {}
+            with get_nested(self.config, 'forge') as forges:
+                self._default_forge = get_str(forges, 'default')
+
+                for name in forges:
+                    # ignore "default" which is expected and "driver" from legacy configs
+                    if name in ['default', 'driver']:
+                        continue
+
+                    with get_nested(forges, name) as forge:
+                        driver = get_str(forge, 'driver')
+
+                        if driver not in FORGE_DRIVERS:
+                            sys.exit(f'Unknown forge driver {driver}')
+
+                        self._forges[name] = await self.enter_async_context(FORGE_DRIVERS[driver](forge))
+
         except JsonError as exc:
             await self.__aexit__(exc.__class__, exc, None)
             sys.exit(f'Configuration error: {exc}')
@@ -128,4 +143,5 @@ class JobContext(contextlib.AsyncExitStack):
         return self
 
     async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
-        return await self._forge.resolve_subject(spec)
+        forge = spec.forge or self._default_forge
+        return await self._forges[forge].resolve_subject(spec)

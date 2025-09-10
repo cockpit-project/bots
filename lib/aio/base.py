@@ -23,6 +23,7 @@ from .jsonutil import JsonObject, get_int, get_str
 
 class SubjectSpecification:
     def __init__(self, obj: JsonObject) -> None:
+        self.forge = get_str(obj, 'forge', None)
         self.repo = get_str(obj, 'repo')
         self.sha = get_str(obj, 'sha', None)
         self.pull = get_int(obj, 'pull', None)
