@@ -289,6 +289,7 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
                         "labels": ["nightly"],
                     },
                     "command_subject": None if project == api.repo else {
+                        "forge": None,
                         "repo": project,
                         "branch": checkout_ref,
                     },
