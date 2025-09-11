@@ -235,12 +235,9 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
             if context_project:
                 project = context_project
                 branch = context_branch or testmap.get_default_branch(project)
-
-            if project != api.repo:
                 checkout_ref = testmap.get_default_branch(project)
-
-            if base is not None and branch is not None and base != branch:
-                checkout_ref = branch
+                if base is not None and branch is not None:
+                    checkout_ref = branch
 
             if api.repo == "cockpit-project/bots":
                 # bots own test doesn't need bots/ setup as there is a permanent symlink to itself there
