@@ -170,6 +170,15 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
         ],
     },
+    'codeberg:lis/test.thing': {
+        'main': [
+        ],
+        'cockpit-ci': [
+        ],
+        '_manual': [
+            'arch'
+        ],
+    },
     'osbuild/cockpit-composer': {
         'main': [
             'centos-9-stream',
