@@ -394,8 +394,9 @@ class TestTestsScan(unittest.TestCase):
         }
 
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def do_test_amqp_pr_cross_project(self, status_branch, mock_queue):
-        repo_branch = f"cockpit-project/cockpituous{f'/{status_branch}' if status_branch else ''}"
+    def do_test_amqp_pr_cross_project(self, forge_repo, status_branch, mock_queue):
+        forge, _, repo = forge_repo.rpartition(":")
+        repo_branch = f"{forge_repo}/{status_branch}" if status_branch else forge_repo
         # SHA is attached to PR #1
         args = ["--dry", "--sha", "abcdef", "--amqp", "amqp.example.com:1234",
                 # need to pick a project with a REPO_BRANCH_CONTEXT entry for default branch
@@ -416,12 +417,12 @@ class TestTestsScan(unittest.TestCase):
 
         assert request == {
             "human": ("pull-1      fedora/nightly            abcdef       "
-                      f"(cockpit-project/cockpituous) [bots@main]   {{{branch}}}"),
+                      f"({repo}) [bots@main]   {{{branch}}}"),
             "job": {
                 # reports for project/reop
                 "context": f"fedora/nightly@{repo_branch}",
                 # but tests cockpituous
-                "command_subject": {"forge": None, "repo": "cockpit-project/cockpituous", "branch": branch},
+                "command_subject": {"forge": forge, "repo": repo, "branch": branch},
                 "repo": "project/repo",
                 "pull": self.pull_number,
                 "report": None,
@@ -442,12 +443,22 @@ class TestTestsScan(unittest.TestCase):
     def test_amqp_sha_pr_cross_project_default_branch(self):
         """Default branch cross-project status event on PR"""
 
-        self.do_test_amqp_pr_cross_project(None)
+        self.do_test_amqp_pr_cross_project("cockpit-project/cockpituous", None)
 
     def test_amqp_sha_pr_cross_project_explicit_branch(self):
         """Explicit branch cross-project status event on PR"""
 
-        self.do_test_amqp_pr_cross_project("otherbranch")
+        self.do_test_amqp_pr_cross_project("cockpit-project/cockpituous", "otherbranch")
+
+    def test_amqp_sha_pr_cross_forge_default_branch(self):
+        """Explicit branch cross-project status event on PR"""
+
+        self.do_test_amqp_pr_cross_project("codeberg:lis/test.thing", None)
+
+    def test_amqp_sha_pr_cross_forge_explicit_branch(self):
+        """Explicit branch cross-project status event on PR"""
+
+        self.do_test_amqp_pr_cross_project("codeberg:lis/test.thing", "otherbranch")
 
 
 if __name__ == '__main__':
