@@ -20,6 +20,7 @@ from lib.aio.jsonutil import JsonObject
 
 
 class SubjectSpecification(TypedDict, total=False):
+    forge: str | None
     repo: Required[str]
     sha: str | None
     branch: str | None

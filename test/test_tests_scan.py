@@ -421,7 +421,7 @@ class TestTestsScan(unittest.TestCase):
                 # reports for project/reop
                 "context": f"fedora/nightly@{repo_branch}",
                 # but tests cockpituous
-                "command_subject": {"repo": "cockpit-project/cockpituous", "branch": branch},
+                "command_subject": {"forge": None, "repo": "cockpit-project/cockpituous", "branch": branch},
                 "repo": "project/repo",
                 "pull": self.pull_number,
                 "report": None,
