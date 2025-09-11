@@ -264,10 +264,13 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
             if scenario:
                 env["TEST_SCENARIO"] = scenario
             if bots_ref:
+                # picked up in test/common/make-bots
                 env["COCKPIT_BOTS_REF"] = bots_ref
             if branch:
+                # picked up in testlib for "affected tests" logic
                 env["BASE_BRANCH"] = branch
             if number:
+                # used for writing coverage report comments
                 env["TEST_PULL"] = f'{number}'
             # for updating naughty trackers and downloading private images
             secrets = ["github-token", "image-download"]
