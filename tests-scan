@@ -223,6 +223,11 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
             # We're going to post an item to the queue now.  Let's figure what
             # what it should look like...
 
+            # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
+            ref = revision
+
+            checkout_ref = ref
+
             # Get correct project and branch. Ones from test name have priority
             project = api.repo
             branch = base
@@ -231,10 +236,6 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
                 project = context_project
                 branch = context_branch or testmap.get_default_branch(project)
 
-            # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
-            ref = revision
-
-            checkout_ref = ref
             if project != api.repo:
                 checkout_ref = testmap.get_default_branch(project)
 
