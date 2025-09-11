@@ -29,7 +29,7 @@ import pika
 
 from lib import ALLOWLIST, testmap
 from lib.aio.jsonutil import JsonObject, get_int, get_nested, get_object, get_str
-from lib.jobqueue import QueueEntry
+from lib.jobqueue import QueueEntry, SubjectSpecification
 from task import distributed_queue, github, labels_of_pull
 
 sys.dont_write_bytecode = True
@@ -222,32 +222,33 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
 
             # We're going to post an item to the queue now.  Let's figure what
             # what it should look like...
-
-            # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
-            ref = revision
-
-            checkout_ref = ref
+            project: str
+            branch: str | None
+            command_subject: SubjectSpecification | None
+            bots_ref: str = 'main'
 
             # Get correct project and branch. Ones from test name have priority
-            project = api.repo
-            branch = base
             image_scenario, bots_pr, context_project, context_branch = testmap.split_context(context)
             if context_project:
+                # This is the case where the user specified 'scenario@some/other/repo'
                 project = context_project
                 branch = context_branch or testmap.get_default_branch(project)
-                checkout_ref = branch
+                command_subject = {"forge": None, "repo": project, "branch": branch}
 
-            if api.repo == "cockpit-project/bots":
-                # bots own test doesn't need bots/ setup as there is a permanent symlink to itself there
-                # otherwise if we're testing an external project (repo != project) then checkout bots from the PR
-                bots_ref = None if api.repo == project else ref
+                if api.repo == "cockpit-project/bots":
+                    bots_ref = revision  # the original revision
+
             else:
-                if bots_pr:
-                    # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
-                    bots_api = github.GitHub(repo="cockpit-project/bots")
-                    bots_ref = bots_api.get_head(bots_pr) or "xxx"  # Make sure we fail when cannot get the head
-                else:
-                    bots_ref = "main"
+                # This is the case where we're running on the revision itself
+                command_subject = None
+                project = api.repo
+                branch = base
+
+            # The user can override this with '@bots#...'
+            if bots_pr:
+                # Note: Don't use `pull/<pr_number>/head` as it may point to an old revision
+                bots_api = github.GitHub(repo="cockpit-project/bots")
+                bots_ref = bots_api.get_head(bots_pr) or "xxx"  # Make sure we fail when cannot get the head
 
             slug_suffix = context.replace('/', '-').replace('@', '-')
             slug = f"pull-{number}-{revision[:8]}-{time.strftime('%Y%m%d-%H%M%S')}-{slug_suffix}"
@@ -284,11 +285,7 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
                         "title": f"Tests failed on {revision}",
                         "labels": ["nightly"],
                     },
-                    "command_subject": None if project == api.repo else {
-                        "forge": None,
-                        "repo": project,
-                        "branch": checkout_ref,
-                    },
+                    "command_subject": command_subject,
                     "slug": slug,
                     "env": env,
                     "secrets": secrets,
