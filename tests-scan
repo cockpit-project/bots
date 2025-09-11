@@ -230,10 +230,10 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
             # Get correct project and branch. Ones from test name have priority
             image_scenario, bots_pr, context_project, context_branch = testmap.split_context(context)
             if context_project:
-                # This is the case where the user specified 'scenario@some/other/repo'
-                project = context_project
-                branch = context_branch or testmap.get_default_branch(project)
-                command_subject = {"forge": None, "repo": project, "branch": branch}
+                # This is the case where the user specified 'scenario@(forge:)some/other/repo'
+                forge, _, project = context_project.rpartition(':')
+                branch = context_branch or testmap.get_default_branch(context_project)
+                command_subject = {"forge": forge, "repo": project, "branch": branch}
 
                 if api.repo == "cockpit-project/bots":
                     bots_ref = revision  # the original revision
