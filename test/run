@@ -17,6 +17,6 @@ find_python_files() {
     find_scripts 'python3' '*.py'
 }
 
-find_python_files | xargs -0 ruff check --quiet
+find_python_files | xargs -0 ruff check --quiet --force-exclude
 find_python_files | xargs -0 mypy --no-error-summary
 pytest -vv
