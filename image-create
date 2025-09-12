@@ -1,215 +1,200 @@
 #!/usr/bin/env python3
-# This file is part of Cockpit.
-#
-# Copyright (C) 2015 Red Hat, Inc.
-#
-# Cockpit is free software; you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 2.1 of the License, or
-# (at your option) any later version.
-#
-# Cockpit is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+# SPDX-License-Identifier: GPL-3.0-or-later
 
-# image-create  -- Make a root image suitable for use with vm-run.
-#
-# Installs the OS indicated by TEST_OS into the image
-# for test machine and tweaks it to be useable with
-# vm-run and testlib.py.
+"""image-create - Make a root image suitable for use with vm-run.
+
+Installs the OS indicated by TEST_OS into the image for test machine and tweaks
+it to be useable with vm-run and testlib.py.
+"""
 
 import argparse
+import asyncio
+import hashlib
 import os
-import shutil
-import subprocess
-import sys
 import tempfile
+from pathlib import Path
 
-from lib.constants import BOTS_DIR
-from machine import testvm
-
-parser = argparse.ArgumentParser(description='Create a virtual machine image')
-parser.add_argument('-v', '--verbose', action='store_true', help='Display verbose progress details')
-parser.add_argument('-s', '--sit', action='store_true', help='Sit and wait if setup script fails')
-parser.add_argument('-n', '--no-save', action='store_true', help='Don\'t save the new image')
-parser.add_argument('-u', '--upload', action='store_true', help='Upload the image after creation')
-parser.add_argument('--no-build', action='store_true', dest='no_build',
-                    help="Don't build packages and create the vm without build capabilities")
-parser.add_argument("--store", default=None, help="Where to send images")
-parser.add_argument('image', help='The image to create')
-args = parser.parse_args()
-
-# default to --no-build for some images
-if args.image in ["fedora-coreos", "services"]:
-    if not args.no_build:
-        if args.verbose:
-            print("Creating machine without build capabilities based on the image type")
-        args.no_build = True
+from lib import testthing
+from lib.aio.jsonutil import JsonObject
+from lib.constants import IMAGES_DIR, MACHINE_DIR, SCRIPTS_DIR
+from lib.directories import get_images_data_dir
 
 
-class MachineBuilder:
-    def __init__(self, machine: testvm.VirtMachine):
-        self.machine = machine
-        self.iso = self.machine.image.endswith("boot")
-        self.payload = self.machine.image.endswith("payload")
-        if self.iso:
-            self.suffix = ".iso"
-        elif self.payload:
-            self.suffix = ".tar.gz"
-        else:
-            self.suffix = ".qcow2"
+def cloud_init_config(image: str) -> JsonObject:
+    vm_pass = "$5$CockpitCloudInit$Iw89f.aPgqHPXAHC2Zs9h9335n3E1FQDFvR6MLqwPK9"
+    ssh_authorized_keys = [Path(MACHINE_DIR, "identity.pub").read_text()]
+    host_key = Path(MACHINE_DIR, "host_key").read_text()
+    host_key_pub = Path(MACHINE_DIR, "host_key.pub").read_text()
 
-        # Use /var/tmp/ as this is going to be a huge file; /tmp/ is commonly tmpfs
-        self.target_file = self.machine.image_file
-        fp, self.machine.image_file = tempfile.mkstemp(dir="/var/tmp/", prefix=self.machine.image, suffix=self.suffix)
-        os.close(fp)
+    bootcmd = []
+    runcmd = ["printf X_SYSTEMD_UNIT_ACTIVE=los-gehts > /dev/virtio-ports/tt-notify"]
 
-    def bootstrap_system(self) -> None:
-        assert not self.machine._domain
+    if image in ["arch", "centos-9-bootc"]:
+        bootcmd.append("echo 100::55:4e4b:4e4f:574e UNKNOWN >> /etc/hosts")
 
-        os.makedirs(self.machine.run_dir, 0o750, exist_ok=True)
+    if image in ["arch"]:
+        bootcmd.append("systemctl disable --now systemd-time-wait-sync.service || true")
 
-        bootstrap_script = os.path.join(testvm.SCRIPTS_DIR, f"{self.machine.image}.bootstrap")
+    if image in ["opensuse-tumbleweed"]:
+        bootcmd.append("echo 'Include /usr/etc/ssh/sshd_config' > /etc/ssh/sshd_config")
 
-        if os.path.isfile(bootstrap_script):
-            subprocess.check_call([bootstrap_script, self.machine.image_file])
-        else:
-            raise testvm.Failure(f"Unsupported OS {self.machine.image}: {bootstrap_script}")
-
-    def run_setup_script(self, script: str) -> None:
-        """Prepare a test image further by running some commands in it."""
-        self.machine.start()
-
-        try:
-            self.machine.wait_boot(timeout_sec=300)
-            self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib/")], "/var/lib/testvm")
-            self.machine.upload([script], "/var/tmp/SETUP")
-
-            env = {
-                "TEST_OS": self.machine.image,
-                "DO_BUILD": "0" if args.no_build else "1",
-                "SERVER_REPO_URL": os.environ.get("SERVER_REPO_URL", ""),
-                "EXTRAS_REPO_URL": os.environ.get("EXTRAS_REPO_URL", ""),
-                "BASEOS_REPO_URL": os.environ.get("BASEOS_REPO_URL", ""),
-                "APPSTREAM_REPO_URL": os.environ.get("APPSTREAM_REPO_URL", ""),
-            }
-            self.machine.message("run setup script on guest")
-
-            try:
-                self.machine.execute(f"/var/tmp/SETUP {self.machine.image}",
-                                     environment=env, stdout=None, quiet=not self.machine.verbose, timeout=7200)
-                self.machine.execute("rm -f /var/tmp/SETUP")
-            except subprocess.CalledProcessError as exc:
-                if args.sit:
-                    sys.stderr.write(self.machine.diagnose())
-                    input("Press RET to continue... ")
-                raise testvm.Failure(f"setup failed with code {exc.returncode}\n") from exc
-
-        finally:
-            self.machine.stop(timeout_sec=500)
-
-    def boot_system(self) -> None:
-        """Start the system to make sure it can boot, then shutdown cleanly"""
-
-        self.machine.start()
-        # avoid too long boot times -- they cause painfully long tests, and are a bug
-        try:
-            timeout = 30
-            if self.machine.image == "fedora-rawhide":
-                # except with fedora-rawhide, which is slow by design:
-                # https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/HRJT4UF35MRJ7C4ZXVHBFXB4BTW64YSO/
-                timeout = 120
-            self.machine.wait_boot(timeout_sec=timeout)
-        finally:
-            self.machine.stop(timeout_sec=30)
-
-    def build(self) -> None:
-        self.bootstrap_system()
-
-        # gather the scripts, separated by reboots
-        script = os.path.join(testvm.SCRIPTS_DIR, f"{self.machine.image}.setup")
-
-        if not os.path.exists(script):
-            return
-
-        self.machine.message("Running setup script %s" % (script))
-        self.run_setup_script(script)
-
-        # make sure we can boot the system
-        self.boot_system()
-
-    def save(self) -> None:
-        data_dir = testvm.get_images_data_dir()
-
-        os.makedirs(data_dir, 0o750, exist_ok=True)
-
-        if not os.path.exists(self.machine.image_file):
-            raise testvm.Failure("Nothing to save.")
-
-        if not self.iso and not self.payload:
-            rebuild = os.path.join(data_dir, self.machine.image + ".rebuild")
-
-            # Copy image via convert, to make it sparse again
-            subprocess.check_call(["qemu-img", "convert", "-c", "-O", "qcow2", self.machine.image_file, rebuild])
-
-        # Hash the image here
-        sha, _, _rest = subprocess.check_output(
-            ["sha256sum", self.machine.image_file if (self.iso or self.payload) else rebuild], text=True
-        ).partition(" ")
-        if not sha:
-            raise testvm.Failure("sha256sum returned invalid output")
-
-        name = self.machine.image + "-" + sha + self.suffix
-        data_file = os.path.join(data_dir, name)
-        if os.path.exists(data_file):
-            # shutil.move has trouble when the destination exists but
-            # has too restrictive permissions to be overwritten.
-            os.unlink(data_file)
-        shutil.move(self.machine.image_file if (self.iso or self.payload) else rebuild, data_file)
-
-        if not self.iso and not self.payload:
-            # Remove temp image file
-            os.unlink(self.machine.image_file)
-
-        # Update the images symlink
-        if os.path.islink(self.target_file):
-            os.unlink(self.target_file)
-        os.symlink(name, self.target_file)
-
-        # Handle alternate images data directory
-        image_file = os.path.join(testvm.IMAGES_DIR, name)
-        if not os.path.exists(image_file):
-            os.symlink(os.path.abspath(data_file), image_file)
+    return {
+        "users": [
+            "default",
+            {
+                "name": "root",
+                "lock_passwd": False,
+                "hashed_passwd": vm_pass,
+                "groups": "users,wheel",
+                "ssh_authorized_keys": ssh_authorized_keys,
+            },
+            {
+                "name": "admin",
+                "lock_passwd": False,
+                "hashed_passwd": vm_pass,
+                "gecos": "Administrator",
+                "groups": "users,wheel",
+                "ssh_authorized_keys": ssh_authorized_keys,
+            },
+        ],
+        "ssh_pwauth": True,
+        "ssh_keys": {
+            "rsa_private": host_key,
+            "rsa_public": host_key_pub,
+        },
+        "bootcmd": [("sh", "-c", cmd) for cmd in bootcmd],
+        "runcmd": [("sh", "-c", cmd) for cmd in runcmd],
+        "cloud_final_modules": [
+            "scripts-per-once",
+            "scripts-per-boot",
+            "scripts-per-instance",
+            ["scripts-user", "always"],
+            "final-message",
+        ],
+    }
 
 
-try:
-    if args.image == 'services':
+class ImageCreate:
+    def __init__(self, *, image: str, no_build: bool, sit: bool, verbose: bool) -> None:
+        self.ui = testthing.UI(status_messages=True, verbose=verbose)
+
+        if image in ["fedora-coreos", "services"] and not no_build:
+            self.ui.print_verbose("Creating machine without build capabilities based on the image type")
+            no_build = True
+
+        self.image = image
+        self.no_build = no_build
+        self.sit = sit
+
+    def heading(self, text: str) -> None:
+        self.ui.print(f"\n\033[1m## {text}\033[0m\n")
+
+    async def bootstrap(self, tmpfile: Path) -> None:
+        self.heading("Run bootstrap script on host")
+        bootstrap_script = Path(SCRIPTS_DIR) / f"{self.image}.bootstrap"
+        await self.ui.run(bootstrap_script, tmpfile)
+
+    async def setup(self, tmpfile: Path) -> None:
+        self.heading("Start guest")
+        cockpit_test_identity = Path(MACHINE_DIR) / "identity"
+        cockpit_test_identity.chmod(0o600)
+
         # deploying candlepin needs oodles of memory
-        memory_mb = 3072
-    else:
-        memory_mb = 2048
+        memory = "3072M" if self.image in ["services"] else "2048M"
 
-    machine = testvm.VirtMachine(verbose=args.verbose,
-                                 image=args.image,
-                                 memory_mb=memory_mb,
-                                 maintain=True)
-    builder = MachineBuilder(machine)
-    builder.build()
-    if not args.no_save:
-        print("Saving...")
-        builder.save()
-        if args.upload:
-            print("Uploading...")
-            cmd = [os.path.join(BOTS_DIR, "image-upload"), '--prune-s3']
-            if args.store:
-                cmd += ["--store", args.store]
-            cmd += [args.image]
-            subprocess.check_call(cmd)
+        with testthing.IpcDirectory() as ipc:
+            async with testthing.VirtualMachine(
+                boot="mbr",
+                cloud_init_user_data=cloud_init_config(self.image),
+                identity=(cockpit_test_identity, None),
+                image=tmpfile,
+                ipc=ipc,
+                memory=memory,
+                networks=[testthing.Network("user")],
+                snapshot=False,
+                sit=self.sit,
+                target="los-gehts",
+                timeout=300,
+                ui=self.ui,
+            ) as vm:
+                scripts = Path(SCRIPTS_DIR)
+                await vm.wait_boot()
 
-except testvm.Failure as ex:
-    sys.stderr.write("image-create: %s\n" % ex)
-    sys.exit(1)
+                self.heading("Run setup script on guest")
+
+                await vm.scp("-r", scripts / "lib", "vm:/var/lib/testvm")
+                await vm.scp("-r", scripts / f"{self.image}.setup", "vm:/var/tmp/SETUP")
+                await vm.execute(
+                    "/var/tmp/SETUP",
+                    self.image,
+                    environment={
+                        "TEST_OS": self.image,
+                        "DO_BUILD": "0" if self.no_build else "1",
+                        "SERVER_REPO_URL": os.environ.get("SERVER_REPO_URL", ""),
+                        "EXTRAS_REPO_URL": os.environ.get("EXTRAS_REPO_URL", ""),
+                        "BASEOS_REPO_URL": os.environ.get("BASEOS_REPO_URL", ""),
+                        "APPSTREAM_REPO_URL": os.environ.get("APPSTREAM_REPO_URL", ""),
+                    },
+                    stdout=None,
+                )
+
+                self.heading("Shutting down guest")
+
+    async def save(self, tmpfile: Path) -> None:
+        self.heading("Saving image")
+        data_dir = Path(get_images_data_dir())
+        data_dir.mkdir(exist_ok=True, mode=0o750, parents=True)
+
+        with tempfile.NamedTemporaryFile(
+            dir=data_dir, prefix=f"{self.image}", suffix=".sparse.qcow2", delete_on_close=False
+        ) as tmp:
+            # Copy image via convert, to make it sparse again
+            sparse = Path(tmp.name)
+            await self.ui.run(
+                ("qemu-img", "convert"),
+                ("-f", "qcow2", tmpfile),
+                ("-O", "qcow2", "-c", sparse),
+            )
+
+            # Hash the image here
+            with sparse.open("rb") as fp:
+                sha = hashlib.file_digest(fp, "sha256").hexdigest()
+                name = f"{self.image}-{sha}.qcow2"
+
+            # a simple rename always works because it's the same directory
+            data_file = data_dir / name
+            self.ui.print_verbose(f"~ mv \\\n      {sparse} \\\n      {name}\n")
+            sparse.rename(data_file)
+            tmp.close()
+
+        images_dir = Path(IMAGES_DIR)
+
+        self.ui.print_verbose(f"~ ln -sf \\\n      {data_file} \\\n      {images_dir}/\n")
+        (images_dir / name).unlink(missing_ok=True)
+        (images_dir / name).symlink_to(data_file)
+
+        self.ui.print_verbose(f"~ ln -sf \\\n      {name} \\\n      {images_dir}/{self.image}\n")
+        (images_dir / self.image).unlink(missing_ok=True)
+        (images_dir / self.image).symlink_to(name)
+
+    async def create(self) -> None:
+        with testthing.cli_helper(), tempfile.NamedTemporaryFile() as tmp:
+            tmpfile = Path(tmp.name)
+            await self.bootstrap(tmpfile)
+            await self.setup(tmpfile)
+            await self.save(tmpfile)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Create a virtual machine image")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Display verbose progress details")
+    parser.add_argument("-s", "--sit", action="store_true", help="Sit and wait if setup script fails")
+    parser.add_argument("--no-build", action="store_true", help="Create the VM without build capabilities")
+    parser.add_argument("image", help="The image to create")
+    args = parser.parse_args()
+
+    asyncio.run(ImageCreate(**vars(args)).create())
+
+
+if __name__ == "__main__":
+    main()
