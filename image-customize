@@ -345,6 +345,7 @@ async def main() -> None:
     with testthing.cli_helper(), testthing.IpcDirectory() as ipc:
         async with testthing.VirtualMachine(
             prepare_install_image(args.base_image, args.image, args.resize, args.fresh),
+            boot="mbr",
             cpus=args.cpus,
             identity=(cockpit_test_identity, None),
             ipc=ipc,

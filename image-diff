@@ -20,7 +20,7 @@ async def get_packages(image: str) -> Mapping[str, str]:
     file = Path(image) if image.startswith("/") else Path(IMAGES_DIR, image)
 
     with testthing.IpcDirectory() as ipc:
-        async with testthing.VirtualMachine(file, boot="mbr", ipc=ipc) as vm:
+        async with testthing.VirtualMachine(file, boot="mbr", ipc=ipc, memory="1G") as vm:
             # List all packages, irrespective of package manager (rpm or dpkg
             # or pacman). If both are missing, then the command will fail.
             #
