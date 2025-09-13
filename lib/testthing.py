@@ -344,7 +344,7 @@ class UI:
     async def spawn(
         self,
         *args: str | Path | tuple[str | Path, ...],
-        stdin: int | None = None,
+        stdin: int | None = asyncio.subprocess.DEVNULL,
         stdout: int | None = None,
         stderr: int | None = None,
     ) -> asyncio.subprocess.Process:
@@ -395,7 +395,6 @@ class UI:
             *itertools.chain(*_normalize_args(*args)),
             stdin=stdin,
             stdout=stdout,
-            stderr=stderr,
             preexec_fn=pr_set_pdeathsig,
         )
 
@@ -406,15 +405,10 @@ class UI:
     ) -> int:
         """Run a process, waiting for it to exit.
 
-        This takes the same arguments as _spawn, plus a "check" argument (True by
+        This takes the same arguments as spawn, plus a "check" argument (True by
         default) which works in the usual way.
         """
-        process = await self.spawn(
-            *args,
-            stdin=asyncio.subprocess.DEVNULL,
-            stdout=None if self._verbose else asyncio.subprocess.DEVNULL,
-            stderr=None if self._verbose else asyncio.subprocess.DEVNULL,
-        )
+        process = await self.spawn(*args, stdin=asyncio.subprocess.DEVNULL)
         returncode = await process.wait()
         if check and returncode != 0:
             raise SubprocessError(args, returncode=returncode)
@@ -725,7 +719,7 @@ class VirtualMachine:
             creds["ssh.ephemeral-authorized_keys-all"] = public
 
         snap = "on" if self._snapshot else "off"
-        drives = [f"file={self.image},format=qcow2,discard=unmap,cache=unsafe,aio=io_uring,snapshot={snap}"]
+        drives = [f"file={self.image},format=qcow2,discard=unmap,snapshot={snap}"]
 
         if self._cloud_init_user_data:
             cloud_init = self._ipc / "cloud-init"
