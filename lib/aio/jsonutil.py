@@ -159,8 +159,9 @@ def parse_filename(value: JsonValue) -> str | None:
 
 
 def load_external_files(obj: JsonObject, path: Path) -> JsonObject:
-    """Perform a JSON merge patch (RFC 7396) using 'current' and 'patch'.
-    Neither of the original dictionaries is modified — the result is returned.
+    """Replace any [{"file": "filename"}] entries in a document with the
+    contents of the named files. The original dictionary is not modified — the
+    result is returned.
     """
     result = {}
     for key, value in obj.items():
