@@ -11,30 +11,28 @@ import sys
 
 from lib import testmap
 from lib.aio.base import SubjectSpecification
-from lib.aio.github import GitHub
-from lib.directories import xdg_config_home
+from lib.aio.jobcontext import JobContext
 
 
 async def main() -> None:
     used_tags = set()
 
-    # avoid rate limiting with token
-    try:
-        with open(xdg_config_home("cockpit-dev/github-token")) as f:
-            token = f.read().strip()
-    except FileNotFoundError:
-        print("No GitHub token found, rate limiting may apply", file=sys.stderr)
-        token = None
-
-    async with GitHub({"clone-url": "dummy", "api-url": "https://api.github.com/", "post": False,
-                       "token": token, "user-agent": "cockpit-bots"}) as github:
+    async with JobContext(None) as ctx:
         for repo, branches in testmap.REPO_BRANCH_CONTEXT.items():
+            forge: str | None
+            if ":" in repo:
+                forge, _, repo = repo.partition(":")
+            else:
+                forge = None
+
             for branch in branches:
                 if branch.startswith("_"):
                     continue
 
-                subject = await github.resolve_subject(SubjectSpecification({"repo": repo, "branch": branch}))
-                content = await github.read_file(subject, ".cockpit-ci/container")
+                subject = await ctx.resolve_subject(
+                    SubjectSpecification({"forge": forge, "repo": repo, "branch": branch})
+                )
+                content = await subject.read_file(".cockpit-ci/container")
                 if content is None:
                     print(f"Note: {repo}/{branch} has no .cockpit-ci/container", file=sys.stderr)
                     continue
