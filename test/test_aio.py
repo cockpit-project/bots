@@ -135,7 +135,7 @@ def service() -> Iterator[GitHubService]:
 
 @pytest.fixture
 async def api(service: GitHubService) -> AsyncIterator[GitHub]:
-    async with GitHub(service.config) as github:
+    async with GitHub('fakehub', service.config) as github:
         yield github
 
 

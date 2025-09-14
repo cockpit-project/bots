@@ -151,7 +151,7 @@ async def mock_job_context(tmp_path: Path) -> AsyncGenerator[Mock, None]:
             'link': 'http://localhost:9000/logs/'
         }
 
-        forge = GitHub(github_config)
+        forge = GitHub('fakehub', github_config)
         await forge.__aenter__()
 
         logs = LocalLogDriver(log_config)

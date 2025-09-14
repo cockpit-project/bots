@@ -42,7 +42,7 @@ from .s3 import S3LogDriver
 logger = logging.getLogger(__name__)
 
 # __init__ is weird on types, so typecheck this as a callable to enforce correctness
-FORGE_DRIVERS: Mapping[str, Callable[[JsonObject], AsyncContextManager[Forge]]] = {
+FORGE_DRIVERS: Mapping[str, Callable[[str, JsonObject], AsyncContextManager[Forge]]] = {
     'github': GitHub,
 }
 
@@ -131,7 +131,7 @@ class JobContext(contextlib.AsyncExitStack):
                         if driver not in FORGE_DRIVERS:
                             sys.exit(f'Unknown forge driver {driver}')
 
-                        self._forges[name] = await self.enter_async_context(FORGE_DRIVERS[driver](forge))
+                        self._forges[name] = await self.enter_async_context(FORGE_DRIVERS[driver](name, forge))
 
         except JsonError as exc:
             await self.__aexit__(exc.__class__, exc, None)

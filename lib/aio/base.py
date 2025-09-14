@@ -71,7 +71,7 @@ class Forge:
         raise NotImplementedError
 
     @classmethod
-    def new(cls, config: JsonObject) -> Self:
+    def new(cls, name: str, config: JsonObject) -> Self:
         raise NotImplementedError
 
 

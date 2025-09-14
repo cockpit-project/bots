@@ -55,10 +55,11 @@ class CacheEntry(NamedTuple):
 
 
 class GitHub(Forge, contextlib.AsyncExitStack):
-    def __init__(self, config: JsonObject) -> None:
+    def __init__(self, name: str, config: JsonObject) -> None:
         super().__init__()
         self.cache = LRUCache[str, CacheEntry]()
         self.config = config
+        self.name = name
         self.clone = URL(get_str(config, 'clone-url'))
         self.api = URL(get_str(config, 'api-url'))
         self.dry_run = not get_bool(config, 'post')
