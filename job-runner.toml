@@ -13,10 +13,11 @@
 # The defaults from this file are merged with overrides from the first such
 # file found.
 
-# The default configuration is intentionally broken.  You'll need to provide a
-# configuration which (at least) does one of:
-#  - provides a valid GitHub API token; and/or
-#  - sets forge.github.post to false
+# The default configuration will use your personal GitHub user account (via
+# your personal access token in ~/.config/cockpit-dev/github-token, if
+# available) to read from GitHub but won't post unless you set `post = true`,
+# but in that case, as a safety measure, you must also explicitly configure a
+# `token =` to explicitly indicate which account you want to use.
 
 [container]
 command = ['podman']
@@ -53,9 +54,9 @@ default = 'github'
 driver = 'github'
 clone-url = 'https://github.com/'
 api-url = 'https://api.github.com/'
-post = true  # whether to post statuses, open issues, etc.
 user-agent = 'job-runner (cockpit-project/bots)'
-# (at least) one of `token` or `post = false` must be set
+# If you set `post = true` then you must explicitly set a token here as well
+post = false  # whether to post statuses, open issues, etc.
 # token = 'ghp_XXX'
 
 [forge.codeberg]
