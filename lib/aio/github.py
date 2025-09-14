@@ -20,10 +20,13 @@ import json
 import logging
 import platform
 from collections.abc import Awaitable, Callable, Mapping
+from pathlib import Path
 from typing import NamedTuple, Self
 
 import aiohttp
 from yarl import URL
+
+from lib.directories import xdg_config_home
 
 from .base import Forge, Status, Subject, SubjectSpecification
 from .jsonutil import JsonError, JsonObject, JsonValue, get_bool, get_dict, get_nested, get_str, typechecked
@@ -66,8 +69,16 @@ class GitHub(Forge, contextlib.AsyncExitStack):
 
     async def __aenter__(self) -> Self:
         headers = {}
-        # token is mandatory if `post = true`
-        if token := get_str(self.config, 'token', *((None,) if self.dry_run else ())):
+        # `token =` is mandatory if `post = true`...
+        token = get_str(self.config, 'token', *((None,) if self.dry_run else ()))
+
+        # ... but if `post = false`, we fall back to checking ~/.cockpit/cockpit-dev/.
+        if token is None:
+            assert self.dry_run
+            with contextlib.suppress(FileNotFoundError):
+                token = Path(xdg_config_home(f"cockpit-dev/{self.name}-token")).read_text()
+
+        if token is not None:
             headers['Authorization'] = f'token {token.strip()}'
 
         self.session = await self.enter_async_context(create_http_session(self.config, headers))
