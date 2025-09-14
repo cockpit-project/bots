@@ -280,7 +280,7 @@ class UploadAction(ActionBase):
         # preserve trailing / for rsync compatibility
         if src.endswith("/"):
             abssrc += "/"
-        await machine_instance.scp(abssrc, f"vm:{dest}")
+        await machine_instance.scp("-r", abssrc, f"vm:{dest}")
 
 
 async def main() -> None:
