@@ -341,7 +341,7 @@ def is_valid_context(context: str, repo: str) -> bool:
 
 def projects() -> Iterable[str]:
     """Return all projects for which we run tests."""
-    return REPO_BRANCH_CONTEXT.keys()
+    return (repo for repo in REPO_BRANCH_CONTEXT if ':' not in repo)
 
 
 def get_default_branch(repo: str) -> str:
