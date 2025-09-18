@@ -50,7 +50,6 @@ REFRESH = {
     "fedora-rawhide": {},
     "fedora-rawhide-boot": {},
     "fedora-rawhide-anaconda-payload": REFRESH_30,
-    "fedora-rawhide-live-boot": REFRESH_30,
     "opensuse-tumbleweed": {},
     "ubuntu-2204": {},
     "ubuntu-2404": {},
