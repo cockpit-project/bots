@@ -179,14 +179,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'arch'
         ],
     },
-    'osbuild/cockpit-composer': {
-        'main': [
-            'centos-9-stream',
-            'rhel-9-6',
-        ],
-        '_manual': [
-        ],
-    },
     'candlepin/subscription-manager': {
         'main': [
             'centos-10',
