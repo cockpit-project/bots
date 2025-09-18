@@ -223,7 +223,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-43',
         ],
     },
-    'candlepin/subscription-manager-cockpit': {
+    'cockpit-project/subscription-manager-cockpit': {
         'main': [
             'centos-9-stream/subscription-manager-1.29',
             'centos-10',
