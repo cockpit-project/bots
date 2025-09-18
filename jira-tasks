@@ -48,6 +48,8 @@ class JiraClient:
             "summary": summary,
             "description": description,
             "priority": {"name": "Normal"},
+            # Severity
+            "customfield_12316142": {"value": "Moderate"},
             # Story Points
             "customfield_12310243": 2,
             # Preliminary Testing
