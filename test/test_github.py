@@ -68,15 +68,6 @@ class Handler(MockHandler):
             self.send_error(404, 'Mock Not Found: ' + parsed.path)
 
 
-class Logger:
-    def __init__(self):
-        self.data = ""
-
-    # Yes, we open the file each time
-    def write(self, value):
-        self.data = self.data + value
-
-
 class TestGitHub(unittest.TestCase):
     def setUp(self):
         self.server = MockServer(ADDRESS, Handler, GITHUB_ISSUES)
@@ -97,8 +88,6 @@ class TestGitHub(unittest.TestCase):
         self.assertEqual(count, 1)
 
     def testLog(self):
-        self.api.log = Logger()
-
         self.api.get("/test/user")
         self.api.cache.mark(time.time() + 1)
         self.api.get("/test/user")
@@ -108,9 +97,12 @@ class TestGitHub(unittest.TestCase):
             '127.0.0.8:9898 - - * "GET /test/user HTTP/1.1" 304 -\n'
         )
 
-        match = fnmatch.fnmatch(self.api.log.data, expect)
+        with open(self.api.log.path, "r") as f:
+            data = f.read()
+
+        match = fnmatch.fnmatch(data, expect)
         if not match:
-            self.fail(f"'{self.api.log.data}' did not match '{expect}'")
+            self.fail(f"'{data}' did not match '{expect}'")
 
     def testIssuesSince(self):
         issues = self.api.issues(since=1499838499)
