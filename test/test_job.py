@@ -2,7 +2,7 @@ import asyncio
 import json
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, AsyncGenerator, Generator, NamedTuple
+from typing import Any, AsyncGenerator, Generator, NamedTuple
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -10,12 +10,9 @@ from yarl import URL
 
 from lib.aio.github import GitHub
 from lib.aio.job import Failure, Job, run_job
+from lib.aio.jsonutil import JsonObject, get_str, typechecked
 from lib.aio.local import LocalLogDriver
-from task.test_mock_server import HTTPServer, MockHandler, MockServer
-
-if TYPE_CHECKING:
-    from lib.aio.jsonutil import JsonObject
-
+from task.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.1", 9999)
 
@@ -23,7 +20,7 @@ ADDRESS = ("127.0.0.1", 9999)
 POST_CALLS_FILE = Path(tempfile.gettempdir()) / "test_job_post_calls.json"
 
 # Mock GitHub API responses
-GITHUB_DATA = {
+GITHUB_DATA: JsonObject = {
     "/repos/cockpit-project/cockpit/git/refs/heads/main": {
         "object": {"sha": "abc123def456789012345678901234567890abcd"}
     },
@@ -38,23 +35,20 @@ GITHUB_DATA = {
 }
 
 
-class MockGitHubHandler(MockHandler):
+class MockGitHubHandler(MockHandler[JsonObject]):
     @staticmethod
     def clear_post_calls() -> None:
         POST_CALLS_FILE.unlink(missing_ok=True)
 
     @staticmethod
-    def get_post_calls() -> list[tuple[str, object]]:
+    def get_post_calls() -> list[tuple[str, JsonObject]]:
         try:
             return json.loads(POST_CALLS_FILE.read_text())
         except FileNotFoundError:
             return []
 
     def do_GET(self) -> None:
-        # Cast to HTTPServer to access data attribute
-        assert isinstance(self.server, HTTPServer)
         data = self.server.data
-        assert isinstance(data, dict)
         if self.path in data:
             self.replyJson(data[self.path])
         else:
@@ -64,12 +58,7 @@ class MockGitHubHandler(MockHandler):
         # Parse request body
         content_length = int(self.headers.get('Content-Length', '0'))
         post_body = self.rfile.read(content_length)
-
-        # Try to parse as JSON, fallback to raw bytes
-        try:
-            post_data = json.loads(post_body.decode('utf-8'))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            post_data = post_body
+        post_data = typechecked(json.loads(post_body.decode('utf-8')), dict)
 
         # Record the POST call to file
         existing_calls = self.get_post_calls()
@@ -79,10 +68,10 @@ class MockGitHubHandler(MockHandler):
 
         if self.path.startswith('/repos/') and '/statuses/' in self.path:
             # Mock status posting
-            self.replyJson({"state": "success", "context": "test"})  # type: ignore[arg-type]
+            self.replyJson({"state": "success", "context": "test"})
         elif self.path.startswith('/repos/') and self.path.endswith('/issues'):
             # Mock issue creation
-            self.replyJson({"number": 123, "title": "Test Issue"})  # type: ignore[arg-type]
+            self.replyJson({"number": 123, "title": "Test Issue"})
         else:
             self.send_error(404, f'Mock Not Found: {self.path}')
 
@@ -260,17 +249,15 @@ class TestRunJob:
         # First call is the 'pending' status
         pending_path, pending_data = post_calls[0]
         assert pending_path == '/repos/cockpit-project/cockpit/statuses/abc123'
-        assert isinstance(pending_data, dict)
         assert pending_data['state'] == 'pending'
-        assert pending_data['description'].startswith('In progress')
+        assert get_str(pending_data, 'description').startswith('In progress')
         assert pending_data['target_url'] == 'http://localhost:9000/test-job/log.html'
 
         # Second call is the 'success' status
         success_path, success_data = post_calls[1]
         assert success_path == '/repos/cockpit-project/cockpit/statuses/abc123'
-        assert isinstance(success_data, dict)
         assert success_data['state'] == 'success'
-        assert success_data['description'].startswith('Success')
+        assert get_str(success_data, 'description').startswith('Success')
         assert success_data['target_url'] == 'http://localhost:9000/test-job/log.html'
 
     @patch('lib.aio.job.run_container')
@@ -298,15 +285,13 @@ class TestRunJob:
         # First call is the 'pending' status
         pending_path, pending_data = post_calls[0]
         assert pending_path == '/repos/cockpit-project/cockpit/statuses/abc123'
-        assert isinstance(pending_data, dict)
         assert pending_data['state'] == 'pending'
 
         # Second call is the 'failure' status
         failure_path, failure_data = post_calls[1]
         assert failure_path == '/repos/cockpit-project/cockpit/statuses/abc123'
-        assert isinstance(failure_data, dict)
         assert failure_data['state'] == 'failure'
-        assert failure_data['description'].startswith('Container exited with code 1')
+        assert get_str(failure_data, 'description').startswith('Container exited with code 1')
         assert failure_data['target_url'] == 'http://localhost:9000/test-job/log.html'
 
     @patch('lib.aio.job.run_container')
@@ -336,7 +321,7 @@ class TestRunJob:
         assert failure_path == '/repos/cockpit-project/cockpit/statuses/abc123'
         assert isinstance(failure_data, dict)
         assert failure_data['state'] == 'failure'
-        assert failure_data['description'].startswith('Container exited with code 1')
+        assert get_str(failure_data, 'description').startswith('Container exited with code 1')
         assert failure_data['target_url'] == 'http://localhost:9000/test-job/log.html'
 
         # Third is issue creation
@@ -377,7 +362,7 @@ class TestRunJob:
         assert error_path == '/repos/cockpit-project/cockpit/statuses/abc123'
         assert isinstance(error_data, dict)
         assert error_data['state'] == 'error'
-        assert error_data['description'].startswith('Cancelled')
+        assert get_str(error_data, 'description').startswith('Cancelled')
         assert error_data['target_url'] == 'http://localhost:9000/test-job/log.html'
 
     @patch('lib.aio.job.run_container')
@@ -406,7 +391,7 @@ class TestRunJob:
         assert failure_path == '/repos/cockpit-project/cockpit/statuses/abc123'
         assert isinstance(failure_data, dict)
         assert failure_data['state'] == 'failure'
-        assert failure_data['description'].startswith('Timeout after 42 minutes')
+        assert get_str(failure_data, 'description').startswith('Timeout after 42 minutes')
         assert failure_data['target_url'] == 'http://localhost:9000/test-job/log.html'
 
     @patch('lib.aio.job.run_container')

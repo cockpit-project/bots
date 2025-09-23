@@ -34,8 +34,8 @@ GITHUB_ISSUES = [{"number": "5", "state": "open", "created_at": "2011-04-22T13:3
                  {"number": "7", "state": "open"}]
 
 
-class Handler(MockHandler):
-    def do_GET(self):
+class Handler(MockHandler[list[dict[str, str]]]):
+    def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/count":
             self.replyJson(self.server.reply_count)
@@ -59,7 +59,7 @@ class Handler(MockHandler):
         else:
             self.send_error(404, 'Mock Not Found: ' + parsed.path)
 
-    def do_DELETE(self):
+    def do_DELETE(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == '/issues/7':
             del self.server.data[-1]
@@ -69,17 +69,17 @@ class Handler(MockHandler):
 
 
 class TestGitHub(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.server = MockServer(ADDRESS, Handler, GITHUB_ISSUES)
         self.server.start()
         self.temp = tempfile.mkdtemp()
         self.api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/", cacher=cache.Cache(self.temp))
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.server.kill()
         shutil.rmtree(self.temp)
 
-    def testCache(self):
+    def test_cache(self) -> None:
         values = self.api.get("/test/user")
         cached = self.api.get("/test/user")
         self.assertEqual(json.dumps(values), json.dumps(cached))
@@ -87,7 +87,7 @@ class TestGitHub(unittest.TestCase):
         count = self.api.get("/count")
         self.assertEqual(count, 1)
 
-    def testLog(self):
+    def test_log(self) -> None:
         self.api.get("/test/user")
         self.api.cache.mark(time.time() + 1)
         self.api.get("/test/user")
@@ -104,12 +104,12 @@ class TestGitHub(unittest.TestCase):
         if not match:
             self.fail(f"'{data}' did not match '{expect}'")
 
-    def testIssuesSince(self):
+    def test_issues_since(self) -> None:
         issues = self.api.issues(since=1499838499)
         self.assertEqual(len(issues), 1)
         self.assertEqual(issues[0]["number"], "7")
 
-    def testLastIssueDelete(self):
+    def test_last_issue_delete(self) -> None:
         self.assertEqual(len(self.api.issues()), 2)
         self.api.delete("/issues/7")
         issues = self.api.issues()

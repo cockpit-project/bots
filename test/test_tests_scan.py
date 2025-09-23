@@ -18,6 +18,8 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import importlib
+import importlib.machinery
+import importlib.util
 import io
 import json
 import os
@@ -25,14 +27,18 @@ import shutil
 import tempfile
 import unittest
 import unittest.mock
+from collections.abc import Sequence
+from types import ModuleType
+from typing import ClassVar
 
+from lib.aio.jsonutil import JsonValue
 from lib.constants import BOTS_DIR
 from task.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.7", 9898)
 
 
-GITHUB_DATA = {
+GITHUB_DATA: dict[str, JsonValue] = {
     "/repos/project/repo": {
         "default_branch": "main"
     },
@@ -89,8 +95,8 @@ GITHUB_DATA = {
 }
 
 
-class Handler(MockHandler):
-    def do_GET(self):
+class Handler(MockHandler[dict[str, JsonValue]]):
+    def do_GET(self) -> None:
         if self.path in self.server.data:
             self.replyJson(self.server.data[self.path])
         elif self.path.startswith('/repos/project/repo/pulls?'):
@@ -102,9 +108,9 @@ class Handler(MockHandler):
         else:
             self.send_error(404, 'Mock Not Found: ' + self.path)
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         if self.path.startswith("/repos/cockpit-project/cockpit/issues"):
-            content_len = int(self.headers.get('content-length'))
+            content_len = int(self.headers['content-length'])
             data = json.loads(self.rfile.read(content_len).decode('utf-8'))
             self.server.data['issues'] = [data]
             self.replyJson(data)
@@ -113,15 +119,18 @@ class Handler(MockHandler):
 
 
 class TestTestsScan(unittest.TestCase):
+    tests_scan_module: ClassVar[ModuleType]
+
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         loader = importlib.machinery.SourceFileLoader("tests_scan", os.path.join(BOTS_DIR, "tests-scan"))
         spec = importlib.util.spec_from_loader(loader.name, loader)
+        assert spec is not None
         module = importlib.util.module_from_spec(spec)
         loader.exec_module(module)
         cls.tests_scan_module = module
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.temp = tempfile.mkdtemp()
         self.cache_dir = os.path.join(self.temp, "cache")
         os.environ["XDG_CACHE_HOME"] = self.cache_dir
@@ -138,7 +147,7 @@ class TestTestsScan(unittest.TestCase):
             f"pull-{self.pull_number}      {self.context}            {self.revision}"
             f"       ({self.repo}) [bots@main]   {{stable-1.0}}\n")
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.server.kill()
         shutil.rmtree(self.temp)
 
@@ -156,7 +165,7 @@ class TestTestsScan(unittest.TestCase):
     ) -> tuple[str | int, str, str]:
         with unittest.mock.patch("sys.argv", ["tests-scan", "--repo", repo or self.repo, *args]):
             try:
-                self.tests_scan_module.main()  # type: ignore[attr-defined]
+                self.tests_scan_module.main()
                 code: str | int = 0
             except SystemExit as e:
                 assert e.code
@@ -172,7 +181,7 @@ class TestTestsScan(unittest.TestCase):
         assert output == expected_output
 
     # expected job JSON output for our standard mock PR #1 above
-    def run_success_mock_pr(self, args):
+    def run_success_mock_pr(self, args: Sequence[str]) -> None:
         code, output, stderr = self.run_tests_scan(args)
 
         assert code == 0
@@ -195,15 +204,15 @@ class TestTestsScan(unittest.TestCase):
             'slug': f'pull-{self.pull_number}-{self.revision}-20240102-030405-fedora-nightly',
         }
 
-    def test_pull_number(self):
+    def test_pull_number(self) -> None:
         args = ["--dry", "--pull-number", str(self.pull_number), "--context", self.context]
         self.run_success_mock_pr(args)
 
-    def test_notest_pull_number(self):
+    def test_notest_pull_number(self) -> None:
         args = ["--dry", "--pull-number=3", "--context", self.context]
         self.run_success(args, "")
 
-    def test_unkown_pull_number(self):
+    def test_unkown_pull_number(self) -> None:
         args = ["--dry", "--pull-number", "2", "--context", "fedora/nightly"]
         code, output, stderr = self.run_tests_scan(args)
 
@@ -212,30 +221,30 @@ class TestTestsScan(unittest.TestCase):
         assert stderr == ""
         assert output == ""
 
-    def test_pull_data(self):
+    def test_pull_data(self) -> None:
         args = ["--dry", "--context", self.context,
                 "--pull-data", json.dumps({'pull_request': GITHUB_DATA['/repos/project/repo/pulls/1']})]
         self.run_success_mock_pr(args)
 
-    def test_no_arguments(self):
+    def test_no_arguments(self) -> None:
         self.run_success_mock_pr(["--dry", "--context", self.context])
 
-    def test_pull_number_human_readable(self):
+    def test_pull_number_human_readable(self) -> None:
         self.run_success(["--dry", "-v", "--context", self.context, "--pull-number", str(self.pull_number)],
                          self.expected_human_output)
 
-    def test_notest_human_readable(self):
+    def test_notest_human_readable(self) -> None:
         self.run_success(["--dry", "-v", "--context", self.context, "--pull-number=3"], "")
 
-    def test_pull_data_human_readable(self):
+    def test_pull_data_human_readable(self) -> None:
         args = ["--dry", "-v", "--context", self.context,
                 "--pull-data", json.dumps({'pull_request': GITHUB_DATA['/repos/project/repo/pulls/1']})]
         self.run_success(args, self.expected_human_output)
 
-    def test_no_arguments_human_readable(self):
+    def test_no_arguments_human_readable(self) -> None:
         self.run_success(["--dry", "-v", "--context", self.context], self.expected_human_output)
 
-    def test_no_pull_request_human(self):
+    def test_no_pull_request_human(self) -> None:
         repo = "cockpit-project/cockpit"
         expected_output = (f"pull-0      {self.context}            {self.revision}"
                            f"       ({repo}) [bots@main]\n")
@@ -244,7 +253,7 @@ class TestTestsScan(unittest.TestCase):
                          expected_output, repo=repo)
 
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def test_amqp_pr(self, mock_queue):
+    def test_amqp_pr(self, mock_queue: unittest.mock.MagicMock) -> None:
         args = ["--dry", "--context", self.context, "--amqp", "amqp.example.com:1234"]
         self.run_success(args, "")
 
@@ -279,7 +288,7 @@ class TestTestsScan(unittest.TestCase):
         }
 
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def test_amqp_sha_nightly(self, mock_queue):
+    def test_amqp_sha_nightly(self, mock_queue: unittest.mock.MagicMock) -> None:
         """Nightly test on main branch, without PR"""
         # SHA without PR
         args = ["--dry", "--context", self.context, "--sha", "9988aa", "--amqp", "amqp.example.com:1234"]
@@ -317,7 +326,7 @@ class TestTestsScan(unittest.TestCase):
         }
 
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def test_anaconda_secrets(self, mock_queue):
+    def test_anaconda_secrets(self, mock_queue: unittest.mock.MagicMock) -> None:
         """anaconda-webui gets extra secrets"""
         # SHA without PR
         args = ["--dry", "--repo", "rhinstaller/anaconda-webui", "--context", self.context,
@@ -356,7 +365,7 @@ class TestTestsScan(unittest.TestCase):
         }
 
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def test_amqp_sha_pr(self, mock_queue):
+    def test_amqp_sha_pr(self, mock_queue: unittest.mock.MagicMock) -> None:
         """Status event on PR, via human tests-trigger"""
 
         # SHA is attached to PR #1
@@ -394,7 +403,9 @@ class TestTestsScan(unittest.TestCase):
         }
 
     @unittest.mock.patch("task.distributed_queue.DistributedQueue")
-    def do_test_amqp_pr_cross_project(self, forge_repo, status_branch, mock_queue):
+    def do_test_amqp_pr_cross_project(
+        self, forge_repo: str, status_branch: str, mock_queue: unittest.mock.MagicMock
+    ) -> None:
         forge, _, repo = forge_repo.rpartition(":")
         repo_branch = f"{forge_repo}/{status_branch}" if status_branch else forge_repo
         # SHA is attached to PR #1
@@ -440,22 +451,22 @@ class TestTestsScan(unittest.TestCase):
             },
         }
 
-    def test_amqp_sha_pr_cross_project_default_branch(self):
+    def test_amqp_sha_pr_cross_project_default_branch(self) -> None:
         """Default branch cross-project status event on PR"""
 
         self.do_test_amqp_pr_cross_project("cockpit-project/cockpituous", None)
 
-    def test_amqp_sha_pr_cross_project_explicit_branch(self):
+    def test_amqp_sha_pr_cross_project_explicit_branch(self) -> None:
         """Explicit branch cross-project status event on PR"""
 
         self.do_test_amqp_pr_cross_project("cockpit-project/cockpituous", "otherbranch")
 
-    def test_amqp_sha_pr_cross_forge_default_branch(self):
+    def test_amqp_sha_pr_cross_forge_default_branch(self) -> None:
         """Explicit branch cross-project status event on PR"""
 
         self.do_test_amqp_pr_cross_project("codeberg:lis/test.thing", None)
 
-    def test_amqp_sha_pr_cross_forge_explicit_branch(self):
+    def test_amqp_sha_pr_cross_forge_explicit_branch(self) -> None:
         """Explicit branch cross-project status event on PR"""
 
         self.do_test_amqp_pr_cross_project("codeberg:lis/test.thing", "otherbranch")

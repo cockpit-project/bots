@@ -47,7 +47,7 @@ Journal extracted to TestMultiMachine-testFrameNavigation-fedora-i386-127.0.0.2-
 
 
 class TestPolicy(unittest.TestCase):
-    def testKnownIssue(self):
+    def test_known_issue(self) -> None:
         script = os.path.join(BOTS_DIR, "test-failure-policy")
         cmd = [script, "--offline", "example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
@@ -55,7 +55,7 @@ class TestPolicy(unittest.TestCase):
         self.assertEqual(output, "Known issue #9876\n")
         self.assertEqual(proc.returncode, 77)
 
-    def testAlreadyKnownIssue(self):
+    def test_already_known_issue(self) -> None:
         script = os.path.join(BOTS_DIR, "test-failure-policy")
         cmd = [script, "--offline", "--all", "bogus"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
@@ -63,7 +63,7 @@ class TestPolicy(unittest.TestCase):
         self.assertEqual(output, "Known issue #9876 in example\n")
         self.assertEqual(proc.returncode, 78)
 
-    def testRetry(self):
+    def test_retry(self) -> None:
         script = os.path.join(BOTS_DIR, "test-failure-policy")
         cmd = [script, "--offline", "example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
@@ -82,7 +82,7 @@ machine_core.exceptions.Failure: Unable to reach machine fedora-33-127.0.0.2-240
         self.assertEqual(output, "due to failure of test harness or framework\n")
         self.assertEqual(proc.returncode, 1)
 
-    def testNoOp(self):
+    def test_no_op(self) -> None:
         script = os.path.join(BOTS_DIR, "test-failure-policy")
         cmd = [script, "--offline", "example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
@@ -103,7 +103,7 @@ testlib.Error: Condition did not become true.
         self.assertEqual(output, "")
         self.assertEqual(proc.returncode, 0)
 
-    def testLineGlob(self):
+    def test_line_glob(self) -> None:
         script = os.path.join(BOTS_DIR, "test-failure-policy")
         cmd = [script, "--offline", "example"]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)

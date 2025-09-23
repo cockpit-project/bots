@@ -25,12 +25,6 @@ warn_return_any = false
 module = [
     'task',
 
-    'test_github',
-    'test_issue_scan',
-    'test_task',
-    'test_test_failure_policy',
-    'test_tests_scan',
-
     'cockpit-lib-update',
     'image-refresh',
     'image-trigger',
@@ -74,7 +68,6 @@ select = [
     "RSE",     # flake8-raise
     "RUF",     # ruff rules
     "T10",     # flake8-debugger
-    "TC",      # flake8-type-checking
     "UP032",   # f-string
     "W",       # warnings (mostly whitespace)
     "YTT",     # flake8-2020
