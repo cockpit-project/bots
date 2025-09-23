@@ -15,27 +15,46 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 import http.server
 import json
 import multiprocessing
 from collections.abc import Mapping
 
+from lib.aio.jsonutil import JsonValue
 
-class HTTPServer(http.server.HTTPServer):
+# This is a bit confusing, here's how it goes:
+#
+# We run a totally normal HTTPServer.  Generally speaking, a HTTPServer has a
+# handler type which must subclass BaseHTTPRequestHandler which handles the
+# methods.  All of our handlers additionally derive from MockHandler which adds
+# a couple of useful methods.
+#
+# We also have a HTTPServer subclass which is responsible for holding 'data'
+# and 'reply_count'.  This is available on the handler as `self.server` when
+# methods are being run.
+#
+# The MockServer class exists entirely to facilitate starting the actual
+# server.  Note: this uses multiprocessing, so the data is copied each time,
+# which is why we can pass in mutable state but it's never modified.
+
+
+class HTTPServer[T](http.server.HTTPServer):
     reply_count = 0
-    data: object
+    data: T
 
 
-class MockServer:
+class MockServer[T]:
     def __init__(
-        self, address: tuple[str, int], handler: type[http.server.BaseHTTPRequestHandler], data: object = None
+        self, address: tuple[str, int], handler: type[MockHandler[T]], data: T
     ):
         self.address = address
         self.handler = handler
         self.data = data
 
     def run(self) -> None:
-        srv = HTTPServer(self.address, self.handler)
+        srv = HTTPServer[T](self.address, self.handler)
         srv.data = self.data
         srv.serve_forever()
 
@@ -49,7 +68,14 @@ class MockServer:
         assert self.process.exitcode is not None
 
 
-class MockHandler(http.server.BaseHTTPRequestHandler):
+class MockHandler[T](http.server.BaseHTTPRequestHandler):
+    # This is wrong and broken and unsafe, but we kinda need to do it.  We know
+    # that we'll only ever use this with the correct server type, but this
+    # information doesn't get carried through the library stack (in fact, we
+    # can't even be sure that .server here is even an HTTP server: it could be
+    # any socket server).  So let's add it back.  It's just tests...
+    server: HTTPServer[T]
+
     def replyData(self, value: str, headers: Mapping[str, str] = {}, status: int = 200) -> None:
         self.send_response(status)
         for name, content in headers.items():
@@ -58,7 +84,7 @@ class MockHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(value.encode('utf-8'))
         self.wfile.flush()
 
-    def replyJson(self, value: str, headers: Mapping[str, str] = {}, status: int = 200) -> None:
+    def replyJson(self, value: JsonValue, headers: Mapping[str, str] = {}, status: int = 200) -> None:
         assert isinstance(self.server, HTTPServer)
         self.server.reply_count += 1
         all_headers = {"Content-type": "application/json", **headers}

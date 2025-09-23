@@ -19,9 +19,15 @@ from enum import Enum
 from pathlib import Path
 from typing import ContextManager, TypeVar, Union
 
+# immutable
 JsonLiteral = str | float | bool | None
 JsonValue = Union['JsonObject', Sequence['JsonValue'], JsonLiteral]
 JsonObject = Mapping[str, JsonValue]
+
+# mutable
+JsonDocument = Union['JsonDict', 'JsonList', JsonLiteral]
+JsonDict = dict[str, JsonDocument]
+JsonList = list[JsonDocument]
 
 
 DT = TypeVar('DT')

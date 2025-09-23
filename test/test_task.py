@@ -25,12 +25,13 @@ import unittest
 from unittest.mock import patch
 
 import task
+from lib.aio.jsonutil import JsonObject
 from task.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.9", 9898)
 
 
-GITHUB_DATA = {
+GITHUB_DATA: JsonObject = {
     "/repos/project/repo": {
         "default_branch": "main"
     },
@@ -48,33 +49,33 @@ GITHUB_DATA = {
 }
 
 
-class Handler(MockHandler):
-    def do_GET(self):
+class Handler(MockHandler[JsonObject]):
+    def do_GET(self) -> None:
         if self.path in self.server.data:
             self.replyJson(self.server.data[self.path])
         else:
             self.send_error(404, 'Mock Not Found: ' + self.path)
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         if self.path == "/repos/project/repo/pulls":
-            content_len = int(self.headers.get('content-length'))
+            content_len = int(self.headers['content-length'])
             data = json.loads(self.rfile.read(content_len).decode('utf-8'))
             assert data['title'] == "[no-test] Task title"
             data["number"] = 1234
             self.replyJson(data)
         elif self.path == "/repos/project/repo/pulls/1234":
-            content_len = int(self.headers.get('content-length'))
+            content_len = int(self.headers['content-length'])
             data = json.loads(self.rfile.read(content_len).decode('utf-8'))
             data["number"] = 1234
             data["body"] = "This is the body"
             data["head"] = {"sha": "abcde"}
             self.replyJson(data)
         elif self.path == "/repos/project/repo/issues/1234/comments":
-            content_len = int(self.headers.get('content-length'))
+            content_len = int(self.headers['content-length'])
             data = json.loads(self.rfile.read(content_len).decode('utf-8'))
             self.replyJson(data)
         elif self.path == "/repos/project/repo/issues/1234/labels":
-            content_len = int(self.headers.get('content-length'))
+            content_len = int(self.headers['content-length'])
             data = json.loads(self.rfile.read(content_len).decode('utf-8'))
             self.replyJson(data)
         elif self.path.startswith("/repos/project/repo/issues/3333"):
@@ -83,7 +84,7 @@ class Handler(MockHandler):
             self.send_error(405, 'Method not allowed: ' + self.path)
 
 
-def mock_execute(*args):
+def mock_execute(*args: str) -> str:
     assert args[0] == 'git'
     if args[1] == "show":
         return "Task title\n"
@@ -99,43 +100,44 @@ def mock_execute(*args):
 
 
 class TestTask(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.server = MockServer(ADDRESS, Handler, GITHUB_DATA)
         self.server.start()
         self.temp = tempfile.mkdtemp()
         os.environ["GITHUB_API"] = "http://127.0.0.9:9898"
         os.environ["GITHUB_BASE"] = "project/repo"
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.server.kill()
         shutil.rmtree(self.temp)
         os.unsetenv("GITHUB_API")
         os.unsetenv("GITHUB_BASE")
 
-    def testRunArguments(self):
+    def test_run_arguments(self) -> None:
         status = {"ran": False}
 
-        def function(context, **kwargs):
+        def function(context: str, **kwargs: str) -> None:
             self.assertEqual(context, "my-context")
             self.assertEqual(kwargs["title"], "The issue title")
             status["ran"] = True
 
-        ret = task.run("my-context", function, name="blah", title="Task title", issue=3333)
+        ret = task.run("my-context", function, name="blah", title="Task title", issue=3333)  # type: ignore[no-untyped-call]
         self.assertEqual(ret, 0)
         self.assertTrue(status["ran"])
 
-    def testComment(self):
-        comment = task.comment(1234, "This is the comment")
+    def test_comment(self) -> None:
+        comment = task.comment(1234, "This is the comment")  # type: ignore[no-untyped-call]
+        assert isinstance(comment, dict)
         self.assertEqual(comment["body"], "This is the comment")
 
-    def testLabel(self):
-        label = task.label(1234, ['xxx'])
+    def test_label(self) -> None:
+        label = task.label(1234, ['xxx'])  # type: ignore[no-untyped-call]
         self.assertEqual(label, ['xxx'])
 
     @patch('task.execute', mock_execute)
-    def testPullBody(self):
-        args = {"title": "Task title"}
-        pull = task.pull("branch", body="This is the body", **args)
+    def test_pull_body(self) -> None:
+        pull = task.pull("branch", body="This is the body", title="Task title")  # type: ignore[no-untyped-call]
+        assert isinstance(pull, dict)
         self.assertEqual(pull["title"], "Task title")
         self.assertEqual(pull["body"], "This is the body")
 
