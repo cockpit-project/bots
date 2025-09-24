@@ -269,7 +269,7 @@ IMAGE_REFRESH_TRIGGERS = {
         *contexts("fedora-43-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
     ],
     "fedora-43-anaconda-payload": [
-        *contexts("fedora-eln-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
+        *contexts("fedora-43-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
     ],
 }
 
