@@ -40,7 +40,9 @@ def trigger_pull(api: github.GitHub, opts: argparse.Namespace) -> int:
     if opts.context:
         contexts = set[str]()
         for cntx in opts.context:
-            if cntx.startswith("image:"):
+            if '*' or '?' in cntx:
+                contexts.update(testmap.tests_for_fnmatch(cntx))
+            elif cntx.startswith("image:"):
                 contexts.update(testmap.tests_for_image(cntx.split(':', 1)[1]))
             elif testmap.is_valid_context(cntx, api.repo):
                 if opts.bots_pr:
@@ -99,7 +101,8 @@ def main() -> int:
     parser.add_argument('target', help='The pull request number to trigger, '
                                        'or - for the upstream of the current branch')
     parser.add_argument('context', nargs='*', help='The github task context(s) to trigger; can also be '
-                                                   '"image:<imagename>" to trigger all tests related to that image')
+                                                   '"image:<imagename>" to trigger all tests related to that image '
+                                                   'or a wildcard pattern to trigger all matching tests')
     opts = parser.parse_args()
 
     api = github.GitHub(repo=opts.repo)
