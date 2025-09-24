@@ -17,17 +17,19 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import asyncio
 import os
 import subprocess
-import sys
 from collections.abc import Sequence
+from pathlib import Path
 
-from lib.constants import BOTS_DIR, TEST_DIR
-from machine import testvm
+from lib import testthing
+from lib.constants import BOTS_DIR, IMAGES_DIR, MACHINE_DIR, TEST_DIR
+from lib.testmap import get_test_image
 
 opt_quick: bool = False
 opt_verbose: bool = False
-opt_build_options: str = ''
+opt_build_options: str = ""
 stdout_disposition: int | None = None
 
 
@@ -35,7 +37,7 @@ def prepare_install_image(base_image: str, install_image: str, resize: str | Non
     """Create the necessary layered image for the build/install"""
 
     if "/" not in base_image:
-        base_image = os.path.join(testvm.IMAGES_DIR, base_image)
+        base_image = os.path.join(IMAGES_DIR, base_image)
     if "/" not in install_image:
         install_image = os.path.join(os.path.join(TEST_DIR, "images"), os.path.basename(install_image))
 
@@ -54,8 +56,16 @@ def prepare_install_image(base_image: str, install_image: str, resize: str | Non
         install_image_dir = os.path.dirname(install_image)
         os.makedirs(install_image_dir, exist_ok=True)
         base_image = os.path.realpath(base_image)
-        subprocess.check_call(["qemu-img", "create", "-q", "-f", "qcow2",
-                               "-o", f"backing_file={base_image},backing_fmt=qcow2", qcow2_image])
+        subprocess.check_call([
+            "qemu-img",
+            "create",
+            "-q",
+            "-f",
+            "qcow2",
+            "-o",
+            f"backing_file={base_image},backing_fmt=qcow2",
+            qcow2_image,
+        ])
         if os.path.lexists(install_image):
             os.unlink(install_image)
         os.symlink(os.path.basename(qcow2_image), install_image)
@@ -70,7 +80,7 @@ class ActionBase(argparse.Action):
     """Keep an ordered list of actions"""
 
     @staticmethod
-    def execute(machine_instance: testvm.Machine, argument: str) -> None:
+    async def execute(machine_instance: testthing.VirtualMachine, argument: str, /) -> None:
         raise NotImplementedError
 
     def __call__(
@@ -78,68 +88,76 @@ class ActionBase(argparse.Action):
         parser: argparse.ArgumentParser,
         namespace: argparse.Namespace,
         value: str | Sequence[str] | None,
-        option_string: object = None
+        option_string: object = None,
     ) -> None:
         getattr(namespace, self.dest).append((self.execute, value))
 
 
 class InstallAction(ActionBase):
     """Install local rpm or distro package"""
+
     @staticmethod
-    def execute(machine_instance: testvm.Machine, package: str) -> None:
+    async def execute(machine_instance: testthing.VirtualMachine, package: str) -> None:
         # If we have a '/' in the package name, or if a file with that name
         # exists in the current directory, then assume that this is a package
         # we're uploading from the host.
-        if '/' in package or os.path.isfile(package):
+        if "/" in package or os.path.isfile(package):
             dest = "/var/tmp/" + os.path.basename(package)
-            machine_instance.upload([os.path.abspath(package)], dest)
+            await machine_instance.scp(os.path.abspath(package), f"vm:{dest}")
             package = dest
 
         # requesting install of Python wheel?
-        if package.endswith('.whl'):
-            machine_instance.execute(f"python3 -m pip install --no-index --prefix=/usr/local {package}", timeout=120)
+        if package.endswith(".whl"):
+            await asyncio.wait_for(
+                machine_instance.execute(f"python3 -m pip install --no-index --prefix=/usr/local {package}"),
+                timeout=120,
+            )
             return
 
         # this will fail if neither is available -- exception is clear enough, this is a developer tool
-        out = machine_instance.execute("which dnf || which yum || which apt-get")
-        if 'dnf' in out:
+        out = await machine_instance.execute("which dnf || which yum || which apt-get || which pacman")
+        if "dnf" in out:
             install_command = "dnf install -y"
-        elif 'yum' in out:
+        elif "yum" in out:
             install_command = "yum --setopt=skip_missing_names_on_install=False -y install"
-        else:
+        elif "apt-get" in out:
             install_command = "apt-get install -y"
+        elif "pacman" in out:
+            install_command = "pacman -S --noconfirm"
+        else:
+            raise NotImplementedError(f"unknown build platform: {out}")
 
-        machine_instance.execute(f"{install_command} {package}", timeout=1800)
+        await machine_instance.execute(f"{install_command} {package}")
 
 
 class BuildAction(ActionBase):
     """Build and install distribution package(s) from dist tarball or source RPM"""
 
     @staticmethod
-    def execute(machine_instance: testvm.Machine, source: str) -> None:
+    async def execute(machine_instance: testthing.VirtualMachine, source: str) -> None:
         # upload the tarball or srpm
         sourcename = os.path.basename(source)
 
         vm_source = os.path.join("/var/tmp", sourcename)
-        machine_instance.upload([source], vm_source, relative_dir=".")
+        await machine_instance.scp(source, f"vm:{vm_source}")
 
         # this will fail if neither is available -- exception is clear enough, this is a developer tool
-        out = machine_instance.execute("(which pbuilder || which mock || which pacman) 2>/dev/null")
-        if 'pbuilder' in out:
-            BuildAction.build_deb(machine_instance, vm_source)
-        elif 'mock' in out:
-            BuildAction.build_rpm(machine_instance, vm_source)
-        elif 'pacman' in out:
-            BuildAction.build_arch(machine_instance, vm_source)
+        out = await machine_instance.execute("(which pbuilder || which mock || which pacman) 2>/dev/null")
+        if "pbuilder" in out:
+            await BuildAction.build_deb(machine_instance, vm_source)
+        elif "mock" in out:
+            await BuildAction.build_rpm(machine_instance, vm_source)
+        elif "pacman" in out:
+            await BuildAction.build_arch(machine_instance, vm_source)
         else:
             raise NotImplementedError(f"unknown build platform: {out}")
 
     @staticmethod
-    def build_deb(machine: testvm.Machine, vm_source: str) -> None:
-        build_opts = 'nocheck' if opt_quick else ''
+    async def build_deb(machine: testthing.VirtualMachine, vm_source: str) -> None:
+        build_opts = "nocheck" if opt_quick else ""
 
         # build source packge
-        machine.execute(f"""
+        await machine.execute(f"""
             set -eu
             rm -rf /var/tmp/build
             mkdir -p /var/tmp/build
@@ -156,27 +174,30 @@ class BuildAction(ActionBase):
             dpkg-buildpackage -S -us -uc -nc""")
 
         # build binary packages
-        machine.execute(f"cd /var/tmp/build; DEB_BUILD_OPTIONS='{build_opts}' pbuilder build --buildresult . "
-                        f"{opt_build_options} *.dsc", timeout=1800, stdout=stdout_disposition)
+        await machine.execute(
+            f"cd /var/tmp/build; DEB_BUILD_OPTIONS='{build_opts}' pbuilder build --buildresult . "
+            f"{opt_build_options} *.dsc",
+            stdout=stdout_disposition,
+        )
 
         # install packages
-        machine.execute("dpkg -i /var/tmp/build/*.deb")
+        await machine.execute("dpkg -i /var/tmp/build/*.deb")
 
     @staticmethod
-    def build_rpm(machine: testvm.Machine, vm_source: str) -> None:
-        mock_opts = ''
+    async def build_rpm(machine: testthing.VirtualMachine, vm_source: str) -> None:
+        mock_opts = ""
         if opt_verbose:
-            mock_opts += ' --verbose'
+            mock_opts += " --verbose"
         if opt_quick:
-            mock_opts += ' --nocheck'
+            mock_opts += " --nocheck"
         if opt_build_options:
-            mock_opts += ' ' + opt_build_options
+            mock_opts += " " + opt_build_options
 
         # build source package, unless this is running against an srpm already
         if vm_source.endswith(".src.rpm"):
             srpm = vm_source
         else:
-            machine.execute(f"""
+            await machine.execute(f"""
                 set -eu
                 rm -rf /var/tmp/build
                 su builder -c 'rpmbuild --define "_topdir /var/tmp/build" -ts "{vm_source}"'
@@ -184,7 +205,7 @@ class BuildAction(ActionBase):
             srpm = "/var/tmp/build/SRPMS/*.src.rpm"
 
         # HACK: mock in openSUSE must be called through sudo (but still originally as builder)
-        if "opensuse" in machine.execute("cat /etc/os-release"):
+        if "opensuse" in await machine.execute("cat /etc/os-release"):
             mock_sudo = "sudo"
         else:
             mock_sudo = ""
@@ -192,19 +213,25 @@ class BuildAction(ActionBase):
         # build binary RPMs from srpm; disable all repositorys as mock insists on
         # calling `dnf builddep`, which insists on a cache; our test VMs don't have a cache,
         # as the mock is offline and pre-installed
-        machine.execute(f"su builder -c '{mock_sudo} mock --no-clean --no-cleanup-after --disablerepo=* "
-                        f"--offline --resultdir /var/tmp/build {mock_opts} --rebuild {srpm}'",
-                        timeout=1800, stdout=stdout_disposition)
+        await machine.execute(
+            f"su builder -c '{mock_sudo} mock --no-clean --no-cleanup-after --disablerepo=* "
+            f"--offline --resultdir /var/tmp/build {mock_opts} --rebuild {srpm}'",
+            stdout=stdout_disposition,
+        )
 
         # install RPMs
-        machine.execute('packages=$(find /var/tmp/build -name "*.rpm" -not -name "*.src.rpm"); '
-                        f'rpm -U --force --verbose {"--nodigest --nosignature" if opt_quick else ""} $packages')
+        await machine.execute(
+            'packages=$(find /var/tmp/build -name "*.rpm" -not -name "*.src.rpm"); '
+            f"rpm -U --force --verbose {'--nodigest --nosignature' if opt_quick else ''} $packages"
+        )
 
     @staticmethod
-    def build_arch(machine: testvm.Machine, vm_source: str) -> None:
+    async def build_arch(machine: testthing.VirtualMachine, vm_source: str) -> None:
         # unpack source tree's arch packaging directory (PKGBUILD refers to some files)
         # and set PKGBUILD variables
-        machine.write("/var/tmp/mkbuild.sh", f"""#!/bin/sh
+        await machine.write(
+            "/var/tmp/mkbuild.sh",
+            f"""#!/bin/sh
             set -eu
             rm -rf /var/tmp/build
             mkdir -p /var/tmp/build
@@ -215,52 +242,49 @@ class BuildAction(ActionBase):
             cp "$archdir"/* .
             # tarball must be in same directory as PKGBUILD
             cp '{vm_source}' /var/tmp/build/
-            """, perm="755")
-        machine.execute(f"su builder {opt_build_options} /var/tmp/mkbuild.sh")
+            """,
+            perm="755",
+        )
+        await machine.execute(f"su builder {opt_build_options} /var/tmp/mkbuild.sh")
 
         # build binaries
-        machine.execute("cd /var/tmp/build; makechrootpkg -r /var/lib/archbuild/cockpit -U builder",
-                        timeout=1800, stdout=stdout_disposition)
+        await machine.execute(
+            "cd /var/tmp/build; makechrootpkg -r /var/lib/archbuild/cockpit -U builder",
+            stdout=stdout_disposition,
+        )
 
         # install packages
-        machine.execute("pacman -U --noconfirm /var/tmp/build/*.pkg.tar.zst")
+        await machine.execute("pacman -U --noconfirm /var/tmp/build/*.pkg.tar.zst")
 
 
 class RunCommandAction(ActionBase):
     @staticmethod
-    def execute(machine_instance: testvm.Machine, command: str) -> None:
-        try:
-            machine_instance.execute(command, timeout=1800)
-        except subprocess.CalledProcessError as e:
-            sys.stderr.write("%s\n" % e)
-            sys.exit(e.returncode)
+    async def execute(machine_instance: testthing.VirtualMachine, command: str) -> None:
+        await machine_instance.execute(command)
 
 
 class ScriptAction(ActionBase):
     @staticmethod
-    def execute(machine_instance: testvm.Machine, script: str) -> None:
+    async def execute(machine_instance: testthing.VirtualMachine, script: str) -> None:
         uploadpath = "/var/tmp/" + os.path.basename(script)
-        machine_instance.upload([os.path.abspath(script)], uploadpath)
-        machine_instance.execute("chmod a+x %s" % uploadpath)
-        try:
-            machine_instance.execute(uploadpath, timeout=1800)
-        except subprocess.CalledProcessError as e:
-            sys.stderr.write("%s\n" % e)
-            sys.exit(e.returncode)
+        await machine_instance.scp(os.path.abspath(script), f"vm:{uploadpath}")
+        await machine_instance.execute("chmod a+x %s" % uploadpath)
+        await machine_instance.execute(uploadpath)
 
 
 class UploadAction(ActionBase):
     @staticmethod
-    def execute(machine_instance: testvm.Machine, srcdest: str) -> None:
+    async def execute(machine_instance: testthing.VirtualMachine, srcdest: str) -> None:
         src, dest = srcdest.split(":")
         abssrc = os.path.abspath(src)
         # preserve trailing / for rsync compatibility
-        if src.endswith('/'):
-            abssrc += '/'
-        machine_instance.upload([abssrc], dest)
+        if src.endswith("/"):
+            abssrc += "/"
+        await machine_instance.scp("-r", abssrc, f"vm:{dest}")
 
 
-def main() -> None:
+async def main() -> None:
+    # fmt: off
     parser = argparse.ArgumentParser(
         description=('Run command inside or install packages into a Cockpit virtual machine. '
                      'All actions can be specified multiple times and run in the given order.'))
@@ -284,7 +308,7 @@ def main() -> None:
                         help="Additional options for mock/pbuilder/arch builder")
     parser.add_argument('--resize', help="Resize the image. Size in bytes with using K, M, or G suffix.")
     parser.add_argument('-n', '--no-network', action='store_true', help='Do not connect the machine to the Internet')
-    parser.add_argument('--cpus', type=int, default=None,
+    parser.add_argument('--cpus', type=int, default=2,
                         help="Number of CPUs for the virtual machine")
     parser.add_argument('--memory-mb', type=int, default=2048,
                         help="RAM size for the virtual machine")
@@ -294,6 +318,7 @@ def main() -> None:
                         help='Disable tests during package build with --build')
     parser.add_argument('image', help='The image to use (destination name when using --base-image)')
     parser.add_argument('--sit', action='store_true', help='Sit and wait if any VM action fails')
+    # fmt: on
     args = parser.parse_args()
 
     if not args.actions and not args.resize:
@@ -302,7 +327,7 @@ def main() -> None:
     if not args.base_image:
         args.base_image = os.path.basename(args.image)
 
-    args.base_image = testvm.get_test_image(args.base_image)
+    args.base_image = get_test_image(args.base_image)
 
     global opt_quick, opt_verbose, opt_build_options, stdout_disposition
     opt_quick = args.quick
@@ -311,30 +336,28 @@ def main() -> None:
     if not args.verbose:
         stdout_disposition = subprocess.DEVNULL
 
-    if '/' not in args.base_image:
+    if "/" not in args.base_image:
         subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), args.base_image])
-    network = testvm.VirtNetwork(0, image=args.base_image)
-    machine = testvm.VirtMachine(maintain=True,
-                                 verbose=args.verbose,
-                                 networking=network.host(restrict=args.no_network),
-                                 image=prepare_install_image(args.base_image, args.image, args.resize, args.fresh),
-                                 cpus=args.cpus,
-                                 memory_mb=args.memory_mb)
-    machine.start()
-    machine.wait_boot()
-    try:
-        for (handler, arg) in args.actions:
-            handler(machine, arg)
-    except Exception as e:
-        if args.sit:
-            print(e, file=sys.stderr)
-            print(machine.diagnose(), file=sys.stderr)
-            print("Press RET to continue...")
-            sys.stdin.readline()
-        raise e
-    finally:
-        machine.stop()
+
+    cockpit_test_identity = Path(MACHINE_DIR) / "identity"
+    cockpit_test_identity.chmod(0o600)
+
+    with testthing.cli_helper(), testthing.IpcDirectory() as ipc:
+        async with testthing.VirtualMachine(
+            prepare_install_image(args.base_image, args.image, args.resize, args.fresh),
+            boot="mbr",
+            cpus=args.cpus,
+            identity=(cockpit_test_identity, None),
+            ipc=ipc,
+            memory=f"{args.memory_mb}M",
+            networks=[] if args.no_network else [testthing.Network("user")],
+            sit=args.sit,
+            snapshot=False,
+            verbose=args.verbose,
+        ) as vm:
+            for handler, arg in args.actions:
+                await asyncio.wait_for(handler(vm, arg), timeout=1800)
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    asyncio.run(main())
