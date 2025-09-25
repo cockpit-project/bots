@@ -84,6 +84,12 @@ deploy_to cockpit-project/cockpit-files-weblate \
     --deploy-from \
         cockpit-project/cockpit-files/cockpit-files-weblate/DEPLOY_KEY
 
+# subscription-manager-cockpit
+deploy_to cockpit-project/subscription-manager-cockpit \
+    --deploy-from \
+        cockpit-project/subscription-manager-cockpit/npm-update/SELF_DEPLOY_KEY \
+        cockpit-project/subscription-manager-cockpit/self/DEPLOY_KEY
+
 # shared
 deploy_to cockpit-project/node-cache \
     --deploy-from \
@@ -94,7 +100,9 @@ deploy_to cockpit-project/node-cache \
         cockpit-project/cockpit-machines/npm-update/NODE_CACHE_DEPLOY_KEY \
         cockpit-project/cockpit-machines/node-cache/DEPLOY_KEY \
         cockpit-project/cockpit-podman/npm-update/NODE_CACHE_DEPLOY_KEY \
-        cockpit-project/cockpit-podman/node-cache/DEPLOY_KEY
+        cockpit-project/cockpit-podman/node-cache/DEPLOY_KEY \
+        cockpit-project/subscription-manager-cockpit/npm-update/NODE_CACHE_DEPLOY_KEY \
+        cockpit-project/subscription-manager-cockpit/node-cache/DEPLOY_KEY
 
 # flathub
 deploy_to cockpit-project/org.cockpit_project.CockpitClient \
