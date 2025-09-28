@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "test/check-machines-storage-pools", line *, in testStoragePoolsCreate
-*
-wait_js_cond(ph_is_present("#my_disk_pool-system-create-volume-button:enabled")): Error: condition did not become true

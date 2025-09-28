@@ -1,5 +1,0 @@
-error: Failed to start pool pdd-pool-1
-error: internal error: Failed to create disk pool geometry
-*
-Traceback (most recent call last):
-  File "test/check-machines-storage-pools", line *, in testStoragePoolsDeletion
