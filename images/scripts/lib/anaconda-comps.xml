@@ -9,51 +9,24 @@
     <default>true</default>
     <uservisible>true</uservisible>
     <packagelist>
-      <packagereq type="mandatory">audit</packagereq>
       <packagereq type="mandatory">bash</packagereq>
       <packagereq type="mandatory">coreutils</packagereq>
-      <packagereq type="mandatory">curl</packagereq>
-      <packagereq type="mandatory">dhcp-client</packagereq>
       <packagereq type="mandatory">dnf5</packagereq>
       <packagereq type="mandatory">e2fsprogs</packagereq>
       <packagereq type="mandatory">filesystem</packagereq>
       <packagereq type="mandatory">glibc</packagereq>
-      <packagereq type="mandatory">hostname</packagereq>
       <packagereq type="mandatory">iproute</packagereq>
       <packagereq type="mandatory">iputils</packagereq>
-      <packagereq type="mandatory">kbd</packagereq>
       <packagereq type="mandatory">less</packagereq>
-      <packagereq type="mandatory">man-db</packagereq>
-      <packagereq type="mandatory">ncurses</packagereq>
-      <packagereq type="mandatory">openssh-clients</packagereq>
-      <packagereq type="mandatory">openssh-server</packagereq>
       <packagereq type="mandatory">parted</packagereq>
       <packagereq type="mandatory">policycoreutils</packagereq>
       <packagereq type="mandatory">procps-ng</packagereq>
-      <packagereq type="mandatory">rootfiles</packagereq>
       <packagereq type="mandatory">rpm</packagereq>
       <packagereq type="mandatory">selinux-policy-targeted</packagereq>
       <packagereq type="mandatory">setup</packagereq>
       <packagereq type="mandatory">shadow-utils</packagereq>
-      <packagereq type="mandatory">sssd-common</packagereq>
-      <packagereq type="mandatory">libsss_sudo</packagereq>
-      <packagereq type="mandatory">sssd-kcm</packagereq>
-      <packagereq type="mandatory">sudo</packagereq>
       <packagereq type="mandatory">systemd</packagereq>
       <packagereq type="mandatory">util-linux</packagereq>
-      <packagereq type="mandatory">vim-minimal</packagereq>
-      <packagereq type="default">NetworkManager</packagereq>
-      <packagereq type="default">dnf5-plugins</packagereq>
-      <packagereq type="default">dracut-config-rescue</packagereq>
-      <packagereq type="default">firewalld</packagereq>
-      <packagereq type="default">fwupd</packagereq>
-      <packagereq type="default">plymouth</packagereq>
-      <packagereq type="default">prefixdevname</packagereq>
-      <packagereq type="default">systemd-resolved</packagereq>
-      <packagereq type="default">zram-generator-defaults</packagereq>
-      <packagereq type="optional">dracut-config-generic</packagereq>
-      <packagereq type="optional">initial-setup</packagereq>
-      <packagereq type="optional">initscripts</packagereq>
     </packagelist>
   </group>
 
@@ -63,43 +36,20 @@
     <default>false</default>
     <uservisible>false</uservisible>
     <packagelist>
-      <packagereq type="mandatory">authselect</packagereq>
       <packagereq type="mandatory">btrfs-progs</packagereq>
-      <packagereq type="mandatory">chrony</packagereq>
       <packagereq type="mandatory">cryptsetup</packagereq>
-      <packagereq type="mandatory">dosfstools</packagereq>
-      <packagereq type="mandatory">dracut-network</packagereq>
       <packagereq type="mandatory">e2fsprogs</packagereq>
       <packagereq type="mandatory">efibootmgr</packagereq>
-      <packagereq type="mandatory">exfatprogs</packagereq>
-      <packagereq type="mandatory">firewalld</packagereq>
-      <packagereq type="mandatory">gfs2-utils</packagereq>
-      <packagereq type="mandatory">glibc-all-langpacks</packagereq>
-      <packagereq type="mandatory">grub2-efi-ia32</packagereq>
-      <packagereq type="mandatory">grub2-efi-ia32-cdboot</packagereq>
       <packagereq type="mandatory">grub2-efi-x64</packagereq>
-      <packagereq type="mandatory">grub2-efi-x64-cdboot</packagereq>
       <packagereq type="mandatory">grub2-pc</packagereq>
       <packagereq type="mandatory">grub2-tools</packagereq>
       <packagereq type="mandatory">grub2-tools-efi</packagereq>
       <packagereq type="mandatory">grub2-tools-extra</packagereq>
       <packagereq type="mandatory">grubby</packagereq>
-      <packagereq type="mandatory">hfsplus-tools</packagereq>
-      <packagereq type="mandatory">iscsi-initiator-utils</packagereq>
-      <packagereq type="mandatory">kbd-legacy</packagereq>
-      <packagereq type="mandatory">kexec-tools</packagereq>
       <packagereq type="mandatory">lvm2</packagereq>
-      <packagereq type="mandatory">mactel-boot</packagereq>
       <packagereq type="mandatory">mdadm</packagereq>
-      <packagereq type="mandatory">ntfsprogs</packagereq>
-      <packagereq type="mandatory">nvme-cli</packagereq>
-      <packagereq type="mandatory">realmd</packagereq>
       <packagereq type="mandatory">shim-x64</packagereq>
-      <packagereq type="mandatory">teamd</packagereq>
       <packagereq type="mandatory">xfsprogs</packagereq>
-      <packagereq type="optional">device-mapper-multipath</packagereq>
-      <packagereq type="optional">fcoe-utils</packagereq>
-      <packagereq type="optional">sdubby</packagereq>
     </packagelist>
   </group>
 
@@ -110,9 +60,7 @@
     <uservisible>false</uservisible>
     <packagelist>
       <packagereq type="mandatory">NetworkManager</packagereq>
-      <packagereq type="mandatory">dbus-broker</packagereq>
       <packagereq type="mandatory">dracut</packagereq>
-      <packagereq type="mandatory">initial-setup</packagereq>
       <packagereq type="mandatory">kernel</packagereq>
     </packagelist>
   </group>
