@@ -181,4 +181,8 @@ zypper clean
 # c-podman tests
 /var/lib/testvm/podman-images.setup
 
+# cockpit tests pull quay.io/cockpit/ws which fails because 
+# quay.io is not present in the unqualified-search-registries in /etc/containers/registries.conf 
+sed -i 's/"registry.opensuse.org"/"quay.io", "registry.opensuse.org"/' /etc/containers/registries.conf
+
 /var/lib/testvm/zero-disk.setup
