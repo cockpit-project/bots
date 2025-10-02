@@ -38,6 +38,7 @@ module = [
 
 [tool.ruff]
 exclude = [
+    "lib/testthing.py",
     ".git/",
 ]
 line-length = 118
