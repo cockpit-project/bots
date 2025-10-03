@@ -3,4 +3,9 @@ set -eux
 
 OUTPUT="$1"
 
-PYTHONPATH=. python3 images/scripts/create-anaconda-payload --output=$OUTPUT
+WORKDIR=$(mktemp -d)
+PYTHONPATH=. python3 images/scripts/create-anaconda-liveimg-payload --output="$WORKDIR" --image fedora-rawhide
+PYTHONPATH=. python3 images/scripts/create-anaconda-dnf-payload --output="$WORKDIR" --image fedora-rawhide
+
+tar -C "$WORKDIR" -czf "$OUTPUT" .
+rm -rf "$WORKDIR"

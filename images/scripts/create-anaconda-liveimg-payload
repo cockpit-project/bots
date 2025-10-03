@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-# create-anaconda-payload  -- Create a payload to be used by anaconda installer tests.
+# create-anaconda-liveimg-payload  -- Create a liveimg payload to be used by anaconda installer tests.
 
 import argparse
 import os
@@ -74,9 +74,9 @@ def build_payload(image: str, output: str) -> None:
         )
 
         # Change directory to /mnt/sysimage/ and create archive
-        machine.execute("cd /mnt/sysimage && tar --selinux --acls --xattrs -zcvf /root/payload.tar.gz *", timeout=100)
+        machine.execute("cd /mnt/sysimage && tar --selinux --acls --xattrs -zcvf /root/liveimg.tar.gz *", timeout=100)
 
-        machine.download("/root/payload.tar.gz", output)
+        machine.download("/root/liveimg.tar.gz", output)
     finally:
         machine.stop()
 
