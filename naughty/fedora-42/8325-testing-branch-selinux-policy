@@ -1,0 +1,3 @@
+type=AVC * avc:  denied  { open } for  pid=* comm="sshd-session" path="/root/.ssh/authorized_keys" dev="vda4" ino=* scontext=system_u:system_r:sshd_session_t:s0-s0:c0.c1023 tcontext=unconfined_u:object_r:httpd_exec_t:s0 tclass=file permissive=1
+*
+SELinux is preventing /usr/libexec/openssh/sshd-session from open access on the file /root/.ssh/authorized_keys.
