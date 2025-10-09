@@ -1,0 +1,5 @@
+#!/sbin/openrc-run
+
+command="/usr/local/sbin/tt-vsock-sshd"
+command_background=true
+pidfile=/run/tt-vsock-sshd.pid

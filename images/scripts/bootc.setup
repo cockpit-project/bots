@@ -27,20 +27,6 @@ podman rmi localhost:5000/bootc:latest localhost/bootc:latest
 podman rm -f -t0 ostree-registry
 rm /var/cache/bootc.oci.tar
 
-# Older RHEL releases need vsock support for test.thing
-if [ "${IMAGE#rhel-9}" != "$IMAGE" ] || [ "${IMAGE#centos-9}" != "$IMAGE" ]; then
-    cp -va /var/lib/testvm/test.thing-workarounds/*.{socket,service} /etc/systemd/system
-    systemctl daemon-reload
-    systemctl enable tt-sshd-vsock.socket tt-sd_notify.service
-    checkmodule -M -m -o /tmp/sshd_vsock.mod /var/lib/testvm/test.thing-workarounds/sshd_vsock.te
-    semodule_package -m /tmp/sshd_vsock.mod -o /tmp/sshd_vsock.pp
-    semodule -i /tmp/sshd_vsock.pp
-fi
-
-# https://github.com/openssh/openssh-portable/pull/388
-# https://github.com/openssh/openssh-portable/pull/593
-echo 100::55:4e4b:4e4f:574e UNKNOWN | tee -a /etc/hosts
-
 # disable various maintenance tasks which interfere with tests and don't make sense for our tests
 systemctl disable bootc-fetch-apply-updates.timer fstrim.timer logrotate.timer raid-check.timer
 

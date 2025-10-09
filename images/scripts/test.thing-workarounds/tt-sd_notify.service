@@ -9,11 +9,7 @@ Wants=sockets.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -ec '\
-    if addr="$$(dmidecode -qt11 | grep -om1 "vsock-stream:2:[0-9]*")"; then \
-        printf X_SYSTEMD_UNIT_ACTIVE=sockets.target | socat - "$${addr/stream/connect}"; \
-    fi \
-'
+ExecStart=vsock-fling 2 1111 X_SYSTEMD_UNIT_ACTIVE=sockets.target
 
 [Install]
 WantedBy=sockets.target

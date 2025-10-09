@@ -171,10 +171,6 @@ echo 'GRUB_CMDLINE_LINUX_DEFAULT=""' >> /etc/default/grub
 echo 'GRUB_CMDLINE_LINUX="no_timer_check net.ifnames=0 console=tty1 console=ttyS0,115200n8"' >> /etc/default/grub
 grub2-mkconfig -o /boot/grub2/grub.cfg
 
-# https://github.com/openssh/openssh-portable/pull/388
-# https://github.com/openssh/openssh-portable/pull/593
-echo 100::55:4e4b:4e4f:574e UNKNOWN | tee -a /etc/hosts
-
 # reduce image size
 zypper clean
 

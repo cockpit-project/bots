@@ -1,0 +1,25 @@
+#!/usr/bin/env -S sh -c 'if [ -x /usr/libexec/platform-python ]; then exec /usr/libexec/platform-python "$0" "$@"; else exec python3 "$0" "$@"; fi'
+
+import argparse
+import ctypes
+import socket
+import struct
+
+parser = argparse.ArgumentParser(
+    description="Speedy thing goes in, speedy thing comes out."
+)
+parser.add_argument("cid", type=int)
+parser.add_argument("port", type=int)
+parser.add_argument("message", type=str.encode)
+args = parser.parse_args()
+
+# Old Python is unaware of `AF_VSOCK` or how to format its
+# `struct sockaddr` so we need to get a bit creative...
+AF_VSOCK = 40
+sockaddr = struct.pack("HHII4x", AF_VSOCK, 0, args.port, args.cid)
+
+libc = ctypes.CDLL(None)
+fd = libc.socket(AF_VSOCK, socket.SOCK_STREAM, 0)
+libc.connect(fd, sockaddr, len(sockaddr))
+libc.write(fd, args.message, len(args.message))
+libc.close(fd)

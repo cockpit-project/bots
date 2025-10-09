@@ -1,0 +1,73 @@
+#!/usr/bin/python3
+
+import base64
+import signal
+import socket
+import subprocess
+from collections.abc import Iterator
+from pathlib import Path
+
+
+def dmidecode(table: bytes) -> Iterator[tuple[str, bytes]]:
+    while table:
+        type_ = table[0]
+        length = table[1]
+        strings, _, table = table[length:].partition(b"\0\0")
+
+        if type_ == 11:
+            for oemstr in strings.split(b"\0"):
+                prefix, _, content = oemstr.partition(b":")
+                if prefix in [b"io.systemd.credential", b"io.systemd.credential.binary"]:
+                    key, _, value = content.partition(b"=")
+                    if b"binary" in prefix:
+                        value = base64.decodebytes(value)
+                    yield key.decode("ascii"), value
+
+
+def vsock_fling(notify_socket: str, message: bytes) -> None:
+    try:
+        af, cid, port = notify_socket.split(":")
+        addr = (int(cid), int(port))
+    except ValueError:
+        return  # unsupported address
+
+    if af != 'vsock-stream':
+        return  # unsupported address
+
+    sd_notify = socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM)
+    sd_notify.connect(addr)
+    sd_notify.send(message)
+    sd_notify.close()
+
+
+def main() -> None:
+    creds = dict(dmidecode(Path("/sys/firmware/dmi/tables/DMI").read_bytes()))
+    rundir = Path("/run/tt-vsock-sshd")
+    rundir.mkdir(exist_ok=True)
+
+    if ephemeral := creds.get("ssh.ephemeral-authorized_keys-all"):
+        (rundir / "ephemeral-all").write_bytes(ephemeral)
+
+    listener = socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM)
+    listener.bind((-1, 22))
+    listener.listen()
+
+    if notify_socket := creds.get("vmm.notify_socket"):
+        vsock_fling(notify_socket.decode(), b"X_SYSTEMD_UNIT_ACTIVE=sockets.target")
+
+    signal.signal(signal.SIGCHLD, signal.SIG_IGN)  # no zombies, please
+    while True:
+        sock, _addr = listener.accept()
+        subprocess.run(
+            (
+                "/usr/sbin/sshd",
+                "-i",
+                *("-o", f"AuthorizedKeysFile={rundir}/ephemeral-all .ssh/authorized_keys"),
+            ),
+            stdin=sock.fileno(),
+            stdout=sock.fileno(),
+            start_new_session=True,
+        )
+
+
+main()

@@ -30,11 +30,12 @@ And then you can say `ssh tt.0` or `scp file tt.0:/tmp`.
 # When copying test.thing into your own project, try to use a tagged version.
 # If you need to use a version between tags or have made your own
 # modifications, please make note if it by modifying the version number.
-__version__ = "0.3.4+hacks!"
+__version__ = "0.4.0"
 
 import argparse
 import asyncio
 import contextlib
+import contextvars
 import ctypes
 import dataclasses
 import functools
@@ -51,10 +52,19 @@ import sys
 import tempfile
 import traceback
 import weakref
-from collections.abc import AsyncGenerator, Callable, Iterable, Mapping, Sequence, Iterator
+from collections.abc import (
+    AsyncGenerator,
+    AsyncIterator,
+    Callable,
+    Coroutine,
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from pathlib import Path
-from types import TracebackType
 from typing import Any, Literal, Never, Self
+from types import TracebackType
 
 logger = logging.getLogger(__name__)
 
@@ -90,10 +100,6 @@ Df9PUWMYZ3HRwwdsYovSOkT53fG6guy+vElUEDkrpZYczROZ6GUcx70=
 """A copy of `bots/machine/identity` from the cockpit project.  Many existing
 VM images have the public half of this key inside of them, so it's useful for
 gaining access to those if they lack support for ephemeral ssh keys."""
-
-COCKPIT_TEST_IDENTITY_PUB = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDUOtNJdBEXyKxBB898rdT54ULjMGuO6v4jLXmRsdRhR5Id/lKNc9hsdioPWUePgYlqML2iSV72vKQoVhkyYkpcsjr3zvBny9+5xej3+TBLoEMAm2hmllKPmxYJDU8jQJ7wJuRrOVOnk0iSNF+FcY/yaQ0owSF02Nphx47j2KWc0IjGGlt4fl0fmHJuZBA2afN/4IYIIsEWZziDewVtaEjWV3InMRLllfdqGMllhFR+ed2hQz9PN2QcapmEvUR4UCy/mJXrke5htyFyHi8ECfyMMyYeHwbWLFQIve4CWix9qtksvKjcetnxT+WWrutdr3c9cfIj/c0v/Zg/c4zETxtp cockpit-test"  # noqa: E501
-"""A copy of `bots/machine/identity.pub` from the cockpit project.  The
-corresponding public key for COCKPIT_TEST_IDENTITY."""
 
 
 # This is basically tempfile.TemporaryDirectory but sequentially-allocated.
@@ -240,12 +246,14 @@ async def _qmp_command(ipc: Path, command: str) -> object:
     return response
 
 
-def _ssh_direct_args(identities: Sequence[Path], port: Path) -> tuple[tuple[str, str], ...]:
+def _ssh_direct_args(
+    identities: Sequence[Path], vsock: Path
+) -> tuple[tuple[str, str], ...]:
     options = {
         # Fake that we know the host key
         "KnownHostsCommand": "/bin/echo %H %t %K",
         # Use systemd-ssh-proxy to connect via vsock
-        "ProxyCommand": f"/usr/lib/systemd/systemd-ssh-proxy vsock-mux/{port} 22",
+        "ProxyCommand": f"/usr/lib/systemd/systemd-ssh-proxy vsock-mux/{vsock} 22",
         "ProxyUseFdpass": "yes",
         # Try to prevent interactive prompting and/or updating known_hosts
         # files or otherwise interacting with the environment
@@ -260,8 +268,8 @@ def _ssh_direct_args(identities: Sequence[Path], port: Path) -> tuple[tuple[str,
 
     return (
         ("-F", "none"),  # don't use the user's config
-        *(("-o", f"{k} {v}") for k, v in options.items()),
-        *(("-o", f"IdentityFile {path}") for path in identities),
+        *(("-o", f"{k}={v}") for k, v in options.items()),
+        *(("-i", f"{path}") for path in identities),
     )
 
 
@@ -271,15 +279,35 @@ def _stderr_is_tty() -> bool:
 
 
 class UI:
+    """A helper for printing messages and launching subprocesses."""
+
     def __init__(self, *, status_messages: bool, verbose: bool) -> None:
+        """Create a UI helper.
+
+        This controls the stderr output of test.thing.  The test.thing library
+        never writes to stdout.
+
+         - status_messages: if intermediary messages about the state of the
+           machine should be printed or not
+         - verbose: extra output is printed (like all executed commands)
+
+        If both are false then nothing will be printed.
+        """
         self._status_messages = status_messages
         self._verbose = verbose
 
     def clear_status_message(self) -> None:
+        """Clear any displayed status message."""
         if _stderr_is_tty():
             sys.stderr.write("\r\033[2K")
 
     def print_status(self, line: str) -> None:
+        """Print a status line message.
+
+        This is only printed if status_messages=True.  A status message is a
+        transient message that will be erased at the next output (unless stderr
+        is not a TTY).
+        """
         if self._status_messages:
             if os.isatty(2):
                 sys.stderr.write("\r\033[2K  " + line + "\r")
@@ -287,11 +315,13 @@ class UI:
                 sys.stderr.write(line + "\n")
 
     def print_verbose(self, line: str) -> None:
+        """Print a verbose message, if verbose=True."""
         if self._verbose:
             self.clear_status_message()
             sys.stderr.write(line + "\n")
 
     def print(self, line: str) -> None:
+        """Print a message, unconditionally."""
         self.clear_status_message()
         sys.stderr.write(line + "\n")
 
@@ -320,7 +350,12 @@ class UI:
         finally:
             loop.remove_reader(0)
 
-    async def sit(self, msg: str | None = None, exc: BaseException | None = None) -> None:
+    async def sit(
+        self,
+        msg: str | None = None,
+        vm_id: str | None = None,
+        exc: BaseException | None = None,
+    ) -> None:
         """Wait for the user to press Enter."""
         # <pitti> lis: the ages old design question: does the button show
         # the current state or the future one when you press it :)
@@ -335,9 +370,13 @@ class UI:
         self.clear_status_message()
 
         if exc is not None:
-            sys.stderr.write(f"\n🤦 {''.join(traceback.format_exception(exc))}\n")
+            self.print(f"\n🤦 {''.join(traceback.format_exception(exc))}")
         if msg is not None:
-            sys.stderr.write(f"\n{msg}\n")
+            self.print(f"\n{msg}")
+        if vm_id is not None:
+            self.print(
+                f"Guest is still running.  Connect with: \033[1mssh {vm_id}\033[0m"
+            )
 
         await self._wait_stdin("\nEnter or EOF to exit ⏸️ ")
 
@@ -385,22 +424,21 @@ class UI:
             if prctl(PR_SET_PDEATHSIG, signal.SIGTERM):
                 os._exit(1)  # should never happen
 
-        # If we are expecting output, clear the status message
-        if stdout is None or stderr is None:
-            self.clear_status_message()
-
         self.print_verbose(f"+ {_pretty_print_args(*args)}\n")
 
         return await asyncio.subprocess.create_subprocess_exec(
             *itertools.chain(*_normalize_args(*args)),
             stdin=stdin,
             stdout=stdout,
+            stderr=stderr,
             preexec_fn=pr_set_pdeathsig,
+            start_new_session=True,
         )
 
     async def run(
         self,
         *args: str | Path | tuple[str | Path, ...],
+        stdin: int | None = asyncio.subprocess.DEVNULL,
         check: bool = True,
     ) -> int:
         """Run a process, waiting for it to exit.
@@ -408,7 +446,7 @@ class UI:
         This takes the same arguments as spawn, plus a "check" argument (True by
         default) which works in the usual way.
         """
-        process = await self.spawn(*args, stdin=asyncio.subprocess.DEVNULL)
+        process = await self.spawn(*args, stdin=stdin)
         returncode = await process.wait()
         if check and returncode != 0:
             raise SubprocessError(args, returncode=returncode)
@@ -467,7 +505,9 @@ class GuestPath(pathlib.PurePosixPath):
             user, group = owner
             owner = f"{user or ''}:{group or ''}"
 
-        await self._vm.execute("chown", "-h" if not follow_symlinks else (), owner, self)
+        await self._vm.execute(
+            "chown", "-h" if not follow_symlinks else (), owner, self
+        )
 
     async def write_bytes(self, data: bytes, *, append: bool = False) -> None:
         """Write or append to to a binary file."""
@@ -487,9 +527,13 @@ class GuestPath(pathlib.PurePosixPath):
         """Write or append to a text file."""
         await self.write_bytes(data.encode(), append=append)
 
-    async def unlink(self, *, missing_ok: bool = False, recursive: bool = False) -> None:
+    async def unlink(
+        self, *, missing_ok: bool = False, recursive: bool = False
+    ) -> None:
         """Unlink the given file."""
-        await self._vm.execute("rm", "-f" if missing_ok else (), "-r" if recursive else (), self)
+        await self._vm.execute(
+            "rm", "-f" if missing_ok else (), "-r" if recursive else (), self
+        )
 
     async def rmdir(self) -> None:
         """Remove a directory."""
@@ -524,7 +568,54 @@ class Network:
         return f"socket,mcast=230.0.0.1:{self.id},localaddr=127.0.0.1"
 
 
-class VirtualMachine:
+class _ServiceGroup(asyncio.TaskGroup):
+    """A special kind of TaskGroup to support 'background services'.
+
+    Tasks normally run 'forever', and end only via cancellation. There's also a
+    "ready" notification mechanism via contextvars, which allows combining
+    "setup" and "running" phases into a single task, allowing parallel startup.
+    """
+
+    ready_var = contextvars.ContextVar[asyncio.Event]("Service task ready event")
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.__ready: list[asyncio.Event] = []
+        self.__tasks: list[asyncio.Task[None]] = []
+
+    def add_service(self, coro: Coroutine[None, None, None]) -> None:
+        event = asyncio.Event()
+        context = contextvars.copy_context()
+        context.run(self.ready_var.set, event)
+        self.__tasks.append(self.create_task(coro, context=context))
+        self.__ready.append(event)
+
+    @classmethod
+    def notify_ready(cls) -> None:
+        cls.ready_var.get().set()
+
+    async def wait_all_ready(self) -> None:
+        for event in self.__ready:
+            await event.wait()
+
+    async def cancel_all(self) -> None:
+        for task in self.__tasks:
+            task.cancel()  # already checks task.done()
+
+    async def __aexit__(
+        self,
+        et: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        try:
+            return await super().__aexit__(et, exc, tb)
+        except BaseExceptionGroup as eg:
+            if len(eg.exceptions) == 1:
+                raise eg.exceptions[0]
+            raise
+
+class VirtualMachine(contextlib.AsyncExitStack):
     """A handle to a running virtual machine.
 
     This is meant to be used as an async context manager like so:
@@ -544,16 +635,24 @@ class VirtualMachine:
     See the documentation for the module.
     """
 
-    """ssh command-line arguments for executing commands"""
     ssh_args: tuple[str | Path | tuple[str | Path, ...], ...]
+    """ssh command-line arguments for executing commands"""
 
-    """ssh command-line arguments to be used to connect directly to the vsock"""
     ssh_direct_args: tuple[str | Path | tuple[str | Path, ...], ...] | None
+    """ssh command-line arguments to be used to connect directly to the vsock"""
 
-    # our three background tasks
-    _notify_server_task: asyncio.Task[None] | None = None
+    journal: list[dict[str, str]]
+    """A list of journal entries from the guest.
+
+    Each entry is a dictionary.  Multiple values per key are not supported, but
+    binary data is: the strings are encoded with errors='surrogateescape' so
+    it's possible to get the original binary back if that's what you're
+    expecting.
+
+    See the journal= kwarg to VirtualMachine().
+    """
+
     _ssh_control_task: asyncio.Task[None] | None = None
-    _qemu_task: asyncio.Task[None] | None = None
 
     def __init__(
         self,
@@ -567,12 +666,14 @@ class VirtualMachine:
         cpus: int = 4,
         identity: tuple[Path, str | None] | None = None,
         identities: Sequence[str | Path] = (),
+        journal: bool | Callable[[dict[str, str]], bool | None] = False,
         memory: int | str = "4G",
         networks: Sequence[Network] = (),
+        provision_ssh_key: bool = False,
         sit: bool = False,
         snapshot: bool = True,
         status_messages: bool = False,
-        target: str = 'sockets.target',
+        target: str = "sockets.target",
         timeout: float = 30.0,
         ui: UI | None = None,
         verbose: bool = False,
@@ -591,8 +692,12 @@ class VirtualMachine:
           - identities: extra private keys (either as paths on the disk or
             directly as strings) to pass to ssh.  Useful if you're not sure
             which key the image will accept and want to try multiple.
+          - journal: False (default) to disable journal handling, True to
+            record all entries, and a callable to decide on a per-entry basis.
           - memory: how much memory the guest gets in MiB, or a string like "4G"
           - networks: a list of Network objects (or empty to disable networking)
+          - provision_ssh_key: if we should attempt to install the public side
+            of the ssh key as ~root/.ssh/authorized_keys in the guest
           - sit: if we should "sit" when an exception occurs: print the exception
             and wait for input (to allow inspecting the running VM)
           - snapshot: if the 'snapshot' option is used on the disk (changes are
@@ -600,9 +705,12 @@ class VirtualMachine:
           - status_messages: if we should do output of status messages (stderr)
           - target: the name of the systemd target to wait for
           - timeout: how long to wait for the VM to start, or 'inf'
-          - ui: a custom instance of UI (otherwise a new one is constructed per status_messages= and verbose=)
+          - ui: a custom instance of UI (otherwise a new one is constructed per
+            status_messages= and verbose=)
           - verbose: if we should do output of verbose messages (stderr)
         """
+        super().__init__()
+
         self.image = image
         self._ipc = ipc
         self._attach_console = attach_console
@@ -612,32 +720,33 @@ class VirtualMachine:
         self._credentials = credentials
         self._identity = identity
         self._identities = identities
+        self._journal = journal
         self._memory = memory
         self._networks = networks
+        self._provision_ssh_key = provision_ssh_key
         self._sit = sit
         self._snapshot = snapshot
         self._target = target
         self._timeout = timeout
         self._ui = ui or UI(status_messages=status_messages, verbose=verbose)
 
-        self._tasks = asyncio.TaskGroup()
+        self._tasks = _ServiceGroup()
         self._ssh_control_ready = asyncio.Event()
         self._qemu_exited = asyncio.Event()
         self._shutdown_ok = False
 
         self.root = GuestPath("/", vm=self)
         self.home = GuestPath(".", vm=self)
+        self.journal = []
 
     async def _run_helper(
-        self,
-        *args: str | Path | tuple[str | Path, ...],
-        ready_when: Path,
-    ) -> asyncio.Task[None]:
+        self, *args: str | Path | tuple[str | Path, ...], ready_when: Path
+    ) -> None:
         """Run a helper process in the background.
 
-        The function returns when the given named file (usually a socket)
-        appears.  The process is awaited from our task group.  It should never
-        exit.  On cancellation, the process is terminated.
+        This is designed to be used from _ServiceGroup and will notify when the
+        process is properly running.  On cancellation, the process is
+        terminated.
         """
         process = await self._ui.spawn(*args)
 
@@ -647,21 +756,23 @@ class VirtualMachine:
                 returncode = await asyncio.wait_for(process.wait(), 0.01)
                 raise SubprocessError(args, returncode=returncode)
 
-        async def wait_exit() -> None:
-            try:
-                returncode = await process.wait()  # this should never return
-                raise SubprocessError(args, returncode=returncode)
-            except asyncio.CancelledError:
+        _ServiceGroup.notify_ready()
+
+        try:
+            returncode = await process.wait()  # this should never return
+            raise SubprocessError(args, returncode=returncode)
+        except asyncio.CancelledError:
+            with contextlib.suppress(ProcessLookupError):
                 process.kill()
-                await process.wait()
+            await process.wait()
 
-        return self._tasks.create_task(wait_exit())
+    async def _ssh_keygen_service(self) -> None:
+        """Create the ephemeral ssh key.
 
-    async def _ssh_keygen(self) -> tuple[Path, str]:
-        """Create a ssh key in the given directory.
-
-        Returns the path to the private key and the public key as a string.
+        This is designed to be used from _ServiceGroup and will notify when the
+        key has been generated and stored on self._identity.
         """
+        assert self._identity is None
         private_key = self._ipc / "id"
 
         await self._ui.run(
@@ -673,7 +784,8 @@ class VirtualMachine:
             ("-f", f"{private_key}"),
         )
 
-        return private_key, (self._ipc / "id.pub").read_text().strip()
+        self._identity = private_key, (self._ipc / "id.pub").read_text().strip()
+        _ServiceGroup.notify_ready()
 
     def _sd_notify(self, line: str) -> None:
         logger.debug("sd_notify:%s", line)
@@ -693,31 +805,73 @@ class VirtualMachine:
         elif key == "X_SYSTEMD_SHUTDOWN":
             self._ui.print_status(f"Shutdown: {value}")
 
-    async def _sd_notify_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        logger.debug("sd_notify connection")
-        try:
-            # Actually we should read until EOF but see
-            # https://github.com/rust-vmm/vhost-device/issues/874
-            message = await reader.read(65536)
-            self._sd_notify(message.decode())
-        finally:
-            writer.close()
-            await writer.wait_closed()
+    async def _sd_notify_service(self, path: Path) -> None:
+        async def connection(
+            reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+        ) -> None:
+            logger.debug("sd_notify connection")
+            try:
+                # Actually we should read until EOF but see
+                # https://github.com/rust-vmm/vhost-device/issues/874
+                message = await reader.read(65536)
+                self._sd_notify(message.decode())
+            finally:
+                writer.close()
+                await writer.wait_closed()
 
-    async def _qemu(
-        self,
-        *,
-        port: int,
-        public: str | None,
-    ) -> None:
-        creds = {
-            **self._credentials,
-            "vmm.notify_socket": f"vsock-stream:2:{port}",
-        }
+        async with await asyncio.start_unix_server(connection, path) as srv:
+            _ServiceGroup.notify_ready()
+            await srv.serve_forever()
 
-        if public is not None:
-            creds["ssh.ephemeral-authorized_keys-all"] = public
+    async def _journal_service(self, path: Path) -> None:
+        intern_table: dict[str, str] = {}
 
+        def intern(bval: bytes) -> str:
+            # The spec says that binary is "rare", so let's do strings, but use
+            # surrogateescape to leave the door open to having a way back.
+            sval = bval.decode(errors="surrogateescape")
+            return intern_table.setdefault(sval, sval)
+
+        async def connection(
+            reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+        ) -> None:
+            assert self._journal is not False
+
+            print("JOURNAL CON")
+            print("JOURNAL CON")
+            print("JOURNAL CON")
+
+            # https://systemd.io/JOURNAL_EXPORT_FORMATS/#journal-export-format
+            try:
+                entry: dict[str, str] = {}
+
+                while line := await reader.readline():
+                    if line := line.rstrip(b"\n"):
+                        key, eq, value = line.partition(b"=")
+
+                        if not eq:  # no equal sign?
+                            # 64bit le size, followed by data, followed by newline
+                            size = await reader.readexactly(8)
+                            value = await reader.readexactly(
+                                int.from_bytes(size, "little")
+                            )
+                            _ = await reader.readexactly(1)
+
+                        # NB: no multiple-entries supported :(
+                        entry[intern(key)] = intern(value)
+
+                    else:
+                        if self._journal is True or self._journal(entry):
+                            self.journal.append(entry)
+                        entry = {}
+            finally:
+                writer.close()
+
+        async with await asyncio.start_unix_server(connection, path) as srv:
+            _ServiceGroup.notify_ready()
+            await srv.serve_forever()
+
+    async def _qemu(self, creds: Mapping[str, str]) -> None:
         snap = "on" if self._snapshot else "off"
         drives = [f"file={self.image},format=qcow2,discard=unmap,snapshot={snap}"]
 
@@ -725,7 +879,9 @@ class VirtualMachine:
             cloud_init = self._ipc / "cloud-init"
             cloud_init.mkdir()
             (cloud_init / "meta-data").touch()
-            (cloud_init / "user-data").write_text("#cloud-config\n" + json.dumps(self._cloud_init_user_data) + "\n")
+            (cloud_init / "user-data").write_text(
+                "#cloud-config\n" + json.dumps(self._cloud_init_user_data) + "\n"
+            )
             drives.append(f"driver=vvfat,dir={cloud_init},readonly=on,label=CIDATA")
 
         args = (
@@ -733,6 +889,7 @@ class VirtualMachine:
             "-nodefaults",
             ("-object", f"memory-backend-memfd,share=on,id=mem0,size={self._memory}"),
             ("-bios", _find_ovmf()) if self._boot == "efi" else (),
+            ("-boot", "menu=on"),
             ("-machine", "q35,accel=kvm,memory-backend=mem0"),
             ("-cpu", "host"),
             ("-smp", f"{self._cpus}"),
@@ -743,7 +900,10 @@ class VirtualMachine:
             ("-device", "vhost-user-vsock-pci,chardev=vsock"),
             # Console stuff...
             ("-device", "virtio-serial-pci"),
-            ("-chardev", f"socket,path={self._ipc}/vsock_1111,id=tt-notify,reconnect-ms=1"),
+            (
+                "-chardev",
+                f"socket,path={self._ipc}/vsock_1111,id=tt-notify,reconnect-ms=1",
+            ),
             ("-device", "virtserialport,chardev=tt-notify,name=tt-notify"),
             ("-serial", "chardev:console"),
             *(
@@ -761,15 +921,21 @@ class VirtualMachine:
                 )
             ),
             *(("-drive", f"{drive},if=virtio,media=disk") for drive in drives),
-            *(("-nic", net.to_qemu() + ",model=virtio-net-pci") for net in self._networks),
+            *(
+                ("-nic", net.to_qemu() + ",model=virtio-net-pci")
+                for net in self._networks
+            ),
             # Credentials
-            *(("-smbios", f"type=11,value=io.systemd.credential:{k}={v}") for k, v in creds.items()),
+            *(
+                ("-smbios", f"type=11,value=io.systemd.credential:{k}={v}")
+                for k, v in creds.items()
+            ),
         )
 
         qemu = None
         try:
             self._ui.print_status("Waiting for guest")
-            qemu = await self._ui.spawn(*args)
+            qemu = await self._ui.spawn(*args, stdin=None)
             returncode = await qemu.wait()
             if not self._shutdown_ok:
                 raise SubprocessError(args, returncode)
@@ -794,7 +960,7 @@ class VirtualMachine:
         try:
             assert self.ssh_direct_args is not None
 
-            self._ui.print_status("ssh control socket: Connecting")
+            self._ui.print_status("ssh control socket: connecting via vsock")
 
             control_socket = self._ipc / "ssh"
 
@@ -822,8 +988,7 @@ class VirtualMachine:
 
             # we're online!
             self._ssh_control_ready.set()
-            self._ui.print_status("ssh control socket: Connected")
-            self._ui.clear_status_message()
+            self._ui.print_status("ssh control socket: connected.")
 
             returncode = await ssh.wait()
             if not self._shutdown_ok:
@@ -839,135 +1004,143 @@ class VirtualMachine:
             self._ssh_control_ready.clear()
             self._ssh_control_task = None
 
-    async def __aenter__(self) -> Self:
-        """Start the virtual machine."""
-        await self._tasks.__aenter__()
+    def _get_console_log(self) -> Sequence[str]:
+        try:
+            log = (self._ipc / "console").read_text(errors="replace")
+        except FileNotFoundError:
+            log = ""
+
+        # Remove ANSI escapes, control characters, extra newlines
+        log_lines = re.sub(
+            r"\x1b\[[ -?]*[@-~]|"  # CSI: ESC [ + params/interms + final
+            r"\x1b\][^\a\x1b]*|"  # OSC: ESC ] + everything to \a or ESC
+            r"\x1b[ ()O].|\x1b.|"  # two- and one-character escapes
+            r"[\x00-\b\v-\x1f\x7f]|"  # all control chars but [\t\n]
+            r"(<=\n)\n",  # extra newlines
+            "",
+            log,
+        ).splitlines()
+
+        return ["Console log:" if log_lines else "Console log unavailable.", *log_lines]
+
+    async def _start_services(
+        self, services: _ServiceGroup, creds: dict[str, str]
+    ) -> None:
+        if self._identity is None:
+            services.add_service(self._ssh_keygen_service())
+
+        services.add_service(self._sd_notify_service(self._ipc / "vsock_1111"))
+        creds["vmm.notify_socket"] = "vsock-stream:2:1111"
+
+        if self._journal:
+            services.add_service(self._journal_service(self._ipc / "vsock_1112"))
+            creds["journal.forward_to_socket"] = "vsock-stream:2:1112"
+
+        services.add_service(
+            self._run_helper(
+                "vhost-device-vsock",
+                ("--socket", self._ipc / "vsock-device"),
+                ("--uds-path", self._ipc / "vsock"),
+                ready_when=self._ipc / "vsock-device",
+            )
+        )
+
+    def _setup_identities(self, creds: dict[str, str]) -> Iterable[Path]:
+        assert self._identity is not None
+        private, public = self._identity
+        yield private
+
+        if public is not None:
+            creds["ssh.ephemeral-authorized_keys-all"] = public
+            if self._provision_ssh_key:
+                creds["ssh.authorized_keys.root"] = public
+
+        for nr, identity in enumerate(self._identities):
+            if isinstance(identity, str):
+                path = self._ipc / f"id.{nr}"
+                with path.open("x") as extra:
+                    extra.write(identity)
+                path.chmod(0o400)
+                yield path
+            else:
+                yield identity
+
+    @contextlib.asynccontextmanager
+    async def _run(self) -> AsyncIterator[Self]:
+        # It goes like this:
+        #  - we start listening on the sd-notify socket
+        #  - we start qemu
+        #  - at some point the guest will notify that ssh is ready
+        #    - this causes us to spawn the ssh control task
+        #  - once connected, _ssh_control_ready gets set
+        #  - we wait for that, so when it's done, we're done
+        creds = {**self._credentials}
 
         self.ssh_args = (
             ("-F", "none"),  # don't use the user's config
             ("-o", f"ControlPath={self._ipc}/ssh"),  # connect via the control socket
         )
 
-        try:
-            if self._identity is None:
-                self._identity = await self._ssh_keygen()
+        async with _ServiceGroup() as services:
+            # Start all of the background services in parallel
+            await self._start_services(services, creds)
 
-            private, public = self._identity
-            identities = [private]
+            # ...and wait for them to be ready
+            await services.wait_all_ready()
 
-            for nr, identity in enumerate(self._identities):
-                if isinstance(identity, str):
-                    path = self._ipc / f"id.{nr}"
-                    with path.open("x") as extra:
-                        extra.write(identity)
-                    path.chmod(0o400)
-                    identities.append(path)
-                else:
-                    identities.append(identity)
-
+            # we should have our ssh key by now, so deal with that
+            identities = tuple(self._setup_identities(creds))
             self.ssh_direct_args = _ssh_direct_args(identities, self._ipc / "vsock")
 
-            # It goes like this:
-            #  - we start listening on the sd-notify socket
-            #  - we start qemu
-            #  - at some point the guest will notify that ssh is ready
-            #    - this causes us to spawn the ssh control task
-            #  - once connected, _ssh_control_ready gets set
-            #  - we wait for that, so when it's done, we're done
+            async with self._tasks:
+                # start QEMU
+                self._tasks.create_task(self._qemu(creds))
 
-            self._vsock_helper = await self._run_helper(
-                "vhost-device-vsock",
-                ("--socket", self._ipc / "vsock-device"),
-                ("--uds-path", self._ipc / "vsock"),
-                ready_when=self._ipc / "vsock-device",
-            )
-
-            server = await asyncio.start_unix_server(self._sd_notify_connection, self._ipc / "vsock_1111")
-            self._notify_server_task = self._tasks.create_task(server.serve_forever())
-
-            self._qemu_task = self._tasks.create_task(self._qemu(port=1111, public=public))
-
-            # the notify socket server will create the ssh control socket task
-            # which, in turn, sets this ready once it's online.
-            try:
-                await asyncio.wait_for(self._ssh_control_ready.wait(), self._timeout)
-            except TimeoutError as exc:
-                self._ui.clear_status_message()
-
+                # the notify socket server will create the ssh control socket task
+                # which, in turn, sets this ready once it's online.
                 try:
-                    log = (self._ipc / "console").read_text(errors="replace")
-                except FileNotFoundError:
-                    log = ""
+                    await asyncio.wait_for(
+                        self._ssh_control_ready.wait(), self._timeout
+                    )
+                except TimeoutError as exc:
+                    lines = [
+                        "Timed out waiting for the VM to start"
+                        f" (after {self._timeout}s).",
+                        *self._get_console_log(),
+                    ]
+                    raise TimeoutError("\n".join(lines) + "\n") from exc
 
-                # Remove ANSI escapes and weird/excessive line endings
-                log = re.sub(r"\033\[[0-9;]*[A-Za-z]", "", log)
-                log_lines = re.split(r"[\r\n]+", log)
+                # we're online
+                try:
+                    yield self
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    if self._sit:
+                        await self._ui.sit(vm_id=self.get_id(), exc=exc)
+                    raise
 
-                lines = [
-                    "Timed out waiting for the VM to start (after {self._timeout}s).",
-                    "Console log:" if log_lines else "Console log unavailable.",
-                    *log_lines,
-                ]
+                # time to shutdown.
+                self._shutdown_ok = True
 
-                raise TimeoutError("\n".join(lines) + "\n") from exc
+                # start with the control channel.
+                if self._ssh_control_task is not None:
+                    task = self._ssh_control_task
+                    task.cancel()
+                    await task  # Cancellation is async, so wait
 
-        except:
-            exc_info = sys.exc_info()
-            logger.debug("Startup failed: %r", exc_info)
-            await self._tasks.__aexit__(*exc_info)
-            raise
-        else:
-            logger.debug("Startup was successful")
-            return self
-        finally:
-            logger.debug("Startup is done")
-            self._ui.clear_status_message()
+                # next, qemu: if we're in snapshot mode then we don't have to do a
+                # clean shutdown
+                with contextlib.suppress(FileNotFoundError):
+                    await self.qmp("quit" if self._snapshot else "system_powerdown")
 
-    async def __aexit__(
-        self,
-        et: type[BaseException] | None,
-        exc: BaseException | None,
-        tb: TracebackType | None,
-    ) -> None:
-        """Stop the virtual machine."""
-        self._shutdown_ok = True
+            # finally, all background services
+            await services.cancel_all()
 
-        try:
-            if self._sit and exc is not None:
-                current = asyncio.current_task()
-                cancelled = current and current.cancelled()
-
-                # This will report exceptions thrown from inside of the context managed
-                # block but won't work properly in case we were cancelled due to an
-                # error elsewhere (ie: qemu unexpectedly exiting) because at that point
-                # the main task will have been cancelled and we won't be able to block
-                # while waiting to read from stdin.  That's ok: the goal if this is to
-                # catch test failures, not infra failures.
-                if not cancelled:
-                    await self._ui.sit(exc=exc)
-
-            if self._ssh_control_task is not None:
-                task = self._ssh_control_task
-                task.cancel()
-                await task  # Cancellation is async, so wait
-
-            # If we're in snapshot mode then we don't have to do a clean shutdown
-            with contextlib.suppress(FileNotFoundError):
-                await self.qmp("quit" if self._snapshot else "system_powerdown")
-            await self._qemu_exited.wait()
-
-            assert self._vsock_helper is not None
-            self._vsock_helper.cancel()
-
-            assert self._notify_server_task is not None
-            self._notify_server_task.cancel()
-
-        finally:
-            # If the TaskGroup fails (possibly by way of 'exc') and shutdown
-            # also failed then the error from the shutdown will be suppressed.
-            await self._tasks.__aexit__(et, exc, tb)
-            if exc is not None:
-                raise exc
+    async def __aenter__(self) -> Self:
+        """Start the virtual machine."""
+        await super().__aenter__()
+        return await self.enter_async_context(self._run())
 
     def get_id(self) -> str:
         """Get the machine identifier like `tt.0`, `tt.1`, etc."""
@@ -993,19 +1166,6 @@ class VirtualMachine:
         """Cancel a previous forward."""
         return await self._ssh_cmd(("-O", "cancel"), *args)
 
-    async def scp(self, *args: str | pathlib.Path, direct: bool = False) -> None:
-        """Do a file transfer with scp.
-
-        The hostname is ignored, so for paths on the guest use something like
-        `vm:/tmp/path`.
-        """
-        assert self.ssh_direct_args is not None
-        await self._ui.run(
-            "scp",
-            *(self.ssh_direct_args if direct else self.ssh_args),
-            args,
-        )
-
     async def wait_boot(self) -> None:
         """Wait for the machine to be fully-booted."""
         await self.execute("systemctl", "is-system-running", "--wait")
@@ -1018,6 +1178,7 @@ class VirtualMachine:
         direct: bool = False,
         input: bytes | str | None = b"",  # noqa:A002  # shadows `input()` but so does subprocess module
         environment: Mapping[str, str] = {},
+        stdin: int | None = asyncio.subprocess.PIPE,
         stdout: int | None = asyncio.subprocess.PIPE,
     ) -> str:
         """Execute a command on the guest.
@@ -1039,11 +1200,7 @@ class VirtualMachine:
             cmd,
         )
 
-        ssh = await self._ui.spawn(
-            *full_command,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=stdout,
-        )
+        ssh = await self._ui.spawn(*full_command, stdin=stdin, stdout=stdout)
         input_bytes = input.encode() if isinstance(input, str) else input
         output, _ = await ssh.communicate(input_bytes)
         returncode = await ssh.wait()
@@ -1086,6 +1243,43 @@ class VirtualMachine:
 
         if perm:
             await dest.chmod(perm)
+
+    async def scp(self, *args: str | pathlib.Path, direct: bool = False) -> None:
+        """Do a file transfer with scp.
+
+        The hostname is ignored, so for paths on the guest use something like
+        `vm:/tmp/path`.
+
+        All arguments that are given in the form of `pathlib.Path` are passed to
+        `scp` in absolute form, avoiding worries about `:` characters, but also
+        making it impossible to use certain scp features (such as the special
+        treatment of `.` — which pathlib collapses anyway).  Use string form if
+        you need this, and worry about the escaping yourself.
+        """
+        assert self.ssh_direct_args is not None
+        await self._ui.run(
+            "scp",
+            *(self.ssh_direct_args if direct else self.ssh_args),
+            tuple(p.absolute() if isinstance(p, pathlib.Path) else p for p in args),
+        )
+
+    async def upload(
+        self, *args: str | pathlib.Path, target_directory: str | GuestPath | None = None
+    ) -> None:
+        """Upload files to the guest.
+
+        This works similarly to `cp --target-directory` (`-t`).
+
+        All arguments are interpreted as local paths.  The target directory is
+        a directory on the remote system (defaulting to root's home directory)
+        which will be created (`mkdir -p`) if it doesn't exist.  Each argument
+        is recursively copied into that directory by its basename.
+        """
+        if target_directory is not None:
+            await self.execute("mkdir", "-p", target_directory)
+        await self.scp(
+            "-r", *map(pathlib.Path, args), f"{self.get_id()}:{target_directory or ''}"
+        )
 
     @contextlib.asynccontextmanager
     async def disconnected(self) -> AsyncGenerator[None]:
@@ -1145,11 +1339,16 @@ class SubprocessError(Exception):
         self.output = output
 
         if returncode < 0:
-            msg = f"Subprocess terminated by {signal.Signals(-returncode).name}"
+            msg = f"Subprocess terminated by {signal.Signals(-returncode).name}\n"
         else:
             msg = f"Subprocess exited unexpectedly with return code {returncode}:\n"
 
-        super().__init__(f"{msg}\n{_pretty_print_args(*args)}\n\n")
+        if self.output:
+            out = "\n🗯️  Output:\n\n" + self.output.decode(errors="replace")
+        else:
+            out = ""
+
+        super().__init__(f"{msg}\n{_pretty_print_args(*args)}\n{out}\n")
 
 
 def cleanup_on_signal() -> None:
@@ -1169,23 +1368,60 @@ def cleanup_on_signal() -> None:
     signal.signal(signal.SIGTERM, _term)
 
 
+async def _ssh_properly_configured() -> bool:
+    proc = None
+    try:
+        proc = await asyncio.subprocess.create_subprocess_exec(
+            *("ssh", "-G", "tt.n"),
+            stdout=asyncio.subprocess.PIPE,
+        )
+        stdout, _stderr = await proc.communicate()
+    except OSError:
+        return False
+    else:
+        return b"/test.thing/tt.n/ssh\n" in stdout
+    finally:
+        if proc is not None:
+            await proc.wait()
+
+
+async def _show_ssh_hints(ui: UI, vm_id: str) -> None:
+    if not _stderr_is_tty():
+        return
+
+    if await _ssh_properly_configured():
+        ui.print(f"\n🍓 VM running.  Connect with: \033[1mssh {vm_id}\033[0m\n")
+    else:
+        ui.print(f"""
+Please consider adding this stanza to your SSH config:
+
+Host tt.*
+        ControlPath ${{XDG_RUNTIME_DIR}}/test.thing/%h/ssh
+
+At which point you can connect to the VM using \033[1mssh {vm_id}\033[0m\n""")
+
+
 @contextlib.contextmanager
 def cli_helper() -> Iterator[None]:
-    """A context manager for using test.thing from CLI tools.
+    """Help use test.thing from CLI tools.
 
     This installs a signal handler for clean exit on SIGHUP and SIGTERM and
-    catches SubprocessError and TimeoutError, printing a message to stderr and
-    calling sys.exit()."""
+    catches SubprocessError, TimeoutError, and KeyboardInterrupt, printing a
+    message to stderr and calling sys.exit().
+
+    Because of how cancellation is used internally to handle KeyboardInterrupt,
+    you should use this *outside* of asyncio.run().
+    """
     cleanup_on_signal()
     try:
         yield
-    except* (SubprocessError, TimeoutError) as eg:
+    except* (SubprocessError, TimeoutError, KeyboardInterrupt) as eg:
         for exc in eg.exceptions:
-            sys.stderr.write(f"🤦 {exc}\n")
+            sys.stderr.write(f"\n🤦 [{exc.__class__.__name__}] {exc}\n\n")
         sys.exit("I'm sorry it didn't work out.")
 
 
-def _main() -> None:  # noqa: C901
+def _main() -> None:
     class AppendTuple(argparse.Action):
         def __call__(
             self,
@@ -1199,19 +1435,31 @@ def _main() -> None:  # noqa: C901
             fwds = (*fwds, (option_string, values))
             setattr(namespace, self.dest, fwds)
 
-    parser = argparse.ArgumentParser(description="test.thing - a simple modern VM runner")
-    parser.add_argument("--maintain", "-m", action="store_true", help="Changes are permanent")
-    parser.add_argument("--attach", "-a", action="store_true", help="Attach to the VM console")
-    parser.add_argument("--sit", action="store_true", help="Wait for enter key on exceptions")
-    parser.add_argument("--debug", "-d", action="store_true", help="Enable debug output")
-    parser.add_argument("--cloud-init", action="store_true", help="Add Cockpit ssh key via cloud-init")
+    parser = argparse.ArgumentParser(
+        description="test.thing - a simple modern VM runner"
+    )
+    parser.add_argument(
+        "--maintain", "-m", action="store_true", help="Changes are permanent"
+    )
+    parser.add_argument(
+        "--attach", "-a", action="store_true", help="Attach to the VM console"
+    )
+    parser.add_argument(
+        "--sit", action="store_true", help="Wait for enter key on exceptions"
+    )
+    parser.add_argument(
+        "--debug", "-d", action="store_true", help="Enable debug output"
+    )
+    parser.add_argument("--root-pw", help="Set root's password")
     parser.add_argument(
         "--boot",
         choices=("efi", "mbr"),
         default="efi",
         help="How to boot the image (default: efi)",
     )
-    parser.add_argument("--verbose", "-v", action="store_true", help="Print verbose output")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Print verbose output"
+    )
     parser.add_argument(
         "--ssh-key",
         "-i",
@@ -1219,8 +1467,12 @@ def _main() -> None:  # noqa: C901
         action="append",
         help="Path to SSH private key (default: generate)",
     )
-    parser.add_argument("--timeout", type=float, help="For startup, in seconds, or 'inf' (default: 30)")
-    parser.add_argument("--no-network", action="store_true", help="Isolate the VM from the Internet")
+    parser.add_argument(
+        "--timeout", type=float, help="For startup, in seconds, or 'inf' (default: 30)"
+    )
+    parser.add_argument(
+        "--no-network", action="store_true", help="Isolate the VM from the Internet"
+    )
     parser.add_argument(
         "-L",
         "-R",
@@ -1230,7 +1482,6 @@ def _main() -> None:  # noqa: C901
         action=AppendTuple,
         help="Setup an SSH-style port forward",
     )
-    parser.add_argument("--no-wait", action="store_true", help="Don't wait for ENTER before exiting")
     parser.add_argument(
         "--script",
         "-c",
@@ -1244,33 +1495,35 @@ def _main() -> None:  # noqa: C901
         metavar="UNIT",
         action="append",
         dest="script",
-        type=(lambda s: f"systemctl enable --now {s!s}"),
+        type=(lambda s: f"systemctl enable --now {shlex.quote(s)}"),
         help="Start this systemd unit",
     )
 
     parser.add_argument("image", type=Path, help="The path to a qcow2 VM image to run")
-    args = parser.parse_args()
-
-    if args.cloud_init:
-        user_data = {"users": [{"name": "root", "ssh_authorized_keys": [COCKPIT_TEST_IDENTITY_PUB]}]}
-    else:
-        user_data = None
+    parser.add_argument("cmd", nargs="*")
+    args = parser.parse_intermixed_args()
 
     async def _async_main() -> None:
         with cli_helper(), IpcDirectory() as ipc:
+            ui = UI(status_messages=not args.attach, verbose=args.verbose)
+
             async with VirtualMachine(
                 args.image,
                 ipc=ipc,
                 attach_console=args.attach,
                 boot=args.boot,
-                cloud_init_user_data=user_data,
+                cloud_init_user_data={
+                    "chpasswd": {"list": "root:foobar", "expire": False},
+                    "ssh_pwauth": True,
+                },
                 identities=args.ssh_key or (COCKPIT_TEST_IDENTITY,),
+                journal=print,
                 networks=(() if args.no_network else (Network.user(),)),
+                provision_ssh_key=not args.maintain,
                 sit=args.sit,
                 snapshot=not args.maintain,
-                status_messages=not args.attach,
                 timeout=args.timeout,
-                verbose=args.verbose,
+                ui=ui,
             ) as vm:
                 for spec in args.fwd_spec:
                     await vm.forward_port(spec)
@@ -1280,8 +1533,11 @@ def _main() -> None:  # noqa: C901
 
                 if args.attach:
                     await vm.wait_exit()
-                elif not args.no_wait:
-                    await vm._ui.sit(f"VM running: {vm.get_id()}")
+                elif args.cmd:
+                    await vm.execute(*args.cmd, stdin=None, stdout=None)
+                else:
+                    await _show_ssh_hints(ui, vm.get_id())
+                    await ui.run("ssh", *vm.ssh_args, vm.get_id(), stdin=None)
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)

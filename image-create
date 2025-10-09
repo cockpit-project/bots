@@ -9,9 +9,11 @@ it to be useable with vm-run and testlib.py.
 
 import argparse
 import asyncio
+import contextlib
 import hashlib
 import os
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
 
 from lib import testthing
@@ -19,24 +21,99 @@ from lib.aio.jsonutil import JsonObject
 from lib.constants import IMAGES_DIR, MACHINE_DIR, SCRIPTS_DIR
 from lib.directories import get_images_data_dir
 
+WORKAROUNDS = Path(SCRIPTS_DIR) / 'test.thing-workarounds'
 
-def cloud_init_config(image: str) -> JsonObject:
-    vm_pass = "$5$CockpitCloudInit$Iw89f.aPgqHPXAHC2Zs9h9335n3E1FQDFvR6MLqwPK9"
+
+def format_journal_line(entry: Mapping[str, str]) -> str:
+    def one_of(*keys: str, default: str) -> str:
+        return next(filter(None, (entry.get(k) for k in keys)), default)
+
+    stamp = one_of(
+        "_SOURCE_BOOTTIME_TIMESTAMP",
+        "_SOURCE_MONOTONIC_TIMESTAMP",
+        "__MONOTONIC_TIMESTAMP",
+        default="0",
+    )
+    if entry["_TRANSPORT"].lower() == "kernel":
+        ident = "kernel"
+    else:
+        name = one_of("SYSLOG_IDENTIIFIER", "_COMM", "_EXE", default="?")
+        pid = one_of("SYSLOG_PID", "_PID", default="?")
+        ident = f"{name}[{pid}]"
+
+    return f"[{float(stamp) / 1_000_000:+.6f}] {ident}: {entry['MESSAGE']}"
+
+
+def print_journal_line(entry: Mapping[str, str]) -> None:
+    if entry.get('PRIORITY', '9') in '012345678' or 'ssh' in entry.get('SYSLOG_IDENTIFIER', ""):  # 4 = "Warning"
+        with contextlib.suppress(OSError):
+            print(format_journal_line(entry))
+
+
+def cloud_init_config(image: str) -> JsonObject | None:
+    def extra_file(dest: str) -> JsonObject:
+        source = WORKAROUNDS / Path(dest).name
+        return {
+            "path": dest,
+            "content": source.read_text(),
+            "permissions": "0755" if os.access(source, os.X_OK) else "0644",
+        }
+
+    # don't cloud-init images that we already used ignition for
+    if image in ['centos-9-bootc', 'fedora-coreos', 'services']:
+        return None
+
     ssh_authorized_keys = [Path(MACHINE_DIR, "identity.pub").read_text()]
     host_key = Path(MACHINE_DIR, "host_key").read_text()
     host_key_pub = Path(MACHINE_DIR, "host_key.pub").read_text()
 
     bootcmd = []
-    runcmd = ["printf X_SYSTEMD_UNIT_ACTIVE=los-gehts > /dev/virtio-ports/tt-notify"]
+    write_files = {"/usr/bin/vsock-fling"}  # weeeee
+    runcmd = []
 
-    if image in ["arch", "centos-9-bootc"]:
-        bootcmd.append("echo 100::55:4e4b:4e4f:574e UNKNOWN >> /etc/hosts")
+    # TODO: filter this?
+    runcmd.append("echo 100::55:4e4b:4e4f:574e UNKNOWN >> /etc/hosts")
 
-    if image in ["arch"]:
-        bootcmd.append("systemctl disable --now systemd-time-wait-sync.service || true")
+    if image == 'arch':
+        bootcmd.append("systemctl disable --now systemd-time-wait-sync.service")
 
-    if image in ["opensuse-tumbleweed"]:
-        bootcmd.append("echo 'Include /usr/etc/ssh/sshd_config' > /etc/ssh/sshd_config")
+    openrc = image.startswith('alpine')
+    if openrc:
+        # ssh-vsock support for OpenRC
+        write_files.add("/usr/local/sbin/tt-vsock-sshd")
+        write_files.add("/etc/init.d/tt-vsock-ssh-service")
+        runcmd.append("rc-update add tt-vsock-ssh-service default")
+        runcmd.append("rc-service tt-vsock-ssh-service start")
+
+        # do this one last: it notifies that we're done
+        runcmd.append("vsock-fling 2 1111 X_SYSTEMD_UNIT_ACTIVE=multi-user.target")
+
+    else:
+        # systemd
+
+        if image.startswith(("centos-9-", "rhel-8-", "rhel-9-", "ubuntu-22", "ubuntu-24")):
+            # no `vmm.notify_socket`, `systemd-ssh-generator` `ssh-vsock.socket` support
+
+            if image.startswith(("centos-", "rhel-")):
+                # SELinux vsock fixes: https://issues.redhat.com/browse/RHEL-113647
+                # We need to apply these *before* we can start the socket unit...
+                print("Updating SELinux policy can take a long time... please be patient.")
+                write_files.add("/tmp/tt-ssh-vsock-selinux.sh")
+                runcmd.append("/tmp/tt-ssh-vsock-selinux.sh")
+
+            write_files.update({
+                "/etc/systemd/system/tt-sd_notify.service",
+                "/etc/systemd/system/tt-sshd-vsock.socket",
+                "/etc/systemd/system/tt-sshd-vsock@.service",
+            })
+            runcmd.extend([
+                r"systemctl daemon-reload",
+                r"systemctl enable --now tt-sshd-vsock.socket",
+                r"systemctl enable tt-sd_notify.service",
+            ])
+
+            # do this one last: it notifies that we're done
+            runcmd.append("vsock-fling 2 1111 X_SYSTEMD_UNIT_ACTIVE=multi-user.target")
 
     return {
         "users": [
@@ -44,15 +121,16 @@ def cloud_init_config(image: str) -> JsonObject:
             {
                 "name": "root",
                 "lock_passwd": False,
-                "hashed_passwd": vm_pass,
+                "plain_text_passwd": "foobar",
                 "groups": "users,wheel",
                 "ssh_authorized_keys": ssh_authorized_keys,
             },
             {
                 "name": "admin",
                 "lock_passwd": False,
-                "hashed_passwd": vm_pass,
+                "plain_text_passwd": "foobar",
                 "gecos": "Administrator",
+                "primary_group": "admin",
                 "groups": "users,wheel",
                 "ssh_authorized_keys": ssh_authorized_keys,
             },
@@ -63,6 +141,7 @@ def cloud_init_config(image: str) -> JsonObject:
             "rsa_public": host_key_pub,
         },
         "bootcmd": [("sh", "-c", cmd) for cmd in bootcmd],
+        "write_files": [extra_file(file) for file in write_files],
         "runcmd": [("sh", "-c", cmd) for cmd in runcmd],
         "cloud_final_modules": [
             "scripts-per-once",
@@ -86,6 +165,13 @@ class ImageCreate:
         self.no_build = no_build
         self.sit = sit
 
+        if image.endswith('boot'):
+            self.suffix = 'iso'
+        elif image.endswith('payload'):
+            self.suffix = 'tar.gz'
+        else:
+            self.suffix = 'qcow2'
+
     def heading(self, text: str) -> None:
         self.ui.print(f"\n\033[1m## {text}\033[0m\n")
 
@@ -95,35 +181,48 @@ class ImageCreate:
         await self.ui.run(bootstrap_script, tmpfile)
 
     async def setup(self, tmpfile: Path) -> None:
+        scripts = Path(SCRIPTS_DIR)
+        setup_script = scripts / f"{self.image}.setup"
+        if not setup_script.exists():
+            self.heading("No additional setup required")
+            return
+
         self.heading("Start guest")
         cockpit_test_identity = Path(MACHINE_DIR) / "identity"
         cockpit_test_identity.chmod(0o600)
 
+        cockpit_test_identity_pub = Path(MACHINE_DIR) / "identity.pub"
+
         # deploying candlepin needs oodles of memory
         memory = "3072M" if self.image in ["services"] else "2048M"
 
+        cloud_init_user_data = cloud_init_config(self.image)
+
         with testthing.IpcDirectory() as ipc:
             async with testthing.VirtualMachine(
-                boot="mbr",
-                cloud_init_user_data=cloud_init_config(self.image),
+                # attach_console=True,
+                cloud_init_user_data=cloud_init_user_data,
+                boot="mbr" if self.image in ['alpine'] else "efi",
+                credentials={
+                    # "ssh.authorized_keys.root": cockpit_test_identity_pub.read_text().strip(),
+                    "passwd.plaintext-password.root": "foobar",
+                },
                 identity=(cockpit_test_identity, None),
                 image=tmpfile,
                 ipc=ipc,
+                journal=print_journal_line,
                 memory=memory,
                 networks=[testthing.Network("user")],
                 snapshot=False,
                 sit=self.sit,
-                target="los-gehts",
-                timeout=300,
+                target="multi-user.target",
+                timeout=120,
                 ui=self.ui,
             ) as vm:
-                scripts = Path(SCRIPTS_DIR)
-                await vm.wait_boot()
-
                 self.heading("Run setup script on guest")
 
                 await vm.scp("-r", scripts / "lib", "vm:/var/lib/testvm")
-                await vm.scp("-r", scripts / f"{self.image}.setup", "vm:/var/tmp/SETUP")
+                await vm.scp("-r", setup_script, "vm:/var/tmp/SETUP")
                 await vm.execute(
                     "/var/tmp/SETUP",
                     self.image,
@@ -146,39 +245,50 @@ class ImageCreate:
         data_dir.mkdir(exist_ok=True, mode=0o750, parents=True)
 
         with tempfile.NamedTemporaryFile(
-            dir=data_dir, prefix=f"{self.image}", suffix=".sparse.qcow2", delete_on_close=False
+            dir=data_dir,
+            prefix=f"{self.image}-",
+            suffix=".tmp.{self.suffix}",
+            delete_on_close=False,
         ) as tmp:
             # Copy image via convert, to make it sparse again
-            sparse = Path(tmp.name)
-            await self.ui.run(
-                ("qemu-img", "convert"),
-                ("-f", "qcow2", tmpfile),
-                ("-O", "qcow2", "-c", sparse),
-            )
+            tmp_data_file = Path(tmp.name)
+
+            if self.suffix == 'qcow':
+                # re-sparseify
+                await self.ui.run(
+                    ("qemu-img", "convert"),
+                    ("-f", "qcow2", tmpfile),
+                    ("-O", "qcow2", "-c", tmp_data_file),
+                )
+            else:
+                # copy from the tmpdir to the datadir
+                await self.ui.run('cp', tmpfile, tmp_data_file)
 
             # Hash the image here
-            with sparse.open("rb") as fp:
+            with tmp_data_file.open("rb") as fp:
                 sha = hashlib.file_digest(fp, "sha256").hexdigest()
-                name = f"{self.image}-{sha}.qcow2"
+                name = f"{self.image}-{sha}.{self.suffix}"
 
             # a simple rename always works because it's the same directory
-            data_file = data_dir / name
-            self.ui.print_verbose(f"~ mv \\\n      {sparse} \\\n      {name}\n")
-            sparse.rename(data_file)
+            final_data_file = data_dir / name
+            self.ui.print_verbose(f"~ mv \\\n      {final_data_file} \\\n      {name}\n")
+            tmp_data_file.rename(final_data_file)
             tmp.close()
 
         images_dir = Path(IMAGES_DIR)
 
-        self.ui.print_verbose(f"~ ln -sf \\\n      {data_file} \\\n      {images_dir}/\n")
+        self.ui.print_verbose(f"~ ln -sf \\\n      {final_data_file} \\\n      {images_dir}/\n")
         (images_dir / name).unlink(missing_ok=True)
-        (images_dir / name).symlink_to(data_file)
+        (images_dir / name).symlink_to(final_data_file)
 
         self.ui.print_verbose(f"~ ln -sf \\\n      {name} \\\n      {images_dir}/{self.image}\n")
         (images_dir / self.image).unlink(missing_ok=True)
         (images_dir / self.image).symlink_to(name)
 
     async def create(self) -> None:
-        with testthing.cli_helper(), tempfile.NamedTemporaryFile() as tmp:
+        with tempfile.NamedTemporaryFile(
+            dir="/var/tmp", prefix=f"cockpit-image-create-{self.image}-", suffix=f".tmp.{self.suffix}"
+        ) as tmp:
             tmpfile = Path(tmp.name)
             await self.bootstrap(tmpfile)
             await self.setup(tmpfile)
@@ -193,7 +303,8 @@ def main() -> None:
     parser.add_argument("image", help="The image to create")
     args = parser.parse_args()
 
-    asyncio.run(ImageCreate(**vars(args)).create())
+    with testthing.cli_helper():
+        asyncio.run(ImageCreate(**vars(args)).create())
 
 
 if __name__ == "__main__":
