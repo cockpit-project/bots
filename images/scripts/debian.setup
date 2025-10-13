@@ -273,6 +273,7 @@ if [ "$IMAGE" = "ubuntu-2204" ] ; then
 fi
 
 cat <<EOS >> /tmp/pbuilder_script
+#!/bin/bash
 $(/usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get)
 EOS
 
