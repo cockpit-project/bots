@@ -4,6 +4,8 @@
 set -ex
 IMAGE="$1"
 
+. /etc/os-release
+
 # Enable a console on ttyS0 so that we can log-in via vm-run.
 # and make the boot up more verbose
 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT/# GRUB_CMDLINE_LINUX_DEFAULT/' /etc/default/grub
@@ -167,7 +169,7 @@ fi
 # smaller and faster initrd; see https://launchpad.net/bugs/1592684
 echo 'MODULES=dep' > /etc/initramfs-tools/conf.d/modules-dep.conf
 
-if grep -q 'ID=ubuntu' /etc/os-release; then
+if [ "${ID}" = "ubuntu" ]; then
     PBUILDER_OPTS='COMPONENTS="main universe"'
 
     # we want to have some snaps installed
@@ -224,7 +226,7 @@ mkdir -p /var/lib/package-sets/timesyncd
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 $APT --no-install-recommends install cockpit
 
-if grep -q 'ID=ubuntu' /etc/os-release; then
+if [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" != "25.10" ]; then
     # Extract scsi_debug and team modules from full kernel; let's not install linux-image-generic
     # just for that, it increases boot time by over 10s and image size by > 600 MB
     EXTRAS=$(apt-cache show linux-image-generic | grep Depends: | grep -o 'linux-modules-extra[^,]*')
@@ -247,7 +249,7 @@ curl -L https://github.com/cockpit-project/cockpit/archive/main.tar.gz | tar -C 
 
 
 # HACK: auto-detection is broken: https://bugs.debian.org/1038689
-if grep -q 'ID=ubuntu' /etc/os-release; then
+if [ "${ID}" = "ubuntu" ]; then
     MIRRORSITE=http://archive.ubuntu.com/ubuntu
 else
     MIRRORSITE=http://deb.debian.org/debian
@@ -346,7 +348,7 @@ touch /home/admin/.sudo_as_admin_successful
 
 # Pull a small snap on Ubuntu so that we can test its effect on the
 # Storage page and elsewhere.
-if grep -q 'ID=ubuntu' /etc/os-release; then
+if [ "${ID}" = "ubuntu" ]; then
     snap install hello-world
 fi
 
