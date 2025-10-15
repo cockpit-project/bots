@@ -49,7 +49,8 @@ case "$OS_VER" in
 esac
 
 # TEMP: cockpit needs python3-devel to select the default Python version
-EXTRA_DEPS="$EXTRA_DEPS python3-devel"
+# TEMP: asciidoctor needed for PR testing https://github.com/cockpit-project/cockpit/pull/21515
+EXTRA_DEPS="$EXTRA_DEPS python3-devel asciidoctor"
 
 # libappstream-glib-devel is needed for merging translations in AppStream XML files in starter-kit and derivatives
 # on RHEL 8 only: gettext in RHEL 8 does not know about .metainfo.xml files, and libappstream-glib-devel
