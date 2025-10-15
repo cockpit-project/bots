@@ -51,6 +51,14 @@ esac
 # TEMP: cockpit needs python3-devel to select the default Python version
 EXTRA_DEPS="$EXTRA_DEPS python3-devel"
 
+# TEMP: asciidoctor (most distros) or asciidoc (CentOS) needed for PR testing
+# https://github.com/cockpit-project/cockpit/pull/21515
+case "$OS_VER" in
+    rhel*|centos*) EXTRA_DEPS="$EXTRA_DEPS asciidoc" ;;
+    *suse*) EXTRA_DEPS="$EXTRA_DEPS ruby3.4-rubygem-asciidoctor" ;;
+    *) EXTRA_DEPS="$EXTRA_DEPS asciidoctor";;
+esac
+
 # libappstream-glib-devel is needed for merging translations in AppStream XML files in starter-kit and derivatives
 # on RHEL 8 only: gettext in RHEL 8 does not know about .metainfo.xml files, and libappstream-glib-devel
 # provides /usr/share/gettext/its/appdata.{its,loc} for them
