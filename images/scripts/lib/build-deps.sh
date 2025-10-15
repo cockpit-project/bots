@@ -7,7 +7,9 @@ set -eu
 set -o pipefail
 
 GET="curl --silent --show-error --fail"
-COCKPIT_GIT="https://raw.githubusercontent.com/cockpit-project/cockpit"
+# TEMP CHANGE: for PR testing purposes
+# https://github.com/cockpit-project/cockpit/pull/21515
+COCKPIT_GIT="https://raw.githubusercontent.com/bookwar/cockpit"
 OS_VER="$1"
 # Remove variant information from OS_VER (e.g. fedora 40 eln -> fedora 40)
 OS_VER_NO_VARIANT="$(echo $OS_VER | cut -d' ' -f 1,2)"
@@ -19,11 +21,11 @@ case "$OS_VER" in
         ;;
     *suse*)
         # macro for determining suse version is %suse_version
-        spec=$($GET "$COCKPIT_GIT/main/tools/cockpit.spec")
+        spec=$($GET "$COCKPIT_GIT/asciidoc-guide/tools/cockpit.spec")
         OS_VER_NO_VARIANT="suse_version $(rpm --eval '%suse_version')"
         ;;
     *)
-        spec=$($GET "$COCKPIT_GIT/main/tools/cockpit.spec")
+        spec=$($GET "$COCKPIT_GIT/asciidoc-guide/tools/cockpit.spec")
         ;;
 esac
 
