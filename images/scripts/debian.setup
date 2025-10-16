@@ -353,6 +353,11 @@ if [ "${ID}" = "ubuntu" ]; then
     snap install hello-world
 fi
 
+# set ubuntu-2510 to use sudo by default instead of sudo-rs
+if [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" = "25.10" ]; then
+    update-alternatives --set sudo /usr/bin/sudo.ws
+fi
+
 # HACK: https://launchpad.net/bugs/2040483
 if [ "$IMAGE" = "ubuntu-2404" ]; then
     mkdir -p /etc/containers/containers.conf.d
