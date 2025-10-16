@@ -315,12 +315,6 @@ stratisd
 
 dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
 
-# HACK: wireguard-tools pulls in systemd-resolved, but installing that doesn't start the service,
-# thus breaking DNS; https://issues.redhat.com/browse/RHEL-37686
-if  [ "$IMAGE" = "centos-10" ] || [ "${IMAGE#rhel-10*}" != "$IMAGE" ]; then
-    systemctl start systemd-resolved
-fi
-
 mkdir -p /var/lib/package-sets/clevis
 dnf download --downloaddir=/var/lib/package-sets/clevis $PACKAGE_SET_CLEVIS
 
