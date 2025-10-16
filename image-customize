@@ -152,6 +152,13 @@ class BuildAction(ActionBase):
             version=$(dpkg-parsechangelog -SVersion)
             # cut off Debian revision
             ln -s '{vm_source}' ../${{source}}_${{version%-*}}.orig.tar.xz
+            # if there is a -node tarball, include that
+            node_tar="$(dirname {vm_source})/${{source}}-node-${{version%-*}}.tar.xz"
+            if [ -e "$node_tar" ]; then
+                ln -s "$node_tar" ../${{source}}_${{version%-*}}.orig-node.tar.xz
+                mkdir node
+                tar -C node --strip-components=1 -xf "$node_tar"
+            fi
 
             dpkg-buildpackage -S -us -uc -nc""")
 
