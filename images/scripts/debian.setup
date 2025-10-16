@@ -272,6 +272,8 @@ fi
 
 cat <<EOS >> /tmp/pbuilder_script
 $(/usr/lib/pbuilder/pbuilder-satisfydepends-classic --control /tmp/out/tools/debian/control --force-version --echo|grep apt-get)
+# TEMP: until these make it into cockpit.git
+apt-get -y install esbuild node-argparse node-gettext-parser node-mime-db node-react node-react-dom
 EOS
 
 pbuilder execute --save-after-exec -- /tmp/pbuilder_script
