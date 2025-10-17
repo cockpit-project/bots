@@ -181,6 +181,7 @@ libvirt-dbus \
 libvirt-client \
 libvirt-daemon-kvm \
 NetworkManager-team \
+qemu-kvm-block-curl \
 openssl \
 PackageKit \
 pcp-libs \
