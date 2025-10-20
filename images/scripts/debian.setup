@@ -117,6 +117,11 @@ if [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/sos/sosreport}"
 fi
 
+# apt-ftparchive moved to apt-utils in ubuntu-2510
+if [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" = "25.10" ]; then
+    TEST_PACKAGES="$TEST_PACKAGES apt-utils"
+fi
+
 # These packages are downloaded to the image so that the tests can
 # install them on-demand.
 
