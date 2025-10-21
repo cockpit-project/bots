@@ -86,7 +86,7 @@ pacman -Rdd --noconfirm iptables
 
 # Ignore a linux kernel update as it removes kernel modules which are required
 # for starting firewalld and podman, as last step the kernel is upgraded.
-pacman -Syu --noconfirm $COCKPIT_DEPS $TEST_PACKAGES cockpit --ignore linux
+pacman -Syu --noconfirm --asexplicit $COCKPIT_DEPS $TEST_PACKAGES cockpit --ignore linux
 
 echo "127.0.1.1 $(hostname)" >> /etc/hosts
 
@@ -177,7 +177,10 @@ locale-gen
 pacman -Syu --noconfirm
 
 # Reduce image size, remove cloud-init
-pacman -R --noconfirm cloud-init
+pacman -R --noconfirm --recursive --cascade cloud-init
+
+# Reduce image size, remove devtools VCS support for non-git sources
+pacman -R --noconfirm --nodeps --nodeps mercurial breezy subversion
 
 # Causes some sort of race condition in waiting on NTP to be synced
 # https://github.com/cockpit-project/bots/issues/3901#issuecomment-1260579703
