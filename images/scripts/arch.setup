@@ -63,7 +63,6 @@ qemu-ui-spice-app \
 qemu-hw-usb-host \
 qemu-hw-usb-redirect \
 qemu-block-curl \
-nginx \
 valkey \
 openbsd-netcat \
 nfs-utils \
