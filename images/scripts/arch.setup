@@ -14,7 +14,6 @@ binutils \
 edk2-ovmf \
 json-glib \
 krb5 \
-accountsservice \
 cpio \
 cdrtools \
 docbook-xsl \
@@ -133,7 +132,6 @@ useradd -c Builder builder
 echo "builder ALL = NOPASSWD: /usr/sbin/makechrootpkg, /usr/sbin/mkarchroot, /usr/bin/*-x86_64-build" > /etc/sudoers.d/90-archbuild
 
 BUILD_DEPS="\
-accountsservice \
 base-devel \
 cockpit \
 git \
