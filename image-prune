@@ -37,7 +37,7 @@ from task import github
 logger = logging.getLogger('image-prune')
 
 # Days after which images expire if not in use
-IMAGE_EXPIRE = 14
+IMAGE_EXPIRE = 7
 
 
 def git(*args: str, cwd: str = '.') -> str:
