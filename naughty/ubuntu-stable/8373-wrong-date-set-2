@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "test/verify/check-system-info", line *, in testTime
+*
+AssertionError: 'Sat Jun  4 06:34:' not found in '*'
