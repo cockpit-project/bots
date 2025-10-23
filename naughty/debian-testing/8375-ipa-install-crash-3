@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/usr/sbin/ipa-client-install", line *, in <module>
+*
+TypeError: type 'cryptography.hazmat.bindings._rust.x509.Certificate' is not an acceptable base type
