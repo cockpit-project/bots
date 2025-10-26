@@ -1,1 +1,0 @@
-AssertionError: Critical error encountered during installation: org.fedoraproject.Anaconda.Error: Process reported exit code 1: mdadm: Unable to initialize sysfs
