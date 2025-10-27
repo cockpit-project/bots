@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "test/check-machines-hostdevs", line *, in testHostDevicesList
+    b.wait_in_text("#vm-subVmTest1-hostdev-1-vendor", "Red Hat, Inc")
+*
+testlib.Error: timeout
