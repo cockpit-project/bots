@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "test/check-machines-hostdevs", line *, in testHostDevAddSingleDevice
+    HostDevAddDialog(self, "system", dev_type="pci",).execute()
+*
+testlib.Error: timeout
+wait_js_cond(ph_is_present("#delete-resource-modal-vendor")): Error: condition did not become true
