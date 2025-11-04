@@ -44,8 +44,6 @@ REFRESH = {
     "debian-trixie": {},
     "fedora-42": {},
     "fedora-43": {},
-    "fedora-43-boot": {},
-    "fedora-43-anaconda-payload": REFRESH_30,
     "fedora-coreos": {},
     "fedora-rawhide": {},
     "fedora-rawhide-boot": {},
