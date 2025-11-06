@@ -150,9 +150,12 @@ until systemctl list-jobs | grep -q "No jobs"; do sleep 1; done
 RELEASE=$(. /etc/os-release; echo $VERSION_CODENAME)
 
 # debian-testing image gets bootstrapped from debian stable; upgrade
+# We leave "stable" in sources.list in case packages we want to
+# install later are temporarily missing in testing.
 if [ "$IMAGE" = "debian-testing" ]; then
     rm --verbose -f /etc/apt/sources.list.d/*
-    echo 'deb http://deb.debian.org/debian testing main' > /etc/apt/sources.list
+    echo 'deb http://deb.debian.org/debian stable main' > /etc/apt/sources.list
+    echo 'deb http://deb.debian.org/debian testing main' >> /etc/apt/sources.list
     RELEASE=testing
 fi
 
