@@ -24,9 +24,7 @@ import re
 import socket
 import subprocess
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 from collections.abc import Callable, Collection, Container, Mapping, Sequence
 from http import HTTPStatus
 from ssl import SSLEOFError
