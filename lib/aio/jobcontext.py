@@ -59,7 +59,7 @@ class JobContext(contextlib.AsyncExitStack):
     _default_forge: str
 
     def load_config(self, path: Path, name: str, *, missing_ok: bool = False) -> None:
-        logger.debug('Loading %s configuration from %s', name, str(path))
+        logger.debug('Loading %s configuration from %s', name, path)
         try:
             with path.open('rb') as file:
                 content = tomllib.load(file)
@@ -67,7 +67,7 @@ class JobContext(contextlib.AsyncExitStack):
             sys.exit(f'{path}: {exc}')
         except FileNotFoundError as exc:
             if missing_ok:
-                logger.debug('No %s configuration found at %s', name, str(path))
+                logger.debug('No %s configuration found at %s', name, path)
                 return
             else:
                 sys.exit(f'{path}: {exc}')
