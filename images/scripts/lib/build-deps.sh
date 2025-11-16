@@ -72,4 +72,11 @@ case "$OS_VER" in
     *) ;;
 esac
 
+# TEMP: pull nodejs and nodejs-esbuild until they become proper cockpit BuildRequires
+case "$OS_VER" in
+    fedora*eln) ;;
+    fedora*) EXTRA_DEPS="$EXTRA_DEPS nodejs nodejs-esbuild" ;;
+    *) ;;
+esac
+
 echo "$EXTRA_DEPS"
