@@ -22,7 +22,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from lib.constants import TEST_OS_DEFAULT
 
 COCKPIT_SCENARIOS = {'networking', 'storage', 'expensive', 'other'}
-ANACONDA_SCENARIOS = {'efi', 'cockpit', 'storage', 'expensive', 'other'}
+ANACONDA_SCENARIOS = {'efi', 'cockpit', 'dnf', 'storage', 'expensive', 'other'}
 
 
 def contexts(image: str, *scenarios: Iterable[str], repo: str | None = None) -> Sequence[str]:
