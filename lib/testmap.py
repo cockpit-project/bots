@@ -139,6 +139,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-43',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
+            'centos-10',
             'opensuse-tumbleweed',
             'rhel-8-10/ws-container',
             'rhel-9-8',
@@ -148,7 +149,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10',
         ],
         '_manual': [
-            'centos-10',
             'fedora-rawhide',
         ],
     },
