@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-system-realms", line *, in testQualifiedUsers
-*
-testlib.Error: timeout
-wait_js_cond(!ph_is_present("#realms-join-dialog")): Error: condition did not become true
