@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "test/verify/check-users", line *, in testBasic
+    self.assertIn(m.execute("passwd -S root").split()[1], ["P", "PS"])
+*
+IndexError: list index out of range
