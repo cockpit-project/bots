@@ -185,6 +185,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-8',
             'rhel-10-2',
             'fedora-42',
+            'fedora-43',
         ],
         'subscription-manager-1.28': [
             'rhel-8-8',
@@ -212,7 +213,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-0',
         ],
         '_manual': [
-            'fedora-43',
         ],
     },
     'cockpit-project/subscription-manager-cockpit': {
@@ -223,9 +223,9 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-2',
             'rhel-10-2/devel',
             'fedora-42',
+            'fedora-43',
         ],
         '_manual': [
-            'fedora-43',
         ],
     },
     'rhinstaller/anaconda-webui': {
