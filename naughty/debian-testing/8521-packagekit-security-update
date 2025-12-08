@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "test/verify/check-packagekit", line *, in testInfoSecurity
+    self.assertHistory(".pf-v6-c-expandable-section ul", ["secdeclare", "secparse", "sevcritical"])
+*
+wait_js_cond(ph_in_text(".pf-v6-c-expandable-section ul li:nth-child(1)","secdeclare")): Error: actual text: *
