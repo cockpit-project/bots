@@ -226,7 +226,7 @@ def update_known_issue(api: github.GitHub, number: int, err: str, context: str) 
                                 header[header_idx] = " ".join(rec_entries)
                         latest[0] = "\n".join(header)
                         # list of recent occurrences
-                        occurrences = [_f for _f in latest[1].split("\n") if _f]
+                        occurrences = [f for f in latest[1].split("\n") if f]
                         occurrences.append(f"- {occ}\n")
                         # only keep the last 10
                         if len(occurrences) > 10:
