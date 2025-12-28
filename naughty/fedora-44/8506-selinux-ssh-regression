@@ -1,7 +1,0 @@
-Error: crun: fchown std stream `1`: Permission denied: OCI permission denied
-*
-Traceback (most recent call last):
-  File "test/check-application", line *, in testLogErrors
-    m.execute(f"podman run --log-driver=passthrough --name {container_name} -d {IMG_ALPINE} false </dev/null")
-*
-  File "bots/machine/machine_core/ssh_connection.py", line *, in execute
