@@ -50,14 +50,14 @@ cmd_download() {
         tee package.json >/dev/null
         npm install --ignore-scripts >&2 & wait -n    # allows the shell to catch SIGINT
         cp package.json node_modules/.package.json
-        tar --directory=node_modules --create .
+        tar --directory=node_modules --exclude=".claude" --create .
     '
 }
 
 cmd_install() {
     rm -rf node_modules
     mkdir node_modules
-    cmd_download < package.json | tar --directory node_modules --exclude '.git*' --extract
+    cmd_download < package.json | tar --directory node_modules --exclude '.git*' --exclude '.claude' --extract
     cp node_modules/.package-lock.json package-lock.json
 }
 
