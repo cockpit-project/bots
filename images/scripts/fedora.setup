@@ -63,6 +63,7 @@ pcp \
 pcp-libs \
 python3-pip \
 python3-pcp \
+python3-setuptools \
 python3-tracer \
 realmd \
 selinux-policy-targeted \
