@@ -134,6 +134,11 @@ PACKAGE_SET_STRATIS="\
 stratisd
 "
 
+# HACK: https://bugzilla.redhat.com/show_bug.cgi?id=2412451
+if [ "${VERSION_ID}" = "43" ]; then
+    TEST_PACKAGES="${TEST_PACKAGES} gobject-introspection"
+fi
+
 # avoid NM-wait-online hanging on disconnected interfaces
 mkdir -p /etc/NetworkManager/conf.d/
 printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
