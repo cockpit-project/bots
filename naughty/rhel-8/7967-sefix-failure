@@ -1,5 +1,0 @@
-> warn: Unable to run fix: {"problem":null,"name":"org.freedesktop.DBus.Python.subprocess.CalledProcessError","message":"*/usr/share/setroubleshoot/SetroubleshootFixit.py*in run_fix*subprocess.CalledProcessError: Command '['sealert', '-f', *, '-P', dbus.String('restorecon')]' returned non-zero exit status 3.\n"}
-*
-  File "test/verify/check-selinux", line *, in testTroubleshootAlerts
-*
-wait_js_cond(ph_in_text("tbody:contains('read access on the file /root/.ssh/authorized_keys') .pf-v6-c-alert__title","Solution applied successfully")): Error: actual text: Danger alert:Solution failed
