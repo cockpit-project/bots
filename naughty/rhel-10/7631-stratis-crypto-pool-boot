@@ -1,3 +1,0 @@
-Traceback (most recent call last):
-  File "check-storage-stratis", line *, in testEncrypted
-    b.wait_text(self.card_desc("Encrypted Stratis pool", "Name"), "pool0")
