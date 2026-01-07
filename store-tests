@@ -22,6 +22,7 @@ import logging
 import re
 import sqlite3
 import sys
+import urllib.parse
 import urllib.request
 from datetime import datetime
 
@@ -151,7 +152,9 @@ def main():
                 raw_log = url[:-5] if url.endswith(".html") else url
                 logging.debug("scanning log %s", raw_log)
 
-                with urllib.request.urlopen(raw_log,
+                # Set headers to avoid getting blocked by Anubis
+                req = urllib.request.Request(raw_log, headers={'Accept': 'text/plain'})
+                with urllib.request.urlopen(req,
                                             context=host_ssl_context(urllib.parse.urlparse(raw_log).netloc)) as fp:
                     data = fp.readlines()
                     for (testname, failed, retry_reason, seconds) in find_tests(data):
