@@ -41,19 +41,17 @@ case "$OS_VER" in
         ;;
     rhel*10|centos*10)
         # no rpmlint in RHEL 10: https://pkgs.devel.redhat.com/cgit/rpms/rpmlint/commit/?h=rhel-10-main&id=9a9efcbfd844
-        EXTRA_DEPS="libappstream-glib gettext desktop-file-utils nodejs"
+        EXTRA_DEPS="libappstream-glib gettext desktop-file-utils"
         ;;
     *)
-        EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils nodejs"
+        EXTRA_DEPS="libappstream-glib rpmlint gettext desktop-file-utils"
         ;;
 esac
 
-# TEMP: asciidoctor (most distros) or asciidoc (CentOS) needed for PR testing
+# TEMP: asciidoctor until we add that to cockpit.spec for OpenSUSE
 # https://github.com/cockpit-project/cockpit/pull/21515
 case "$OS_VER" in
-    rhel*|centos*) EXTRA_DEPS="$EXTRA_DEPS asciidoc" ;;
     *suse*) EXTRA_DEPS="$EXTRA_DEPS ruby3.4-rubygem-asciidoctor" ;;
-    *) EXTRA_DEPS="$EXTRA_DEPS asciidoctor";;
 esac
 
 # libappstream-glib-devel is needed for merging translations in AppStream XML files in starter-kit and derivatives
@@ -61,21 +59,6 @@ esac
 # provides /usr/share/gettext/its/appdata.{its,loc} for them
 case "$OS_VER" in
     rhel*8|centos*8) EXTRA_DEPS="$EXTRA_DEPS libappstream-glib-devel" ;;
-    *) ;;
-esac
-
-# pull nodejs-devel on Fedora for compliance with the guidelines on using nodejs modules:
-# https://docs.fedoraproject.org/en-US/packaging-guidelines/Node.js/#_buildrequires
-case "$OS_VER" in
-    fedora*eln) ;;
-    fedora*) EXTRA_DEPS="$EXTRA_DEPS nodejs-devel" ;;
-    *) ;;
-esac
-
-# TEMP: pull nodejs and nodejs-esbuild until they become proper cockpit BuildRequires
-case "$OS_VER" in
-    fedora*eln) ;;
-    fedora*) EXTRA_DEPS="$EXTRA_DEPS nodejs nodejs-esbuild" ;;
     *) ;;
 esac
 
