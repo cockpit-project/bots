@@ -70,6 +70,8 @@ class SSHConnection:
         self.ssh_process = None
         self.ssh_reachable = False
         self.label = label if label else f"{self.ssh_user}@{self.ssh_address}:{self.ssh_port}"
+        # See https://github.com/cockpit-project/cockpit/blob/main/test/README.md#test-configuration
+        self.timeout_factor = float(os.getenv("TEST_TIMEOUT_FACTOR", "1"))
 
     def disconnect(self) -> None:
         self.ssh_reachable = False
@@ -135,9 +137,11 @@ class SSHConnection:
 
     def wait_boot(self, timeout_sec: int = 120) -> None:
         """Wait for a machine to boot"""
+        # See https://github.com/cockpit-project/cockpit/blob/main/test/README.md#test-configuration
+        effective_timeout = timeout_sec * self.timeout_factor
         start_time = time.time()
         boot_id = None
-        while (time.time() - start_time) < timeout_sec:
+        while (time.time() - start_time) < effective_timeout:
             if self.wait_execute(timeout_sec=15):
                 boot_id = self.wait_user_login()
                 if boot_id:
@@ -152,8 +156,9 @@ class SSHConnection:
         self.disconnect()
         assert self.boot_id, "Before using wait_reboot() use wait_boot() successfully"
         boot_id = self.boot_id
+        effective_timeout = timeout_sec * self.timeout_factor
         start_time = time.time()
-        while (time.time() - start_time) < timeout_sec:
+        while (time.time() - start_time) < effective_timeout:
             try:
                 self.wait_boot(timeout_sec=timeout_sec)
                 if self.boot_id != boot_id:
