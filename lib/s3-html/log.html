@@ -367,7 +367,7 @@ let link_patterns = [
 
 function find_patterns(segment) {
     function fmt(tmpl, match) {
-        return tmpl.replace(/\$([0-9]+)/g, function (m, x) { return match[Number(x)]; });
+        return tmpl.replace(/\$([0-9]+)/g, (m, x) => match[Number(x)]);
     }
 
     let links = [];
@@ -454,7 +454,7 @@ function extract(text) {
         document.querySelector('#test-info').textContent = text.slice(0, text.indexOf('\n'));
 
         const ids = { };
-        segments.forEach(function (segment, segmentIndex) {
+        segments.forEach((segment, segmentIndex) => {
             tap_range.lastIndex = 0;
             tap_result.lastIndex = 0;
             tap_skipped.lastIndex = 0;
@@ -533,14 +533,14 @@ function extract(text) {
             entry.collapsed = !entry.failed;
             entries.push({ idx: entry.idx, entry: entry, html: Mustache.render(entry_template, entry) });
         });
-        entries.sort(function(a, b) {
+        entries.sort((a, b) => {
             a = isNaN(parseInt(a.idx), 10) ? a.idx : parseInt(a.idx, 10);
             b = isNaN(parseInt(b.idx), 10) ? b.idx : parseInt(b.idx, 10);
             return a < b ? -1 : (a > b ? 1 : 0);
         });
         altered_text = Mustache.render(tests_template, { tests: entries });
         // for the overview list, put the failed entries first
-        entries.sort(function(a, b) {
+        entries.sort((a, b) => {
                 let a_idx = isNaN(parseInt(a.idx, 10)) ? a.idx : parseInt(a.idx, 10);
                 let b_idx = isNaN(parseInt(b.idx, 10)) ? b.idx : parseInt(b.idx, 10);
                 if (a.entry.skipped == b.entry.skipped)
@@ -578,7 +578,7 @@ function extract(text) {
 function set_content(text) {
     const log = document.querySelector('#log');
     log.innerHTML = extract(text);
-    Array.from(log.getElementsByClassName("test-entry")).forEach(function (el) {
+    Array.from(log.getElementsByClassName("test-entry")).forEach(el => {
         const toggle = el.getElementsByClassName("test-entry-toggle")[0];
         const content = el.getElementsByClassName("accordion-content")[0];
         toggle.addEventListener(
@@ -591,7 +591,7 @@ function set_content(text) {
         )
     });
 
-    Array.from(log.querySelectorAll("[data-links-row]")).forEach(function (el) {
+    Array.from(log.querySelectorAll("[data-links-row]")).forEach(el => {
         const button = el.querySelector("[data-links-open]");
         if (button) {
             button.addEventListener("click", () => {
@@ -606,7 +606,7 @@ function set_content(text) {
     testingToolbar.innerHTML = Mustache.render(test_filter_toolbar);
     const failedFilter = testingToolbar.querySelector("#switch-for-failed-filtering");
 
-    function handleFilterSelection(checkbox) {
+    const handleFilterSelection = checkbox => {
         // Apply the clicked filter
         if (checkbox.checked) {
             document.body.classList.add(selectorTestRetried);
@@ -628,14 +628,12 @@ function set_content(text) {
     handleFilterSelection(failedFilter)
 }
 
-function sleep(seconds) {
-    return new Promise(resolve => setTimeout(resolve, 1000 * seconds));
-}
+const sleep = seconds => new Promise(resolve => setTimeout(resolve, 1000 * seconds));
 
 const activeFilters = [];
-function filterTests(selection) {
+const filterTests = selection => {
 
-}
+};
 
 class NotFoundError extends Error { };
 
