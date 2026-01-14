@@ -339,6 +339,7 @@ function extract(text) {
                         retries += 1;
                         entry.passed = true;
                         entry.retried = true;
+                        entry.title = entry.title.replace("RETRY", "<mark>RETRY</mark>");
                     }
                 } else if(m[1] == "ok") {
                     const skip_match = tap_skipped.exec(segment);;
