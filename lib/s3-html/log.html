@@ -29,10 +29,10 @@
         /* Filters end */
 
         .test-entry.failed .test-entry-toggle {
-            background-color: var(--pf-t--global--color--nonstatus--red--default);
+            background-color: var(--pf-t--global--icon--color--status--danger--default);
         }
         .test-entry.retried .test-entry-toggle {
-            background-color: var(--pf-t--global--color--nonstatus--orangered--default);
+            background-color: var(--pf-t--global--color--nonstatus--purple--default);
         }
         .test-entry.skipped .test-entry-toggle {
             background-color: var(--pf-t--global--color--nonstatus--orange--default);
@@ -69,6 +69,7 @@ const tap_range = /^([0-9]+)\.\.([0-9]+)$/m;
 const tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # (?:SKIP|TODO) .*)?$/gm;
 const tap_skipped = /^ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # SKIP (.*$)/gm;
 const tap_todo = /^not ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # TODO (.*$)/gm;
+const tap_retry = /^not ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # RETRY (.*$)/gm;
 const tap_total_time = /^# (\d+ TESTS FAILED|TESTS PASSED) \[([0-9]+)s on .*\]$/m;
 
 function renderTestEntry(entry) {
