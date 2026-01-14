@@ -89,8 +89,8 @@ class SSHConnection:
         # If connected to machine, kill master connection
         self._kill_ssh_master()
 
-        start_time = time.time()
-        while (time.time() - start_time) < timeout_sec:
+        start_time = time.monotonic()
+        while (time.monotonic() - start_time) < timeout_sec:
             addrinfo = socket.getaddrinfo(self.ssh_address, self.ssh_port, 0, socket.SOCK_STREAM)
             family, socktype, proto, _canonname, sockaddr = addrinfo[0]
             with socket.socket(family, socktype, proto) as sock:
@@ -139,9 +139,9 @@ class SSHConnection:
         """Wait for a machine to boot"""
         # See https://github.com/cockpit-project/cockpit/blob/main/test/README.md#test-configuration
         effective_timeout = timeout_sec * self.timeout_factor
-        start_time = time.time()
+        start_time = time.monotonic()
         boot_id = None
-        while (time.time() - start_time) < effective_timeout:
+        while (time.monotonic() - start_time) < effective_timeout:
             if self.wait_execute(timeout_sec=15):
                 boot_id = self.wait_user_login()
                 if boot_id:
@@ -157,8 +157,8 @@ class SSHConnection:
         assert self.boot_id, "Before using wait_reboot() use wait_boot() successfully"
         boot_id = self.boot_id
         effective_timeout = timeout_sec * self.timeout_factor
-        start_time = time.time()
-        while (time.time() - start_time) < effective_timeout:
+        start_time = time.monotonic()
+        while (time.monotonic() - start_time) < effective_timeout:
             try:
                 self.wait_boot(timeout_sec=timeout_sec)
                 if self.boot_id != boot_id:
