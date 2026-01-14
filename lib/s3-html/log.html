@@ -5,7 +5,6 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="https://cdn.jsdelivr.net/npm/@patternfly/patternfly/patternfly.css" rel="stylesheet">
-        <script src="https://cdn.jsdelivr.net/npm/mustache@4.2.0/mustache.min.js" integrity="sha256-1/0GA1EkYejtvYFoa+rSq4LfM4m5zKI13Z1bQIhI4Co=" crossorigin="anonymous"></script>
         <style>
         * {
             font-family: "Open Sans";
@@ -42,59 +41,6 @@
             --pf-v6-c-data-list--m-compact--FontSize: var(--pf-t--global--font--size--body--md);
         }
         </style>
-        <script id="Tests" type="text/template" type="x-tmpl-mustache">
-            <ul class="pf-v6-c-data-list pf-m-compact">
-                {{#tests}} {{{html}}} {{/tests}}
-            </ul>
-        </script>
-        <script id="LinkCategory" type="text/template" type="x-tmpl-mustache">
-            <div class="pf-v6-c-label-group pf-m-category" data-links-row>
-                <div class="pf-v6-c-label-group__main">
-                  <span
-                    class="pf-v6-c-label-group__label"
-                    aria-hidden="true"
-                    id="label-group-category-label"
-                  >
-                    <span class="pf-v6-c-label pf-m-filled  pf-m-clickable pf-m-info">
-                        <button class="pf-v6-c-label__content pf-m-clickable" type="button" data-links-open>
-                            <span class="pf-v6-c-label__icon">
-                                <i class="fas fa-fw fa-external-link-alt" aria-hidden="true"></i>
-                            </span>
-                            <span class="pf-v6-c-label__text">Open all</span>
-                        </button>
-                        </span>
-                    </span>
-                    <ul
-                        class="pf-v6-c-label-group__list"
-                        role="list"
-                        aria-labelledby="label-group-category-label"
-                    >
-                        {{#links}}
-                        <li class="pf-v6-c-label-group__list-item">
-                            {{{link_html}}}
-                        </li>
-                        {{/links}}
-                    </ul>
-                </div>
-            </div>
-            <br>
-        </script>
-        <script id="Link" type="text/template" type="x-tmpl-mustache">
-            <span class="pf-v6-c-label pf-m-filled {{color}} pf-m-clickable">
-                <a
-                    data-links-log
-                    class="pf-v6-c-label__content pf-m-clickable"
-                    title="{{title}}"
-                    href="./{{url}}"
-                    target="_blank"
-                >
-                    <span class="pf-v6-c-label__icon">
-                        <i class="{{icon}}" aria-hidden="true"></i>
-                    </span>
-                    <span class="pf-v6-c-label__text">{{label}}</span>
-                </a>
-            </span>
-        </script>
         <script type="text/javascript">
             // Automatic dark mode based on system preference
             const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -112,8 +58,29 @@
             // Listen for changes to the color scheme preference
             darkModeMediaQuery.addEventListener('change', applyTheme);
         </script>
-        <script id="TestEntry" type="text/template" type="x-tmpl-mustache">
-            <li class="pf-v6-c-data-list__item test-entry {{#collapsed}}collapsed{{/collapsed}} {{^passed}}failed{{/passed}} {{#retried}}retried{{/retried}} {{#skipped}}skipped{{/skipped}}" id="{{id}}">
+        <script>
+
+/* Identity function for html`` tagged templates - just returns the string, but signals intent
+   and can trigger HTML syntax highlighting in editors that support it (e.g., in pure .js files).
+   Note: Won't work in .html files due to filetype detection, but kept for code clarity. */
+const html = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] ?? ''), '');
+
+const tap_range = /^([0-9]+)\.\.([0-9]+)$/m;
+const tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # (?:SKIP|TODO) .*)?$/gm;
+const tap_skipped = /^ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # SKIP (.*$)/gm;
+const tap_todo = /^not ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # TODO (.*$)/gm;
+const tap_total_time = /^# (\d+ TESTS FAILED|TESTS PASSED) \[([0-9]+)s on .*\]$/m;
+
+function renderTestEntry(entry) {
+    const classes = [];
+    if (entry.collapsed) classes.push('collapsed');
+    if (!entry.passed) classes.push('failed');
+    if (entry.retried) classes.push('retried');
+    if (entry.skipped) classes.push('skipped');
+
+    const linksHtml = entry.links.map(link => link.link_html).join('');
+
+    return html`<li class="pf-v6-c-data-list__item test-entry ${classes.join(' ')}" id="${entry.id}">
                 <div class="pf-v6-c-data-list__item-row">
                     <div class="pf-v6-c-data-list__item-control">
                         <div class="pf-v6-c-data-list__toggle test-entry-toggle">
@@ -136,17 +103,15 @@
                     </div>
                     <div class="pf-v6-c-data-list__item-content">
                         <div class="pf-v6-c-data-list__cell">
-                            <a href="#{{id}}" class="pf-v6-c-button pf-m-inline pf-m-link">
-                                <span class="pf-v6-c-button__text">{{id}}</span>
+                            <a href="#${entry.id}" class="pf-v6-c-button pf-m-inline pf-m-link">
+                                <span class="pf-v6-c-button__text">${entry.id}</span>
                             </a>:&nbsp;
                             <span>
-                                {{title}}
+                                ${entry.title}
                             </span>
-                            {{#reason}}<span>-- <mark>skipped:</mark> {{reason}}</span>{{/reason}}
+                            ${entry.reason ? `<span>-- <mark>skipped:</mark> ${entry.reason}</span>` : ''}
                             <div>
-                                {{#links}}
-                                    {{{link_html}}}
-                                {{/links}}
+                                ${linksHtml}
                             </div>
                         </div>
                     </div>
@@ -157,164 +122,13 @@
                     >
                         <div class="pf-v6-c-code-block">
                             <div class="pf-v6-c-code-block__content">
-                                <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">{{text}}</code></pre>
+                                <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">${entry.text}</code></pre>
                             </div>
                         </div>
                     </div>
                 </div>
-            </li>
-        </script>
-        <script id="TextOnly" type="text/template">
-            <div class="pf-v6-c-code-block">
-                <div class="pf-v6-c-code-block__content">
-                    <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">{{text}}</code></pre>
-                </div>
-            </div>
-        </script>
-        <script id="TestToolbar" type="text/template">
-            <label class="pf-v6-c-switch" for="switch-for-failed-filtering">
-                <input
-                    class="pf-v6-c-switch__input"
-                    type="checkbox"
-                    role="switch"
-                    id="switch-for-failed-filtering"
-                    aria-labelledby="switch-for-failed-filtering-text"
-                    checked
-                />
-
-                <span class="pf-v6-c-switch__toggle"></span>
-
-                <span
-                    class="pf-v6-c-switch__label"
-                    id="switch-for-failed-filtering-text"
-                    aria-hidden="true"
-                >Show only failed</span>
-            </label>
-        </script>
-        <script id="TestProgress" type="text/template">
-            <div class="pf-v6-c-progress pf-m-sm" id="progress-sm-example">
-                <div
-                    class="pf-v6-c-progress__description"
-                    id="progress-sm-example-description"
-                >Test progress</div>
-                <div class="pf-v6-c-progress__status" aria-hidden="true">
-                    <span class="pf-v6-c-progress__measure">{{finished}}/{{total}} ({{percentage_done}}%)</span>
-                </div>
-                <div
-                    class="pf-v6-c-progress__bar"
-                    role="progressbar"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                    aria-valuenow="{{percentage_done}}"
-                    aria-labelledby="progress-sm-example-description"
-                >
-                    <div class="pf-v6-c-progress__indicator" style="width:{{percentage_done}}%;"></div>
-                </div>
-            </div>
-        </script>
-        <script id="TestingOverview" type="text/template">
-            <div id="testing" class="pf-v6-u-mt-m">
-                {{#total_test_time}}
-                <span class="pf-v6-c-timestamp">
-                    <time class="pf-v6-c-timestamp__text" datetime="{{total_test_time}}m">
-                        took {{total_test_time}} minutes to run
-                    </time>
-                </span>
-                <br>
-                {{/total_test_time}}
-                <div class="pf-v6-c-label-group pf-m-category">
-                    <div class="pf-v6-c-label-group__main">
-                        <span
-                        class="pf-v6-c-label-group__label"
-                        aria-hidden="true"
-                        id="label-group-category-label"
-                        >
-                            {{total}} tests{{#left}}, {{left}} left{{/left}}
-                        </span>
-                        <ul class="pf-v6-c-label-group__list" role="list" aria-labelledby="label-group-category-label">
-                            <li class="pf-v6-c-label-group__list-item">
-                            <span class="pf-v6-c-label pf-m-filled pf-m-success">
-                                <span class="pf-v6-c-label__content">
-                                    <span class="pf-v6-c-label__icon">
-                                        <i class="fas fa-fw fa-check-circle" aria-hidden="true"></i>
-                                    </span>
-                                    <span class="pf-v6-c-label__text">{{passed}} passed</span>
-                                </span>
-                            </span>
-                            </li>
-                            <li class="pf-v6-c-label-group__list-item">
-                                <span class="pf-v6-c-label pf-m-filled {{#skipped}}pf-m-yellow{{/skipped}}">
-                                    <span class="pf-v6-c-label__content">
-                                        <span class="pf-v6-c-label__icon">
-                                            <i class="fas fa-fw fa-exclamation-triangle" aria-hidden="true"></i>
-                                        </span>
-                                        <span class="pf-v6-c-label__text">{{skipped}} skipped</span>
-                                    </span>
-                                </span>
-                            </li>
-                            <li class="pf-v6-c-label-group__list-item">
-                                <span class="pf-v6-c-label pf-m-filled {{#failed}}pf-m-danger{{/failed}}">
-                                    <span class="pf-v6-c-label__content">
-                                        <span class="pf-v6-c-label__icon">
-                                            <i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i>
-                                        </span>
-                                        <span class="pf-v6-c-label__text">{{failed}} failed</span>
-                                    </span>
-                                </span>
-                            </li>
-                            {{#retries}}
-                            <li class="pf-v6-c-label-group__list-item">
-                                <span class="pf-v6-c-label pf-m-filled pf-m-info">
-                                    <span class="pf-v6-c-label__content">
-                                        <span class="pf-v6-c-label__icon">
-                                            <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
-                                        </span>
-                                        <span class="pf-v6-c-label__text">{{retries}} retries of failures</span>
-                                    </span>
-                                </span>
-                            </li>
-                            {{/retries}}
-                            {{#affected_retries}}
-                            <li class="pf-v6-c-label-group__list-item">
-                                <span class="pf-v6-c-label pf-m-filled pf-m-info">
-                                    <span class="pf-v6-c-label__content">
-                                        <span class="pf-v6-c-label__icon">
-                                            <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
-                                        </span>
-                                        <span class="pf-v6-c-label__text">{{affected_retries}} retries of successes</span>
-                                    </span>
-                                </span>
-                            </li>
-                            {{/affected_retries}}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </script>
-        <script>
-
-const tap_range = /^([0-9]+)\.\.([0-9]+)$/m;
-const tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # (?:SKIP|TODO) .*)?$/gm;
-const tap_skipped = /^ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # SKIP (.*$)/gm;
-const tap_todo = /^not ok [0-9]+ ([^#].*)(?: #? ?duration: ([^#]*))? # TODO (.*$)/gm;
-const tap_total_time = /^# (\d+ TESTS FAILED|TESTS PASSED) \[([0-9]+)s on .*\]$/m;
-
-const entry_template = document.querySelector("#TestEntry").innerHTML;
-Mustache.parse(entry_template);
-const tests_template = document.querySelector("#Tests").innerHTML;
-Mustache.parse(tests_template);
-const text_only_template = document.querySelector("#TextOnly").innerHTML;
-Mustache.parse(text_only_template);
-const test_filter_toolbar = document.querySelector("#TestToolbar").innerHTML;
-Mustache.parse(test_filter_toolbar);
-const progress_template = document.querySelector("#TestProgress").innerHTML;
-Mustache.parse(progress_template);
-const overview_template = document.querySelector("#TestingOverview").innerHTML;
-Mustache.parse(overview_template);
-const link_category_template = document.querySelector("#LinkCategory").innerHTML;
-Mustache.parse(link_category_template);
-const link_template = document.querySelector("#Link").innerHTML;
-Mustache.parse(link_template);
+            </li>`;
+}
 
 /* Patterns for text that should be turned into links.
 
@@ -379,25 +193,60 @@ function find_patterns(segment) {
         let m;
         let currentPattern = []
         while (m = r.exec(segment)) {
+            const url = fmt(p.url || "$0", m);
+            const title = fmt(p.title || p.url || "$0", m);
+            const icon = p.icon || "fas fa-fw fa-external-link-alt";
+            const label = fmt(p.label || "file", m);
+            const color = p.color || "pf-m-custom";
             currentPattern.push({
-                link_html: Mustache.render(link_template,
-                                            {
-                                                url: fmt(p.url || "$0", m),
-                                                title: fmt(p.title || p.url || "$0", m),
-                                                icon: p.icon || "fas fa-fw fa-external-link-alt",
-                                                label: fmt(p.label || "file"),
-                                                color: p.color || "pf-m-custom"
-                                            })
+                link_html: html`<span class="pf-v6-c-label pf-m-filled ${color} pf-m-clickable">
+                <a
+                    data-links-log
+                    class="pf-v6-c-label__content pf-m-clickable"
+                    title="${title}"
+                    href="./${url}"
+                    target="_blank"
+                >
+                    <span class="pf-v6-c-label__icon">
+                        <i class="${icon}" aria-hidden="true"></i>
+                    </span>
+                    <span class="pf-v6-c-label__text">${label}</span>
+                </a>
+            </span>`
             });
         }
         if (currentPattern.length) {
+            const linksHtml = currentPattern.map(link =>
+                html`<li class="pf-v6-c-label-group__list-item">${link.link_html}</li>`
+            ).join('');
             links.push({
-                link_html: Mustache.render(link_category_template,
-                                            {
-                                                label: fmt(p.label || "file"),
-                                                links: currentPattern,
-                                            })
-        })
+                link_html: html`<div class="pf-v6-c-label-group pf-m-category" data-links-row>
+                <div class="pf-v6-c-label-group__main">
+                  <span
+                    class="pf-v6-c-label-group__label"
+                    aria-hidden="true"
+                    id="label-group-category-label"
+                  >
+                    <span class="pf-v6-c-label pf-m-filled  pf-m-clickable pf-m-info">
+                        <button class="pf-v6-c-label__content pf-m-clickable" type="button" data-links-open>
+                            <span class="pf-v6-c-label__icon">
+                                <i class="fas fa-fw fa-external-link-alt" aria-hidden="true"></i>
+                            </span>
+                            <span class="pf-v6-c-label__text">Open all</span>
+                        </button>
+                        </span>
+                    </span>
+                    <ul
+                        class="pf-v6-c-label-group__list"
+                        role="list"
+                        aria-labelledby="label-group-category-label"
+                    >
+                        ${linksHtml}
+                    </ul>
+                </div>
+            </div>
+            <br>`
+            });
         }
         // links = [...links, ...currentPattern]
     }
@@ -407,9 +256,11 @@ function find_patterns(segment) {
 function extract(text) {
     let first, last, total, passed, failed, skipped, total_test_time;
     /* default is to show the text we have, unless we find actual results */
-    let altered_text = Mustache.render(text_only_template, {
-                    text: text
-                });
+    let altered_text = html`<div class="pf-v6-c-code-block">
+                <div class="pf-v6-c-code-block__content">
+                    <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">${text}</code></pre>
+                </div>
+            </div>`;
     const entries = [];
     const testingElem = document.querySelector('#testing');
     const testingProgressElem = document.querySelector('#testing-progress');
@@ -434,7 +285,7 @@ function extract(text) {
                              text: text_init,
                            };
 
-        entries.push({ idx: init_entry.idx, entry: init_entry, html: Mustache.render(entry_template, init_entry) });
+        entries.push({ idx: init_entry.idx, entry: init_entry, html: renderTestEntry(init_entry) });
 
         passed = 0;
         failed = 0;
@@ -531,14 +382,16 @@ function extract(text) {
             entry.links = find_patterns(segment);
             entry.failed = !entry.passed && !entry.skipped;
             entry.collapsed = !entry.failed;
-            entries.push({ idx: entry.idx, entry: entry, html: Mustache.render(entry_template, entry) });
+            entries.push({ idx: entry.idx, entry: entry, html: renderTestEntry(entry) });
         });
         entries.sort((a, b) => {
             a = isNaN(parseInt(a.idx), 10) ? a.idx : parseInt(a.idx, 10);
             b = isNaN(parseInt(b.idx), 10) ? b.idx : parseInt(b.idx, 10);
             return a < b ? -1 : (a > b ? 1 : 0);
         });
-        altered_text = Mustache.render(tests_template, { tests: entries });
+        altered_text = html`<ul class="pf-v6-c-data-list pf-m-compact">
+                ${entries.map(e => e.html).join('')}
+            </ul>`;
         // for the overview list, put the failed entries first
         entries.sort((a, b) => {
                 let a_idx = isNaN(parseInt(a.idx, 10)) ? a.idx : parseInt(a.idx, 10);
@@ -554,17 +407,97 @@ function extract(text) {
 
         const finished = passed + failed + skipped;
         const left = total - finished;
-        testingElem.innerHTML = Mustache.render(overview_template, { tests: entries,
-                                                                passed,
-                                                                failed,
-                                                                skipped,
-                                                                retries,
-                                                                affected_retries: affected_retries,
-                                                                total,
-                                                                left,
-                                                                total_test_time,
-                                                              });
-        testingProgressElem.innerHTML = Mustache.render(progress_template, {total, finished, percentage_done: Math.floor(((total-left)/total)*100)});
+        testingElem.innerHTML = html`<div id="testing" class="pf-v6-u-mt-m">
+                ${total_test_time ? `<span class="pf-v6-c-timestamp">
+                    <time class="pf-v6-c-timestamp__text" datetime="${total_test_time}m">
+                        took ${total_test_time} minutes to run
+                    </time>
+                </span>
+                <br>` : ''}
+                <div class="pf-v6-c-label-group pf-m-category">
+                    <div class="pf-v6-c-label-group__main">
+                        <span
+                        class="pf-v6-c-label-group__label"
+                        aria-hidden="true"
+                        id="label-group-category-label"
+                        >
+                            ${total} tests${left ? `, ${left} left` : ''}
+                        </span>
+                        <ul class="pf-v6-c-label-group__list" role="list" aria-labelledby="label-group-category-label">
+                            <li class="pf-v6-c-label-group__list-item">
+                            <span class="pf-v6-c-label pf-m-filled pf-m-success">
+                                <span class="pf-v6-c-label__content">
+                                    <span class="pf-v6-c-label__icon">
+                                        <i class="fas fa-fw fa-check-circle" aria-hidden="true"></i>
+                                    </span>
+                                    <span class="pf-v6-c-label__text">${passed} passed</span>
+                                </span>
+                            </span>
+                            </li>
+                            <li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled ${skipped ? 'pf-m-yellow' : ''}">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-exclamation-triangle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">${skipped} skipped</span>
+                                    </span>
+                                </span>
+                            </li>
+                            <li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled ${failed ? 'pf-m-danger' : ''}">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-exclamation-circle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">${failed} failed</span>
+                                    </span>
+                                </span>
+                            </li>
+                            ${retries ? `<li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled pf-m-info">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">${retries} retries of failures</span>
+                                    </span>
+                                </span>
+                            </li>` : ''}
+                            ${affected_retries ? `<li class="pf-v6-c-label-group__list-item">
+                                <span class="pf-v6-c-label pf-m-filled pf-m-info">
+                                    <span class="pf-v6-c-label__content">
+                                        <span class="pf-v6-c-label__icon">
+                                            <i class="fas fa-fw fa-info-circle" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="pf-v6-c-label__text">${affected_retries} retries of successes</span>
+                                    </span>
+                                </span>
+                            </li>` : ''}
+                        </ul>
+                    </div>
+                </div>
+            </div>`;
+        const percentage_done = Math.floor(((total-left)/total)*100);
+        testingProgressElem.innerHTML = html`<div class="pf-v6-c-progress pf-m-sm" id="progress-sm-example">
+                <div
+                    class="pf-v6-c-progress__description"
+                    id="progress-sm-example-description"
+                >Test progress</div>
+                <div class="pf-v6-c-progress__status" aria-hidden="true">
+                    <span class="pf-v6-c-progress__measure">${finished}/${total} (${percentage_done}%)</span>
+                </div>
+                <div
+                    class="pf-v6-c-progress__bar"
+                    role="progressbar"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="${percentage_done}"
+                    aria-labelledby="progress-sm-example-description"
+                >
+                    <div class="pf-v6-c-progress__indicator" style="width:${percentage_done}%;"></div>
+                </div>
+            </div>`;
     } else {
         while(testingElem.firstChild)
             testingElem.removeChild(testingElem.firstChild);
@@ -602,9 +535,7 @@ function set_content(text) {
 
     // We also have CSS based filters for our tests
     const selectorTestRetried = "c-filter-only-failed-retried"
-    const testingToolbar = document.querySelector('#testing-toolbar')
-    testingToolbar.innerHTML = Mustache.render(test_filter_toolbar);
-    const failedFilter = testingToolbar.querySelector("#switch-for-failed-filtering");
+    const failedFilter = document.querySelector("#switch-for-failed-filtering");
 
     const handleFilterSelection = checkbox => {
         // Apply the clicked filter
@@ -746,7 +677,26 @@ fetch_content('log');
         </div>
         <div id="testing-progress"></div>
         <div id="testing"></div>
-        <div id="testing-toolbar"></div>
+        <div id="testing-toolbar">
+            <label class="pf-v6-c-switch" for="switch-for-failed-filtering">
+                            <input
+                                class="pf-v6-c-switch__input"
+                                type="checkbox"
+                                role="switch"
+                                id="switch-for-failed-filtering"
+                                aria-labelledby="switch-for-failed-filtering-text"
+                                checked
+                            />
+
+                            <span class="pf-v6-c-switch__toggle"></span>
+
+                            <span
+                                class="pf-v6-c-switch__label"
+                                id="switch-for-failed-filtering-text"
+                                aria-hidden="true"
+                            >Show only failed</span>
+                        </label>
+        </div>
         <div id="log"></div>
     </body>
 </html>
