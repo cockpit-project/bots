@@ -96,7 +96,21 @@
             </span>
         </script>
         <script type="text/javascript">
-            addEventListener("click", (event) => { })
+            // Automatic dark mode based on system preference
+            const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+            function applyTheme(e) {
+                const cl = document.documentElement.classList;
+                if (e.matches)
+                    cl.add('pf-v6-theme-dark');
+                else
+                    cl.remove('pf-v6-theme-dark');
+            }
+
+            // Apply theme on page load
+            applyTheme(darkModeMediaQuery);
+            // Listen for changes to the color scheme preference
+            darkModeMediaQuery.addEventListener('change', applyTheme);
         </script>
         <script id="TestEntry" type="text/template" type="x-tmpl-mustache">
             <li class="pf-v6-c-data-list__item test-entry {{#collapsed}}collapsed{{/collapsed}} {{^passed}}failed{{/passed}} {{#retried}}retried{{/retried}} {{#skipped}}skipped{{/skipped}}" id="{{id}}">
