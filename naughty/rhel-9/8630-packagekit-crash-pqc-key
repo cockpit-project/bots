@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "integration-tests/submancockpit/test/check-subscriptions", line *, in testMissingPackages
+    b.wait_in_text(".pf-v6-c-alert.pf-m-danger .pf-v6-c-alert__description", "not-found")
+*Error: actual text: PackageKit crashed
+*
+Process * (packagekitd) of user 0 dumped core.
