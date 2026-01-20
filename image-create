@@ -82,10 +82,8 @@ class MachineBuilder:
 
     def run_setup_script(self, script: str) -> None:
         """Prepare a test image further by running some commands in it."""
-        self.machine.start()
-
         try:
-            self.machine.wait_boot(timeout_sec=300)
+            self.machine.boot(timeout_sec=300)
             self.machine.upload([os.path.join(testvm.SCRIPTS_DIR, "lib/")], "/var/lib/testvm")
             self.machine.upload([script], "/var/tmp/SETUP")
 
@@ -115,10 +113,9 @@ class MachineBuilder:
     def boot_system(self) -> None:
         """Start the system to make sure it can boot, then shutdown cleanly"""
 
-        self.machine.start()
         # avoid too long boot times -- they cause painfully long tests, and are a bug
         try:
-            self.machine.wait_boot(timeout_sec=30)
+            self.machine.boot(timeout_sec=30)
         finally:
             self.machine.stop(timeout_sec=30)
 

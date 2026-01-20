@@ -327,8 +327,7 @@ def main() -> None:
                                  image=prepare_install_image(args.base_image, args.image, args.resize, args.fresh),
                                  cpus=args.cpus,
                                  memory_mb=args.memory_mb)
-    machine.start()
-    machine.wait_boot()
+    machine.boot()
     try:
         for (handler, arg) in args.actions:
             handler(machine, arg)
