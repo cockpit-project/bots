@@ -25,8 +25,7 @@ args = parser.parse_args()
 
 subprocess.check_call([os.path.join(BOTS_DIR, 'image-download'), TEST_OS_DEFAULT])
 m = testvm.VirtMachine(image=TEST_OS_DEFAULT, verbose=True)
-m.start()
-m.wait_boot()
+m.boot()
 
 # build OS bootc container image
 m.upload([str(Path(testvm.SCRIPTS_DIR, 'lib'))], '/root')
@@ -78,8 +77,7 @@ subprocess.check_call(['qemu-img', 'resize', '-f', 'qcow2', args.vmpath, '+20G']
 
 # booting the image will cause bootc-generic-growpart to grow the /sysroot partition
 m = testvm.VirtMachine(image=os.path.abspath(args.vmpath), maintain=True, verbose=True)
-m.start()
-m.wait_boot()
+m.boot()
 
 # copy OCI image into the VM as well, for cockpit-ostree tests
 # the .setup script processes this further

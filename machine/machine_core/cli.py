@@ -34,8 +34,7 @@ def cmd_cli() -> None:
     network = machine_virtual.VirtNetwork(0, image=args.image)
     machine = machine_virtual.VirtMachine(image=args.image, networking=network.host(), memory_mb=args.memory,
                                           verbose=args.verbose)
-    machine.start()
-    machine.wait_boot()
+    machine.boot()
 
     # run a command to force starting the SSH master
     machine.execute('uptime')

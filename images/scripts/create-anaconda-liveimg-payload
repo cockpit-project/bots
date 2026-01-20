@@ -62,8 +62,7 @@ def build_payload(image: str, output: str) -> None:
     subprocess.check_call([os.path.join(BOTS_DIR, "image-download"), image])
     machine = testvm.VirtMachine(image=image, memory_mb=4096)
     try:
-        machine.start()
-        machine.wait_boot()
+        machine.boot()
         machine.execute("dnf install -y anaconda", timeout=300)
 
         # Create directory /mnt/sysimage and start installation

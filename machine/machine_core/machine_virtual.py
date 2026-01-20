@@ -31,7 +31,13 @@ from typing import IO, Any, TextIO
 import libvirt
 import libvirt_qemu
 
-from lib.constants import BOTS_DIR, DEFAULT_MACHINE_MEMORY_MB, DEFAULT_SHUTDOWN_TIMEOUT, TEST_DIR
+from lib.constants import (
+    BOTS_DIR,
+    DEFAULT_BOOT_TIMEOUT,
+    DEFAULT_MACHINE_MEMORY_MB,
+    DEFAULT_SHUTDOWN_TIMEOUT,
+    TEST_DIR,
+)
 
 from .exceptions import Failure
 from .machine import Machine
@@ -507,6 +513,15 @@ class VirtMachine(Machine):
         except Failure:
             self.kill()
             raise
+
+    def boot(self, timeout_sec: int = DEFAULT_BOOT_TIMEOUT) -> None:
+        """Start the machine and wait for boot to complete
+
+        Args:
+            timeout_sec: Boot timeout in seconds
+        """
+        self.start()
+        self.wait_boot(timeout_sec)
 
     def stop(self, timeout_sec: int = DEFAULT_SHUTDOWN_TIMEOUT) -> None:
         if self.maintain:
