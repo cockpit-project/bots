@@ -33,7 +33,7 @@ from . import timeout as timeoutlib
 # HACK: some projects directly import ssh_connection before adjusting sys.path; add bots root dir
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-from lib.constants import TEST_DIR
+from lib.constants import DEFAULT_BOOT_TIMEOUT, TEST_DIR
 
 
 class SSHConnection:
@@ -135,7 +135,7 @@ class SSHConnection:
     def print_console_log(self) -> None:
         pass
 
-    def wait_boot(self, timeout_sec: int = 120) -> None:
+    def wait_boot(self, timeout_sec: int = DEFAULT_BOOT_TIMEOUT) -> None:
         """Wait for a machine to boot"""
         # See https://github.com/cockpit-project/cockpit/blob/main/test/README.md#test-configuration
         effective_timeout = timeout_sec * self.timeout_factor
