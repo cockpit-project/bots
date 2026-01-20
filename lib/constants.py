@@ -36,6 +36,8 @@ SCRIPTS_DIR = os.path.join(IMAGES_DIR, "scripts")
 DEFAULT_IDENTITY_FILE = os.path.join(MACHINE_DIR, "identity")
 DEFAULT_IDENTITY_PUB_FILE = os.path.join(MACHINE_DIR, "identity.pub")
 
+DEFAULT_SHUTDOWN_TIMEOUT = 120  # seconds
+
 TEST_OS_DEFAULT = "fedora-43"
 DEFAULT_IMAGE = os.environ.get("TEST_OS", TEST_OS_DEFAULT)
 DEFAULT_MACHINE_MEMORY_MB = 1152

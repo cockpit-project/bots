@@ -22,7 +22,7 @@ import subprocess
 from collections.abc import Collection, Mapping, Sequence
 from functools import cached_property
 
-from lib.constants import BOTS_DIR, DEFAULT_IDENTITY_FILE, OSTREE_IMAGES
+from lib.constants import BOTS_DIR, DEFAULT_IDENTITY_FILE, DEFAULT_SHUTDOWN_TIMEOUT, OSTREE_IMAGES
 
 from . import ssh_connection, timeout
 
@@ -137,7 +137,7 @@ class Machine(ssh_connection.SSHConnection):
         """Overridden by machine classes to stop the machine"""
         self.message("Not shutting down already running machine")
 
-    def wait_poweroff(self, timeout_sec: int = 120) -> None:
+    def wait_poweroff(self, timeout_sec: int = DEFAULT_SHUTDOWN_TIMEOUT) -> None:
         """Overridden by machine classes to wait for a machine to stop"""
         raise NotImplementedError
 
@@ -145,7 +145,7 @@ class Machine(ssh_connection.SSHConnection):
         """Overridden by machine classes to unconditionally kill the running machine"""
         raise NotImplementedError
 
-    def shutdown(self, timeout_sec: int = 120) -> None:
+    def shutdown(self, timeout_sec: int = DEFAULT_SHUTDOWN_TIMEOUT) -> None:
         """Overridden by machine classes to gracefully shutdown the running machine"""
         raise NotImplementedError
 
