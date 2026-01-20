@@ -31,7 +31,7 @@ from typing import IO, Any, TextIO
 import libvirt
 import libvirt_qemu
 
-from lib.constants import BOTS_DIR, DEFAULT_MACHINE_MEMORY_MB, TEST_DIR
+from lib.constants import BOTS_DIR, DEFAULT_MACHINE_MEMORY_MB, DEFAULT_SHUTDOWN_TIMEOUT, TEST_DIR
 
 from .exceptions import Failure
 from .machine import Machine
@@ -508,7 +508,7 @@ class VirtMachine(Machine):
             self.kill()
             raise
 
-    def stop(self, timeout_sec: int = 120) -> None:
+    def stop(self, timeout_sec: int = DEFAULT_SHUTDOWN_TIMEOUT) -> None:
         if self.maintain:
             self.shutdown(timeout_sec=timeout_sec)
         else:
@@ -541,7 +541,7 @@ class VirtMachine(Machine):
                 sys.stderr.write(f"WARNING: Destroying machine failed: {e}\n")
         self._cleanup(quick=True)
 
-    def wait_poweroff(self, timeout_sec: int = 120) -> None:
+    def wait_poweroff(self, timeout_sec: int = DEFAULT_SHUTDOWN_TIMEOUT) -> None:
         # shutdown must have already been triggered
         if self._domain:
             start_time = time.time()
@@ -566,7 +566,7 @@ class VirtMachine(Machine):
                     raise
         self._cleanup(quick=True)
 
-    def shutdown(self, timeout_sec: int = 120) -> None:
+    def shutdown(self, timeout_sec: int = DEFAULT_SHUTDOWN_TIMEOUT) -> None:
         # shutdown the system gracefully
         # to stop it immediately, use kill()
         self.disconnect()
