@@ -113,9 +113,11 @@ class MachineBuilder:
     def boot_system(self) -> None:
         """Start the system to make sure it can boot, then shutdown cleanly"""
 
-        # avoid too long boot times -- they cause painfully long tests, and are a bug
+        # Avoid too long boot times -- they cause painfully long tests, and are a bug
+        # However, prefer failing on broken/flaky images over having to occasionally re-run
+        # builds due to nested KVM issues.
         try:
-            self.machine.boot(timeout_sec=30)
+            self.machine.boot(timeout_sec=30, nested_kvm_retry=False)
         finally:
             self.machine.stop(timeout_sec=30)
 

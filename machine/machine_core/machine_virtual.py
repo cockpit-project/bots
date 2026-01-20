@@ -275,6 +275,9 @@ class VirtMachine(Machine):
     disk_bus: str = 'virtio'
     disk_dev: str = 'vda'
 
+    # Cache for nested virtualization detection
+    _is_nested_virt: bool | None = None
+
     def __init__(
         self,
         image: str,
@@ -514,14 +517,35 @@ class VirtMachine(Machine):
             self.kill()
             raise
 
-    def boot(self, timeout_sec: int = DEFAULT_BOOT_TIMEOUT) -> None:
+    @classmethod
+    def is_nested_virt(cls) -> bool:
+        """Detect if running in a nested virtualization environment"""
+        if cls._is_nested_virt is None:
+            result = subprocess.run(['systemd-detect-virt', '--vm', '--quiet'])
+            cls._is_nested_virt = (result.returncode == 0)
+        return cls._is_nested_virt
+
+    def boot(self, timeout_sec: int = DEFAULT_BOOT_TIMEOUT, *, nested_kvm_retry: bool = True) -> None:
         """Start the machine and wait for boot to complete
+
+        In nested virtualization environments this retries up to 3 times on boot failure.
 
         Args:
             timeout_sec: Boot timeout in seconds
         """
-        self.start()
-        self.wait_boot(timeout_sec)
+        max_attempts = 3 if (self.is_nested_virt() and nested_kvm_retry) else 1
+
+        for attempt in range(1, max_attempts + 1):
+            self.start()
+            try:
+                self.wait_boot(timeout_sec)
+                return
+            except Failure as e:
+                if attempt < max_attempts:
+                    print(f"WARNING: Boot attempt #{attempt} failed in nested KVM: {e}", file=sys.stderr)
+                    self.kill()
+                else:
+                    raise
 
     def stop(self, timeout_sec: int = DEFAULT_SHUTDOWN_TIMEOUT) -> None:
         if self.maintain:
