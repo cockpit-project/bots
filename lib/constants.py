@@ -36,6 +36,7 @@ SCRIPTS_DIR = os.path.join(IMAGES_DIR, "scripts")
 DEFAULT_IDENTITY_FILE = os.path.join(MACHINE_DIR, "identity")
 DEFAULT_IDENTITY_PUB_FILE = os.path.join(MACHINE_DIR, "identity.pub")
 
+DEFAULT_BOOT_TIMEOUT = 120  # seconds
 DEFAULT_SHUTDOWN_TIMEOUT = 120  # seconds
 
 TEST_OS_DEFAULT = "fedora-43"
