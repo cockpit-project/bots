@@ -6,7 +6,7 @@
     <title>CI Weather Report</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.13.0/sql-wasm.js" integrity="sha512-Yra4xuTWinXfBpG2ftgDX8MVmMiOev1FtqiYs51+kEna/5peD0kZqAL1syYCH61f9gxmAFidIJz42IKcRhWMkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0" integrity="sha256-Uv9BNBucvCPipKQ2NS9wYpJmi8DTOEfTA/nH2aoJALw=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js" integrity="sha512-Y51n9mtKTVBh3Jbx5pZSJNDDMyY+yGe77DGtBPzRlgsf/YLCh13kSZ3JmfHGzYFCmOndraf0sQgfM654b7dJ3w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
         <div class="d-flex justify-content-between flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
@@ -43,26 +43,34 @@
             <div class="row">
                 <div class="col-md-12">
                     <h2 id="g1-title"></h2>
-                    <canvas id="g1" style="width: 100%; height: 256px"></canvas>
+                    <div style="position: relative; height: 256px;">
+                        <canvas id="g1"></canvas>
+                    </div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-12">
                     <h2 id="g2-title"></h2>
-                    <canvas id="g2" style="width: 100%; height: 256px"></canvas>
+                    <div style="position: relative; height: 256px;">
+                        <canvas id="g2"></canvas>
+                    </div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-12">
                     <h2 id="g3-title"></h2>
-                    <canvas id="g3" style="width: 100%; height: 256px"></canvas>
+                    <div style="position: relative; height: 256px;">
+                        <canvas id="g3"></canvas>
+                    </div>
                     <div id="g3-details"></div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-12">
                     <h2 id="g4-title"></h2>
-                    <canvas id="g4" style="width: 100%; height: 256px"></canvas>
+                    <div style="position: relative; height: 256px;">
+                        <canvas id="g4"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -215,11 +223,14 @@
                         borderColor: "rgba(24, 42, 94, 0.8)",
                         fill: false,
                         spanGaps: true,
+                        tension: 0.4,
+                        label: "Failure rate",
                     }, {
                         data: Array(days + 1).fill(10),
                         borderColor: "rgba(1, 2, 3, 0.3)",
                         fill: false,
                         spanGaps: true,
+                        label: "10% threshold",
                     }], null, "%");
 
                 const all = db.exec(`
@@ -425,6 +436,7 @@
                         borderColor: "rgba(50, 150, 50, 0.3)",
                         fill: false,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Limit for one retry",
                         yAxisID: "limit",
                     }, {
@@ -432,52 +444,60 @@
                         borderColor: "rgba(120, 120, 50, 0.3)",
                         fill: false,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Limit for any retry",
                         yAxisID: "limit",
                     }, {
                         data: pr_points.map(p => p[2]),
                         borderColor: "rgba(180, 25, 52, 0.8)",
-                        backgroundColor: "rgba(180, 25, 52, 0.8)",
+                        backgroundColor: "rgba(180, 25, 52, 0.5)",
+                        fill: true,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Merged red",
                         yAxisID: "main",
                     }, {
                         data: pr_points.map(p => p[1]),
                         borderColor: "rgba(180, 100, 25, 0.8)",
-                        backgroundColor: "rgba(180, 100, 25, 0.8)",
+                        backgroundColor: "rgba(180, 100, 25, 0.5)",
+                        fill: true,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Green with 2+ retries",
                         yAxisID: "main",
                     }, {
                         data: pr_points.map(p => p[0]),
                         borderColor: "rgba(180, 180, 25, 0.8)",
-                        backgroundColor: "rgba(180, 180, 25, 0.8)",
+                        backgroundColor: "rgba(180, 180, 25, 0.5)",
+                        fill: true,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Green with 1 retry",
                         yAxisID: "main",
                     }], {
-                        scales: {
-                            yAxes: [{
-                                id: "limit",
-                                display: false,
-                                ticks: {
-                                    min: 0,
-                                    max: max,
-                                },
-                            }, {
-                                id: "main",
-                                stacked: true,
-                                ticks: {
-                                    min: 0,
-                                    max: max,
-                                },
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: "% (stacked)",
-                                },
-                            }]
+                        plugins: {
+                            legend: {
+                                display: true,
+                            },
                         },
-                        responsive: false,
+                        scales: {
+                            limit: {
+                                display: false,
+                                min: 0,
+                                max: max,
+                            },
+                            main: {
+                                stacked: true,
+                                min: 0,
+                                max: max,
+                                title: {
+                                    display: true,
+                                    text: "% (stacked)",
+                                },
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
                     });
 
                 createGraph("g2", "Test runs semaphore", wait_labels, [{
@@ -485,66 +505,78 @@
                         borderColor: "rgba(120, 120, 50, 0.3)",
                         fill: false,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Limit for non-completed (except 'Failed tests')",
                         yAxisID: "limit",
                     }, {
                         data: test_points.map(p => p[0]),
                         borderColor: "rgba(25, 52, 180, 0.8)",
-                        backgroundColor: "rgba(25, 52, 180, 0.8)",
+                        backgroundColor: "rgba(25, 52, 180, 0.5)",
+                        fill: true,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Never picked",
                         yAxisID: "main",
                     }, {
                         data: test_points.map(p => p[1]),
                         borderColor: "rgba(25, 180, 180, 0.8)",
-                        backgroundColor: "rgba(25, 180, 180, 0.8)",
+                        backgroundColor: "rgba(25, 180, 180, 0.5)",
+                        fill: true,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Never finished",
                         yAxisID: "main",
                     }, {
                         data: test_points.map(p => p[2]),
                         borderColor: "rgba(180, 25, 25, 0.8)",
-                        backgroundColor: "rgba(180, 25, 25, 0.8)",
+                        backgroundColor: "rgba(180, 25, 25, 0.5)",
+                        fill: true,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Aborted",
                         yAxisID: "main",
                     }, {
                         data: test_points.map(p => p[3]),
                         borderColor: "rgba(180, 100, 25, 0.8)",
-                        backgroundColor: "rgba(180, 100, 25, 0.8)",
+                        backgroundColor: "rgba(180, 100, 25, 0.5)",
+                        fill: true,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Failed in preparation",
                         yAxisID: "main",
                     }, {
                         data: test_points.map(p => p[4]),
                         borderColor: "rgba(180, 180, 25, 0.8)",
-                        backgroundColor: "rgba(180, 180, 25, 0.8)",
+                        backgroundColor: "rgba(180, 180, 25, 0.5)",
+                        fill: true,
                         spanGaps: true,
+                        tension: 0.4,
                         label: "Failed tests",
                         yAxisID: "main",
                     }], {
-                        scales: {
-                            yAxes: [{
-                                id: "limit",
-                                display: false,
-                                ticks: {
-                                    min: 0,
-                                    max: max_runs,
-                                },
-                            }, {
-                                id: "main",
-                                stacked: true,
-                                ticks: {
-                                    min: 0,
-                                    max: max_runs,
-                                },
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: "% (stacked)",
-                                },
-                            }]
+                        plugins: {
+                            legend: {
+                                display: true,
+                            },
                         },
-                        responsive: false,
+                        scales: {
+                            limit: {
+                                display: false,
+                                min: 0,
+                                max: max_runs,
+                            },
+                            main: {
+                                stacked: true,
+                                min: 0,
+                                max: max_runs,
+                                title: {
+                                    display: true,
+                                    text: "% (stacked)",
+                                },
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
                     });
 
                 createGraph("g3", "Tests that did not finish within 60 minutes", wait_labels, [{
@@ -552,11 +584,14 @@
                         borderColor: "rgba(94, 42, 24, 0.8)",
                         fill: false,
                         spanGaps: true,
+                        tension: 0.4,
+                        label: "Tests over 60min",
                     }, {
                         data: Array(days + 1).fill(5),
                         borderColor: "rgba(1, 2, 3, 0.3)",
                         fill: false,
                         spanGaps: true,
+                        label: "5% threshold",
                     }], null, "%");
 
                 // Render logs for last 15 tests that did not finish within 60 minutes
@@ -584,11 +619,14 @@
                         borderColor: "rgba(24, 42, 94, 0.8)",
                         fill: false,
                         spanGaps: true,
+                        tension: 0.4,
+                        label: "Wait time",
                     }, {
                         data: Array(days + 1).fill(300),
                         borderColor: "rgba(1, 2, 3, 0.3)",
                         fill: false,
                         spanGaps: true,
+                        label: "300s threshold",
                     }], null, "seconds");
 
             }
@@ -602,17 +640,20 @@
 
         if (!options)
             options = {
-                legend: {
-                    display: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
                 },
-                responsive: false,
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
-                    yAxes: [{
-                        scaleLabel: {
+                    y: {
+                        title: {
                             display: true,
-                            labelString: ylabel,
+                            text: ylabel,
                         },
-                    }]
+                    }
                 }
             };
 
