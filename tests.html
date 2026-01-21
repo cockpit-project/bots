@@ -1,11 +1,14 @@
-<meta charset="utf8" />
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CI Weather Report</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-IUOUHAPazai08QFs7W4MbzTlwEWFo7z/4zw8YmxEiko=" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.2.1/dist/sql-wasm.js" integrity="sha256-1mDb9YqGizNOF0OlwicJqO7i2swLOzZAFBAAOeIE+XM=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0" integrity="sha256-Uv9BNBucvCPipKQ2NS9wYpJmi8DTOEfTA/nH2aoJALw=" crossorigin="anonymous"></script>
 </head>
-<html>
-    <body>
+<body>
         <div class="d-flex justify-content-between flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
             <div>
                 <h4 class="my-0 mr-md-auto font-weight-normal">CI Weather Report</h4>
@@ -63,7 +66,6 @@
                 </div>
             </div>
         </div>
-  </body>
   <script>
     // Pretty format test names
     function normalize(name, project) {
@@ -690,4 +692,5 @@
         document.getElementById(id).appendChild(wrapper);
     }
   </script>
+</body>
 </html>
