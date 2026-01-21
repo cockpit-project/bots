@@ -73,6 +73,14 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 id="g5-title"></h2>
+                    <div style="position: relative; height: 256px;">
+                        <canvas id="g5"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
   <script>
     // Pretty format test names
@@ -633,6 +641,64 @@
                         spanGaps: true,
                         label: "300s threshold",
                     }], null, "seconds");
+
+                // Show % of infrastructure/harness failures per day
+                const start_time = new Date();
+                start_time.setHours(0, 0, 0, 0);
+                start_time.setDate(start_time.getDate() - days + 1);
+
+                const infra_failures = db.exec(`
+                        SELECT date(TestRuns.time, 'unixepoch', 'localtime') as day, COUNT(*) as count
+                        FROM Tests
+                        JOIN TestRuns ON Tests.run = TestRuns.id
+                        WHERE TestRuns.time >= ${start_time.getTime() / 1000}
+                            AND Tests.failed = 1 AND project LIKE '${repo}'
+                            AND Tests.retry_reason = 'due to failure of test harness or framework'
+                        GROUP BY day`);
+
+                const total_tests = db.exec(`
+                        SELECT date(TestRuns.time, 'unixepoch', 'localtime') as day, COUNT(*) as count
+                        FROM Tests
+                        JOIN TestRuns ON Tests.run = TestRuns.id
+                        WHERE TestRuns.time >= ${start_time.getTime() / 1000}
+                            AND project LIKE '${repo}'
+                        GROUP BY day`);
+
+                // Build maps for easy lookup
+                const infra_map = {};
+                infra_failures[0].values.forEach(row => infra_map[row[0]] = row[1]);
+
+                const total_map = {};
+                total_tests[0].values.forEach(row => total_map[row[0]] = row[1]);
+
+                // Build the chart data
+                const infra_points = [];
+                const infra_labels = [];
+                const day = new Date(start_time);
+                for (let i = 0; i < days; i++) {
+                    // Format as YYYY-MM-DD in local time to match SQLite's localtime
+                    const day_str = day.getFullYear() + '-' +
+                                    String(day.getMonth() + 1).padStart(2, '0') + '-' +
+                                    String(day.getDate()).padStart(2, '0');
+
+                    const infra_count = infra_map[day_str] || 0;
+                    const total_count = total_map[day_str] || 0;
+                    const percentage = total_count > 0 ? (infra_count * 100.0) / total_count : null;
+
+                    infra_labels.push(`${formatDate(day)} (${infra_count}/${total_count})`);
+                    infra_points.push(percentage);
+
+                    day.setDate(day.getDate() + 1);
+                }
+
+                createGraph("g5", "Infrastructure/harness failure rate", infra_labels, [{
+                        data: infra_points,
+                        borderColor: "rgba(180, 50, 180, 0.8)",
+                        fill: false,
+                        spanGaps: true,
+                        tension: 0.4,
+                        label: "Harness failure %",
+                    }], null, "%");
 
             }
         };
