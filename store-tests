@@ -27,6 +27,7 @@ import urllib.request
 from datetime import datetime
 
 from lib import testmap
+from lib.aio.jsonutil import get_str
 from lib.network import host_ssl_context
 from task import github
 
@@ -87,29 +88,31 @@ def main():
     # 'posted' - when this run was triggered
     # 'finished' - when this run finished - 'state' is then either 'success', 'failure' or 'error'
     for status in reversed(statuses):
-        if not testmap.is_valid_context(status["context"], api.repo):
+        if not testmap.is_valid_context(get_str(status, "context"), api.repo):
             continue
 
-        cc = contexts.setdefault(status["context"], [])
+        cc = contexts.setdefault(get_str(status, "context"), [])
 
-        desc = status["description"]
-        if status["state"] == "pending":
+        desc = get_str(status, "description")
+        if get_str(status, "state") == "pending":
             if "progress" in desc:
-                cc[-1]["url"] = status["target_url"]
-                cc[-1]["started"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()  # noqa:DTZ007
+                cc[-1]["url"] = get_str(status, "target_url")
+                cc[-1]["started"] = datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # noqa:DTZ007
             elif "Not yet tested" in desc:
-                new_run = {"posted": datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()}  # noqa:DTZ007
+                new_run: dict[str, str | float] = {
+                    "posted": datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # noqa:DTZ007
+                }
                 new_run["state"] = "pending"
                 cc.append(new_run)
             else:
                 logging.warning("Pending status has unexpected description '%s', skipping.", desc)
-        elif status["state"] in ["success", "failure", "error"]:
-            cc[-1]["finished"] = datetime.strptime(status["created_at"], DATE_FORMAT).timestamp()  # noqa:DTZ007
-            cc[-1]["state"] = status["state"]
-            if status["state"] == "error":
+        elif get_str(status, "state") in ["success", "failure", "error"]:
+            cc[-1]["finished"] = datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # noqa:DTZ007
+            cc[-1]["state"] = get_str(status, "state")
+            if get_str(status, "state") == "error":
                 cc[-1]["description"] = desc
         else:
-            logging.warning("Status has unexpected state '%s', skipping.", status["state"])
+            logging.warning("Status has unexpected state '%s', skipping.", get_str(status, "state"))
 
     for context, statuses in contexts.items():
         repo = api.repo
