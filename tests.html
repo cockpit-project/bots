@@ -108,6 +108,7 @@
     }
 
     const DAY = 86400;
+    const IGNORE_HARNESS_FAILURES = "AND (Tests.retry_reason IS NULL OR Tests.retry_reason != 'due to failure of test harness or framework')";
     const params = new URLSearchParams(window.location.search);
     const days = Number(params.get('days') || 14);
     const test = params.get('test');
@@ -171,6 +172,7 @@
                         FROM TestRuns
                         JOIN Tests ON Tests.run = TestRuns.id
                         WHERE time > ${since} AND Tests.failed = 1 AND Tests.testname = '${test}' AND project LIKE '${repo}'
+                            ${IGNORE_HARNESS_FAILURES}
                         GROUP BY context
                         ORDER BY COUNT(*) DESC`)[0].values;
                 let total_failures = fails_by_context.reduce((acc, row) => acc + row[1], 0);
@@ -180,6 +182,7 @@
                         SELECT DISTINCT TestRuns.url
                         FROM TestRuns JOIN Tests ON TestRuns.id = Tests.run
                         WHERE testname = '${test}' AND TestRuns.context = '${context}' AND failed = 1 AND project LIKE '${repo}'
+                            ${IGNORE_HARNESS_FAILURES}
                         ORDER BY run DESC
                         LIMIT 2`);
                     const links = urls[0].values.map(u => u[0]);
@@ -207,6 +210,7 @@
                                 FROM Tests
                                 JOIN TestRuns ON Tests.run = TestRuns.id
                                 WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.failed = 1 AND Tests.testname = '${test}' AND project LIKE '${repo}'
+                                    ${IGNORE_HARNESS_FAILURES}
                             ) AS t2
                             WHERE TestRuns.time > ${from.getTime() / 1000} AND TestRuns.time < ${to.getTime() / 1000} AND Tests.testname = '${test}' AND project LIKE '${repo}'`);
                     labels.unshift(`${formatDate(from)} (${failed[0].values[0][1]} runs)`);
@@ -298,6 +302,7 @@
                                 FROM Tests
                                 JOIN TestRuns ON Tests.run = TestRuns.id
                                 WHERE TestRuns.time > ${since} AND Tests.failed = 1 AND project LIKE '${repo}'
+                                    ${IGNORE_HARNESS_FAILURES}
                                 GROUP BY testname, context
                         ) AS failruns ON allruns.testname = failruns.testname AND TestRuns.context = failruns.context
                         WHERE TestRuns.time > ${since} AND failruns.failed > 1 AND project LIKE '${repo}'
