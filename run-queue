@@ -31,6 +31,9 @@ from collections.abc import Sequence
 
 import pika
 
+from lib.aio.base import SubjectSpecification
+from lib.aio.jsonutil import JsonObject, get_int, get_str
+from lib.bots_automerge import auto_merge_bots_pr
 from lib.directories import get_images_data_dir
 from lib.network import redhat_network
 from lib.stores import LOG_STORE
@@ -43,7 +46,7 @@ statistics_queue = os.environ.get("RUN_STATISTICS_QUEUE")
 # as per pika docs
 DeliveryTag = int
 
-ConsumeResult = tuple[Sequence[str] | str | None, DeliveryTag | None]
+ConsumeResult = tuple[Sequence[str] | str | None, DeliveryTag | None, SubjectSpecification | None]
 
 
 # Returns a command argv to execute and the delivery tag needed to ack the message
@@ -52,7 +55,7 @@ def consume_webhook_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResu
     # call tests-scan or issue-scan appropriately
     method_frame, _header_frame, message = dq.channel.basic_get(queue='webhook')
     if not method_frame or not message:
-        return None, None
+        return None, None, None
 
     body = json.loads(message)
     event = body['event']
@@ -97,9 +100,9 @@ def consume_webhook_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResu
             cmd = ['./issue-scan', '--issues-data', json.dumps(request), '--amqp', dq.address]
     else:
         logging.error('Unkown event type in the webhook queue')
-        return None, None
+        return None, None, None
 
-    return cmd, method_frame.delivery_tag
+    return cmd, method_frame.delivery_tag, None
 
 
 # Returns a command to execute and the delivery tag needed to ack the message
@@ -119,18 +122,22 @@ def consume_task_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResult:
                 queue = ['public', 'rhel'][random.randrange(2)]
     else:
         # nothing to do
-        return None, None
+        return None, None, None
 
     method_frame, _header_frame, message = dq.channel.basic_get(queue=queue)
     if not method_frame or not message:
-        return None, None
+        return None, None, None
 
     body = json.loads(message)
     if job := body.get('job'):
+        print(f"\njob: {job}")
         command = ['./job-runner', 'json', json.dumps(job)]
+        job_subject = SubjectSpecification(job)
     else:
+        print("\nNO JOB :(")
         command = body['command']
-    return command, method_frame.delivery_tag
+        job_subject = None
+    return command, method_frame.delivery_tag, job_subject
 
 
 def mail_notification(body: str) -> None:
@@ -159,14 +166,14 @@ def main() -> int:
     opts = parser.parse_args()
 
     with distributed_queue.DistributedQueue(opts.amqp, ['webhook', 'rhel', 'public', 'statistics']) as dq:
-        cmd, delivery_tag = consume_webhook_queue(dq)
+        cmd, delivery_tag, job_subj = consume_webhook_queue(dq)
         if not cmd and delivery_tag:
             logging.info("Webhook message interpretation generated no command")
             dq.channel.basic_ack(delivery_tag)
             return 0
 
         if not cmd:
-            cmd, delivery_tag = consume_task_queue(dq)
+            cmd, delivery_tag, job_subj = consume_task_queue(dq)
         if not cmd:
             logging.info("All queues are empty")
             return 1
@@ -190,6 +197,15 @@ failed with exit code %i. Please check the container logs for details.""" % (cmd
 
         if delivery_tag is not None:
             dq.channel.basic_ack(delivery_tag)
+
+        if job_subj is not None:
+            print(f"\n\n\nrepo: {job_subj.repo}\n, pull: {job_subj.pull}\n, sha: {job_subj.sha}\n")
+            # skip automerge if jobs don't run against a PR
+            if job_subj.repo is not None and job_subj.pull is not None and job_subj.sha is not None:
+                print("starting automerge")
+                auto_merge_bots_pr(job_subj.repo, job_subj.pull, job_subj.sha)
+            else:
+                logging.info("Skipping automerge for job: %s", job_subj)
 
     return 0
 

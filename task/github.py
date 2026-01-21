@@ -334,8 +334,11 @@ class GitHub:
             data = self.get_obj(f"commits/{revision}/status?page={page}&per_page={count}")
             count = 0
             page += 1
+            print(f"DATA: {data}")
             for status in get_dictv(data, "statuses", ()):
                 context = get_str(status, "context")
+                print(f"CONTEXT: {context}")
+                print(f"REPO: {self.repo}")
                 if is_valid_context(context, self.repo) and context not in result:
                     result[context] = status
                 count += 1
@@ -411,9 +414,29 @@ class GitHub:
                 count = len(comments)
         return result
 
+    def get_pr_info(self, pr: int) -> JsonObject:
+        return self.get_obj(f"pulls/{pr}", {})
+
     def get_head(self, pr: int) -> str | None:
-        pull = self.get_obj(f"pulls/{pr}", {})
+        pull = self.get_pr_info(pr)
         return get_str(get_dict(pull, "head", {}), "sha", None)
+
+    def get_author(self, pr: int) -> JsonObject:
+        pull = self.get_pr_info(pr)
+        print(f"PR INFO: {pull}")
+        return get_dict(pull, "user", {})
+
+    def approve_pr(self, pr: int, sha: str) -> None:
+        # https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#create-a-review-for-a-pull-request
+        data = {
+            'commit_id': sha,
+            'event': 'APPROVE',
+            'comments': 'So cool'
+        }
+        rw = self.post(f'pulls/{pr}/reviews', data)
+        print(f"post {rw}")
+
+        # let's not write the merge code yet :)
 
 
 class Checklist:

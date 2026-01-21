@@ -303,6 +303,7 @@ def is_valid_context(context: str, repo: str) -> bool:
     image = image_scenario.split('/')[0]
     # if the context specifies a repo, use that one instead
     branch_contexts = tests_for_project(context_repo or repo)
+    print(f"CONTEXTS: {branch_contexts}")
     if context_repo:
         # if the context specifies a repo, only look at that particular branch
         try:
