@@ -90,6 +90,10 @@ deploy_to cockpit-project/subscription-manager-cockpit \
         cockpit-project/subscription-manager-cockpit/npm-update/SELF_DEPLOY_KEY \
         cockpit-project/subscription-manager-cockpit/self/DEPLOY_KEY
 
+deploy_to cockpit-project/subscription-manager-cockpit-weblate \
+    --deploy-from \
+        cockpit-project/subscription-manager-cockpit/subscription-manager-cockpit-weblate/DEPLOY_KEY
+
 # shared
 deploy_to cockpit-project/node-cache \
     --deploy-from \
