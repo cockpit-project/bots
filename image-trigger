@@ -27,8 +27,6 @@ import time
 import task
 from lib.constants import BASE_DIR
 
-sys.dont_write_bytecode = True
-
 # default for refresh-days
 DAYS = 7
 

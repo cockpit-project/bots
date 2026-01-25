@@ -30,8 +30,6 @@ from lib.constants import BOTS_DIR
 from lib.testmap import get_test_image
 from task import github
 
-sys.dont_write_bytecode = True
-
 
 def main() -> int:
     script = os.path.basename(__file__)

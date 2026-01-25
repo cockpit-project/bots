@@ -24,14 +24,11 @@
 import os
 import re
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
 import task
 from lib.constants import BASE_DIR
-
-sys.dont_write_bytecode = True
 
 GIT_URL_RE = r'COCKPIT_REPO_URL\s*=\s*(.*)'
 GIT_COMMIT_RE = r'COCKPIT_REPO_COMMIT\s*=\s*(.*)'

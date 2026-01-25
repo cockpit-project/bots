@@ -32,7 +32,6 @@ from lib.aio.jsonutil import JsonObject, get_int, get_nested, get_object, get_st
 from lib.jobqueue import QueueEntry, SubjectSpecification
 from task import distributed_queue, github, labels_of_pull
 
-sys.dont_write_bytecode = True
 logging.basicConfig(level=logging.INFO)
 
 

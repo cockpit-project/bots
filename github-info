@@ -26,8 +26,6 @@ import sys
 
 from task import github
 
-sys.dont_write_bytecode = True
-
 
 def httpdate(dt: datetime.datetime) -> str:
     """Return a string representation of a date according to RFC 1123

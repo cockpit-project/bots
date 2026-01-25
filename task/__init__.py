@@ -50,8 +50,6 @@ __all__ = (
     "verbose",
 )
 
-sys.dont_write_bytecode = True
-
 api = github.GitHub()
 verbose = False
 

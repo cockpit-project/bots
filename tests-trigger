@@ -8,8 +8,6 @@ from lib import ALLOWLIST, testmap
 from lib.aio.jsonutil import get_str
 from task import github
 
-sys.dont_write_bytecode = True
-
 
 def git(*args: str) -> str:
     return subprocess.check_output(('git', *args), encoding='utf-8').strip()

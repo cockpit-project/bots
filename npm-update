@@ -41,8 +41,6 @@ GROUP = [
     "@patternfly"
 ]
 
-sys.dont_write_bytecode = True
-
 
 def read_package_json(package_json_path):
     with open(package_json_path) as f:
