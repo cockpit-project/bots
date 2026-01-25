@@ -27,8 +27,6 @@ import task
 from lib import testmap
 from lib.constants import BASE_DIR
 
-sys.dont_write_bytecode = True
-
 
 def run(context, verbose=False, **kwargs):
     cwd = BASE_DIR

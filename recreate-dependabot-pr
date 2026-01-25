@@ -22,14 +22,11 @@
 # Anaconda uses ui/webui/Makefile.am).
 
 import os
-import sys
 import time
 from typing import Optional
 
 import task
 from lib.aio.jsonutil import get_dict, get_int, get_str
-
-sys.dont_write_bytecode = True
 
 
 def main() -> None:

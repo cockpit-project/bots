@@ -22,7 +22,6 @@
 import argparse
 import asyncio
 import logging
-import sys
 from pathlib import Path
 
 import aiohttp
@@ -30,8 +29,6 @@ from yarl import URL
 
 import task
 from lib.aio.jsonutil import get_str, get_strv, typechecked
-
-sys.dont_write_bytecode = True
 
 
 async def main() -> None:

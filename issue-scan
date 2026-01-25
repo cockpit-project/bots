@@ -38,7 +38,6 @@ REDHAT_TASKS = [
     "redhat"
 ]
 
-sys.dont_write_bytecode = True
 logging.basicConfig(level=logging.INFO)
 
 

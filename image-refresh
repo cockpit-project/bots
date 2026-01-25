@@ -28,8 +28,6 @@ import task
 from lib import testmap
 from lib.constants import BOTS_DIR, SCRIPTS_DIR
 
-sys.dont_write_bytecode = True
-
 
 def run(*cmd: str, check: bool = True, **kwargs: Any) -> int:
     print('\n+', shlex.join(cmd), file=sys.stderr)
