@@ -17,8 +17,8 @@ import subprocess
 import sys
 import time
 
+from lib import github, task
 from lib.aio.jsonutil import JsonObject, get_dict, get_str
-from task import github, labels_of_pull
 
 
 def execute(*args: str) -> str:
@@ -61,7 +61,7 @@ def main() -> None:
     old_statuses = api.statuses(remote)
 
     pull = find_pr_with_sha(api, remote)
-    labels = labels_of_pull(pull)
+    labels = task.labels_of_pull(pull)
     tests_disabled = "no-test" in labels or "[no-test]" in get_str(pull, "title")
     # needs no-test label to prevent tests bring triggered
     # we cannot set the label for ourselves without `repo` permission

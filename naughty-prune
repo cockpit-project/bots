@@ -26,7 +26,7 @@ import subprocess
 import sys
 import time
 
-import task
+from lib import task
 from lib.constants import BASE_DIR
 
 # Number of days after which a known issue is treated as stale

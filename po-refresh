@@ -23,8 +23,7 @@ import os
 import subprocess
 import sys
 
-import task
-from lib import testmap
+from lib import task, testmap
 from lib.constants import BASE_DIR
 
 

@@ -31,7 +31,7 @@ from types import ModuleType
 
 from lib.aio.jsonutil import JsonDict, JsonObject
 from lib.constants import BOTS_DIR
-from task.test_mock_server import MockHandler, MockServer
+from lib.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.7", 9898)
 
@@ -182,7 +182,7 @@ class TestIssueScan(unittest.TestCase):
             ["--human-readable"], "issue-2 image-refresh foonux main\nissue-3 image-refresh barnux main\n"
         )
 
-    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
     def test_scan_ghapi_amqp(self, mock_queue: unittest.mock.MagicMock) -> None:
         self.run_success(["--amqp", "amqp.example.com:1234"], "")
 
@@ -231,7 +231,7 @@ class TestIssueScan(unittest.TestCase):
         )
 
     # this represents what actually happens in production
-    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
     def test_scan_clidata_amqp(self, mock_queue: unittest.mock.MagicMock) -> None:
         self.run_success(
             [

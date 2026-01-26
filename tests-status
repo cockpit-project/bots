@@ -24,7 +24,7 @@ import time
 import urllib.parse
 import urllib.request
 
-import task
+from lib import task
 from lib.network import host_ssl_context
 
 

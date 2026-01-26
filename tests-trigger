@@ -4,9 +4,8 @@ import argparse
 import subprocess
 import sys
 
-from lib import ALLOWLIST, testmap
+from lib import ALLOWLIST, github, testmap
 from lib.aio.jsonutil import get_str
-from task import github
 
 
 def git(*args: str) -> str:

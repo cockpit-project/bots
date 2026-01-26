@@ -27,10 +27,9 @@ from collections.abc import Collection, Sequence
 
 import pika
 
-from lib import ALLOWLIST, testmap
+from lib import ALLOWLIST, distributed_queue, github, task, testmap
 from lib.aio.jsonutil import JsonObject, get_dict, get_int, get_str
 from lib.jobqueue import QueueEntry
-from task import distributed_queue, github, labels_of_pull
 
 # RHEL tasks have to be done inside Red Hat network
 REDHAT_TASKS = [
@@ -81,7 +80,7 @@ def tasks_for_issues(issues_data: str, opts_repo: str | None) -> Sequence[tuple[
         event = json.loads(issues_data)
         repo = event["repository"]["full_name"]
         issue = event.get("issue") or event.get("pull_request")
-        if 'bot' not in labels_of_pull(issue):
+        if 'bot' not in task.labels_of_pull(issue):
             return []
         api = github.GitHub(repo=repo)
         issues = [issue]

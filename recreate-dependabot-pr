@@ -25,14 +25,14 @@ import os
 import time
 from typing import Optional
 
-import task
+from lib import github, task
 from lib.aio.jsonutil import get_dict, get_int, get_str
 
 
 def main() -> None:
     assert os.getenv('GITHUB_BASE') is not None, 'GITHUB_BASE must be set'
 
-    api = task.github.GitHub()
+    api = github.GitHub()
     for pull in api.pulls(state="open"):
         number = get_int(pull, 'number')
         if number is None:

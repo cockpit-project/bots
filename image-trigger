@@ -24,7 +24,7 @@ import subprocess
 import sys
 import time
 
-import task
+from lib import task
 from lib.constants import BASE_DIR
 
 # default for refresh-days

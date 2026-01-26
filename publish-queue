@@ -22,7 +22,7 @@ import sys
 
 import pika
 
-from task import distributed_queue
+from lib import distributed_queue
 
 
 def main() -> int:

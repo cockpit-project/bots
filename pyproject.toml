@@ -23,7 +23,9 @@ disallow_untyped_calls = false
 disallow_untyped_defs = false
 warn_return_any = false
 module = [
-    'task',
+    'lib.cache',
+    'lib.distributed_queue',
+    'lib.github',
     'lib.task',
 
     'cockpit-lib-update',

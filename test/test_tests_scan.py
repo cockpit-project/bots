@@ -32,7 +32,7 @@ from typing import ClassVar
 
 from lib.aio.jsonutil import JsonValue
 from lib.constants import BOTS_DIR
-from task.test_mock_server import MockHandler, MockServer
+from lib.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.7", 9898)
 
@@ -251,7 +251,7 @@ class TestTestsScan(unittest.TestCase):
         self.run_success(["--dry", "-v", "--sha", self.revision, "--context", self.context],
                          expected_output, repo=repo)
 
-    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
     def test_amqp_pr(self, mock_queue: unittest.mock.MagicMock) -> None:
         args = ["--dry", "--context", self.context, "--amqp", "amqp.example.com:1234"]
         self.run_success(args, "")
@@ -286,7 +286,7 @@ class TestTestsScan(unittest.TestCase):
             }
         }
 
-    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
     def test_amqp_sha_nightly(self, mock_queue: unittest.mock.MagicMock) -> None:
         """Nightly test on main branch, without PR"""
         # SHA without PR
@@ -324,7 +324,7 @@ class TestTestsScan(unittest.TestCase):
             }
         }
 
-    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
     def test_anaconda_secrets(self, mock_queue: unittest.mock.MagicMock) -> None:
         """anaconda-webui gets extra secrets"""
         # SHA without PR
@@ -363,7 +363,7 @@ class TestTestsScan(unittest.TestCase):
             }
         }
 
-    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
     def test_amqp_sha_pr(self, mock_queue: unittest.mock.MagicMock) -> None:
         """Status event on PR, via human tests-trigger"""
 
@@ -401,7 +401,7 @@ class TestTestsScan(unittest.TestCase):
             }
         }
 
-    @unittest.mock.patch("task.distributed_queue.DistributedQueue")
+    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
     def do_test_amqp_pr_cross_project(
         self, forge_repo: str, status_branch: str, mock_queue: unittest.mock.MagicMock
     ) -> None:

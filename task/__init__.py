@@ -21,7 +21,6 @@ This module provides utilities for automating GitHub-based workflows including
 issue management, pull request creation, and task execution.
 """
 
-from . import github
 from lib.task import (
     api,
     attach,
@@ -40,6 +39,8 @@ from lib.task import (
     verbose,
     would,
 )
+
+from . import github
 
 __all__ = (
     "api",

@@ -33,7 +33,7 @@ import subprocess
 import sys
 import tempfile
 
-import task
+from lib import task
 from lib.constants import BASE_DIR, BOTS_DIR
 
 # Dependencies which have to be updated in lockstep, not individually

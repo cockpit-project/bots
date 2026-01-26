@@ -18,7 +18,7 @@
 import time
 from pathlib import Path
 
-from task import cache
+from lib import cache
 
 
 def test_read_write(tmp_path: Path) -> None:

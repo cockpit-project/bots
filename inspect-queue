@@ -21,7 +21,7 @@ import argparse
 import json
 import sys
 
-from task import distributed_queue
+from lib import distributed_queue
 
 MAX_PRIORITY = 9
 
