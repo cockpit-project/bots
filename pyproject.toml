@@ -24,6 +24,7 @@ disallow_untyped_defs = false
 warn_return_any = false
 module = [
     'task',
+    'lib.task',
 
     'cockpit-lib-update',
     'image-refresh',

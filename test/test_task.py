@@ -134,7 +134,7 @@ class TestTask(unittest.TestCase):
         label = task.label(1234, ['xxx'])  # type: ignore[no-untyped-call]
         self.assertEqual(label, ['xxx'])
 
-    @patch('task.execute', mock_execute)
+    @patch('lib.task.execute', mock_execute)
     def test_pull_body(self) -> None:
         pull = task.pull("branch", body="This is the body", title="Task title")  # type: ignore[no-untyped-call]
         assert isinstance(pull, dict)
