@@ -25,10 +25,10 @@ import re
 import sys
 import traceback
 
+from lib import github
 from lib.aio.jsonutil import JsonValue, get_str
 from lib.constants import BOTS_DIR
 from lib.testmap import get_test_image
-from task import github
 
 
 def main() -> int:

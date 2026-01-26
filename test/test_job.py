@@ -12,7 +12,7 @@ from lib.aio.github import GitHub
 from lib.aio.job import Failure, Job, run_job
 from lib.aio.jsonutil import JsonObject, get_str, typechecked
 from lib.aio.local import LocalLogDriver
-from task.test_mock_server import MockHandler, MockServer
+from lib.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.1", 9999)
 

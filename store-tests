@@ -26,10 +26,9 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 
-from lib import testmap
+from lib import github, testmap
 from lib.aio.jsonutil import get_str
 from lib.network import host_ssl_context
-from task import github
 
 # Result line has form like:
 # ok 2 test/verify/check-accounts TestAccounts.testExpire [ND@1]

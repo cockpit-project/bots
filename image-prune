@@ -30,9 +30,8 @@ import urllib.error
 import urllib.parse
 from collections.abc import Collection, Iterator
 
-from lib import s3
+from lib import github, s3
 from lib.directories import get_images_data_dir
-from task import github
 
 logger = logging.getLogger('image-prune')
 

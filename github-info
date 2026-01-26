@@ -24,7 +24,7 @@ import argparse
 import datetime
 import sys
 
-from task import github
+from lib import github
 
 
 def httpdate(dt: datetime.datetime) -> str:

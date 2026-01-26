@@ -27,7 +27,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-import task
+from lib import task
 from lib.constants import BASE_DIR
 
 GIT_URL_RE = r'COCKPIT_REPO_URL\s*=\s*(.*)'

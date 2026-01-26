@@ -24,9 +24,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import task
+from lib import task
 from lib.aio.jsonutil import JsonObject
-from task.test_mock_server import MockHandler, MockServer
+from lib.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.9", 9898)
 

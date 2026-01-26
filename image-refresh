@@ -24,8 +24,7 @@ import subprocess
 import sys
 from typing import Any
 
-import task
-from lib import testmap
+from lib import github, task, testmap
 from lib.constants import BOTS_DIR, SCRIPTS_DIR
 
 
@@ -100,7 +99,7 @@ def image_refresh(image: str, **kwargs: Any) -> int | tuple[int, str]:
                     task.api.post(f"statuses/{head}", {
                         "state": "pending",
                         "context": trigger,
-                        "description": task.github.NOT_TESTED_DIRECT
+                        "description": github.NOT_TESTED_DIRECT
                     })
 
     except subprocess.CalledProcessError as exc:

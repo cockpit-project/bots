@@ -3,7 +3,7 @@
 import argparse
 import time
 
-from task import github
+from lib import github
 
 bug_msg = """
 This issue is closed due to inactivity.

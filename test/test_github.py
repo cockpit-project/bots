@@ -25,8 +25,8 @@ import time
 import unittest
 import urllib.parse
 
-from task import cache, github
-from task.test_mock_server import MockHandler, MockServer
+from lib import cache, github
+from lib.test_mock_server import MockHandler, MockServer
 
 ADDRESS = ("127.0.0.8", 9898)
 GITHUB_ISSUES = [{"number": "5", "state": "open", "created_at": "2011-04-22T13:33:48Z"},

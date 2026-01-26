@@ -32,10 +32,9 @@ import traceback
 from collections.abc import Sequence
 from datetime import datetime, timezone
 
+from lib import github
 from lib.aio.jsonutil import JsonObject, get_dictv, get_str, typechecked
 from lib.constants import BASE_DIR
-
-from task import github
 
 # Module-level state
 api = github.GitHub()
