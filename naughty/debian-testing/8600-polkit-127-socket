@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "test/verify/check-superuser", line *, in testMultipleBridgeConfig
-    b.wait_in_text(".pf-v6-c-modal-box", "Please authenticate")
-*
-wait_js_cond(ph_in_text(".pf-v6-c-modal-box","Please authenticate")): Error: actual text: Danger alert:Problem becoming administratorError executing command as another user: Not authorized
