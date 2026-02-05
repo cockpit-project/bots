@@ -107,6 +107,7 @@ linux-system-roles \
 ltrace \
 netcat \
 NetworkManager-openvpn \
+NetworkManager-wifi \
 nginx \
 ntfs-3g \
 ntpsec \
