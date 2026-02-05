@@ -98,6 +98,8 @@ dnf-automatic \
 firewalld \
 gdb \
 gettext \
+hostapd \
+kernel-modules-internal \
 libvirt-daemon-driver-storage-iscsi \
 libvirt-daemon-driver-storage-iscsi-direct \
 libvirt-daemon-driver-storage-logical \
