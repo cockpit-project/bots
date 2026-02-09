@@ -151,23 +151,6 @@ RELEASE=$(. /etc/os-release; echo $VERSION_CODENAME)
 
 if [ "$IMAGE" = "debian-testing" ]; then
     RELEASE=testing
-
-    # HACK: some packages fell out of testing
-    echo 'deb http://deb.debian.org/debian unstable main' >> /etc/apt/sources.list.d/unstable.list
-    cat <<EOF > /etc/apt/preferences.d/unstable
-Package: *
-Pin: release a=unstable
-Pin-Priority: -1
-
-Package: *ipa*
-Pin: release a=unstable
-Pin-Priority: 10
-
-Package: *sss*
-Pin: release a=unstable
-Pin-Priority: 10
-EOF
-
 fi
 
 # Attention: Enable proposed for ubuntu-stable after 24.10 release
