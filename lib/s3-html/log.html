@@ -60,10 +60,12 @@
         </script>
         <script>
 
+const html_escape = (str) => str.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
 /* Identity function for html`` tagged templates - just returns the string, but signals intent
    and can trigger HTML syntax highlighting in editors that support it (e.g., in pure .js files).
    Note: Won't work in .html files due to filetype detection, but kept for code clarity. */
-const html = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] ?? ''), '');
+const html = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (html_escape(values[i]) ?? ''), '');
 
 const tap_range = /^([0-9]+)\.\.([0-9]+)$/m;
 const tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # (?:SKIP|TODO) .*)?$/gm;
