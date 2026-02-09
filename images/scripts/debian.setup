@@ -105,6 +105,11 @@ xfsprogs \
 DENIED_PACKAGES="\
 "
 
+if [ "$IMAGE" = "debian-testing" ] ; then
+    # it's gone
+    TEST_PACKAGES="${TEST_PACKAGES/packagekit-tools/}"
+fi
+
 # older libvirt have this builtin
 if [ "$IMAGE" = "ubuntu-2204" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/virtiofsd/}"
