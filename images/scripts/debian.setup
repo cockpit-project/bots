@@ -374,6 +374,13 @@ fi
 # pmlogger.service sometimes causes long shutdown hangs; disable all PCP services and timers
 systemctl --all --legend=false list-units 'pm*' | awk '{print $1}' | xargs --no-run-if-empty systemctl disable
 
+# HACK: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=770825
+# /etc/nsswitch.conf is missing the "sudoers:" line on debian-testing
+# when sssd is installed
+if [ "$IMAGE" = "debian-testing" ]; then
+    echo "sudoers: files sss" >>/etc/nsswitch.conf
+fi
+
 # reduce image size; don't keep old kernels
 sed -i '/linux/d' /etc/apt/apt.conf.d/01autoremove
 $APT autoremove --purge || true
