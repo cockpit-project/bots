@@ -60,12 +60,12 @@
         </script>
         <script>
 
-const html_escape = (str) => str.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const html_escape = (str) => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
 /* Identity function for html`` tagged templates - just returns the string, but signals intent
    and can trigger HTML syntax highlighting in editors that support it (e.g., in pure .js files).
    Note: Won't work in .html files due to filetype detection, but kept for code clarity. */
-const html = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (html_escape(values[i] ?? '')), '');
+const html = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] ?? ''), '');
 
 const tap_range = /^([0-9]+)\.\.([0-9]+)$/m;
 const tap_result = /^(ok|not ok) ([0-9]+) (.*)(?: # duration: ([0-9]+s))?(?: # (?:SKIP|TODO) .*)?$/gm;
@@ -125,7 +125,7 @@ function renderTestEntry(entry) {
                     >
                         <div class="pf-v6-c-code-block">
                             <div class="pf-v6-c-code-block__content">
-                                <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">${entry.text}</code></pre>
+                                <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">${html_escape(entry.text)}</code></pre>
                             </div>
                         </div>
                     </div>
@@ -213,7 +213,7 @@ function find_patterns(segment) {
                     <span class="pf-v6-c-label__icon">
                         <i class="${icon}" aria-hidden="true"></i>
                     </span>
-                    <span class="pf-v6-c-label__text">${label}</span>
+                    <span class="pf-v6-c-label__text">${html_escape(label)}</span>
                 </a>
             </span>`
             });
@@ -261,7 +261,7 @@ function extract(text) {
     /* default is to show the text we have, unless we find actual results */
     let altered_text = html`<div class="pf-v6-c-code-block">
                 <div class="pf-v6-c-code-block__content">
-                    <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">${text}</code></pre>
+                    <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">${html_escape(text)}</code></pre>
                 </div>
             </div>`;
     const entries = [];
