@@ -1,0 +1,27 @@
+name: TF test run
+on:
+  pull_request:
+
+jobs:
+  run-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Schedule test on Testing Farm
+        uses: sclorg/testing-farm-as-github-action@v4
+        with:
+          api_key: ${{ secrets.TESTING_FARM_API_KEY }}
+          # https://api.testing-farm.io/v0.1/composes/redhat
+          compose: Fedora-43-Updated
+          # Specify git repository and ref for PR head
+          git_url: ${{ github.event.pull_request.head.repo.clone_url }}
+          git_ref: ${{ github.event.pull_request.head.ref }}
+          # Request virtualized guest with KVM support
+          # https://tmt.readthedocs.io/en/stable/spec/hardware.html#virtualization
+          tmt_hardware: '{"virtualization": {"is-virtualized": true, "is-supported": true}}'
+          # Pass secrets to the test environment (semicolon-separated)
+          secrets: TEST_SECRET=${{ secrets.TEST_SECRET }}
+          # Pass git info for cloning inside container
+          variables: GIT_URL=${{ github.event.pull_request.head.repo.clone_url }};GIT_REF=${{ github.event.pull_request.head.ref }}
+          timeout: 60

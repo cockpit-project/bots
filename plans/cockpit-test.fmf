@@ -1,0 +1,34 @@
+summary: Test cockpit test on Testing Farm
+prepare:
+    how: install
+    package:
+      - podman
+
+discover:
+    how: fmf
+    test: run
+
+execute:
+    how: tmt
+
+/run:
+    summary: Run test in tasks container
+    test: |
+        set -ex
+        # get hw info
+        ls -l /dev/kvm
+        lscpu
+        free -t -h
+
+        podman run --rm \
+            --device /dev/kvm \
+            -e GIT_URL="$GIT_URL" \
+            -e GIT_REF="$GIT_REF" \
+            ghcr.io/cockpit-project/tasks \
+            sh -exc "
+                git clone https://github.com/cockpit-project/cockpit-files
+                cd cockpit-files
+                time make prepare-check
+                time make check
+            "
+    duration: 60m
