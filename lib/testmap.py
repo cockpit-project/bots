@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import fnmatch
 import itertools
-import os.path
 from collections.abc import Iterable, Mapping, Sequence
 
 from lib.constants import TEST_OS_DEFAULT
@@ -327,12 +327,12 @@ def projects() -> Iterable[str]:
 
 
 def get_default_branch(repo: str) -> str:
+    """Get the default branch.  Currently this is always 'main' but it might
+    change if we add repositories with a branch like 'devel' or so."""
     branches = REPO_BRANCH_CONTEXT[repo]
     if 'main' in branches:
         return 'main'
-    if 'master' in branches:
-        return 'master'
-    raise ValueError(f"repo {repo} does not contain main or master branch")
+    raise ValueError(f"repo {repo} does not contain main branch")
 
 
 def tests_for_project(project: str) -> Mapping[str, Sequence[str]]:
@@ -368,6 +368,24 @@ def tests_for_image(image: str) -> Sequence[str]:
             break
 
     return list(tests)
+
+
+def tests_for_fnmatch(pattern: str) -> Sequence[str]:
+    """Return all contexts which match the given pattern."""
+
+    # Iterate all scenarios on all repositories, excluding _manual
+    tests = set()
+    for repo, branch_contexts in REPO_BRANCH_CONTEXT.items():
+        for branch, contexts in branch_contexts.items():
+            if branch.startswith('_'):
+                continue
+            for context in contexts:
+                c = context + '@' + repo
+                if branch != get_default_branch(repo):
+                    c += "/" + branch
+                tests.add(c)
+
+    return [test for test in tests if fnmatch.fnmatch(test, pattern)]
 
 
 def tests_for_po_refresh(project: str) -> Sequence[str]:
