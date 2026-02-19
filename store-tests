@@ -125,7 +125,7 @@ def main() -> None:
         else:
             logging.warning("Status has unexpected state '%s', skipping.", get_str(status, "state"))
 
-    for context, statuses in contexts.items():
+    for context, runs in contexts.items():
         repo = api.repo
         if "@" in context:
             parts = context.split("@")
@@ -135,20 +135,20 @@ def main() -> None:
                 # if not given, defaults to primary branch
                 repo = parts[1]
 
-        for retry, status in enumerate(statuses):
-            started = status.started if status.started is not None else status.posted
-            waited = started - status.posted
-            took = (status.finished if status.finished is not None else started) - started
+        for retry, run in enumerate(runs):
+            started = run.started if run.started is not None else run.posted
+            waited = started - run.posted
+            took = (run.finished if run.finished is not None else started) - started
             logging.debug(
                 "Processing %s%s as %s that waited %ss and took %ss in %s. %s",
                 context,
                 "(retry no." + str(retry) + ")" if retry else "",
-                status.state + (f" ({status.description})" if status.description else ""),
-                waited, took, repo, status.url
+                run.state + (f" ({run.description})" if run.description else ""),
+                waited, took, repo, run.url
             )
 
             # URL is our primary key, so if we don't have one, just fake something unique
-            url = status.url or f"queued-{opts.revision}-{context}-{retry}"
+            url = run.url or f"queued-{opts.revision}-{context}-{retry}"
 
             row = cursor.execute("SELECT id FROM TestRuns WHERE url = ?", (url, )).fetchone()
             if row is not None:
@@ -156,10 +156,10 @@ def main() -> None:
                 continue
 
             run_id = insert_run(cursor, repo, opts.revision, context, url,
-                                status.posted, retry, waited, took, status.state,
-                                status.description)
+                                run.posted, retry, waited, took, run.state,
+                                run.description)
 
-            if status.url:  # If we faked 'url' then don't try to scan it
+            if run.url:  # If we faked 'url' then don't try to scan it
                 raw_log = url[:-5] if url.endswith(".html") else url
                 logging.debug("scanning log %s", raw_log)
 

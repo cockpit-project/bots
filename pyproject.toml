@@ -30,7 +30,6 @@ module = [
     'naughty-prune',
     'npm-update',
     'po-refresh',
-    'store-tests',
     'tasks-container-update',
 ]
 
