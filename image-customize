@@ -205,7 +205,7 @@ class BuildAction(ActionBase):
 
         # install RPMs
         machine.execute('packages=$(find /var/tmp/build -name "*.rpm" -not -name "*.src.rpm"); '
-                        f'rpm -U --force --verbose {"--nodigest --nosignature" if opt_quick else ""} $packages')
+                        f'rpm -U --force --verbose --nosignature {"--nodigest" if opt_quick else ""} $packages')
 
     @staticmethod
     def build_arch(machine: testvm.Machine, vm_source: str) -> None:
