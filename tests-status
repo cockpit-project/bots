@@ -24,7 +24,7 @@ import time
 import urllib.parse
 import urllib.request
 
-from lib import task
+from lib import github
 from lib.network import host_ssl_context
 
 
@@ -78,7 +78,7 @@ def main():
                                        'or - for the upstream of the current branch')
     opts = parser.parse_args()
 
-    api = task.github.GitHub(repo=opts.repo)
+    api = github.GitHub(repo=opts.repo)
 
     if opts.target != '-':
         pull = api.get(f"pulls/{opts.target}")

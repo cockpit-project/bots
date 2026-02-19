@@ -33,7 +33,7 @@ import subprocess
 import sys
 import tempfile
 
-from lib import task
+from lib import github, task
 from lib.constants import BASE_DIR, BOTS_DIR
 
 # Dependencies which have to be updated in lockstep, not individually
@@ -74,7 +74,7 @@ def run(context, verbose=False, **kwargs):
         context = None
 
     if not kwargs["dry"]:
-        api = task.github.GitHub()
+        api = github.GitHub()
 
         # List pending updates
         for issue in api.issues(state="open"):

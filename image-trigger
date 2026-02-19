@@ -24,7 +24,7 @@ import subprocess
 import sys
 import time
 
-from lib import task
+from lib import github, task
 from lib.constants import BASE_DIR
 
 # default for refresh-days
@@ -68,7 +68,7 @@ def main():
                         help="Print verbose information")
     parser.add_argument("image", nargs="?")
     opts = parser.parse_args()
-    api = task.github.GitHub()
+    api = github.GitHub()
 
     try:
         scan(api, opts.image, opts.verbose)
