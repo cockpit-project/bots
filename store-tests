@@ -24,6 +24,9 @@ import sqlite3
 import sys
 import urllib.parse
 import urllib.request
+from collections import defaultdict
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 from datetime import datetime
 
 from lib import github, testmap
@@ -47,7 +50,17 @@ re_duration = re.compile(r"# \d TEST (FAILED|PASSED) \[(\d+)s")
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
 
-def main():
+@dataclass
+class TestRun:
+    posted: float
+    state: str
+    started: float | None = None
+    finished: float | None = None
+    url: str | None = None
+    description: str | None = None
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(description='Store information about failed tests')
     parser.add_argument("--db", default="test-results.db", help="Database name")
     parser.add_argument("--repo", help="Repository from which to process failures")
@@ -73,7 +86,7 @@ def main():
     if not statuses:
         sys.exit(f"Revision {opts.revision} has no statuses")
 
-    contexts = {}
+    contexts: defaultdict[str, list[TestRun]] = defaultdict(list)
 
     # Read the "status story"
     # First we get 'Not yet tested' or 'Not yet tested (direct trigger)'
@@ -90,26 +103,25 @@ def main():
         if not testmap.is_valid_context(get_str(status, "context"), api.repo):
             continue
 
-        cc = contexts.setdefault(get_str(status, "context"), [])
+        cc = contexts[get_str(status, "context")]
 
         desc = get_str(status, "description")
         if get_str(status, "state") == "pending":
             if "progress" in desc:
-                cc[-1]["url"] = get_str(status, "target_url")
-                cc[-1]["started"] = datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # noqa:DTZ007
+                cc[-1].url = get_str(status, "target_url")
+                cc[-1].started = datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # noqa:DTZ007
             elif "Not yet tested" in desc:
-                new_run: dict[str, str | float] = {
-                    "posted": datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # noqa:DTZ007
-                }
-                new_run["state"] = "pending"
-                cc.append(new_run)
+                cc.append(TestRun(
+                    posted=datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp(),  # noqa:DTZ007
+                    state="pending",
+                ))
             else:
                 logging.warning("Pending status has unexpected description '%s', skipping.", desc)
         elif get_str(status, "state") in ["success", "failure", "error"]:
-            cc[-1]["finished"] = datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # noqa:DTZ007
-            cc[-1]["state"] = get_str(status, "state")
+            cc[-1].finished = datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # noqa:DTZ007
+            cc[-1].state = get_str(status, "state")
             if get_str(status, "state") == "error":
-                cc[-1]["description"] = desc
+                cc[-1].description = desc
         else:
             logging.warning("Status has unexpected state '%s', skipping.", get_str(status, "state"))
 
@@ -124,22 +136,19 @@ def main():
                 repo = parts[1]
 
         for retry, status in enumerate(statuses):
-            posted = status["posted"]  # This must be always present, lets fails if it isn't
-            url = status.get("url")
-            started = status.get("started", posted)
-            waited = started - posted
-            took = status.get("finished", started) - started
+            started = status.started if status.started is not None else status.posted
+            waited = started - status.posted
+            took = (status.finished if status.finished is not None else started) - started
             logging.debug(
                 "Processing %s%s as %s that waited %ss and took %ss in %s. %s",
                 context,
                 "(retry no." + str(retry) + ")" if retry else "",
-                status["state"] + (" (" + status["description"] + ")" if status.get("description") else ""),
-                waited, took, repo, url
+                status.state + (f" ({status.description})" if status.description else ""),
+                waited, took, repo, status.url
             )
 
             # URL is our primary key, so if we don't have one, just fake something unique
-            if not url:
-                url = "-".join(["queued", opts.revision, context, str(retry)])
+            url = status.url or f"queued-{opts.revision}-{context}-{retry}"
 
             row = cursor.execute("SELECT id FROM TestRuns WHERE url = ?", (url, )).fetchone()
             if row is not None:
@@ -147,10 +156,10 @@ def main():
                 continue
 
             run_id = insert_run(cursor, repo, opts.revision, context, url,
-                                posted, retry, waited, took, status["state"],
-                                status.get("description"))
+                                status.posted, retry, waited, took, status.state,
+                                status.description)
 
-            if status.get("url"):  # If we faked 'url' then don't try to scan it
+            if status.url:  # If we faked 'url' then don't try to scan it
                 raw_log = url[:-5] if url.endswith(".html") else url
                 logging.debug("scanning log %s", raw_log)
 
@@ -174,7 +183,7 @@ def main():
     db_conn.close()
 
 
-def init_db(cursor):
+def init_db(cursor: sqlite3.Cursor) -> None:
     cursor.execute("""CREATE TABLE if not exists TestRuns
                     (id INTEGER PRIMARY KEY,
                      project TEXT,
@@ -204,26 +213,45 @@ def init_db(cursor):
                    """)
 
 
-def insert_run(cursor, project, revision, context, url, time, retry, waited, took, state, desc):
+def insert_run(
+    cursor: sqlite3.Cursor,
+    project: str,
+    revision: str,
+    context: str,
+    url: str,
+    time: float,
+    retry: int,
+    waited: float,
+    took: float,
+    state: str,
+    desc: str | None,
+) -> int | None:
     return cursor.execute("INSERT INTO TestRuns VALUES (null, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                           (project, revision, context, url, time, retry, waited, took, state, desc)).lastrowid
 
 
-def insert_test(cursor, run_id, testname, failed, retry_reason, seconds):
+def insert_test(
+    cursor: sqlite3.Cursor,
+    run_id: int | None,
+    testname: str,
+    failed: bool,
+    retry_reason: str | None,
+    seconds: str | int,
+) -> None:
     cursor.execute("INSERT INTO Tests VALUES (?, ?, ?, ?, ?)",
                    (testname, retry_reason, int(failed), run_id, int(seconds)))
 
 
-def insert_coverage(cursor, run_id, coverage):
+def insert_coverage(cursor: sqlite3.Cursor, run_id: int | None, coverage: float) -> None:
     cursor.execute("INSERT INTO TestCoverage VALUES (?, ?)", (coverage, run_id))
 
 
-def find_tests(fp):
+def find_tests(fp: Iterable[bytes]) -> Iterator[tuple[str, bool, str | None, str | int]]:
     last_msg = ""
     prev_msg = ""
     save_message = False
-    for line in fp:
-        line = line.decode('utf-8')
+    for raw_line in fp:
+        line = raw_line.decode('utf-8')
 
         if save_message:
             last_msg = line.strip()
@@ -253,7 +281,7 @@ def find_tests(fp):
         prev_msg = line.strip()
 
 
-def test_parser(logfile):
+def test_parser(logfile: str) -> None:
     with open(logfile, 'rb') as f:
         for (testname, failed, retry_reason, seconds) in find_tests(f):
             print(f"{'FAIL' if failed else 'PASS'} {testname} "
