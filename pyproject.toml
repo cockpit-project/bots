@@ -27,7 +27,6 @@ module = [
 
     'cockpit-lib-update',
     'image-refresh',
-    'image-trigger',
     'naughty-prune',
     'npm-update',
     'po-refresh',
