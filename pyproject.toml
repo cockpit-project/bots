@@ -32,7 +32,6 @@ module = [
     'po-refresh',
     'store-tests',
     'tasks-container-update',
-    'tests-status',
 ]
 
 [tool.ruff]

@@ -23,12 +23,14 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from collections.abc import Mapping
 
 from lib import github
+from lib.aio.jsonutil import JsonObject, get_str
 from lib.network import host_ssl_context
 
 
-def print_summary(by_state, state):
+def print_summary(by_state: dict[str, list[tuple[str, str]]], state: str) -> None:
     tests = by_state[state]
     print("%i tests in state %s: %s" % (
         len(tests),
@@ -36,7 +38,7 @@ def print_summary(by_state, state):
         " ".join([t[0] for t in tests])))
 
 
-def print_failure(context, url):
+def print_failure(context: str, url: str) -> None:
     print(context + ":")
     print("  " + url)
     if url.endswith(".html"):
@@ -48,27 +50,27 @@ def print_failure(context, url):
     print()
 
 
-def git(*args):
+def git(*args: str) -> str:
     return subprocess.check_output(('git', *args), encoding='utf-8').strip()
 
 
 # returns a dict of state->[(context, url)]
-def sort_statuses(statuses):
-    by_context = {}  # context → (state, url)
+def sort_statuses(statuses: Mapping[str, JsonObject]) -> dict[str, list[tuple[str, str]]]:
+    by_context: dict[str, tuple[str, str]] = {}  # context → (state, url)
     for context, status in statuses.items():
         # latest status wins
         if context in by_context:
             continue
-        by_context[context] = (status["state"], status.get("target_url", ""))
+        by_context[context] = (get_str(status, "state"), get_str(status, "target_url", ""))
 
-    by_state = {}  # state → [(context, url), ..]
+    by_state: dict[str, list[tuple[str, str]]] = {}  # state → [(context, url), ..]
     for context, (state, url) in by_context.items():
         by_state.setdefault(state, []).append((context, url))
 
     return by_state
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='Summarize test status of a PR')
     parser.add_argument('--wait', action='store_true', help="Wait for all green, or one red", default=None)
     parser.add_argument('--repo', help="The repository of the PR", default=None)
