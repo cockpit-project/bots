@@ -20,6 +20,7 @@
 import argparse
 import os
 import random
+import shlex
 import subprocess
 import sys
 import time
@@ -62,7 +63,7 @@ REFRESH = {
 }
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description='Ensure necessary issue exists for image refresh')
     parser.add_argument('-v', '--verbose', action="store_true", default=False,
                         help="Print verbose information")
@@ -81,18 +82,16 @@ def main():
 
 # Check if the given files that match @pathspec are stale
 # and haven't been updated in @days.
-def stale(days, pathspec, ref="HEAD", verbose=False):
-    def execute(*args):
-        if verbose:
-            sys.stderr.write("+ " + " ".join(args) + "\n")
-        output = subprocess.check_output(args, cwd=BASE_DIR, text=True)
-        if verbose:
-            sys.stderr.write("> " + output + "\n")
-        return output
+def stale(days: int, pathspec: str, ref: str = "HEAD", verbose: bool = False) -> bool:
+    cmd = ["git", "log", "--max-count=1", "--pretty=format:%ct", ref, "--", pathspec]
+    if verbose:
+        sys.stderr.write("+ " + shlex.join(cmd) + "\n")
+    output = subprocess.check_output(cmd, cwd=BASE_DIR, text=True)
+    if verbose:
+        sys.stderr.write("> " + output + "\n")
 
-    timestamp = execute("git", "log", "--max-count=1", "--pretty=format:%ct", ref, "--", pathspec)
     try:
-        timestamp = int(timestamp)
+        timestamp = int(output)
     except ValueError:
         timestamp = 0
 
@@ -103,7 +102,7 @@ def stale(days, pathspec, ref="HEAD", verbose=False):
     return timestamp < due
 
 
-def scan(api, force, verbose):
+def scan(api: github.GitHub, force: str | None, verbose: bool) -> None:
     subprocess.check_call(["git", "fetch", "origin", "main"])
     for (image, options) in REFRESH.items():
         perform = False
