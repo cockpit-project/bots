@@ -55,6 +55,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
             # no udisks on CoreOS → skip storage
             *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
+            # TODO: gradually fix the remaining scenarios
+            *contexts('opensuse-tumbleweed', COCKPIT_SCENARIOS - {'networking', 'storage', 'expensive'}),
             *contexts('rhel-8-10', ['ws-container'], COCKPIT_SCENARIOS),
             *contexts('rhel-9-8', COCKPIT_SCENARIOS),
             *contexts('rhel-10-2', COCKPIT_SCENARIOS),
