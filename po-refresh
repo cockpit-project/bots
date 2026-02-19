@@ -23,7 +23,7 @@ import os
 import subprocess
 import sys
 
-from lib import task, testmap
+from lib import github, task, testmap
 from lib.constants import BASE_DIR
 
 
@@ -140,7 +140,7 @@ def run(context, verbose=False, **kwargs):
     branch = task.branch(context, "po: Update from Fedora Weblate", pathspec="po/",
                          branch=local_branch, **kwargs)
 
-    api = task.github.GitHub()
+    api = github.GitHub()
 
     if local_branch and not branch:  # We only introduced/dropped language but otherwise no updates
         if kwargs["issue"]:
