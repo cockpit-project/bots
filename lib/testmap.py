@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import fnmatch
 import itertools
 import os.path
 from collections.abc import Iterable, Mapping, Sequence
@@ -348,19 +349,27 @@ def tests_for_project(project: str) -> Mapping[str, Sequence[str]]:
     return res
 
 
-def _direct_tests_for_image(image: str) -> set[str]:
-    """Return tests directly matching an image, without following build image mappings."""
+def _direct_tests_for_image(image: str, scenario: str = '*') -> set[str]:
+    """Return tests directly matching an image, without following build image mappings.
+
+    scenario is an fnmatch pattern to filter by scenario name (default '*' matches all).
+    """
     tests: set[str] = set()
     for repo, branch_contexts in REPO_BRANCH_CONTEXT.items():
         for branch, contexts in branch_contexts.items():
             if branch.startswith('_'):
                 continue
             for context in contexts:
-                if context.split('/')[0].replace('-distropkg', '') == image:
-                    c = context + '@' + repo
-                    if branch != get_default_branch(repo):
-                        c += "/" + branch
-                    tests.add(c)
+                context_image, _, context_scenario = context.partition('/')
+                # -distropkg is a test mode suffix, not a separate image
+                if context_image.removesuffix('-distropkg') != image:
+                    continue
+                if not fnmatch.fnmatch(context_scenario, scenario):
+                    continue
+                c = context + '@' + repo
+                if branch != get_default_branch(repo):
+                    c += "/" + branch
+                tests.add(c)
     return tests
 
 
