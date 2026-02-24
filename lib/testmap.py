@@ -243,6 +243,13 @@ OSTREE_BUILD_IMAGE = {
     "fedora-coreos": "fedora-43",
 }
 
+# ws-container scenarios build RPMs for the cockpit/ws container on a different
+# image than the one being tested.  This must match the base OS version used in
+# the cockpit/ws container present in the given image.
+WSCONTAINER_BUILD_IMAGE = {
+    "rhel-8-10": "fedora-42",
+}
+
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
 IMAGE_REFRESH_TRIGGERS = {
     "services": [
@@ -272,6 +279,10 @@ IMAGE_REFRESH_TRIGGERS = {
 # in fedora-X
 def get_build_image(image: str) -> str:
     return OSTREE_BUILD_IMAGE.get(image, image)
+
+
+def get_build_image_for_ws_container_inside_of(image: str) -> str | None:
+    return WSCONTAINER_BUILD_IMAGE.get(image)
 
 
 # some tests have suffixes that run the same image in different modes; map a
@@ -384,6 +395,11 @@ def tests_for_image(image: str) -> Sequence[str]:
         if image == i:
             tests.update(_direct_tests_for_image(a))
             break
+
+    # is this a build image for ws-container? then add those scenario tests
+    for test_image, build_image in WSCONTAINER_BUILD_IMAGE.items():
+        if image == build_image:
+            tests.update(_direct_tests_for_image(test_image, 'ws-container*'))
 
     return list(tests)
 
