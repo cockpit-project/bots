@@ -1,0 +1,18 @@
+summary: Run bot job runner task
+prepare:
+    how: install
+    package:
+      - podman
+      - python3-aiohttp+speedups
+      - python3-aioresponses
+
+discover:
+    how: fmf
+    test: job-runner
+
+execute:
+    how: tmt
+
+/job-runner:
+    summary: Run bot job-runner task
+    test: ./job-runner.sh
