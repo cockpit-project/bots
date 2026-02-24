@@ -348,10 +348,9 @@ def tests_for_project(project: str) -> Mapping[str, Sequence[str]]:
     return res
 
 
-def tests_for_image(image: str) -> Sequence[str]:
-    """Return context list of all tests required for testing an image"""
-
-    tests = set(IMAGE_REFRESH_TRIGGERS.get(image, []))
+def _direct_tests_for_image(image: str) -> set[str]:
+    """Return tests directly matching an image, without following build image mappings."""
+    tests: set[str] = set()
     for repo, branch_contexts in REPO_BRANCH_CONTEXT.items():
         for branch, contexts in branch_contexts.items():
             if branch.startswith('_'):
@@ -362,11 +361,19 @@ def tests_for_image(image: str) -> Sequence[str]:
                     if branch != get_default_branch(repo):
                         c += "/" + branch
                     tests.add(c)
+    return tests
+
+
+def tests_for_image(image: str) -> Sequence[str]:
+    """Return context list of all tests required for testing an image"""
+
+    tests = set(IMAGE_REFRESH_TRIGGERS.get(image, []))
+    tests.update(_direct_tests_for_image(image))
 
     # is this a build image for Atomic? then add the Atomic tests
     for a, i in OSTREE_BUILD_IMAGE.items():
         if image == i:
-            tests.update(tests_for_image(a))
+            tests.update(_direct_tests_for_image(a))
             break
 
     return list(tests)

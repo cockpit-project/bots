@@ -91,3 +91,12 @@ def test_cockpit_contexts() -> None:
     # scenario options
     assert f"{TEST_OS_DEFAULT}/firefox-expensive" in main_tests
     # devel runs in one scenario due to coverage
+
+
+def test_tests_for_image_ostree() -> None:
+    # refreshing an ostree build image should trigger the ostree image tests
+    for ostree_image, build_image in testmap.OSTREE_BUILD_IMAGE.items():
+        build_image_tests = testmap.tests_for_image(build_image)
+        ostree_tests = [t for t in build_image_tests if t.startswith(f"{ostree_image}/")]
+        assert ostree_tests, \
+            f"{build_image} refresh should trigger {ostree_image} tests"
