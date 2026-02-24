@@ -100,3 +100,12 @@ def test_tests_for_image_ostree() -> None:
         ostree_tests = [t for t in build_image_tests if t.startswith(f"{ostree_image}/")]
         assert ostree_tests, \
             f"{build_image} refresh should trigger {ostree_image} tests"
+
+
+def test_tests_for_image_wscontainer() -> None:
+    # refreshing a ws-container build image should trigger the ws-container scenarios
+    for test_image, build_image in testmap.WSCONTAINER_BUILD_IMAGE.items():
+        build_image_tests = testmap.tests_for_image(build_image)
+        ws_container_tests = [t for t in build_image_tests if f"{test_image}/ws-container" in t]
+        assert ws_container_tests, \
+            f"{build_image} refresh should trigger {test_image}/ws-container scenarios"
