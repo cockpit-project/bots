@@ -25,9 +25,17 @@ import sys
 import time
 from collections.abc import Collection, Sequence
 
-import pika
+# We don't need pika when running in a GitHub workflow; the whole AMQP code path will be obsolete once we
+# permanently switch to GitHub Actions
+try:
+    import pika
 
-from lib import ALLOWLIST, distributed_queue, github, task, testmap
+    from lib import distributed_queue
+except ImportError:
+    pika = None
+    distributed_queue = None  # type: ignore[assignment]
+
+from lib import ALLOWLIST, github, task, testmap
 from lib.aio.jsonutil import JsonObject, get_dict, get_int, get_str
 from lib.jobqueue import QueueEntry
 
@@ -52,14 +60,19 @@ def main() -> int:
                         help='Repository to scan and checkout.')
     opts = parser.parse_args()
 
-    for result in scan(opts.issues_data, opts.repo):
-        if opts.amqp:
+    if opts.amqp:
+        assert pika is not None, "pika module is required for --amqp"
+        assert distributed_queue is not None, "distributed_queue module is required for --amqp"
+
+        for result in scan(opts.issues_data, opts.repo):
             with distributed_queue.DistributedQueue(opts.amqp, queues=['rhel', 'public']) as dq:
                 queue_task(dq, result)
-        elif opts.human_readable:
-            print(result['human'])
-        else:
-            print(json.dumps(result))
+    else:
+        for result in scan(opts.issues_data, opts.repo):
+            if opts.human_readable:
+                print(result['human'])
+            else:
+                print(json.dumps(result))
 
     return 0
 
@@ -153,7 +166,9 @@ def output_task(command: str, issue: JsonObject, repo: str) -> QueueEntry | None
     }
 
 
-def queue_task(dq: distributed_queue.DistributedQueue, body: QueueEntry) -> None:
+def queue_task(dq: 'distributed_queue.DistributedQueue', body: QueueEntry) -> None:
+    assert pika is not None
+    assert distributed_queue is not None
     queue = 'rhel' if contains_any(body['job']['context'], REDHAT_TASKS) else 'public'
     dq.channel.basic_publish('', queue, json.dumps(body),
                              properties=pika.BasicProperties(priority=distributed_queue.MAX_PRIORITY))
