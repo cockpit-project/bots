@@ -63,11 +63,7 @@ def consume_webhook_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResu
         pull_request = request['pull_request']
         repo = pull_request['base']['repo']['full_name']
         action = request['action']
-        # scan for body changes (edited) and the bots label; we only use that for image refreshes in the bots repo
-        if repo.endswith('/bots') and (
-                action == 'labeled' or (action == 'edited' and 'body' in request.get('changes', {}))):
-            cmd = ['./issue-scan', '--issues-data', json.dumps(request), '--amqp', dq.address]
-        elif action in ['opened', 'synchronize']:
+        if action in ['opened', 'synchronize']:
             cmd = ['./tests-scan', '--pull-data', json.dumps(request), '--amqp', dq.address, '--repo', repo]
         # When PR was merged, generate task for storing tests
         elif action == 'closed' and pull_request.get('merged', False):
@@ -90,11 +86,6 @@ def consume_webhook_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResu
         sha = request['sha']
         context = request['context']
         cmd = ['./tests-scan', '--sha', sha, '--amqp', dq.address, '--context', context, '--repo', repo]
-    elif event == 'issues':
-        action = request['action']
-        # scan for opened, body changes (edited), and the bots label
-        if action in ['opened', 'labeled'] or (action == 'edited' and 'body' in request.get('changes', {})):
-            cmd = ['./issue-scan', '--issues-data', json.dumps(request), '--amqp', dq.address]
     else:
         logging.error('Unkown event type in the webhook queue')
         return None, None
