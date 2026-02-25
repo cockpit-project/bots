@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eux
+
+OUTPUT="$1"
+
+WORKDIR=$(mktemp -d)
+PYTHONPATH=. python3 images/scripts/create-anaconda-liveimg-payload --output="$WORKDIR" --image fedora-44
+PYTHONPATH=. python3 images/scripts/create-anaconda-dnf-payload --output="$WORKDIR" --image fedora-44
+
+tar -C "$WORKDIR" -czf "$OUTPUT" .
+rm -rf "$WORKDIR"
