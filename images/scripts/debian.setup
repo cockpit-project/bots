@@ -186,6 +186,7 @@ if [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
 fi
 
 # smaller and faster initrd; see https://launchpad.net/bugs/1592684
+mkdir -p /etc/initramfs-tools/conf.d
 echo 'MODULES=dep' > /etc/initramfs-tools/conf.d/modules-dep.conf
 
 if [ "${ID}" = "ubuntu" ]; then
