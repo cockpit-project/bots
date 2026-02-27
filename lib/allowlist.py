@@ -49,4 +49,7 @@ ALLOWLIST = {
     # candlepin team + contributors
     'ptoscano',
     'pkoprda',
+
+    # SUSE
+    'Nykseli',
 }
