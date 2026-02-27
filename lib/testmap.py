@@ -342,12 +342,10 @@ def projects() -> Iterable[str]:
 
 
 def get_default_branch(repo: str) -> str:
-    branches = REPO_BRANCH_CONTEXT[repo]
-    if 'main' in branches:
-        return 'main'
+    branches = tests_for_project(repo)
     if 'master' in branches:
         return 'master'
-    raise ValueError(f"repo {repo} does not contain main or master branch")
+    return 'main'
 
 
 def tests_for_project(project: str) -> Mapping[str, Sequence[str]]:
