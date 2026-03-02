@@ -1,0 +1,8 @@
+#!/bin/bash
+set -ex
+
+URL=https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/
+IMAGE=$(curl -L -s "$URL" | sed -n '/<a href=.*AlmaLinux-9-GenericCloud-latest.*qcow2"/ { s/^.*href="//; s_".*$__; p }')
+[ -n "$IMAGE" ]
+
+exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "$URL/$IMAGE"
