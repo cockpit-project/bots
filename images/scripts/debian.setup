@@ -110,6 +110,11 @@ if [ "$IMAGE" = "debian-testing" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/packagekit-tools/}"
 fi
 
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1129529
+if [ "$IMAGE" = "debian-testing" ] ; then
+    TEST_PACKAGES="${TEST_PACKAGES} cpio"
+fi
+
 # older libvirt have this builtin
 if [ "$IMAGE" = "ubuntu-2204" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/virtiofsd/}"
