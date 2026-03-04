@@ -1,14 +1,13 @@
 import hashlib
 import json
-import re
 import time
 from collections.abc import AsyncIterator, Iterator, Sequence
 from pathlib import Path
 from typing import Any
 
-import aiohttp
+import httpx
 import pytest
-from aioresponses import CallbackResult, aioresponses
+import respx
 from yarl import URL
 
 from lib.aio.base import SubjectSpecification
@@ -17,6 +16,14 @@ from lib.aio.jobcontext import JobContext
 from lib.aio.jsonutil import JsonObject, JsonValue, json_merge_patch
 from lib.aio.s3 import S3Key, S3LogDriver
 from lib.aio.util import LRUCache
+
+
+class MockResponse:
+    """Stores response data for the mock server."""
+    def __init__(self, *, status: int = 200, headers: dict[str, str] | None = None, body: str = '') -> None:
+        self.status = status
+        self.headers = headers or {}
+        self.body = body
 
 
 class GitHubService:
@@ -29,7 +36,7 @@ class GitHubService:
     db: JsonObject = {}  # noqa:RUF012  # JsonObject is immutable
 
     def __init__(self) -> None:
-        self.resources: dict[URL, CallbackResult] = {}
+        self.resources: dict[str, MockResponse] = {}
         self.flakes: list[Exception | tuple[int, str]] = []
         self.hits = 0
         self.points = 0  # ie: GitHub rate-limiting "points"
@@ -47,54 +54,56 @@ class GitHubService:
         self.hits = self.points = 0
 
     def add(self, resource: str, *, etag: bool = False, mtime: bool = False, **kwargs: Any) -> None:
-        headers = {}
+        headers: dict[str, str] = {}
         if etag:
             all_data = str(kwargs.get('body')) + ':' + str(kwargs.get('payload'))
             headers['etag'] = hashlib.sha256(all_data.encode()).hexdigest()
         if mtime:
             headers['last-modified'] = str(time.monotonic())  # accurate enough to change each time
-        self.resources[self.API_URL / resource] = CallbackResult(headers=headers, **kwargs)
+
+        status = kwargs.get('status', 200)
+        body = kwargs.get('body', '')
+        self.resources[str(self.API_URL / resource)] = MockResponse(status=status, headers=headers, body=body)
 
     def update(self, resource: str, value: JsonValue, *, etag: bool = True, mtime: bool = False) -> None:
         self.db = json_merge_patch(self.db, {resource: value})
         if resource in self.db:
             self.add(resource, body=json.dumps(self.db[resource]), etag=etag, mtime=mtime)
         else:
-            del self.resources[self.API_URL / resource]
+            del self.resources[str(self.API_URL / resource)]
 
     def flake(self, flakes: Sequence[Exception | tuple[int, str]]) -> None:
         self.flakes.extend(flakes)
 
-    async def post(self, url: URL, headers: dict[str, str], **kwargs: str) -> CallbackResult:
-        raise NotImplementedError
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        headers = dict(request.headers)
 
-    async def get(self, url: URL, headers: dict[str, str], **kwargs: str) -> CallbackResult:
         if self.flakes:
             flake = self.flakes.pop(0)
             if isinstance(flake, Exception):
                 raise flake
             else:
-                status, reason = flake
-                return CallbackResult(status=status, reason=reason)
+                status, _reason = flake
+                return httpx.Response(status)
 
         self.hits += 1  # every request is a hit
 
-        assert headers['User-Agent'] == self.USER_AGENT
-        assert headers['Authorization'] == f'token {self.TOKEN}'
-        assert url in self.resources
+        assert headers.get('user-agent') == self.USER_AGENT
+        assert headers.get('authorization') == f'token {self.TOKEN}'
+        assert url in self.resources, f'{url} not in {list(self.resources.keys())}'
 
         result = self.resources[url]
-        assert result.headers is not None  # because we add it ourselves
         # do etag/last-modified checks. in theory this needs to be
         # case-insensitive, but we use lowercase throughout.  if we return 304
         # then that doesn't impact our rate-limiting score.
         if (etag := result.headers.get('etag')) and headers.get('if-none-match') == etag:
-            return CallbackResult(status=304, reason='Not Modified')
+            return httpx.Response(304)
         if (lm := result.headers.get('last-modified')) and headers.get('if-modified-since') == lm:
-            return CallbackResult(status=304, reason='Not Modified')
+            return httpx.Response(304)
 
         self.points += 1  # "full strength" return, counts as rate-limit points
-        return result
+        return httpx.Response(result.status, headers=result.headers, content=result.body)
 
 
 def test_lru_cache() -> None:
@@ -127,9 +136,8 @@ def test_lru_cache() -> None:
 @pytest.fixture
 def service() -> Iterator[GitHubService]:
     server = GitHubService()
-    with aioresponses() as mock:
-        mock.post(re.compile(r''), callback=server.post, repeat=True)
-        mock.get(re.compile(r''), callback=server.get, repeat=True)
+    with respx.mock:
+        respx.route(host="api.github.test").mock(side_effect=server.handle_request)
         yield server
 
 
@@ -141,15 +149,15 @@ async def api(service: GitHubService) -> AsyncIterator[GitHub]:
 
 async def test_github_404(service: GitHubService, api: GitHub) -> None:
     # Make sure 4xx errors get raised immediately without retries
-    service.add('x', status=404, reason='Not Found')
-    with pytest.raises(aiohttp.ClientResponseError, match=r'404.*Not Found'):
+    service.add('x', status=404)
+    with pytest.raises(httpx.HTTPStatusError, match=r'404'):
         assert await api.get('x') == {}
     service.assert_hits(1, 1)
 
 
 async def test_github_api_flakes(service: GitHubService, api: GitHub) -> None:
     # Make sure 5xx errors and network issues get retries
-    service.flake([(503, 'Busy'), aiohttp.ClientConnectionError()])
+    service.flake([(503, 'Busy'), httpx.ConnectError('connection failed')])
     service.update('x', {'a': 'b'}, etag=True)
     assert await api.get('x') == {'a': 'b'}
 
@@ -276,7 +284,7 @@ async def test_config(tmp_path: Path) -> None:
         assert config['test']['text'] == 'xyz'
 
         assert isinstance(context._forges['github'], GitHub)
-        assert context._forges['github'].session.headers['Authorization'] == 'token tok_ABCDEFG'
+        assert context._forges['github'].session.headers['authorization'] == 'token tok_ABCDEFG'
 
         assert isinstance(context.logs, S3LogDriver)
         assert context.logs.key == S3Key('ACC', 'SEC')
