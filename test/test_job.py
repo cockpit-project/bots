@@ -366,20 +366,24 @@ class TestRunJob:
         assert error_data['target_url'] == 'http://localhost:9000/test-job/log.html'
 
     @patch('lib.aio.job.run_container')
-    @patch('lib.aio.job.gather_and_cancel')
     async def test_run_job_timeout(
         self,
-        mock_gather: AsyncMock,
         mock_run_container: AsyncMock,
         job_with_timeout: Job,
         log_streamer_mocks: LogStreamerMocks,
         mock_job_context: Mock,
     ) -> None:
-        mock_gather.side_effect = Failure('Timeout after 42 minutes')
+        job_with_timeout.timeout = 0.001  # 60ms
+
+        async def nix_und_zwar_langsam(*_: object, **__: object) -> None:
+            await asyncio.sleep(float('inf'))
+        mock_run_container.side_effect = nix_und_zwar_langsam
 
         await run_job(job_with_timeout, mock_job_context)
+        mock_run_container.assert_called_once()
+
         log_streamer_mocks.log_streamer_instance.write.assert_called_with(
-            '\n*** Failure: Timeout after 42 minutes\n'
+            '\n*** Failure: Timeout after 0.001 minutes\n'
         )
 
         # Verify status posts were made
@@ -391,7 +395,7 @@ class TestRunJob:
         assert failure_path == '/repos/cockpit-project/cockpit/statuses/abc123'
         assert isinstance(failure_data, dict)
         assert failure_data['state'] == 'failure'
-        assert get_str(failure_data, 'description').startswith('Timeout after 42 minutes')
+        assert get_str(failure_data, 'description').startswith('Timeout after 0.001 minutes')
         assert failure_data['target_url'] == 'http://localhost:9000/test-job/log.html'
 
     @patch('lib.aio.job.run_container')
