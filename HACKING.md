@@ -35,8 +35,9 @@ You will need to either use the tasks container to run this script or install:
 
 * python3-mypy
 * python3-pytest
-* python3-aioresponses
-* python3-aiohttp
+* python3-httpx
+* python3-respx
+* python3-yarl
 * ruff
 
 It is highly recommended to set this up as a git pre-push hook, to avoid

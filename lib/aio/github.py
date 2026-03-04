@@ -23,7 +23,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from pathlib import Path
 from typing import NamedTuple, Self
 
-import aiohttp
+import httpx
 from yarl import URL
 
 from lib.directories import xdg_config_home
@@ -39,10 +39,10 @@ async def retry(func: Callable[[], Awaitable[T]]) -> T:
     for attempt in range(4):
         try:
             return await func()
-        except aiohttp.ClientResponseError as exc:
-            if exc.status < 500:
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code < 500:
                 raise
-        except aiohttp.ClientError:
+        except httpx.HTTPError:
             pass
 
         # 1 → 2 → 4 → 8s delay
@@ -91,34 +91,40 @@ class GitHub(Forge, contextlib.AsyncExitStack):
             return body
 
         async def post_once() -> JsonValue:
-            async with self.session.post(self.api / resource, json=body) as response:
-                logger.debug('response %r', response)
-                return await response.json()
+            response = await self.session.post(str(self.api / resource), json=body)
+            response.raise_for_status()
+            logger.debug('response %r', response)
+            return response.json()
 
         return await retry(post_once)
 
     async def get(self, resource: str, parameters: Mapping[str, str] | None = None) -> JsonValue:
         async def get_once() -> JsonValue:
-            headers = {**self.session.headers}
+            headers = dict(self.session.headers)
             cache_entry = self.cache.get(resource)
             if cache_entry is not None:
                 headers.update(cache_entry.conditions)
 
+            url = self.api / resource
+            if parameters:
+                url = url % parameters
+
             logger.debug('get %r %r %r', resource, parameters, cache_entry)
-            async with self.session.get(self.api / resource % parameters, headers=headers) as response:
-                condition_map = {'etag': 'if-none-match', 'last-modified': 'if-modified-since'}
-                conditions = {c: response.headers[h] for h, c in condition_map.items() if h in response.headers}
+            response = await self.session.get(str(url), headers=headers)
 
-                if cache_entry is not None and response.status == 304:
-                    self.cache.add(resource, cache_entry)
-                    logger.debug('  cache hit %r -- returning cached value', resource)
-                    return cache_entry.value
+            condition_map = {'etag': 'if-none-match', 'last-modified': 'if-modified-since'}
+            conditions = {c: response.headers[h] for h, c in condition_map.items() if h in response.headers}
 
-                else:
-                    value = await response.json()
-                    logger.debug('  cache miss %r -- caching and returning %r', resource, conditions)
-                    self.cache.add(resource, CacheEntry(conditions, value))
-                    return value
+            if cache_entry is not None and response.status_code == 304:
+                self.cache.add(resource, cache_entry)
+                logger.debug('  cache hit %r -- returning cached value', resource)
+                return cache_entry.value
+
+            response.raise_for_status()
+            value = response.json()
+            logger.debug('  cache miss %r -- caching and returning %r', resource, conditions)
+            self.cache.add(resource, CacheEntry(conditions, value))
+            return value
 
         return await retry(get_once)
 
@@ -134,7 +140,7 @@ class GitHub(Forge, contextlib.AsyncExitStack):
                 return f'{repo}#{pull_nr} changed'
         except JsonError as exc:
             return f'Unexpected error when parsing pull request: {exc}'
-        except aiohttp.ClientError as exc:
+        except httpx.HTTPError as exc:
             # might be transient, so don't kill the job on account of this...
             logger.warning('Error when polling for %s#%s: %r', repo, pull_nr, exc)
             return None
@@ -147,8 +153,8 @@ class GitHub(Forge, contextlib.AsyncExitStack):
     async def read_file(self, subject: Subject, filename: str) -> str | None:
         try:
             contents = await self.get_obj(f'repos/{subject.repo}/contents/{filename}', {'ref': subject.sha})
-        except aiohttp.ClientResponseError as exc:
-            if exc.status == 404:
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 404:
                 return None
             raise
 
