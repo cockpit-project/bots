@@ -62,6 +62,6 @@ post = false  # whether to post statuses, open issues, etc.
 [forge.codeberg]
 driver = 'github'
 clone-url = 'https://codeberg.org/'
-api-url = 'https://codeberg.org/api/v1'
+api-url = 'https://codeberg.org/api/v1/'
 post = false
 user-agent = 'job-runner (cockpit-project/bots)'
