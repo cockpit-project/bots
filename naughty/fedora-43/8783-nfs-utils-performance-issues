@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "test/verify/check-storage-scaling", line *, in testScaling
+    b.click(self.card_button("Storage", f"Show all {n_rows + 200} rows"))
+*
+testlib.Error: timeout
