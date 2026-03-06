@@ -24,7 +24,7 @@ import ssl
 from collections.abc import AsyncIterator, Collection, Coroutine, Hashable, Mapping, Sequence
 from typing import Any, TypeVar
 
-import aiohttp
+import httpx
 
 from .jsonutil import JsonError, JsonObject, get_str, typechecked
 
@@ -129,15 +129,16 @@ async def read_utf8(stream: asyncio.StreamReader) -> AsyncIterator[str]:
     yield decoder.decode(b'', final=True)
 
 
-def create_http_session(config: JsonObject, headers: Mapping[str, str]) -> aiohttp.ClientSession:
+def create_http_session(config: JsonObject, headers: Mapping[str, str]) -> httpx.AsyncClient:
+    verify: ssl.SSLContext | bool
     if cadata := get_str(config, 'ca', None):
-        connector = aiohttp.TCPConnector(ssl=ssl.create_default_context(cadata=cadata))
+        verify = ssl.create_default_context(cadata=cadata)
     else:
-        connector = None
+        verify = True
 
     headers = {
         'User-Agent': get_str(config, 'user-agent'),
         **headers,
     }
 
-    return aiohttp.ClientSession(connector=connector, headers=headers, raise_for_status=True)
+    return httpx.AsyncClient(verify=verify, headers=headers)

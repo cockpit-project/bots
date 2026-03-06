@@ -53,7 +53,7 @@ class Job:
         self.secrets = get_strv(obj, 'secrets', ())
         self.command = get_strv(obj, 'command', None)
         self.env = get_str_map(obj, 'env', {})
-        self.timeout = get_int(obj, 'timeout', 120)
+        self.timeout: float = get_int(obj, 'timeout', 120)
 
         # reporting
         self.context = get_str(obj, 'context', None)

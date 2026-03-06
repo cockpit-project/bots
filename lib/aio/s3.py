@@ -24,7 +24,7 @@ from collections.abc import Collection, Mapping
 from types import TracebackType
 from typing import NamedTuple, Self
 
-import aiohttp
+import httpx
 from yarl import URL
 
 from .base import Destination, LogDriver
@@ -47,7 +47,7 @@ class HttpRequest(NamedTuple):
 
 
 class HttpQueue:
-    def __init__(self, session: aiohttp.ClientSession, s3_key: S3Key) -> None:
+    def __init__(self, session: httpx.AsyncClient, s3_key: S3Key) -> None:
         self.session = session
         self._queue = AsyncQueue[HttpRequest]()
         self._task: asyncio.Task[None] | None = None
@@ -58,18 +58,19 @@ class HttpQueue:
         # NB: Re-sign each attempt.  Time's arrow neither stands still nor reverses.
         headers = s3_sign(request.url, request.method, request.headers, checksum, self._s3_key)
         logger.log(self._level, '%s %s', request.method, request.url)
-        async with self.session.request(request.method, request.url, data=request.data, headers=headers) as response:
-            logger.debug('response %s %s %r', request.method, request.url, response)
+        response = await self.session.request(request.method, str(request.url), content=request.data, headers=headers)
+        response.raise_for_status()
+        logger.debug('response %s %s %r', request.method, request.url, response)
 
     async def request(self, request: HttpRequest) -> None:
         checksum = hashlib.sha256(request.data).hexdigest()
         for attempt in range(5):
             try:
                 return await self.request_once(request, checksum)
-            except aiohttp.ClientResponseError as exc:
-                if exc.status < 500:
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code < 500:
                     raise  # We actually care about 4xx errors, but blindly retry 5xx.
-            except aiohttp.ClientError:
+            except httpx.HTTPError:
                 pass  # That's DNS, connection, etc. errors.  Always retry those.
 
             # 1 → 4 → 16 → 64 → 256s
@@ -147,7 +148,7 @@ def s3_sign(
 
 
 class S3Destination(Destination, contextlib.AsyncExitStack):
-    def __init__(self, session: aiohttp.ClientSession, url: URL, proxy_url: URL, key: S3Key) -> None:
+    def __init__(self, session: httpx.AsyncClient, url: URL, proxy_url: URL, key: S3Key) -> None:
         super().__init__()
         self.session = session
         self.location = url  # Used for S3 operations

@@ -24,8 +24,7 @@ import asyncio
 import logging
 from pathlib import Path
 
-import aiohttp
-from yarl import URL
+import httpx
 
 from lib import task
 from lib.aio.jsonutil import get_str, get_strv, typechecked
@@ -50,18 +49,21 @@ async def main() -> None:
     if not service or not repository:
         args.error(f'Invalid image name: {args.image}')
 
-    async with aiohttp.ClientSession(raise_for_status=True) as session:
-        async with session.get(URL.build(scheme='https', host=service, path='/token', query={
+    async with httpx.AsyncClient() as client:
+        token_url = httpx.URL(f'https://{service}/token').copy_with(params={
             'scope': f'repository:{repository}:pull',
             'service': service
-        }), headers=headers) as response:
-            logging.debug('token response: %r', await response.json())
-            token = get_str(typechecked(await response.json(), dict), 'token')
-            headers['Authorization'] = f'Bearer {token}'
+        })
+        response = await client.get(str(token_url), headers=headers)
+        response.raise_for_status()
+        logging.debug('token response: %r', response.json())
+        token = get_str(typechecked(response.json(), dict), 'token')
+        headers['Authorization'] = f'Bearer {token}'
 
-        async with session.get(f'https://{service}/v2/{repository}/tags/list', headers=headers) as response:
-            logging.debug('list response: %r', await response.json())
-            tags = get_strv(await response.json(), 'tags')
+        response = await client.get(f'https://{service}/v2/{repository}/tags/list', headers=headers)
+        response.raise_for_status()
+        logging.debug('list response: %r', response.json())
+        tags = get_strv(response.json(), 'tags')
 
     tag = max({*tags} - {'latest'})
     logging.debug('Latest tag is %r', tag)

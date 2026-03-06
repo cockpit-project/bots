@@ -1,4 +1,9 @@
+[project]
+name = "bots"
+requires-python = ">= 3.14"
+
 [tool.mypy]
+python_version = "3.14"
 strict = true
 follow_imports = 'silent'  # https://github.com/python-lsp/pylsp-mypy/issues/81
 scripts_are_modules = true  # allow checking all scripts in one invocation
@@ -39,7 +44,7 @@ exclude = [
 ]
 line-length = 118
 preview = true
-target-version = 'py312'
+target-version = 'py314'
 
 [tool.ruff.format]
 quote-style = "preserve"
@@ -75,6 +80,7 @@ addopts = ["--cov-config=pyproject.toml"]  # for subprocesses
 pythonpath = ["."]
 required_plugins = ["pytest-asyncio"]
 asyncio_mode = 'auto'
+asyncio_default_fixture_loop_scope = 'function'
 
 [tool.coverage.run]
 branch = true
