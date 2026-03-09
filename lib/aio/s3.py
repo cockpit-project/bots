@@ -148,12 +148,13 @@ def s3_sign(
 
 
 class S3Destination(Destination, contextlib.AsyncExitStack):
-    def __init__(self, session: httpx.AsyncClient, url: URL, proxy_url: URL, key: S3Key) -> None:
+    def __init__(self, session: httpx.AsyncClient, url: URL, proxy_url: URL, key: S3Key, acl: str) -> None:
         super().__init__()
         self.session = session
         self.location = url  # Used for S3 operations
         self.proxy_location = proxy_url  # Used for external links (GitHub status)
         self.key = key
+        self.acl = acl
 
     def url(self, filename: str) -> URL:
         return self.location / filename
@@ -163,7 +164,7 @@ class S3Destination(Destination, contextlib.AsyncExitStack):
 
     def write(self, filename: str, data: bytes) -> None:
         content_type, content_encoding = mimetypes.guess_type(filename)
-        headers = {**self.session.headers, 'Content-Type': content_type or 'text/plain; charset=utf-8'}
+        headers = {'x-amz-acl': self.acl, 'Content-Type': content_type or 'text/plain; charset=utf-8'}
         if content_encoding:
             headers['Content-Encoding'] = content_encoding
 
@@ -186,6 +187,7 @@ class S3LogDriver(LogDriver, contextlib.AsyncExitStack):
         self.url = URL(get_str(config, 'url'))
         # proxy_url is optional, not needed for public S3 buckets
         self.proxy_url = URL(get_str(config, 'proxy_url', str(self.url)))
+        self.acl = get_str(config, 'acl')
         try:
             access, secret = get_str(config, 'key').split()
             self.key = S3Key(access, secret)
@@ -195,9 +197,8 @@ class S3LogDriver(LogDriver, contextlib.AsyncExitStack):
 
     def get_destination(self, slug: str) -> contextlib.AbstractAsyncContextManager[S3Destination]:
         quoted_slug = slug.replace('//', '--').replace(':', '-')
-        return S3Destination(self.session, self.url / quoted_slug, self.proxy_url / quoted_slug, self.key)
+        return S3Destination(self.session, self.url / quoted_slug, self.proxy_url / quoted_slug, self.key, self.acl)
 
     async def __aenter__(self) -> Self:
-        headers = {'x-amz-acl': get_str(self.config, 'acl')}
-        self.session = await self.enter_async_context(create_http_session(self.config, headers))
+        self.session = await self.enter_async_context(create_http_session(self.config))
         return self

@@ -129,7 +129,7 @@ async def read_utf8(stream: asyncio.StreamReader) -> AsyncIterator[str]:
     yield decoder.decode(b'', final=True)
 
 
-def create_http_session(config: JsonObject, headers: Mapping[str, str]) -> httpx.AsyncClient:
+def create_http_session(config: JsonObject, headers: Mapping[str, str] = {}) -> httpx.AsyncClient:
     verify: ssl.SSLContext | bool
     if cadata := get_str(config, 'ca', None):
         verify = ssl.create_default_context(cadata=cadata)
