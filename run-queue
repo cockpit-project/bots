@@ -48,8 +48,7 @@ ConsumeResult = tuple[Sequence[str] | str | None, DeliveryTag | None]
 
 # Returns a command argv to execute and the delivery tag needed to ack the message
 def consume_webhook_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResult:
-    # interpret payload
-    # call tests-scan or issue-scan appropriately
+    # interpret payload and call tests-scan
     method_frame, _header_frame, message = dq.channel.basic_get(queue='webhook')
     if not method_frame or not message:
         return None, None

@@ -14,8 +14,7 @@ Many bots file or work with issues in GitHub repository. We can use issues to te
 bots what to do. Often certan bots will just file issues for tasks that are outstanding.
 And in many cases other bots will then perform those tasks.
 
-These bots are listed in the `./issue-scan` file. They are written using the
-`tasks/__init__.py` code. These are deprecated in favor of GitHub workflows.
+Issue scanning for `image-refresh` tasks is handled by the `.github/workflows/issue-scan.yml` workflow.
 
 ## Bots printing output
 
