@@ -1,8 +1,7 @@
-# Process ` * [ ] image-refresh imgname` tasks (and theoretically others, but
-# we don't have any) in issues/PRs.
+# Process ` * [ ] image-refresh imgname` tasks in issues/PRs.
 #
-# Run `issue-scan`, schedule the resulting job on Testing Farm, post a comment
-# with the link to the logs.
+# Scan issue body for checklist items, schedule the resulting job on Testing
+# Farm, post a comment with the link to the logs.
 name: issue-scan
 
 on:
@@ -18,118 +17,192 @@ jobs:
     runs-on: ubuntu-latest
     environment: image-build
     permissions:
-      # create new branches
-      contents: write
-      # post comments and PRs
       issues: write
       pull-requests: write
     steps:
-      - name: Clone repository
-        uses: actions/checkout@v5
-
-      - name: Set up GitHub token
-        run: |
-          mkdir -p ~/.config/cockpit-dev
-          echo '${{ secrets.GITHUB_TOKEN }}' > ~/.config/cockpit-dev/github-token
-
-      - name: Scan issue/PR for tasks
-        id: scan
-        run: |
-          # Scan the issue/PR for bot tasks
-          GITHUB_BASE=${{ github.repository }} \
-          SCAN_OUT=$(./issue-scan --issues-data '${{ toJSON(github.event) }}')
-          echo "---- Scan output ----"
-          echo "$SCAN_OUT"
-          echo "---------------------"
-          echo "scan_output=$SCAN_OUT" >> $GITHUB_OUTPUT
-
-      - name: Determine git ref
-        id: gitref
-        if: steps.scan.outputs.scan_output != ''
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "git_url=${{ github.event.pull_request.head.repo.clone_url }}" >> $GITHUB_OUTPUT
-            echo "git_ref=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
-          else
-            echo "git_url=${{ github.event.repository.clone_url }}" >> $GITHUB_OUTPUT
-            echo "git_ref=${{ github.event.repository.default_branch }}" >> $GITHUB_OUTPUT
-          fi
-
-      # https://api.dev.testing-farm.io/docs ; don't use sclorg/testing-farm-as-github-action4
-      # as we don't want to poll (that's just a waste of GH action runner time)
-      - name: Schedule on Testing Farm
-        id: testing_farm
-        if: steps.scan.outputs.scan_output != ''
+      - name: Process image-refresh task
+        uses: actions/github-script@v7
         env:
-          # does not matter much, we just need python-aiohttp and podman for job-runner and the tasks container; keep at recent Fedora
-          # https://api.testing-farm.io/v0.1/composes/redhat
+          TF_API_KEY: ${{ secrets.TESTING_FARM_RH_TOKEN }}
+          GH_TOKEN: ${{ secrets.COCKPITUOUS_TOKEN }}
+          S3_EU: ${{ secrets.S3_KEY_EU }}
+          S3_US: ${{ secrets.S3_KEY_US }}
+          S3_LOGS: ${{ secrets.S3_KEY_LOGS }}
+          # keep at recent Fedora; https://api.testing-farm.io/v0.1/composes/redhat
           TF_COMPOSE: Fedora-43-Updated
-        run: |
-          # Build Testing Farm API request using jq for proper escaping
-          echo '${{ steps.scan.outputs.scan_output }}' | jq \
-            --arg api_key '${{ secrets.TESTING_FARM_RH_TOKEN }}' \
-            --arg git_url '${{ steps.gitref.outputs.git_url }}' \
-            --arg git_ref '${{ steps.gitref.outputs.git_ref }}' \
-            --arg gh_token '${{ secrets.COCKPITUOUS_TOKEN }}' \
-            --arg s3_eu '${{ secrets.S3_KEY_EU }}' \
-            --arg s3_us '${{ secrets.S3_KEY_US }}' \
-            --arg s3_logs '${{ secrets.S3_KEY_LOGS }}' \
-            --arg compose "$TF_COMPOSE" \
-            '{
-              "api_key": $api_key,
-              "test": {
-                "fmf": {
-                  "url": $git_url,
-                  "ref": $git_ref,
-                  "name": "job-runner"
+        with:
+          script: |
+            // Check secrets are available (not available for fork PRs)
+            if (!process.env.TF_API_KEY) {
+              core.setFailed('No access to Testing Farm API key. Are you proposing from a fork?');
+              return;
+            }
+
+            // Fetch allowlist.yaml from main branch
+            const allowlistFile = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: 'lib/allowlist.yaml',
+              ref: 'main'
+            });
+            const allowlistYaml = Buffer.from(allowlistFile.data.content, 'base64').toString();
+            // Simple YAML list parser: extract lines starting with "- "
+            const allowlist = new Set(
+              allowlistYaml.split('\n')
+                .filter(line => line.startsWith('- '))
+                .map(line => line.slice(2).trim())
+            );
+
+            const issue = context.payload.issue || context.payload.pull_request;
+            const login = issue.user.login;
+
+            // Check allowlist
+            if (!allowlist.has(login)) {
+              console.log(`User ${login} not in allowlist, skipping`);
+              return;
+            }
+
+            // Skip WIP issues
+            if (issue.title.trim().startsWith('WIP')) {
+              console.log('WIP issue, skipping');
+              return;
+            }
+
+            // Parse checklist items from body: "* [ ] image-refresh <image>" or "- [ ] ..."
+            const body = issue.body || '';
+            const checklistRegex = /^[*-] \[(?<checked>[ xX])\]\s+(?:(?<status>[A-Z]+):\s+)?(?<item>.+)$/gm;
+            let firstUnchecked = null;
+
+            for (const match of body.matchAll(checklistRegex)) {
+              const checked = match.groups.checked !== ' ';
+              if (!checked && !match.groups.status) {
+                firstUnchecked = match.groups.item.trim();
+                break;
+              }
+            }
+
+            if (!firstUnchecked) {
+              console.log('No unchecked items found');
+              return;
+            }
+
+            // Parse "image-refresh <image>" command
+            const cmdMatch = firstUnchecked.match(/^image-refresh\s+(.+)$/);
+            if (!cmdMatch) {
+              console.log(`First unchecked item is not image-refresh: ${firstUnchecked}`);
+              return;
+            }
+
+            const image = cmdMatch[1].trim();
+            const number = issue.number;
+            const isPR = 'pull_request' in context.payload || 'commits' in issue;
+
+            // Get the git ref and SHA
+            let gitUrl, gitRef, sha, pull;
+            if (isPR) {
+              const pr = context.payload.pull_request;
+              gitUrl = pr.head.repo.clone_url;
+              gitRef = pr.head.ref;
+              const ref = await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `pull/${number}/head`
+              });
+              sha = ref.data.object.sha;
+              pull = number;
+            } else {
+              const repo = context.payload.repository;
+              gitUrl = repo.clone_url;
+              gitRef = repo.default_branch;
+              const ref = await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `heads/${gitRef}`
+              });
+              sha = ref.data.object.sha;
+              pull = null;
+            }
+
+            const current = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15).replace(/(\d{8})(\d{6})/, '$1-$2');
+            const slug = `image-refresh-${image}-${sha.slice(0, 8)}-${current}`;
+            const repoFullName = `${context.repo.owner}/${context.repo.repo}`;
+
+            const job = {
+              repo: repoFullName,
+              sha: sha,
+              pull: pull,
+              slug: slug,
+              context: `image-refresh/${image}`,
+              command: ['./image-refresh', '--verbose', `--issue=${number}`, image],
+              secrets: ['github-token', 'image-upload'],
+            };
+            const human = `issue-${number} image-refresh ${image}`;
+
+            console.log('Job:', JSON.stringify(job, null, 2));
+
+            // Submit to Testing Farm
+            // https://api.dev.testing-farm.io/docs
+            const tfRequest = {
+              api_key: process.env.TF_API_KEY,
+              test: {
+                fmf: {
+                  url: gitUrl,
+                  ref: gitRef,
+                  name: 'job-runner'
                 }
               },
-              "environments": [{
-                "arch": "x86_64",
-                "os": {"compose": $compose},
-                "variables": {
-                  "JOB_JSON": (.job | tojson)
+              environments: [{
+                arch: 'x86_64',
+                os: { compose: process.env.TF_COMPOSE },
+                variables: {
+                  JOB_JSON: JSON.stringify(job)
                 },
-                "secrets": {
-                  "GITHUB_TOKEN": $gh_token,
-                  "S3_KEY_EU": $s3_eu,
-                  "S3_KEY_US": $s3_us,
-                  "S3_KEY_LOGS": $s3_logs
+                secrets: {
+                  GITHUB_TOKEN: process.env.GH_TOKEN,
+                  S3_KEY_EU: process.env.S3_EU,
+                  S3_KEY_US: process.env.S3_US,
+                  S3_KEY_LOGS: process.env.S3_LOGS
                 },
-                "hardware": {"virtualization": {"is-virtualized": true, "is-supported": true}}
+                hardware: { virtualization: { 'is-virtualized': true, 'is-supported': true } }
               }],
-              "settings": {
-                "pipeline": {"timeout": 60}
+              settings: {
+                pipeline: { timeout: 60 }
               }
-            }' > tf-request.json
+            };
 
-          # Submit to Testing Farm
-          TF_RESPONSE=$(curl -s --json @tf-request.json https://api.dev.testing-farm.io/v0.1/requests)
+            const tfResponse = await fetch('https://api.dev.testing-farm.io/v0.1/requests', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(tfRequest)
+            });
+            const tfResult = await tfResponse.json();
 
-          # Sadly, the response does not currently include the artifacts URL, the only
-          # useful thing is the ID; so we have to hardcode it; https://issues.redhat.com/browse/TFT-4379
-          TF_ID=$(echo "$TF_RESPONSE" | jq -r '.id')
-          echo "test_log_url=https://artifacts.osci.redhat.com/testing-farm/$TF_ID" >> $GITHUB_OUTPUT
+            if (!tfResponse.ok) {
+              core.setFailed(`Testing Farm API error: ${JSON.stringify(tfResult)}`);
+              return;
+            }
 
-      - name: Post comment with Testing Farm link
-        if: steps.scan.outputs.scan_output != ''
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
-        run: |
-          HUMAN=$(echo '${{ steps.scan.outputs.scan_output }}' | jq -r '.human')
-          JOB_JSON=$(echo '${{ steps.scan.outputs.scan_output }}' | jq '.job')
+            // https://issues.redhat.com/browse/TFT-4379
+            const testLogUrl = `https://artifacts.osci.redhat.com/testing-farm/${tfResult.id}`;
 
-          cat << COMMENT_EOF | gh issue comment "$ISSUE_NUMBER" --body-file -
-          **Task scheduled:** $HUMAN
+            // Post comment
+            const comment = `**Task scheduled:** ${human}
 
-          Testing Farm logs: ${{ steps.testing_farm.outputs.test_log_url }}
+            Testing Farm logs: ${testLogUrl}
 
-          <details>
-          <summary>Job JSON</summary>
+            <details>
+            <summary>Job JSON</summary>
 
-          \`\`\`json
-          $JOB_JSON
-          \`\`\`
-          </details>
-          COMMENT_EOF
+            \`\`\`json
+            ${JSON.stringify(job, null, 2)}
+            \`\`\`
+            </details>`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: number,
+              body: comment
+            });
+
+            console.log(`Comment posted, Testing Farm: ${testLogUrl}`);
