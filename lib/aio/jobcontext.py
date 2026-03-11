@@ -18,6 +18,7 @@ import logging
 import os
 import string
 import sys
+import tempfile
 import tomllib
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
@@ -56,6 +57,25 @@ LOG_DRIVERS: Mapping[str, Callable[[JsonObject], AsyncContextManager[LogDriver]]
     's3': S3LogDriver,
     'local': LocalLogDriver,
 }
+
+
+def write_path_contents(contents: JsonObject, target: Path) -> None:
+    """Write path contents to filesystem.
+
+    Contents format:
+      - File: {"content": "file text"}
+      - Directory: {"entries": {"name": {...}, ...}}
+    """
+    if 'content' in contents:
+        target.write_text(typechecked(contents['content'], str))
+    elif 'entries' in contents:
+        target.mkdir(parents=True, exist_ok=True)
+        for name, value in typechecked(contents['entries'], dict).items():
+            if name in ('', '.', '..') or '/' in name or '\0' in name:
+                raise ValueError(f"Invalid filename: {name!r}")
+            write_path_contents(typechecked(value, dict), target / name)
+    else:
+        raise ValueError("Path contents must have 'content' or 'entries'")
 
 
 class JobContext(contextlib.AsyncExitStack):
@@ -103,9 +123,22 @@ class JobContext(contextlib.AsyncExitStack):
         try:
             # Build paths mapping for %{name} substitution
             paths: dict[str, str] = {}
+            tmpdir: Path | None = None
             with get_nested(self.config, 'paths') as paths_config:
                 for name in paths_config:
-                    paths[name] = os.path.expanduser(get_str(paths_config, name))
+                    if name in ('', '.', '..') or '/' in name or '\0' in name:
+                        raise JsonError(paths_config, f"Invalid path name: {name!r}")
+                    value = paths_config[name]
+                    if isinstance(value, str):
+                        paths[name] = os.path.expanduser(value)
+                    elif isinstance(value, dict):
+                        if tmpdir is None:
+                            tmpdir = Path(self.enter_context(tempfile.TemporaryDirectory()))
+                        target = tmpdir / name
+                        write_path_contents(value, target)
+                        paths[name] = str(target)
+                    else:
+                        raise JsonError(value, f"path '{name}' must be string or object")
 
             def expand_args(args: Sequence[str]) -> tuple[str, ...]:
                 return tuple(PathTemplate(arg).substitute(paths) for arg in args)
