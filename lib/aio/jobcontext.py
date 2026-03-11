@@ -16,9 +16,10 @@
 import contextlib
 import logging
 import os
+import re
 import sys
 import tomllib
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import AsyncContextManager, Self
 
@@ -31,15 +32,16 @@ from .jsonutil import (
     JsonObject,
     get_nested,
     get_str,
+    get_str_map,
     get_strv,
     json_merge_patch,
     load_external_files,
-    typechecked,
 )
 from .local import LocalLogDriver
 from .s3 import S3LogDriver
 
 logger = logging.getLogger(__name__)
+
 
 # __init__ is weird on types, so typecheck this as a callable to enforce correctness
 FORGE_DRIVERS: Mapping[str, Callable[[str, JsonObject], AsyncContextManager[Forge]]] = {
@@ -57,6 +59,7 @@ class JobContext(contextlib.AsyncExitStack):
     logs: LogDriver
     _forges: dict[str, Forge]
     _default_forge: str
+    _secret_paths: dict[str, str]
 
     def load_config(self, path: Path, name: str, *, missing_ok: bool = False) -> None:
         logger.debug('Loading %s configuration from %s', name, path)
@@ -93,17 +96,33 @@ class JobContext(contextlib.AsyncExitStack):
         else:
             self.load_config(Path(xdg_config_home('cockpit-dev/job-runner.toml')), 'user', missing_ok=True)
 
+    def expand_secret(self, arg: str) -> str:
+        def replace(m: re.Match[str]) -> str:
+            try:
+                return self._secret_paths[m.group(1)]
+            except KeyError:
+                raise JsonError(None, f"undefined secret '{m.group(0)}'") from None
+
+        return re.sub(r'%\{([^}]+)\}', replace, arg)
+
+    def expand_secrets(self, args: Sequence[str]) -> tuple[str, ...]:
+        return tuple(self.expand_secret(arg) for arg in args)
+
     async def __aenter__(self) -> Self:
         try:
+            # Build secrets mapping for %{name} substitution
+            with get_nested(self.config, 'secrets') as secrets_section:
+                external = get_str_map(secrets_section, 'external')
+                secret_paths = {k: os.path.expanduser(v) for k, v in external.items()}
+
+            self._secret_paths = secret_paths
+
             with get_nested(self.config, 'container') as container:
                 self.container_cmd = get_strv(container, 'command')
                 self.container_run_args = get_strv(container, 'run-args')
                 with get_nested(container, 'secrets') as secrets:
-                    self.secrets_args = {
-                        name: [
-                            typechecked(arg, str) for arg in typechecked(args, list)
-                        ] for name, args in secrets.items()
-                    }
+                    # expand here to catch configuration errors early
+                    self.secrets_args = {name: self.expand_secrets(get_strv(secrets, name)) for name in secrets}
                 self.default_image = get_str(container, 'default-image')
 
             with get_nested(self.config, 'logs') as logs:
