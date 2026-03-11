@@ -35,8 +35,8 @@ except ImportError:
     pika = None
     distributed_queue = None  # type: ignore[assignment]
 
-from lib import ALLOWLIST, github, task, testmap
-from lib.aio.jsonutil import JsonObject, get_dict, get_int, get_str
+from lib import ALLOWLIST, github, testmap
+from lib.aio.jsonutil import JsonObject, get_dict, get_dictv, get_int, get_str
 from lib.jobqueue import QueueEntry
 
 # RHEL tasks have to be done inside Red Hat network
@@ -93,7 +93,7 @@ def tasks_for_issues(issues_data: str, opts_repo: str | None) -> Sequence[tuple[
         event = json.loads(issues_data)
         repo = event["repository"]["full_name"]
         issue = event.get("issue") or event.get("pull_request")
-        if 'bot' not in task.labels_of_pull(issue):
+        if not any(get_str(label, 'name') == 'bot' for label in get_dictv(issue, 'labels')):
             return []
         api = github.GitHub(repo=repo)
         issues = [issue]
