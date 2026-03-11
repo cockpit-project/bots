@@ -23,6 +23,10 @@
 # github-token = '~/.config/cockpit-dev/github-token'
 # s3-keys = '~/.config/cockpit-dev/s3-keys'
 
+[secrets.inline]
+# github-token = 'ghp_...'
+# s3-keys = {"linodeobjects.com"="ABCD... Zx2xPa..."}
+
 [container]
 command = ['podman']
 run-args = [

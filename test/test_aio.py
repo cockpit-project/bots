@@ -20,6 +20,7 @@ from lib.aio.util import LRUCache
 
 class MockResponse:
     """Stores response data for the mock server."""
+
     def __init__(self, *, status: int = 200, headers: dict[str, str] | None = None, body: str = '') -> None:
         self.status = status
         self.headers = headers or {}
@@ -223,11 +224,14 @@ async def test_github_pr_lookup(service: GitHubService, api: GitHub) -> None:
     sha = '89abcdef' * 5
 
     # open a PR
-    service.update(f'repos/{repo}/pulls/{pull_nr}', {
-        'state': 'open',
-        'base': {'ref': 'main'},
-        'head': {'sha': sha},
-    })
+    service.update(
+        f'repos/{repo}/pulls/{pull_nr}',
+        {
+            'state': 'open',
+            'base': {'ref': 'main'},
+            'head': {'sha': sha},
+        },
+    )
 
     # Look up the sha in the PR via the REST API
     subject = await api.resolve_subject(SubjectSpecification({'repo': 'owner/repo', 'pull': pull_nr}))
@@ -340,5 +344,121 @@ async def test_secrets_undefined_error(tmp_path: Path) -> None:
     ''')
 
     with pytest.raises(SystemExit, match=r"undefined secret '%\{undefined\}'"):
+        async with JobContext(config_file):
+            pass
+
+
+async def test_inline_secrets(tmp_path: Path) -> None:
+    config_file = tmp_path / 'config.toml'
+    config_file.write_text('''
+        [secrets.inline]
+        github-token = 'ghp_secret123'
+        s3-keys = {"linodeobjects.com" = "ABCD Zx2xPa"}
+
+        [container]
+        command = ['podman']
+        run-args = []
+        default-image = 'ghcr.io/test:latest'
+
+        [container.secrets]
+        github-token = ['-e=COCKPIT_GITHUB_TOKEN_FILE=/x', '-v=%{github-token}:/x']
+        s3-keys = ['-e=COCKPIT_S3_KEY_DIR=/y', '-v=%{s3-keys}:/y']
+
+        [logs]
+        driver = 'local'
+        local.directory = '/tmp/logs'
+    ''')
+
+    async with JobContext(config_file) as ctx:
+        # Check github-token
+        assert ctx.secrets_args['github-token'][0] == '-e=COCKPIT_GITHUB_TOKEN_FILE=/x'
+        token_path = Path(ctx.secrets_args['github-token'][1].removeprefix('-v=').removesuffix(':/x'))
+        assert token_path.read_text() == 'ghp_secret123'
+
+        # Check s3-keys
+        assert ctx.secrets_args['s3-keys'][0] == '-e=COCKPIT_S3_KEY_DIR=/y'
+        s3_path = Path(ctx.secrets_args['s3-keys'][1].removeprefix('-v=').removesuffix(':/y'))
+        assert (s3_path / 'linodeobjects.com').read_text() == 'ABCD Zx2xPa'
+
+    # After context closes, temp files should be cleaned up
+    assert not token_path.exists()
+    assert not s3_path.exists()
+    assert not token_path.parent.exists()
+
+
+async def test_inline_path_nested_error(tmp_path: Path) -> None:
+    config_file = tmp_path / 'config.toml'
+    config_file.write_text('''
+        [secrets.inline.mydir]
+        subdir = { "../escape" = "bad" }
+
+        [container]
+        command = ['podman']
+        run-args = []
+        default-image = 'ghcr.io/test:latest'
+
+        [container.secrets]
+
+        [logs]
+        driver = 'local'
+        local.directory = '/tmp/logs'
+    ''')
+
+    with pytest.raises(
+        SystemExit,
+        match=r"attribute 'secrets': attribute 'inline': attribute 'mydir': "
+              r"attribute 'subdir': invalid filename: '\.\./escape'",
+    ):
+        async with JobContext(config_file):
+            pass
+
+
+async def test_inline_path_invalid_type(tmp_path: Path) -> None:
+    config_file = tmp_path / 'config.toml'
+    config_file.write_text('''
+        [secrets.inline]
+        badvalue = 123
+
+        [container]
+        command = ['podman']
+        run-args = []
+        default-image = 'ghcr.io/test:latest'
+
+        [container.secrets]
+
+        [logs]
+        driver = 'local'
+        local.directory = '/tmp/logs'
+    ''')
+
+    with pytest.raises(
+        SystemExit, match=r"attribute 'secrets': attribute 'inline': attribute 'badvalue': must be string or object"
+    ):
+        async with JobContext(config_file):
+            pass
+
+
+async def test_secrets_conflict_error(tmp_path: Path) -> None:
+    config_file = tmp_path / 'config.toml'
+    config_file.write_text('''
+        [secrets.external]
+        token = '/etc/token'
+
+        [secrets.inline]
+        token = 'inline-value'
+
+        [container]
+        command = ['podman']
+        run-args = []
+        default-image = 'ghcr.io/test:latest'
+
+        [container.secrets]
+
+        [logs]
+        driver = 'local'
+        local.directory = '/tmp/logs'
+    ''')
+
+    with pytest.raises(SystemExit, match=r"secret\(s\) defined in both 'external' and 'inline': token"):
         async with JobContext(config_file):
             pass

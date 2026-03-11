@@ -18,6 +18,7 @@ import logging
 import os
 import re
 import sys
+import tempfile
 import tomllib
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
@@ -52,6 +53,27 @@ LOG_DRIVERS: Mapping[str, Callable[[JsonObject], AsyncContextManager[LogDriver]]
     's3': S3LogDriver,
     'local': LocalLogDriver,
 }
+
+
+def unpack_inline_secret(parent: Path, obj: JsonObject, name: str) -> Path:
+    """Write inline path contents to filesystem. Returns the path written.
+
+    String values become file contents, objects become directories.
+    """
+    if name in ('', '.', '..') or '/' in name or '\0' in name:
+        raise JsonError(obj, f"invalid filename: {name!r}")
+    target = parent / name
+    value = obj[name]
+    if isinstance(value, str):
+        target.write_text(value)
+    elif isinstance(value, Mapping):
+        target.mkdir(parents=True, exist_ok=True)
+        with get_nested(obj, name) as nested:
+            for child_name in nested:
+                unpack_inline_secret(target, nested, child_name)
+    else:
+        raise JsonError(obj, f"attribute '{name}': must be string or object")
+    return target
 
 
 class JobContext(contextlib.AsyncExitStack):
@@ -114,6 +136,16 @@ class JobContext(contextlib.AsyncExitStack):
             with get_nested(self.config, 'secrets') as secrets_section:
                 external = get_str_map(secrets_section, 'external')
                 secret_paths = {k: os.path.expanduser(v) for k, v in external.items()}
+
+                with get_nested(secrets_section, 'inline') as inline:
+                    if conflicts := secret_paths.keys() & inline.keys():
+                        msg = f"secret(s) defined in both 'external' and 'inline': {', '.join(sorted(conflicts))}"
+                        raise JsonError(inline, msg)
+                    if len(inline) > 0:
+                        tmpdir = Path(self.enter_context(tempfile.TemporaryDirectory()))
+                        secret_paths.update({
+                            name: str(unpack_inline_secret(tmpdir, inline, name)) for name in inline
+                        })
 
             self._secret_paths = secret_paths
 
