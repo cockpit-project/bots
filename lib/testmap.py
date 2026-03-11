@@ -111,8 +111,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-9-bootc',
             'debian-testing',
             'debian-trixie',
-            'fedora-42',
             'fedora-43',
+            'fedora-44',
             'fedora-coreos',
             'opensuse-tumbleweed',
             'rhel-8-10/ws-container',
@@ -125,7 +125,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
-            'fedora-44',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -136,8 +135,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'ubuntu-2204',
             'ubuntu-2404',
             'ubuntu-stable',
-            'fedora-42',
             'fedora-43',
+            'fedora-44',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             'opensuse-tumbleweed',
@@ -151,7 +150,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
-            'fedora-44',
         ],
     },
     'cockpit-project/cockpit-files': {
