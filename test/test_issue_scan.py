@@ -146,8 +146,7 @@ class TestIssueScan(unittest.TestCase):
         with unittest.mock.patch("sys.argv", ["issue-scan", *args]):
             code: str | int | None
             try:
-                self.issue_scan_module.main()
-                code = 0
+                code = self.issue_scan_module.main()
             except SystemExit as e:
                 code = e.code
 
@@ -159,6 +158,13 @@ class TestIssueScan(unittest.TestCase):
         assert code == 0
         assert stderr == ""
         assert output == expected_output
+
+    def run_error(self, args: Sequence[str], expected_error: str) -> None:
+        code, output, stderr = self.run_issue_scan(args)
+
+        assert code == 1
+        assert output == ""
+        assert expected_error in stderr
 
     def run_success_json(self, args: Sequence[str], expected_job: JsonObject) -> None:
         code, output, stderr = self.run_issue_scan(args)
@@ -241,6 +247,36 @@ class TestIssueScan(unittest.TestCase):
         self.assertEqual(channel.basic_publish.call_args[0][1], "public")
         request = json.loads(channel.basic_publish.call_args[0][2])
         assert request == EXPECTED_JOB_ISSUE_2
+
+    def test_scan_missing_repository(self) -> None:
+        self.run_error(
+            ["--issues-data", r'{"issue": {"number": 1}}'],
+            "attribute 'repository' required",
+        )
+
+    def test_scan_missing_issue_and_pr(self) -> None:
+        self.run_success(
+            ["--issues-data", r'{"repository": {"full_name": "cockpit-project/bots"}}'],
+            "",
+        )
+
+    def test_scan_missing_labels(self) -> None:
+        self.run_error(
+            ["--issues-data", r'{"repository": {"full_name": "x/bots"}, "issue": {"number": 1}}'],
+            "attribute 'labels' required",
+        )
+
+    def test_scan_label_without_name(self) -> None:
+        self.run_error(
+            ["--issues-data", r'{"repository": {"full_name": "x/bots"}, "issue": {"labels": [{}]}}'],
+            "attribute 'name' required",
+        )
+
+    def test_scan_label_name_not_string(self) -> None:
+        self.run_error(
+            ["--issues-data", r'{"repository": {"full_name": "x/bots"}, "issue": {"labels": [{"name": 123}]}}'],
+            "must have type str",
+        )
 
 
 if __name__ == '__main__':
