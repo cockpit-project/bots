@@ -36,7 +36,7 @@ except ImportError:
     distributed_queue = None  # type: ignore[assignment]
 
 from lib import ALLOWLIST, github, testmap
-from lib.aio.jsonutil import JsonObject, get_dict, get_dictv, get_int, get_str
+from lib.aio.jsonutil import JsonError, JsonObject, get_dict, get_dictv, get_int, get_nested, get_str
 from lib.jobqueue import QueueEntry
 
 # RHEL tasks have to be done inside Red Hat network
@@ -58,7 +58,15 @@ def main() -> int:
                         help='issues or pull request event GitHub JSON data to evaluate')
     opts = parser.parse_args()
 
-    result = scan(opts.issues_data)
+    try:
+        event: JsonObject = json.loads(opts.issues_data)
+        result = scan(event)
+    except json.JSONDecodeError as exc:
+        sys.stderr.write(f"issue-scan: invalid event JSON: {exc}\n")
+        return 1
+    except JsonError as exc:
+        sys.stderr.write(f"issue-scan: invalid event data: {exc}\n")
+        return 1
     if result is None:
         return 0
 
@@ -83,11 +91,15 @@ def contains_any(string: str, matches: Collection[str]) -> bool:
             return True
     return False
 
-def task_for_issue(issues_data: str) -> tuple[str, JsonObject, str] | None:
+
+def task_for_issue(event: JsonObject) -> tuple[str, JsonObject, str] | None:
     """Extract the first unchecked task from an issue/PR event."""
-    event = json.loads(issues_data)
-    repo = event["repository"]["full_name"]
-    issue = event.get("issue") or event.get("pull_request")
+    with get_nested(event, "repository") as repository:
+        repo = get_str(repository, "full_name")
+
+    issue = get_dict(event, "issue", None) or get_dict(event, "pull_request", None)
+    if issue is None:
+        return None
 
     if not any(get_str(label, 'name') == 'bot' for label in get_dictv(issue, 'labels')):
         return None
@@ -163,9 +175,9 @@ def queue_task(dq: 'distributed_queue.DistributedQueue', body: QueueEntry) -> No
     logging.info("Published issue task: %r", body)
 
 
-def scan(issues_data: str) -> QueueEntry | None:
+def scan(event: JsonObject) -> QueueEntry | None:
     """Scan an issue/PR event for a task and return a job entry if found."""
-    task = task_for_issue(issues_data)
+    task = task_for_issue(event)
     if task is None:
         return None
 
