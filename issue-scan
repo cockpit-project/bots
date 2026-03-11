@@ -54,12 +54,22 @@ def main() -> int:
                         help="Print human readable output")
     parser.add_argument('--amqp', default=None,
                         help='The host:port of the AMQP server to publish to (format host:port)')
-    parser.add_argument('--issues-data', required=True,
-                        help='issues or pull request event GitHub JSON data to evaluate')
+
+    event_group = parser.add_mutually_exclusive_group(required=True)
+    event_group.add_argument('--issues-data',
+                             help='Event JSON data as string')
+    event_group.add_argument('--event-data-file',
+                             help='Path to event JSON file (e.g., $GITHUB_EVENT_PATH)')
     opts = parser.parse_args()
 
     try:
-        event: JsonObject = json.loads(opts.issues_data)
+        event: JsonObject
+        if opts.event_data_file:
+            with open(opts.event_data_file) as f:
+                event = json.load(f)
+        else:
+            event = json.loads(opts.issues_data)
+
         result = scan(event)
     except json.JSONDecodeError as exc:
         sys.stderr.write(f"issue-scan: invalid event JSON: {exc}\n")
