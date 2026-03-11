@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import contextlib
+import json
 import logging
 import os
 import re
@@ -31,6 +32,8 @@ from .github import GitHub
 from .jsonutil import (
     JsonError,
     JsonObject,
+    JsonValue,
+    get_dict,
     get_nested,
     get_str,
     get_str_map,
@@ -102,10 +105,14 @@ class JobContext(contextlib.AsyncExitStack):
         # load_external_files() can throw so make sure it's outside of the above block
         self.config = json_merge_patch(self.config, load_external_files(content, path.parent))
 
-    def __init__(self, config_file: Path | str | None, *, debug: bool = False) -> None:
+    def __init__(self, config_file: Path | str | None = None, *, debug: bool = False) -> None:
         super().__init__()
-
         self.debug = debug
+
+        # Pre-serialized config for remote execution
+        if config_file is None and (config_json := os.environ.get('JOB_RUNNER_CONFIG_JSON')):
+            self.config = json.loads(config_json)
+            return
 
         # The config is made out of the built-in config...
         self.load_config(Path(BOTS_DIR) / 'job-runner.toml', 'built-in')
@@ -196,3 +203,33 @@ class JobContext(contextlib.AsyncExitStack):
     async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
         forge = spec.forge or self._default_forge
         return await self._forges[forge].resolve_subject(spec)
+
+    def serialize(self) -> JsonObject:
+        """Serialize config for remote execution.
+
+        Converts external secrets to inline content format so the config
+        is self-contained and can be sent over the wire.
+        """
+
+        def read_path(path: Path) -> JsonValue:
+            if path.is_file():
+                return path.read_text()
+            elif path.is_dir():
+                return {child.name: read_path(child) for child in path.iterdir()}
+            else:
+                raise ValueError(f"Path is neither file nor directory: {path}")
+
+        with get_nested(self.config, 'secrets') as secrets_section:
+            external = get_str_map(secrets_section, 'external')
+            inline = get_dict(secrets_section, 'inline')
+
+        return {
+            **self.config,
+            'secrets': {
+                'external': {},
+                'inline': {
+                    **inline,
+                    **{name: read_path(Path(path).expanduser()) for name, path in external.items()},
+                },
+            },
+        }
