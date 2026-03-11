@@ -31,6 +31,7 @@ from .github import GitHub
 from .jsonutil import (
     JsonError,
     JsonObject,
+    JsonValue,
     get_nested,
     get_str,
     get_str_map,
@@ -59,7 +60,32 @@ LOG_DRIVERS: Mapping[str, Callable[[JsonObject], AsyncContextManager[LogDriver]]
 }
 
 
-def write_path_contents(contents: JsonObject, target: Path) -> None:
+def serialize_path(value: JsonValue) -> JsonObject:
+    """Serialize a path value to inline content format.
+
+    Handles:
+      - String: reads file/directory at that path
+      - {"content": "..."}: returns unchanged
+      - {"entries": {...}}: recurses into entries
+    """
+    if isinstance(value, str):
+        path = Path(value).expanduser()
+        if path.is_file():
+            return {'content': path.read_text()}
+        elif path.is_dir():
+            return {'entries': {child.name: serialize_path(str(child)) for child in path.iterdir()}}
+        else:
+            raise ValueError(f"Path is neither file nor directory: {path}")
+    elif isinstance(value, Mapping):
+        if 'content' in value:
+            return value
+        elif 'entries' in value:
+            entries = typechecked(value['entries'], dict)
+            return {'entries': {name: serialize_path(v) for name, v in entries.items()}}
+    raise ValueError("Path value must be string, or have 'content' or 'entries'")
+
+
+def unpack_serialized_path(contents: JsonObject, target: Path) -> None:
     """Write path contents to filesystem.
 
     Contents format:
@@ -73,7 +99,7 @@ def write_path_contents(contents: JsonObject, target: Path) -> None:
         for name, value in typechecked(contents['entries'], dict).items():
             if name in ('', '.', '..') or '/' in name or '\0' in name:
                 raise ValueError(f"Invalid filename: {name!r}")
-            write_path_contents(typechecked(value, dict), target / name)
+            unpack_serialized_path(typechecked(value, dict), target / name)
     else:
         raise ValueError("Path contents must have 'content' or 'entries'")
 
@@ -103,10 +129,16 @@ class JobContext(contextlib.AsyncExitStack):
         # load_external_files() can throw so make sure it's outside of the above block
         self.config = json_merge_patch(self.config, load_external_files(content, path.parent))
 
-    def __init__(self, config_file: Path | str | None, *, debug: bool = False) -> None:
+    def __init__(
+        self, config_file: Path | str | None = None, *, config: JsonObject | None = None, debug: bool = False
+    ) -> None:
         super().__init__()
-
         self.debug = debug
+
+        # Pre-serialized config for remote execution
+        if config is not None:
+            self.config = config
+            return
 
         # The config is made out of the built-in config...
         self.load_config(Path(BOTS_DIR) / 'job-runner.toml', 'built-in')
@@ -131,11 +163,11 @@ class JobContext(contextlib.AsyncExitStack):
                     value = paths_config[name]
                     if isinstance(value, str):
                         paths[name] = os.path.expanduser(value)
-                    elif isinstance(value, dict):
+                    elif isinstance(value, Mapping):
                         if tmpdir is None:
                             tmpdir = Path(self.enter_context(tempfile.TemporaryDirectory()))
                         target = tmpdir / name
-                        write_path_contents(value, target)
+                        unpack_serialized_path(serialize_path(value), target)
                         paths[name] = str(target)
                     else:
                         raise JsonError(value, f"path '{name}' must be string or object")
@@ -192,3 +224,13 @@ class JobContext(contextlib.AsyncExitStack):
     async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
         forge = spec.forge or self._default_forge
         return await self._forges[forge].resolve_subject(spec)
+
+    def serialize(self) -> JsonObject:
+        """Serialize config for remote execution.
+
+        Converts string paths to inline content format so the config
+        is self-contained and can be sent over the wire.
+        """
+        with get_nested(self.config, 'paths') as paths_config:
+            paths = {name: serialize_path(paths_config[name]) for name in paths_config}
+        return {**self.config, 'paths': paths}
