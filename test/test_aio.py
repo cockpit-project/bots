@@ -288,3 +288,57 @@ async def test_config(tmp_path: Path) -> None:
 
         assert isinstance(context.logs, S3LogDriver)
         assert context.logs.key == S3Key('ACC', 'SEC')
+
+
+async def test_secrets_expansion(tmp_path: Path) -> None:
+    config_file = tmp_path / 'config.toml'
+    config_file.write_text('''
+        [secrets.external]
+        s3-keys = '~/.config/s3-keys'
+        github-token = '/etc/github-token'
+
+        [container]
+        command = ['podman']
+        run-args = []
+        default-image = 'ghcr.io/test:latest'
+
+        [container.secrets]
+        s3-keys = [
+            '--volume=%{s3-keys}:/run/secrets/s3-keys:ro',
+        ]
+        github-token = [
+            '--env=GITHUB_TOKEN_FILE=%{github-token}',
+        ]
+
+        [logs]
+        driver = 'local'
+        local.directory = '/tmp/logs'
+    ''')
+
+    home = Path.home()
+    async with JobContext(config_file) as context:
+        assert context.secrets_args == {
+            's3-keys': (f'--volume={home}/.config/s3-keys:/run/secrets/s3-keys:ro',),
+            'github-token': ('--env=GITHUB_TOKEN_FILE=/etc/github-token',),
+        }
+
+
+async def test_secrets_undefined_error(tmp_path: Path) -> None:
+    config_file = tmp_path / 'config.toml'
+    config_file.write_text('''
+        [container]
+        command = ['podman']
+        run-args = []
+        default-image = 'ghcr.io/test:latest'
+
+        [container.secrets]
+        bad = ['--volume=%{undefined}:/mnt']
+
+        [logs]
+        driver = 'local'
+        local.directory = '/tmp/logs'
+    ''')
+
+    with pytest.raises(SystemExit, match=r"undefined secret '%\{undefined\}'"):
+        async with JobContext(config_file):
+            pass
