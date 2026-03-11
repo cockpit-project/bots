@@ -105,13 +105,6 @@ class Handler(MockHandler[dict[str, JsonDict]]):
     def do_GET(self) -> None:
         if self.path in self.server.data:
             self.replyJson(self.server.data[self.path])
-        elif self.path.startswith('/repos/cockpit-project/bots/issues?'):
-            self.replyJson([
-                self.server.data['/repos/cockpit-project/bots/issues/1'],
-                self.server.data['/repos/cockpit-project/bots/issues/2'],
-                self.server.data['/repos/cockpit-project/bots/issues/99'],
-                self.server.data['/repos/cockpit-project/bots/pull/3'],
-            ])
         else:
             self.send_error(404, 'Mock Not Found: ' + self.path)
 
@@ -150,7 +143,7 @@ class TestIssueScan(unittest.TestCase):
     def run_issue_scan(
         self, args: Sequence[str], mock_strftime: object, mock_stdout: io.StringIO, mock_stderr: io.StringIO
     ) -> tuple[str | int | None, str, str]:
-        with unittest.mock.patch("sys.argv", ["issue-scan", "--repo", "cockpit-project/bots", *args]):
+        with unittest.mock.patch("sys.argv", ["issue-scan", *args]):
             code: str | int | None
             try:
                 self.issue_scan_module.main()
@@ -167,43 +160,14 @@ class TestIssueScan(unittest.TestCase):
         assert stderr == ""
         assert output == expected_output
 
-    def run_success_json(self, args: Sequence[str], expected_jobs: Sequence[JsonObject]) -> None:
+    def run_success_json(self, args: Sequence[str], expected_job: JsonObject) -> None:
         code, output, stderr = self.run_issue_scan(args)
 
         assert code == 0
         assert stderr == ""
-        assert list(map(json.loads, output.splitlines())) == expected_jobs
+        assert json.loads(output) == expected_job
 
-    def test_scan_ghapi_default(self) -> None:
-        self.run_success_json([], [EXPECTED_JOB_ISSUE_2, EXPECTED_JOB_PULL_3])
-
-    def test_scan_ghapi_human(self) -> None:
-        self.run_success(
-            ["--human-readable"], "issue-2 image-refresh foonux main\nissue-3 image-refresh barnux main\n"
-        )
-
-    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
-    def test_scan_ghapi_amqp(self, mock_queue: unittest.mock.MagicMock) -> None:
-        self.run_success(["--amqp", "amqp.example.com:1234"], "")
-
-        mock_queue.assert_called_with("amqp.example.com:1234", queues=["rhel", "public"])
-        channel = mock_queue.return_value.__enter__.return_value.channel
-
-        self.assertEqual(channel.basic_publish.call_count, 2)
-
-        # first call for issues/2
-        self.assertEqual(channel.basic_publish.call_args_list[0][0][0], "")
-        self.assertEqual(channel.basic_publish.call_args_list[0][0][1], "public")
-        request = json.loads(channel.basic_publish.call_args_list[0][0][2])
-        assert request == EXPECTED_JOB_ISSUE_2
-
-        # second call for pull/3
-        self.assertEqual(channel.basic_publish.call_args_list[1][0][0], "")
-        self.assertEqual(channel.basic_publish.call_args_list[1][0][1], "public")
-        request = json.loads(channel.basic_publish.call_args_list[1][0][2])
-        assert request == EXPECTED_JOB_PULL_3
-
-    def test_scan_clidata_default(self) -> None:
+    def test_scan_issue(self) -> None:
         self.run_success_json(
             [
                 "--issues-data",
@@ -212,18 +176,41 @@ class TestIssueScan(unittest.TestCase):
                     "repository": {"full_name": "cockpit-project/bots"},
                 }),
             ],
-            [EXPECTED_JOB_ISSUE_2],
+            EXPECTED_JOB_ISSUE_2,
         )
 
-    def test_scan_clidata_no_bots_label(self) -> None:
-        issue = GITHUB_DATA['/repos/cockpit-project/bots/issues/2'].copy()
-        issue["labels"] = []
+    def test_scan_pull_request(self) -> None:
+        self.run_success_json(
+            [
+                "--issues-data",
+                json.dumps({
+                    "pull_request": GITHUB_DATA['/repos/cockpit-project/bots/pull/3'],
+                    "repository": {"full_name": "cockpit-project/bots"},
+                }),
+            ],
+            EXPECTED_JOB_PULL_3,
+        )
 
+    def test_scan_no_bot_label(self) -> None:
+        """Issue 1 has 'bug' label but no 'bot' label - should be ignored."""
         self.run_success(
             [
                 "--issues-data",
                 json.dumps({
-                    "issue": issue,
+                    "issue": GITHUB_DATA['/repos/cockpit-project/bots/issues/1'],
+                    "repository": {"full_name": "cockpit-project/bots"},
+                }),
+            ],
+            "",
+        )
+
+    def test_scan_user_not_in_allowlist(self) -> None:
+        """Issue 99 is from a user not in the allowlist - should be ignored."""
+        self.run_success(
+            [
+                "--issues-data",
+                json.dumps({
+                    "issue": GITHUB_DATA['/repos/cockpit-project/bots/issues/99'],
                     "repository": {"full_name": "cockpit-project/bots"},
                 }),
             ],
