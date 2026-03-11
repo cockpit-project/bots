@@ -55,8 +55,8 @@ async def main() -> None:
     run_parser.add_argument('--secret', dest='secrets', default=[], action='append', help="Provide the named secret")
     run_parser.add_argument('command', nargs='*', help="Command to run [default: .cockpit-ci/run]")
 
-    run_parser = subprograms.add_parser("json", help="Run a single given as a JSON blob")
-    run_parser.add_argument('json', action=JsonObjectAction, help="The job, in JSON format")
+    json_parser = subprograms.add_parser("json", help="Run a single given as a JSON blob")
+    json_parser.add_argument('json', action=JsonObjectAction, help="The job, in JSON format")
 
     args = parser.parse_args()
 
