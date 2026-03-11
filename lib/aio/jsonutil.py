@@ -17,7 +17,7 @@ import contextlib
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import ContextManager, TypeVar, Union
+from typing import TypeVar, Union
 
 # immutable
 JsonLiteral = str | float | bool | None
@@ -62,15 +62,23 @@ _empty = _Empty.TOKEN
 def _get(obj: JsonObject, cast: Callable[[JsonValue], T], key: str, default: DT | _Empty) -> T | DT:
     try:
         value = obj[key]
-        if default is not _empty and value is default:
-            return default
-        return cast(obj[key])
     except KeyError:
-        if default is not _empty:
+        if not isinstance(default, _Empty):
             return default
         raise JsonError(obj, f"attribute '{key}' required") from None
+
+    # This allows get_str(obj, "attr", None) to also return None if "attr" is
+    # present and equal to `null`.  This would otherwise fail the `cast` (since
+    # it's not a string).  The _Empty check is required to convince mypy that
+    # we're actually returning the user's default value and not the sentinel
+    # value.
+    if not isinstance(default, _Empty) and value is default:
+        return default
+
+    try:
+        return cast(value)
     except JsonError as exc:
-        target = f"attribute '{key}'" + (' elements:' if exc.value is not obj[key] else ':')
+        target = f"attribute '{key}'" + (' elements:' if exc.value is not value else ':')
         raise JsonError(obj, f"{target} {exc!s}") from exc
 
 
@@ -115,20 +123,14 @@ def get_strv(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> DT | S
     return _get(obj, as_strv, key, default)
 
 
-def get_nested(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> ContextManager[DT | JsonObject]:
-    # workaround for https://github.com/microsoft/pyright/issues/7386
-    @contextlib.contextmanager
-    def wrapper() -> Iterator[DT | JsonObject]:
-        try:
-            yield get_dict(obj, key, default)
-        except KeyError:
-            if default is not _empty:
-                yield default
-            raise JsonError(obj, f"attribute '{key}' required") from None
-        except JsonError as exc:
-            target = f"attribute '{key}'" + (' elements:' if exc.value is not obj[key] else ':')
-            raise JsonError(obj, f"{target} {exc!s}") from exc
-    return wrapper()
+@contextlib.contextmanager
+def get_nested(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> Iterator[DT | JsonObject]:
+    nested_obj = get_dict(obj, key, default)
+    try:
+        yield nested_obj
+    except JsonError as exc:
+        target = f"attribute '{key}'" + (' elements:' if exc.value is not nested_obj else ':')
+        raise JsonError(obj, f"{target} {exc!s}") from exc
 
 
 def json_merge_patch(current: JsonObject, patch: JsonObject) -> JsonObject:
