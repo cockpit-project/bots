@@ -16,9 +16,10 @@
 import contextlib
 import logging
 import os
+import string
 import sys
 import tomllib
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import AsyncContextManager, Self
 
@@ -31,6 +32,7 @@ from .jsonutil import (
     JsonObject,
     get_nested,
     get_str,
+    get_str_map,
     get_strv,
     json_merge_patch,
     load_external_files,
@@ -40,6 +42,10 @@ from .local import LocalLogDriver
 from .s3 import S3LogDriver
 
 logger = logging.getLogger(__name__)
+
+
+class PathTemplate(string.Template):
+    delimiter = '%'
 
 # __init__ is weird on types, so typecheck this as a callable to enforce correctness
 FORGE_DRIVERS: Mapping[str, Callable[[str, JsonObject], AsyncContextManager[Forge]]] = {
@@ -95,14 +101,22 @@ class JobContext(contextlib.AsyncExitStack):
 
     async def __aenter__(self) -> Self:
         try:
+            # Build paths mapping for %{name} substitution
+            paths: dict[str, str] = {}
+            with get_nested(self.config, 'paths') as paths_config:
+                for name in paths_config:
+                    paths[name] = os.path.expanduser(get_str(paths_config, name))
+
+            def expand_args(args: Sequence[str]) -> tuple[str, ...]:
+                return tuple(PathTemplate(arg).substitute(paths) for arg in args)
+
             with get_nested(self.config, 'container') as container:
                 self.container_cmd = get_strv(container, 'command')
-                self.container_run_args = get_strv(container, 'run-args')
+                self.container_run_args = expand_args(get_strv(container, 'run-args'))
                 with get_nested(container, 'secrets') as secrets:
                     self.secrets_args = {
-                        name: [
-                            typechecked(arg, str) for arg in typechecked(args, list)
-                        ] for name, args in secrets.items()
+                        name: expand_args(get_strv(secrets, name))
+                        for name in secrets
                     }
                 self.default_image = get_str(container, 'default-image')
 
