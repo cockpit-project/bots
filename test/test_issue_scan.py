@@ -136,6 +136,13 @@ class TestIssueScan(unittest.TestCase):
         self.server.kill()
         shutil.rmtree(self.temp)
 
+    def write_event_file(self, event_data: JsonObject) -> str:
+        """Write event data to a temp file and return the path."""
+        path = os.path.join(self.temp, "event.json")
+        with open(path, "w") as f:
+            json.dump(event_data, f)
+        return path
+
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
     @unittest.mock.patch("sys.stdout", new_callable=io.StringIO)
     # fake the time so that we get predictable test names
@@ -182,6 +189,16 @@ class TestIssueScan(unittest.TestCase):
                     "repository": {"full_name": "cockpit-project/bots"},
                 }),
             ],
+            EXPECTED_JOB_ISSUE_2,
+        )
+
+    def test_scan_event_data_file(self) -> None:
+        event_file = self.write_event_file({
+            "issue": GITHUB_DATA['/repos/cockpit-project/bots/issues/2'],
+            "repository": {"full_name": "cockpit-project/bots"},
+        })
+        self.run_success_json(
+            ["--event-data-file", event_file],
             EXPECTED_JOB_ISSUE_2,
         )
 
