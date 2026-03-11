@@ -462,3 +462,51 @@ async def test_secrets_conflict_error(tmp_path: Path) -> None:
     with pytest.raises(SystemExit, match=r"secret\(s\) defined in both 'external' and 'inline': token"):
         async with JobContext(config_file):
             pass
+
+
+async def test_serialize_roundtrip(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Create external secret files
+    secret_file = tmp_path / 'github-token'
+    secret_file.write_text('ghp_secret123')
+
+    secret_dir = tmp_path / 'certs'
+    secret_dir.mkdir()
+    (secret_dir / 'ca.pem').write_text('-----BEGIN CERT-----')
+
+    config_file = tmp_path / 'config.toml'
+    config_file.write_text(f'''
+        [secrets.external]
+        github-token = '{secret_file}'
+        certs = '{secret_dir}'
+
+        [container]
+        command = ['podman']
+        run-args = []
+        default-image = 'ghcr.io/test:latest'
+
+        [container.secrets]
+        github-token = ['--env=TOKEN=%{{github-token}}']
+
+        [logs]
+        driver = 'local'
+        local.directory = '/tmp/logs'
+    ''')
+
+    # Load and serialize
+    async with JobContext(config_file) as ctx:
+        serialized = ctx.serialize()
+
+    # Verify serialized format
+    assert serialized['secrets'] == {
+        'external': {},
+        'inline': {
+            'github-token': 'ghp_secret123',
+            'certs': {'ca.pem': '-----BEGIN CERT-----'},
+        },
+    }
+
+    # Load from serialized config (simulating remote execution)
+    monkeypatch.setenv('JOB_RUNNER_CONFIG_JSON', json.dumps(serialized))
+    async with JobContext() as ctx2:
+        # Secrets should work the same way
+        assert ctx2.secrets_args['github-token'][0].endswith('/github-token')

@@ -67,7 +67,6 @@ async def main() -> None:
 
     match args.cmd:
         case 'run':
-            # if this throws, it's an error in the parser setup, above
             job = Job(vars(args))
 
         case 'json':
