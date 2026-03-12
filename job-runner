@@ -28,6 +28,7 @@ from lib.aio.job import Job, run_job
 from lib.aio.jobcontext import JobContext
 from lib.aio.jsonutil import JsonError, JsonObject
 from lib.aio.util import JsonObjectAction, KeyValueAction
+from lib.testingfarm import submit_to_testing_farm, wait_for_artifacts
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,8 @@ async def main() -> None:
     parser.add_argument('--debug', action='store_true', help="Enable debugging output")
     parser.add_argument('--config-file', '-F', metavar='FILENAME',
                         help="Config file [default JOB_RUNNER_CONFIG or ~/.config/cockpit-dev/job-runner.toml]")
+    parser.add_argument('--to', choices=['local', 'testing-farm'], default='local',
+                        help="Where to run the job (default: local)")
     subprograms = parser.add_subparsers(dest='cmd', required=True, title="Subcommands")
 
     run_parser = subprograms.add_parser("run", help="Run a single job provided on the command line")
@@ -67,15 +70,13 @@ async def main() -> None:
     else:
         logging.basicConfig(level=logging.INFO)
 
+    job_json: JsonObject
     match args.cmd:
         case 'run':
-            job = Job(vars(args))
+            job_json = vars(args)
 
         case 'json':
-            try:
-                job = Job(args.json)
-            except JsonError as exc:
-                sys.exit(f'Poorly formed job: {exc}')
+            job_json = args.json
 
         case other:
             assert_never(other)
@@ -86,8 +87,25 @@ async def main() -> None:
     else:
         config = None
 
-    async with JobContext(args.config_file, config=config, debug=args.debug) as ctx:
-        await run_job(job, ctx)
+    ctx = JobContext(args.config_file, config=config, debug=args.debug)
+
+    match args.to:
+        case 'testing-farm':
+            request_id = submit_to_testing_farm(ctx, job_json)
+            artifacts_url = wait_for_artifacts(request_id)
+            if artifacts_url:
+                print(artifacts_url)
+            else:
+                sys.exit(f'Job failed to start: {request_id}')
+
+        case 'local':
+            try:
+                job = Job(job_json)
+            except JsonError as exc:
+                sys.exit(f'Poorly formed job: {exc}')
+
+            async with ctx:
+                await run_job(job, ctx)
 
 
 if __name__ == '__main__':
