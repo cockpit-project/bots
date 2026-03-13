@@ -14,11 +14,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import contextlib
+import json
 import logging
 import os
+import re
 import sys
+import tempfile
 import tomllib
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import AsyncContextManager, Self
 
@@ -29,17 +32,20 @@ from .github import GitHub
 from .jsonutil import (
     JsonError,
     JsonObject,
+    JsonValue,
+    get_dict,
     get_nested,
     get_str,
+    get_str_map,
     get_strv,
     json_merge_patch,
     load_external_files,
-    typechecked,
 )
 from .local import LocalLogDriver
 from .s3 import S3LogDriver
 
 logger = logging.getLogger(__name__)
+
 
 # __init__ is weird on types, so typecheck this as a callable to enforce correctness
 FORGE_DRIVERS: Mapping[str, Callable[[str, JsonObject], AsyncContextManager[Forge]]] = {
@@ -52,11 +58,33 @@ LOG_DRIVERS: Mapping[str, Callable[[JsonObject], AsyncContextManager[LogDriver]]
 }
 
 
+def unpack_inline_secret(parent: Path, obj: JsonObject, name: str) -> Path:
+    """Write inline path contents to filesystem. Returns the path written.
+
+    String values become file contents, objects become directories.
+    """
+    if name in ('', '.', '..') or '/' in name or '\0' in name:
+        raise JsonError(obj, f"invalid filename: {name!r}")
+    target = parent / name
+    value = obj[name]
+    if isinstance(value, str):
+        target.write_text(value)
+    elif isinstance(value, Mapping):
+        target.mkdir(parents=True, exist_ok=True)
+        with get_nested(obj, name) as nested:
+            for child_name in nested:
+                unpack_inline_secret(target, nested, child_name)
+    else:
+        raise JsonError(obj, f"attribute '{name}': must be string or object")
+    return target
+
+
 class JobContext(contextlib.AsyncExitStack):
     config: JsonObject = {}  # noqa:RUF012  # JsonObject is immutable
     logs: LogDriver
     _forges: dict[str, Forge]
     _default_forge: str
+    _secret_paths: dict[str, str]
 
     def load_config(self, path: Path, name: str, *, missing_ok: bool = False) -> None:
         logger.debug('Loading %s configuration from %s', name, path)
@@ -77,10 +105,14 @@ class JobContext(contextlib.AsyncExitStack):
         # load_external_files() can throw so make sure it's outside of the above block
         self.config = json_merge_patch(self.config, load_external_files(content, path.parent))
 
-    def __init__(self, config_file: Path | str | None, *, debug: bool = False) -> None:
+    def __init__(self, config_file: Path | str | None = None, *, debug: bool = False) -> None:
         super().__init__()
-
         self.debug = debug
+
+        # Pre-serialized config for remote execution
+        if config_file is None and (config_json := os.environ.get('JOB_RUNNER_CONFIG_JSON')):
+            self.config = json.loads(config_json)
+            return
 
         # The config is made out of the built-in config...
         self.load_config(Path(BOTS_DIR) / 'job-runner.toml', 'built-in')
@@ -93,17 +125,43 @@ class JobContext(contextlib.AsyncExitStack):
         else:
             self.load_config(Path(xdg_config_home('cockpit-dev/job-runner.toml')), 'user', missing_ok=True)
 
+    def expand_secret(self, arg: str) -> str:
+        def replace(m: re.Match[str]) -> str:
+            try:
+                return self._secret_paths[m.group(1)]
+            except KeyError:
+                raise JsonError(None, f"undefined secret '{m.group(0)}'") from None
+
+        return re.sub(r'%\{([^}]+)\}', replace, arg)
+
+    def expand_secrets(self, args: Sequence[str]) -> tuple[str, ...]:
+        return tuple(self.expand_secret(arg) for arg in args)
+
     async def __aenter__(self) -> Self:
         try:
+            # Build secrets mapping for %{name} substitution
+            with get_nested(self.config, 'secrets') as secrets_section:
+                external = get_str_map(secrets_section, 'external')
+                secret_paths = {k: os.path.expanduser(v) for k, v in external.items()}
+
+                with get_nested(secrets_section, 'inline') as inline:
+                    if conflicts := secret_paths.keys() & inline.keys():
+                        msg = f"secret(s) defined in both 'external' and 'inline': {', '.join(sorted(conflicts))}"
+                        raise JsonError(inline, msg)
+                    if len(inline) > 0:
+                        tmpdir = Path(self.enter_context(tempfile.TemporaryDirectory()))
+                        secret_paths.update({
+                            name: str(unpack_inline_secret(tmpdir, inline, name)) for name in inline
+                        })
+
+            self._secret_paths = secret_paths
+
             with get_nested(self.config, 'container') as container:
                 self.container_cmd = get_strv(container, 'command')
                 self.container_run_args = get_strv(container, 'run-args')
                 with get_nested(container, 'secrets') as secrets:
-                    self.secrets_args = {
-                        name: [
-                            typechecked(arg, str) for arg in typechecked(args, list)
-                        ] for name, args in secrets.items()
-                    }
+                    # expand here to catch configuration errors early
+                    self.secrets_args = {name: self.expand_secrets(get_strv(secrets, name)) for name in secrets}
                 self.default_image = get_str(container, 'default-image')
 
             with get_nested(self.config, 'logs') as logs:
@@ -145,3 +203,33 @@ class JobContext(contextlib.AsyncExitStack):
     async def resolve_subject(self, spec: SubjectSpecification) -> Subject:
         forge = spec.forge or self._default_forge
         return await self._forges[forge].resolve_subject(spec)
+
+    def serialize(self) -> JsonObject:
+        """Serialize config for remote execution.
+
+        Converts external secrets to inline content format so the config
+        is self-contained and can be sent over the wire.
+        """
+
+        def read_path(path: Path) -> JsonValue:
+            if path.is_file():
+                return path.read_text()
+            elif path.is_dir():
+                return {child.name: read_path(child) for child in path.iterdir()}
+            else:
+                raise ValueError(f"Path is neither file nor directory: {path}")
+
+        with get_nested(self.config, 'secrets') as secrets_section:
+            external = get_str_map(secrets_section, 'external')
+            inline = get_dict(secrets_section, 'inline')
+
+        return {
+            **self.config,
+            'secrets': {
+                'external': {},
+                'inline': {
+                    **inline,
+                    **{name: read_path(Path(path).expanduser()) for name, path in external.items()},
+                },
+            },
+        }

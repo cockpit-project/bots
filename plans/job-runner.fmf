@@ -1,0 +1,19 @@
+summary: Run job-runner task remotely
+prepare:
+    how: install
+    package:
+      - podman
+      - python3-httpx+http2
+      - python3-yarl
+
+discover:
+    how: fmf
+    test: job-runner
+
+execute:
+    how: tmt
+
+/job-runner:
+    summary: Run job-runner task
+    test: ../job-runner json "$JOB_JSON"
+    duration: 2h

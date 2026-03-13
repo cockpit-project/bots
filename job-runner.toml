@@ -19,6 +19,14 @@
 # but in that case, as a safety measure, you must also explicitly configure a
 # `token =` to explicitly indicate which account you want to use.
 
+[secrets.external]
+# github-token = '~/.config/cockpit-dev/github-token'
+# s3-keys = '~/.config/cockpit-dev/s3-keys'
+
+[secrets.inline]
+# github-token = 'ghp_...'
+# s3-keys = {"linodeobjects.com"="ABCD... Zx2xPa..."}
+
 [container]
 command = ['podman']
 run-args = [
@@ -27,8 +35,11 @@ run-args = [
 default-image = 'ghcr.io/cockpit-project/tasks:latest'
 
 [container.secrets]
-# see podman-secret(1)
-# github-token = ['--secret=github-token']
+# Use %{name} to reference secrets defined in [secrets], e.g.:
+# github-token = [
+#     '--volume=%{github-token}:/run/secrets/github-token:ro',
+#     '--env=COCKPIT_GITHUB_TOKEN_FILE=/run/secrets/github-token',
+# ]
 
 [logs]
 driver='local'   # 's3' or 'local'
