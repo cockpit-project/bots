@@ -23,6 +23,10 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v5
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y python3-yarl python3-httpx
+
       - name: Set up secrets/config
         run: |
           mkdir -p ~/.config/cockpit-dev
