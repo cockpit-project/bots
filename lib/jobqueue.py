@@ -19,6 +19,9 @@ from typing import Required, TypedDict
 from lib.aio.jsonutil import JsonObject
 
 
+# We should have extra_items=JsonValue here for JsonObject compatibility
+# https://peps.python.org/pep-0728 (Python 3.15)
+# https://github.com/python/mypy/issues/18176 (future mypy version)
 class SubjectSpecification(TypedDict, total=False):
     forge: str | None
     repo: Required[str]
@@ -30,6 +33,9 @@ class SubjectSpecification(TypedDict, total=False):
 class JobSpecification(SubjectSpecification, total=False):
     context: Required[str]
     slug: str
+    container: str
+    title: str
+    timeout: int
     report: JsonObject | None
     command_subject: SubjectSpecification | None
     command: Sequence[str]
