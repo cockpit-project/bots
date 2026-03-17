@@ -39,7 +39,7 @@ except ImportError:
 from lib import ALLOWLIST, github, testmap
 from lib.aio.jobcontext import JobContext
 from lib.aio.jsonutil import JsonError, JsonObject, get_dict, get_dictv, get_int, get_nested, get_str
-from lib.aio.testingfarm import submit_to_testing_farm, wait_for_artifacts, get_request_url
+from lib.aio.testingfarm import get_request_url, submit_to_testing_farm, wait_for_artifacts
 from lib.jobqueue import QueueEntry
 
 # RHEL tasks have to be done inside Red Hat network
