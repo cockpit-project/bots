@@ -30,6 +30,8 @@ jobs:
       - name: Set up secrets/config
         run: |
           mkdir -p ~/.config/cockpit-dev
+          echo ${{ github.token }} >> ~/.config/cockpit-dev/github-token
+
           cat > ~/.config/cockpit-dev/job-runner.toml << EOF
           [secrets.inline]
           github-token = '${{ secrets.COCKPITUOUS_TOKEN }}'
