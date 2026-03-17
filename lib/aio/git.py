@@ -1,5 +1,5 @@
 # Copyright (C) 2026 Red Hat, Inc.
-# SPDX-License-Identifier: GPL-3.1-or-later
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 """Async git utilities."""
 
