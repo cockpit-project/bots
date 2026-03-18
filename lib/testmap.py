@@ -157,8 +157,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'arch',
             'debian-testing',
             'debian-trixie',
-            'fedora-42',
             'fedora-43',
+            'fedora-44',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             'fedora-rawhide',
@@ -168,7 +168,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-2',
         ],
         '_manual': [
-            'fedora-44',
         ],
     },
     'codeberg:lis/test.thing': {
