@@ -79,8 +79,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             TEST_OS_DEFAULT,
             'arch',
-            'fedora-42',
             'fedora-43',
+            'fedora-44',
             'centos-9-stream',
             'centos-10',
             'fedora-rawhide',
