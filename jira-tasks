@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
-# Generate a Jira token on https://issues.redhat.com/secure/ViewProfile.jspa → Personal Access Tokens
-# and put it into ~/.config/cockpit-dev/jira-token
+# Generate a Jira token on https://id.atlassian.com/manage-profile/security/api-tokens
+# and put it into ~/.config/cockpit-dev/jira-token with format:
+# Line 1: email@redhat.com
+# Line 2: your-api-token
 
 import argparse
+import base64
 import json
 import sys
 import urllib.error
@@ -14,16 +17,20 @@ from lib.directories import xdg_config_home
 
 
 class JiraClient:
-    def __init__(self, token: str) -> None:
+    def __init__(self, email: str, token: str) -> None:
+        self.email = email
         self.token = token
-        self.base_url = "https://issues.redhat.com"
+        self.base_url = "https://redhat.atlassian.net"
+
+        auth_string = f"{email}:{token}"
+        self.auth_header = base64.b64encode(auth_string.encode()).decode()
 
     def get_fields(self) -> list[JsonObject]:
         url = f"{self.base_url}/rest/api/2/field"
 
         request = urllib.request.Request(
             url,
-            headers={"Authorization": f"Bearer {self.token}"}
+            headers={"Authorization": f"Basic {self.auth_header}"}
         )
 
         try:
@@ -49,13 +56,13 @@ class JiraClient:
             "description": description,
             "priority": {"name": "Normal"},
             # Severity
-            "customfield_12316142": {"value": "Moderate"},
+            "customfield_10840": {"value": "Moderate"},
             # Story Points
-            "customfield_12310243": 2,
+            "customfield_10028": 2,
             # Preliminary Testing
-            "customfield_12321540": {"value": "Pass"},
+            "customfield_10879": {"value": "Pass"},
             # Test Coverage
-            "customfield_12320940": [{"value": "Automated"}]
+            "customfield_10638": [{"value": "Automated"}]
         }
 
         if components:
@@ -71,7 +78,7 @@ class JiraClient:
             data=json.dumps(data).encode('utf-8'),
             headers={
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.token}"
+                "Authorization": f"Basic {self.auth_header}"
             },
             method="POST"
         )
@@ -87,19 +94,23 @@ class JiraClient:
             sys.exit(1)
 
 
-def get_jira_token() -> str:
+def get_jira_credentials() -> tuple[str, str]:
     token_path = xdg_config_home("cockpit-dev/jira-token")
     try:
         with open(token_path) as f:
-            return f.read().strip()
+            lines = f.read().strip().split('\n')
+            if len(lines) < 2:
+                print(f"Error: {token_path} should contain email on line 1 and token on line 2")
+                sys.exit(1)
+            return lines[0].strip(), lines[1].strip()
     except FileNotFoundError:
         print(f"Error: Jira token not found at {token_path}")
         sys.exit(1)
 
 
 def cmd_find_field(args: argparse.Namespace) -> None:
-    token = get_jira_token()
-    client = JiraClient(token)
+    email, token = get_jira_credentials()
+    client = JiraClient(email, token)
 
     fields = client.get_fields()
 
@@ -124,8 +135,8 @@ def cmd_find_field(args: argparse.Namespace) -> None:
 
 
 def cmd_rhel_rebase_issue(args: argparse.Namespace) -> None:
-    token = get_jira_token()
-    client = JiraClient(token)
+    email, token = get_jira_credentials()
+    client = JiraClient(email, token)
 
     summary = f"Rebase {args.package} in RHEL {args.release}"
     description = f"Meta-bug to keep {args.package} up to date with upstream."
@@ -142,7 +153,7 @@ def cmd_rhel_rebase_issue(args: argparse.Namespace) -> None:
 
     issue_key = result.get("key")
     print(f"Created issue: {issue_key}")
-    print(f"URL: https://issues.redhat.com/browse/{issue_key}")
+    print(f"URL: {client.base_url}/browse/{issue_key}")
 
 
 def main() -> None:
