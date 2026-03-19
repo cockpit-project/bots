@@ -190,7 +190,7 @@ chmod +x /var/lib/download-package-sets.sh
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 dnf --setopt=install_weak_deps=False install -y cockpit
 
-dnf $DNF_OPTS -y install mock dnf-plugins-core rpm-build
+dnf $DNF_OPTS -y install mock rpm-build
 useradd -c Builder -G mock builder
 
 # don't use a bootstrap chroot to save time and space; everything is offline, and we always just do exactly one build
