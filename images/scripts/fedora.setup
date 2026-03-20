@@ -94,6 +94,7 @@ acl \
 ansible-core \
 clevis-luks \
 cryptsetup \
+dhclient \
 dnf-automatic \
 firewalld \
 gdb \
