@@ -1,0 +1,66 @@
+# React to `/image-refresh <image>` comments on issues/PRs.
+name: issue-comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  image-refresh:
+    if: startsWith(github.event.comment.body, '/image-refresh ')
+    runs-on: ubuntu-latest
+    environment: image-build
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Set up secrets/config
+        run: |
+          mkdir -p ~/.config/cockpit-dev
+          cat > ~/.config/cockpit-dev/job-runner.toml << EOF
+          [secrets.inline]
+          github-token = '${{ secrets.COCKPITUOUS_TOKEN }}'
+          s3-keys = {"eu-central-1.linodeobjects.com"='${{ secrets.S3_KEY_EU }}', "us-east-1.linodeobjects.com"='${{ secrets.S3_KEY_US }}'}
+
+          [logs]
+          driver = 's3'
+
+          [logs.s3]
+          url = 'https://cockpit-logs.us-east-1.linodeobjects.com/'
+          key = '${{ secrets.S3_KEY_LOGS }}'
+
+          [forge.github]
+          post = true
+          token = '${{ secrets.COCKPITUOUS_TOKEN }}'
+
+          [container]
+          run-args = [
+              '--device=/dev/kvm',
+              '--env=GIT_COMMITTER_NAME=Cockpituous',
+              '--env=GIT_COMMITTER_EMAIL=cockpituous@cockpit-project.org',
+              '--env=GIT_AUTHOR_NAME=Cockpituous',
+              '--env=GIT_AUTHOR_EMAIL=cockpituous@cockpit-project.org',
+          ]
+
+          [container.secrets]
+          github-token = [
+              '--volume=%{github-token}:/run/secrets/github-token:ro,z,U',
+              '--env=COCKPIT_GITHUB_TOKEN_FILE=/run/secrets/github-token',
+          ]
+          image-upload = [
+              '--volume=%{s3-keys}:/run/secrets/s3-keys:ro,z,U',
+              '--env=COCKPIT_S3_KEY_DIR=/run/secrets/s3-keys',
+          ]
+          EOF
+
+      - name: Handle comment and submit to Testing Farm
+        env:
+          TESTING_FARM_API_TOKEN: ${{ secrets.TESTING_FARM_RH_TOKEN }}
+        run: |
+          ./issue-comment event "$GITHUB_EVENT_PATH"

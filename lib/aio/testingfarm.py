@@ -17,6 +17,7 @@ from lib.aio import git
 from lib.aio.jobcontext import JobContext
 from lib.aio.jsonutil import JsonObject, get_dict, get_str, typechecked
 from lib.directories import xdg_config_home
+from lib.jobqueue import JobSpecification
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ class TestingFarmClient(contextlib.AsyncExitStack):
     async def submit_job(
         self,
         ctx: JobContext,
-        job: JsonObject,
+        job: JobSpecification | JsonObject,  # TODO: PEP 728
         *,
         git_url_ref: tuple[str, str] | None = None,
         compose: str = 'Fedora-Rawhide',

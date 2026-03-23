@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Red Hat, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import argparse
+import asyncio
+import json
+import logging
+import sys
+import textwrap
+import time
+from collections.abc import Sequence
+from typing import Literal, assert_never, cast
+
+from lib import ALLOWLIST
+from lib.aio.base import SubjectSpecification
+from lib.aio.github import GitHub
+from lib.aio.job import Job, run_job
+from lib.aio.jobcontext import JobContext
+from lib.aio.jsonutil import JsonObject, get_int, get_nested, get_str
+from lib.aio.testingfarm import TestingFarmClient
+from lib.jobqueue import JobSpecification
+
+logger = logging.getLogger(__name__)
+
+
+async def process_comment(
+    *,
+    repo: str,
+    username: str,
+    issue_nr: int,
+    pull_nr: int | None,
+    comment_body: str,
+    run_to: Literal['local', 'testing-farm'] = 'testing-farm',
+) -> int:
+    logger.debug(
+        "process_comment: repo=%r username=%r issue_nr=%r pull_nr=%r comment_body=%r run_to=%r",
+        repo, username, issue_nr, pull_nr, comment_body, run_to,
+    )
+
+    if not comment_body.startswith("/image-refresh "):
+        logger.debug("comment does not start with /image-refresh, ignoring")
+        return 1
+
+    image = comment_body.removeprefix("/image-refresh ").strip()
+    if not image:
+        logger.debug("empty image name, ignoring")
+        return 1
+
+    if username not in ALLOWLIST:
+        logger.debug("user %r not in allowlist, ignoring", username)
+        return 1
+
+    logger.debug("processing image-refresh for image=%r", image)
+
+    async with JobContext() as ctx:
+        spec = SubjectSpecification({
+            'repo': repo,
+            'pull': pull_nr,
+        })
+        logger.debug("resolving subject for spec=%r", spec)
+        subject = await ctx.resolve_subject(spec)
+        logger.debug("resolved subject sha=%r", subject.sha)
+
+        current = time.strftime('%Y%m%d-%H%M%S')
+        job: JobSpecification = {
+            'repo': repo,
+            'sha': subject.sha,
+            'pull': pull_nr,
+            'slug': f'image-refresh-{image}-{subject.sha[:8]}-{current}',
+            'context': f'image-refresh/{image}',
+            'command': ['./image-refresh', '--verbose', f'--issue={issue_nr}', image],
+            'secrets': ['github-token', 'image-upload'],
+        }
+        logger.debug("created job specification: %r", job)
+
+        match run_to:
+            case 'testing-farm':
+                logger.debug("submitting job to testing-farm")
+                async with TestingFarmClient() as tf:
+                    request_id = await tf.submit_job(ctx, job)
+                    logger.debug("submitted job, request_id=%r", request_id)
+                    artifacts_url = await tf.wait_for_artifacts(request_id)
+                    if artifacts_url is None:
+                        artifacts_url = tf.get_request_url(request_id)
+                    logger.debug("artifacts_url=%r", artifacts_url)
+
+                forge = subject.forge
+                assert isinstance(forge, GitHub)
+                logger.debug("posting comment to issue %r", issue_nr)
+                await forge.post(
+                    f'repos/{repo}/issues/{issue_nr}/comments',
+                    {
+                        'body': textwrap.dedent(f"""\
+                            **Task scheduled:** issue-{issue_nr} {job['context']}
+
+                            Testing Farm link: {artifacts_url}
+
+                            <details>
+                            <summary>Job JSON</summary>
+
+                            ```json
+                            {json.dumps(job, indent=2)}
+                            ```
+                            </details>""")
+                    },
+                )
+
+            case 'local':
+                logger.debug("running job locally")
+                await run_job(Job(cast(JsonObject, job)), ctx)
+
+            case other:
+                assert_never(other)
+
+    logger.debug("process_comment completed successfully")
+    return 0
+
+
+async def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Handle /image-refresh commands in comments")
+    parser.add_argument('--debug', action='store_true', help="Enable debug logging")
+    parser.add_argument(
+        '--to',
+        choices=['local', 'testing-farm'],
+        default='testing-farm',
+        help="Where to run the job (default: testing-farm)",
+    )
+    subparsers = parser.add_subparsers(dest='command', required=True)
+
+    # Event file mode
+    event_parser = subparsers.add_parser('event', help='Process GitHub event file')
+    event_parser.add_argument('event_data_file', help='Path to event JSON file (e.g., $GITHUB_EVENT_PATH)')
+
+    # Test mode (for local testing)
+    test_parser = subparsers.add_parser('test', help='Run with explicit arguments')
+    test_parser.add_argument('--repo', required=True, help="Repository")
+    test_parser.add_argument('--username', required=True, help="Username (must be in ALLOWLIST)")
+    test_parser.add_argument('--comment-id', type=int, help="Comment ID to update")
+    issue_group = test_parser.add_mutually_exclusive_group(required=True)
+    issue_group.add_argument('--issue', type=int, dest='issue_nr', help="Issue number")
+    issue_group.add_argument('--pull', type=int, dest='pull_nr', help="Pull request number")
+    test_parser.add_argument('body', help='Comment body (e.g., "/image-refresh foonux")')
+
+    args = parser.parse_args(argv)
+    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
+    logger.debug("parsed args: %r", args)
+
+    match args.command:
+        case 'event':
+            logger.debug("reading event file %r", args.event_data_file)
+            with open(args.event_data_file) as f:
+                event: JsonObject = json.load(f)
+            logger.debug("loaded event: %r", event)
+
+            with get_nested(event, "repository") as repository:
+                repo = get_str(repository, "full_name")
+
+            with get_nested(event, "comment") as comment:
+                with get_nested(comment, "user") as user:
+                    username = get_str(user, "login")
+
+                body = get_str(comment, "body", "")
+
+            with get_nested(event, "issue") as issue:
+                issue_nr = get_int(issue, "number")
+                pull_nr = issue_nr if "pull_request" in issue else None
+
+            return await process_comment(
+                repo=repo,
+                username=username,
+                issue_nr=issue_nr,
+                pull_nr=pull_nr,
+                comment_body=body,
+                run_to=args.to,
+            )
+
+        case 'test':
+            return await process_comment(
+                repo=args.repo,
+                username=args.username,
+                issue_nr=args.issue_nr or args.pull_nr,
+                pull_nr=args.pull_nr,
+                comment_body=args.body,
+                run_to=args.to,
+            )
+
+        case other:
+            assert_never(other)
+
+
+if __name__ == '__main__':
+    sys.exit(asyncio.run(main()))
