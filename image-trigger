@@ -25,10 +25,9 @@ import shlex
 import subprocess
 import sys
 import time
-from collections.abc import Sequence
 
 from lib import github
-from lib.aio.jsonutil import JsonObject, get_str, typechecked
+from lib.aio.jsonutil import get_str, typechecked
 from lib.constants import BASE_DIR
 
 # default for refresh-days
@@ -73,12 +72,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description='Ensure necessary issue exists for image refresh')
     parser.add_argument('-v', '--verbose', action="store_true", default=False,
                         help="Print verbose information")
+    parser.add_argument('--dry-run', '-n', action="store_true", default=False,
+                        help="Show what would be done, but don't do it")
     parser.add_argument("image", nargs="?")
     opts = parser.parse_args()
     api = github.GitHub()
 
     try:
-        scan(api, opts.image, opts.verbose)
+        scan(api, opts.image, opts.verbose, dry=opts.dry_run)
     except RuntimeError as ex:
         sys.stderr.write("image-trigger: " + str(ex) + "\n")
         return 1
@@ -108,56 +109,16 @@ def stale(days: int, pathspec: str, ref: str = "HEAD", verbose: bool = False) ->
     return timestamp < due
 
 
-def would(*args: object) -> None:
-    print('\n** Would', *args)
+def scan(api: github.GitHub, force: str | None, verbose: bool, dry: bool = False) -> None:
+    subprocess.check_call(["git", "fetch", "origin", "main"])
 
-
-def create_issue(
-    api: github.GitHub,
-    title: str,
-    body: str,
-    item: str,
-    context: str | None = None,
-    items: Sequence[str] = (),
-    state: str = "open",
-    since: int | None = None,
-    dry: bool = False
-) -> JsonObject:
-    if context:
-        item = f"{item} {context}".strip()
-
-    if since:
-        # don't let all bots pass the deadline in the same second, to avoid many duplicates
-        since += random.randint(-3600, 3600)
-
-    for issue in api.issues(state=state, since=since):
-        checklist = github.Checklist(get_str(issue, "body", None))
-        if item in checklist.items:
-            return issue
-
-    if not items:
-        items = [item]
-    checklist = github.Checklist(body)
-    for x in items:
-        checklist.add(x)
-    data = {
-        "title": title,
-        "body": checklist.body,
-        "labels": ["bot"]
+    issues = {
+        item: issue
+        for issue in api.issues(state="open")
+        for item in github.Checklist(get_str(issue, "body", None)).items
     }
 
-    if dry:
-        would(f'open issue on {api.repo}', json.dumps(data, indent=4))
-        return data
-    else:
-        return typechecked(api.post("issues", data), dict)
-
-
-def scan(api: github.GitHub, force: str | None, verbose: bool) -> None:
-    subprocess.check_call(["git", "fetch", "origin", "main"])
     for (image, options) in REFRESH.items():
-        perform = False
-
         if force:
             perform = image == force
         else:
@@ -165,9 +126,21 @@ def scan(api: github.GitHub, force: str | None, verbose: bool) -> None:
             perform = stale(days, os.path.join("images", image), "origin/main", verbose)
 
         if perform:
+            item = f"image-refresh {image}"
+            if item in issues:
+                sys.stderr.write(f'#{issues[item]["number"]}: {item} (already open)\n')
+                continue
+
             text = f"Image refresh for {image}"
-            issue = create_issue(api, text, text, "image-refresh", image)
-            sys.stderr.write(f'#{issue["number"]}: image-refresh {image}\n')
+            checklist = github.Checklist(text)
+            checklist.add(item)
+            data = {"title": text, "body": checklist.body, "labels": ["bot"]}
+            if dry:
+                print(f'** Would open issue on {api.repo}', json.dumps(data, indent=4))
+            else:
+                issue = typechecked(api.post("issues", data), dict)
+                issues[item] = issue
+                sys.stderr.write(f'#{issue["number"]}: {item}\n')
 
 
 if __name__ == '__main__':
