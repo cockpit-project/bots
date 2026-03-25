@@ -18,14 +18,17 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import json
 import os
 import random
 import shlex
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 
-from lib import github, task
+from lib import github
+from lib.aio.jsonutil import JsonObject, get_str, typechecked
 from lib.constants import BASE_DIR
 
 # default for refresh-days
@@ -105,6 +108,51 @@ def stale(days: int, pathspec: str, ref: str = "HEAD", verbose: bool = False) ->
     return timestamp < due
 
 
+def would(*args: object) -> None:
+    print('\n** Would', *args)
+
+
+def create_issue(
+    api: github.GitHub,
+    title: str,
+    body: str,
+    item: str,
+    context: str | None = None,
+    items: Sequence[str] = (),
+    state: str = "open",
+    since: int | None = None,
+    dry: bool = False
+) -> JsonObject:
+    if context:
+        item = f"{item} {context}".strip()
+
+    if since:
+        # don't let all bots pass the deadline in the same second, to avoid many duplicates
+        since += random.randint(-3600, 3600)
+
+    for issue in api.issues(state=state, since=since):
+        checklist = github.Checklist(get_str(issue, "body", None))
+        if item in checklist.items:
+            return issue
+
+    if not items:
+        items = [item]
+    checklist = github.Checklist(body)
+    for x in items:
+        checklist.add(x)
+    data = {
+        "title": title,
+        "body": checklist.body,
+        "labels": ["bot"]
+    }
+
+    if dry:
+        would(f'open issue on {api.repo}', json.dumps(data, indent=4))
+        return data
+    else:
+        return typechecked(api.post("issues", data), dict)
+
+
 def scan(api: github.GitHub, force: str | None, verbose: bool) -> None:
     subprocess.check_call(["git", "fetch", "origin", "main"])
     for (image, options) in REFRESH.items():
@@ -118,7 +166,7 @@ def scan(api: github.GitHub, force: str | None, verbose: bool) -> None:
 
         if perform:
             text = f"Image refresh for {image}"
-            issue = task.issue(text, text, "image-refresh", image)
+            issue = create_issue(api, text, text, "image-refresh", image)
             sys.stderr.write(f'#{issue["number"]}: image-refresh {image}\n')
 
 

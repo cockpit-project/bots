@@ -20,7 +20,6 @@
 import argparse
 import json
 import os
-import random
 import re
 import shlex
 import shutil
@@ -33,7 +32,7 @@ from collections.abc import Sequence
 from datetime import datetime, timezone
 
 from lib import github
-from lib.aio.jsonutil import JsonObject, get_dictv, get_str, typechecked
+from lib.aio.jsonutil import JsonObject, get_dictv, get_str
 from lib.constants import BASE_DIR
 
 # Module-level state
@@ -196,46 +195,6 @@ def run(context, function, **kwargs):
     finally:
         report_finish(ret, name, context, issue, time.time() - start_time, dry=dry)
     return ret or 0
-
-
-def issue(
-    title: str,
-    body: str,
-    item: str,
-    context: str | None = None,
-    items: Sequence[str] = (),
-    state: str = "open",
-    since: int | None = None,
-    dry: bool = False
-) -> JsonObject:
-    if context:
-        item = f"{item} {context}".strip()
-
-    if since:
-        # don't let all bots pass the deadline in the same second, to avoid many duplicates
-        since += random.randint(-3600, 3600)
-
-    for issue in api.issues(state=state, since=since):
-        checklist = github.Checklist(get_str(issue, "body", None))
-        if item in checklist.items:
-            return issue
-
-    if not items:
-        items = [item]
-    checklist = github.Checklist(body)
-    for x in items:
-        checklist.add(x)
-    data = {
-        "title": title,
-        "body": checklist.body,
-        "labels": ["bot"]
-    }
-
-    if dry:
-        would(f'open issue on {api.repo}', json.dumps(data, indent=4))
-        return data
-    else:
-        return typechecked(api.post("issues", data), dict)
 
 
 def execute(*args):
