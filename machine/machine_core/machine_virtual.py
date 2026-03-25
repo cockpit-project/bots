@@ -308,6 +308,9 @@ class VirtMachine(Machine):
         if "disk_dev" in kwargs:
             self.disk_dev = str(kwargs.pop("disk_dev"))
 
+        # Optional; VirtMachine subclass (anaconda-webui) may receive a basename for test/kickstarts/
+        self.kickstart_file_name: str | None = kwargs.pop("kickstart_file_name", None)
+
         # Allocate network information about this machine
         self.networking = networking
         kwargs["address"] = networking["control"]
