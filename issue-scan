@@ -18,6 +18,7 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import asyncio
 import json
 import logging
 import shlex
@@ -36,7 +37,9 @@ except ImportError:
     distributed_queue = None  # type: ignore[assignment]
 
 from lib import ALLOWLIST, github, testmap
+from lib.aio.jobcontext import JobContext
 from lib.aio.jsonutil import JsonError, JsonObject, get_dict, get_dictv, get_int, get_nested, get_str
+from lib.aio.testingfarm import get_request_url, submit_to_testing_farm, wait_for_artifacts
 from lib.jobqueue import QueueEntry
 
 # RHEL tasks have to be done inside Red Hat network
@@ -52,8 +55,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Scan issues for image-refresh tasks")
     parser.add_argument("-v", "--human-readable", "--verbose", action="store_true", default=False,
                         help="Print human readable output")
-    parser.add_argument('--amqp', default=None,
-                        help='The host:port of the AMQP server to publish to (format host:port)')
+    parser.add_argument('--config-file', '-F', metavar='FILENAME',
+                        help="job-runner config file for --to=job-runner")
+
+    dest_group = parser.add_mutually_exclusive_group()
+    dest_group.add_argument('--amqp', default=None,
+                            help='The host:port of the AMQP server to publish to (format host:port)')
+    dest_group.add_argument('--to', choices=['job-runner'],
+                            help='Submit the job to the specified backend')
 
     event_group = parser.add_mutually_exclusive_group(required=True)
     event_group.add_argument('--issues-data',
@@ -80,7 +89,9 @@ def main() -> int:
     if result is None:
         return 0
 
-    if opts.amqp:
+    if opts.to == 'job-runner':
+        return asyncio.run(submit_job_runner(event, result, opts.config_file))
+    elif opts.amqp:
         assert pika is not None, "pika module is required for --amqp"
         assert distributed_queue is not None, "distributed_queue module is required for --amqp"
 
@@ -193,6 +204,58 @@ def scan(event: JsonObject) -> QueueEntry | None:
 
     command, issue, repo = task
     return output_task(command, issue, repo)
+
+
+def get_git_url_ref(event: JsonObject) -> tuple[str, str]:
+    """Extract git URL and ref from a GitHub event."""
+    if pr := get_dict(event, 'pull_request', None):
+        with get_nested(pr, 'head') as head:
+            with get_nested(head, 'repo') as repo:
+                url = get_str(repo, 'clone_url')
+            ref = get_str(head, 'ref')
+    else:
+        with get_nested(event, 'repository') as repository:
+            url = get_str(repository, 'clone_url')
+            ref = get_str(repository, 'default_branch')
+    return url, ref
+
+
+async def submit_job_runner(event: JsonObject, result: QueueEntry, config_file: str | None) -> int:
+    """Submit a job to Testing Farm and post a comment."""
+    git_url_ref = get_git_url_ref(event)
+
+    ctx = JobContext(config_file)
+    request_id = await submit_to_testing_farm(ctx, result['job'], git_url_ref=git_url_ref)
+
+    # Get artifacts URL (with short timeout - we just need the URL, not the result)
+    artifacts_url = await wait_for_artifacts(request_id)
+    if artifacts_url is None:
+        # We failed to get the artifacts URL: the API URL is better than nothing...
+        artifacts_url = get_request_url(request_id)
+
+    # Post comment on the issue/PR
+    issue = get_dict(event, 'issue', None) or get_dict(event, 'pull_request', None)
+    if issue is not None:
+        with get_nested(event, 'repository') as repository:
+            repo = get_str(repository, 'full_name')
+        number = get_int(issue, 'number')
+
+        comment = f"""**Task scheduled:** {result['human']}
+
+Testing Farm link: {artifacts_url}
+
+<details>
+<summary>Job JSON</summary>
+
+```json
+{json.dumps(result['job'], indent=2)}
+```
+</details>"""
+
+        api = github.GitHub(repo=repo)
+        api.post(f'issues/{number}/comments', {'body': comment})
+
+    return 0
 
 
 if __name__ == '__main__':
