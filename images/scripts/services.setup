@@ -150,6 +150,7 @@ podman stop candlepin
 cat <<EOF > /root/run-candlepin
 #!/bin/sh
 podman start candlepin
+until curl --insecure --fail --head https://localhost:8443/candlepin/status; do sleep 5; done
 EOF
 chmod 755 /root/run-candlepin
 
