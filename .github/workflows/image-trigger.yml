@@ -8,9 +8,11 @@ on:
 jobs:
   maintenance:
     runs-on: ubuntu-latest
+    environment: image-build
+    permissions: {}
     steps:
       - name: Set up secrets
-        run: echo '${{ secrets.GITHUB_TOKEN }}' > ~/.config/github-token
+        run: echo '${{ secrets.COCKPITUOUS_TOKEN }}' > ~/.config/github-token
 
       - name: Clone repository
         uses: actions/checkout@v5
