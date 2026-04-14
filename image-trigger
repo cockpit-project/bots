@@ -86,22 +86,23 @@ def main() -> int:
     return 0
 
 
-# Check if the given files that match @pathspec are stale
-# and haven't been updated in @days.
-def stale(days: int, pathspec: str, ref: str = "HEAD", verbose: bool = False) -> bool:
-    cmd = ["git", "log", "--max-count=1", "--pretty=format:%ct", ref, "--", pathspec]
+def last_update(pathspec: str, ref: str = "HEAD", verbose: bool = False) -> tuple[str, int] | None:
+    """Return (commit_sha, age_in_days) of the last commit touching pathspec, or None."""
+    cmd = ["git", "log", "--max-count=1", "--pretty=format:%ct %H", ref, "--", pathspec]
     if verbose:
         sys.stderr.write("+ " + shlex.join(cmd) + "\n")
     output = subprocess.check_output(cmd, cwd=BASE_DIR, text=True)
     if verbose:
         sys.stderr.write("> " + output + "\n")
 
+    parts = output.split(maxsplit=1)
     try:
-        timestamp = int(output)
-    except ValueError:
-        timestamp = 0
+        timestamp = int(parts[0])
+    except (ValueError, IndexError):
+        return None
+    sha = parts[1].strip() if len(parts) > 1 else ""
 
-    return timestamp < time.time() - days * 86400
+    return sha, int((time.time() - timestamp) / 86400)
 
 
 def scan(api: github.GitHub, force: str | None, verbose: bool, dry: bool = False) -> None:
@@ -114,28 +115,35 @@ def scan(api: github.GitHub, force: str | None, verbose: bool, dry: bool = False
     }
 
     for (image, options) in REFRESH.items():
-        if force:
-            perform = image == force
-        else:
-            days = options.get("refresh-days", DAYS)
-            perform = stale(days, os.path.join("images", image), "origin/main", verbose)
+        update = last_update(os.path.join("images", image), "origin/main", verbose)
 
-        if perform:
-            item = f"image-refresh {image}"
-            if item in issues:
-                sys.stderr.write(f'#{issues[item]["number"]}: {item} (already open)\n')
+        if force:
+            if image != force:
                 continue
 
-            text = f"Image refresh for {image}"
-            checklist = github.Checklist(text)
-            checklist.add(item)
-            data = {"title": text, "body": checklist.body, "labels": ["bot"]}
-            if dry:
-                print(f'** Would open issue on {api.repo}', json.dumps(data, indent=4))
-            else:
-                issue = typechecked(api.post("issues", data), dict)
-                issues[item] = issue
-                sys.stderr.write(f'#{issue["number"]}: {item}\n')
+        if update is not None:
+            sha, age = update
+            if not force and age < options.get("refresh-days", DAYS):
+                continue
+            body = f"Last updated in {sha}, {age} days ago.\n"
+        else:
+            body = "No previous image refresh found.\n"
+
+        item = f"image-refresh {image}"
+        if item in issues:
+            sys.stderr.write(f'#{issues[item]["number"]}: {item} (already open)\n')
+            continue
+
+        text = f"Image refresh for {image}"
+        checklist = github.Checklist(text)
+        checklist.add(item)
+        data = {"title": text, "body": f"{body}\n{checklist.body}", "labels": ["bot"]}
+        if dry:
+            print(f'** Would open issue on {api.repo}', json.dumps(data, indent=4))
+        else:
+            issue = typechecked(api.post("issues", data), dict)
+            issues[item] = issue
+            sys.stderr.write(f'#{issue["number"]}: {item}\n')
 
 
 if __name__ == '__main__':
