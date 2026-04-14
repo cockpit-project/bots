@@ -20,7 +20,6 @@
 import argparse
 import json
 import os
-import random
 import shlex
 import subprocess
 import sys
@@ -102,11 +101,7 @@ def stale(days: int, pathspec: str, ref: str = "HEAD", verbose: bool = False) ->
     except ValueError:
         timestamp = 0
 
-    # We randomize when we think this should happen over a day
-    offset = days * 86400
-    due = time.time() - random.randint(offset - 43200, offset + 43200)
-
-    return timestamp < due
+    return timestamp < time.time() - days * 86400
 
 
 def scan(api: github.GitHub, force: str | None, verbose: bool, dry: bool = False) -> None:
