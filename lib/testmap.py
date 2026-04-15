@@ -87,8 +87,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'opensuse-tumbleweed',
-            'rhel-9-8',
-            'rhel-10-2',
         ],
         '_manual': [
             'centos-9-bootc',
