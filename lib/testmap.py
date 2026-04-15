@@ -172,12 +172,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-rawhide',
             'centos-10',
             'rhel-8-10/ws-container',
-            'rhel-9-8',
-            'rhel-10-2',
-        ],
-        '_manual': [
             'rhel-10-3',
             'rhel-9-9',
+        ],
+        '_manual': [
         ],
     },
     'codeberg:lis/test.thing': {
