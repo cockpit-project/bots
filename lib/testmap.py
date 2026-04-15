@@ -143,8 +143,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             f'{TEST_OS_DEFAULT}/firefox',
             'opensuse-tumbleweed',
             'rhel-8-10/ws-container',
-            'rhel-9-8',
-            'rhel-10-2',
+            'rhel-10-3',
+            'rhel-9-9',
         ],
         'rhel-8': [
             'rhel-8-10',
@@ -152,8 +152,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
-            'rhel-10-3',
-            'rhel-9-9',
         ],
     },
     'cockpit-project/cockpit-files': {
