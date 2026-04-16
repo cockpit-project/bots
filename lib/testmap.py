@@ -225,16 +225,14 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             'centos-9-stream/subscription-manager-1.29',
             'centos-10',
-            'rhel-9-8/subscription-manager-1.29',
-            'rhel-10-2',
-            'rhel-10-2/devel',
+            'rhel-9-9/subscription-manager-1.29',
+            'rhel-10-3',
+            'rhel-10-3/devel',
             'fedora-42',
             'fedora-43',
         ],
         '_manual': [
             'fedora-44',
-            'rhel-10-3',
-            'rhel-9-9',
         ],
     },
     'rhinstaller/anaconda-webui': {
