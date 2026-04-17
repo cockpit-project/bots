@@ -1,0 +1,1 @@
+*Rollback failed; causal_error: Command failed: cmd: "/usr/sbin/mkfs.xfs" "-f" "/dev/dm-*" "-m" "*" "-i" "nrext64=0", exit reason: 1 stdout:  stderr: illegal sector size 0
