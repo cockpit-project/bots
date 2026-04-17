@@ -226,11 +226,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-9/subscription-manager-1.29',
             'rhel-10-3',
             'rhel-10-3/devel',
-            'fedora-42',
             'fedora-43',
+            'fedora-44',
         ],
         '_manual': [
-            'fedora-44',
         ],
     },
     'rhinstaller/anaconda-webui': {
