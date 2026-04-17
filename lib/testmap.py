@@ -216,9 +216,9 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-3',
             'rhel-10-3/devel',
             'fedora-43',
+            'fedora-44',
         ],
         '_manual': [
-            'fedora-44',
         ],
     },
     'rhinstaller/anaconda-webui': {
