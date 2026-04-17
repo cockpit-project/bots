@@ -75,6 +75,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('fedora-44', COCKPIT_SCENARIOS),
             *contexts('rhel-10-3', COCKPIT_SCENARIOS),
             *contexts('rhel-9-9', COCKPIT_SCENARIOS),
+            *contexts('ubuntu-2604', COCKPIT_SCENARIOS),
         ],
     },
     'cockpit-project/starter-kit': {
@@ -127,6 +128,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
+            'ubuntu-2604',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -152,6 +154,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-10',
             'fedora-rawhide',
+            'ubuntu-2604',
         ],
     },
     'cockpit-project/cockpit-files': {
@@ -170,6 +173,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-9',
         ],
         '_manual': [
+            'ubuntu-2604',
         ],
     },
     'codeberg:lis/test.thing': {
