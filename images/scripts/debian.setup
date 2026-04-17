@@ -105,7 +105,7 @@ xfsprogs \
 DENIED_PACKAGES="\
 "
 
-if [ "$IMAGE" = "debian-testing" ] ; then
+if [ "$IMAGE" = "debian-testing" ] || [ "$IMAGE" = "ubuntu-2604" ] ; then
     # it's gone
     TEST_PACKAGES="${TEST_PACKAGES/packagekit-tools/}"
 fi
@@ -113,6 +113,11 @@ fi
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1129529
 if [ "$IMAGE" = "debian-testing" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES} cpio"
+fi
+
+# qemu-kvm is now a virtual package
+if [ "$IMAGE" = "ubuntu-2604" ] ; then
+    TEST_PACKAGES="${TEST_PACKAGES/qemu-kvm/qemu-system-x86}"
 fi
 
 # older libvirt have this builtin
@@ -221,7 +226,7 @@ apt-get install -y eatmydata
 APT='eatmydata apt-get -y -o Dpkg::Options::=--force-confold'
 
 # remove packages that we don't need
-for p in lxd snapd landscape-common accountsservice open-vm-tools ufw cloud-init; do $APT purge --auto-remove $p || true; done
+for p in lxd snapd landscape-common accountsservice open-vm-tools ufw cloud-init cloud-init-base; do $APT purge --auto-remove $p || true; done
 
 # python3-rtslib-fb postinst starts rtslib-fb-targetctl.service , but that may fail due to kernel being upgraded
 mkdir -p /run/systemd/system
@@ -257,7 +262,7 @@ mkdir -p /var/lib/package-sets/timesyncd
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 $APT --no-install-recommends install cockpit
 
-if [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" != "25.10" ]; then
+if [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" != "25.10" ] || [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" != "26.04" ]; then
     # Extract scsi_debug and team modules from full kernel; let's not install linux-image-generic
     # just for that, it increases boot time by over 10s and image size by > 600 MB
     EXTRAS=$(apt-cache show linux-image-generic | grep Depends: | grep -o 'linux-modules-extra[^,]*')
