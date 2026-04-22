@@ -121,14 +121,13 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10/ws-container',
             'rhel-10-3',
             'rhel-9-9',
-            'ubuntu-2204',
             'ubuntu-2404',
+            'ubuntu-2604',
             'ubuntu-stable',
         ],
         '_manual': [
             'centos-10',
             'fedora-rawhide',
-            'ubuntu-2604',
         ],
     },
     'cockpit-project/cockpit-machines': {
