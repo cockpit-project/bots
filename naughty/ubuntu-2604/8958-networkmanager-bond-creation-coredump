@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "test/verify/check-networkmanager-bond", line *, in testPrimary
+    b.click("#networking-interfaces tr[data-interface='tbond'] button")
+*
+testlib.Error: timeout
+wait_js_cond(ph_is_present("#networking-interfaces tr[data-interface='tbond'] button:not([disabled]):not([aria-disabled=true])")): Error: condition did not become true
