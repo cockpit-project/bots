@@ -51,7 +51,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
             *contexts('fedora-42', COCKPIT_SCENARIOS),
             *contexts('fedora-43', COCKPIT_SCENARIOS),
-            *contexts('fedora-44', {'networking', 'storage'}),
+            *contexts('fedora-44', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
             *contexts(TEST_OS_DEFAULT, ['devel']),
             *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
