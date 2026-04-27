@@ -49,7 +49,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('ubuntu-2204', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2404', COCKPIT_SCENARIOS),
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
-            *contexts('fedora-42', COCKPIT_SCENARIOS),
             *contexts('fedora-43', COCKPIT_SCENARIOS),
             *contexts('fedora-44', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
