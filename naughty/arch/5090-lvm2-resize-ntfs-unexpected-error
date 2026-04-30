@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "*", line *, in testResizeNtfs
-    self.checkResize("ntfs", crypto=False,
-*
-testlib.Error: timeout

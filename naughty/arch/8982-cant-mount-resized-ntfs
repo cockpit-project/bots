@@ -1,0 +1,4 @@
+> warn: mount: /var/lib/cockpittest/mnt/foo: wrong fs type, bad option, bad superblock on /dev/mapper/TEST-vol, missing codepage or helper program, or other error.
+*
+testlib.Error: timeout
+wait_js_cond(!ph_is_present("#dialog")): Error: condition did not become true
