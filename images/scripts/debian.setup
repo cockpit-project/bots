@@ -108,6 +108,8 @@ DENIED_PACKAGES="\
 if [ "$IMAGE" = "debian-testing" ] || [ "$IMAGE" = "ubuntu-2604" ] ; then
     # it's gone
     TEST_PACKAGES="${TEST_PACKAGES/packagekit-tools/}"
+    # it's new
+    TEST_PACKAGES="${TEST_PACKAGES} network-manager-team"
 fi
 
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1129529
