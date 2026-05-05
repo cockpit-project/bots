@@ -1,0 +1,6 @@
+  File "*/test/verify/check-selinux", line *, in testTroubleshootAlerts
+    b.wait_in_text(row_selector + " .pf-v5-c-alert__title", "Solution applied successfully")
+*
+testlib.Error: timeout
+*
+warning: Unable to run fix*
