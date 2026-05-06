@@ -267,7 +267,7 @@ mkdir -p /var/lib/package-sets/timesyncd
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 $APT --no-install-recommends install cockpit
 
-if [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" != "25.10" ] || [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" != "26.04" ]; then
+if [ "$ID" = "ubuntu" ] && [ "$VERSION_ID" = "22.04" -o "$VERSION_ID" = "24.04" ]; then
     # Extract scsi_debug and team modules from full kernel; let's not install linux-image-generic
     # just for that, it increases boot time by over 10s and image size by > 600 MB
     EXTRAS=$(apt-cache show linux-image-generic | grep Depends: | grep -o 'linux-modules-extra[^,]*')
