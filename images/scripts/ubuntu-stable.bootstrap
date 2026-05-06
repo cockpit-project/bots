@@ -14,5 +14,9 @@ if ! curl --silent "$rel" | grep -q '"supported": true'; then
 fi
 # release name is the last part of the URL
 rel=${rel##*/}
+# resolute == 26.04 LTS, which we already have as ubuntu-2604; test the older release (25.10, and move to 26.10)
+if [ "$rel" = "resolute" ]; then
+    rel="questing"
+fi
 
 exec $(dirname $0)/lib/cloudimage.bootstrap "$1" "https://cloud-images.ubuntu.com/daily/server/$rel/current/$rel-server-cloudimg-amd64.img"
