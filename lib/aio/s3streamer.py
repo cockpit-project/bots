@@ -26,7 +26,7 @@ from typing import ClassVar
 from yarl import URL
 
 from ..constants import LIB_DIR
-from .base import Destination
+from .base import Destination, Log
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class AttachmentsDirectory:
                     self.destination.write(name, data)
 
 
-class LogStreamer:
+class LogStreamer(Log):
     SIZE_LIMIT: ClassVar[int] = 1000000  # 1MB
     TIME_LIMIT: ClassVar[int] = 30       # 30s
 
@@ -154,6 +154,9 @@ class LogStreamer:
         elif self.pending and self.timer is None:
             self.timer = asyncio.get_running_loop().call_later(LogStreamer.TIME_LIMIT, self.send_pending)
 
+    def write_attachment(self, filename: str, data: bytes) -> None:
+        self.index.write(filename, data)
+
     def close(self) -> None:
         # We're about to delete all of the chunks, so don't bother with
         # anything still pending...
@@ -164,3 +167,5 @@ class LogStreamer:
 
         # If the client ever sees a 404, it knows that the streaming is over.
         self.destination.delete([f'log.{suffix}' for suffix in self.suffixes])
+
+        self.index.sync()

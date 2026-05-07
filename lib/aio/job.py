@@ -28,10 +28,9 @@ from pathlib import Path
 from typing import Never
 
 from ..constants import BOTS_DIR
-from .base import Forge, Subject, SubjectSpecification
+from .base import Forge, Log, Subject, SubjectSpecification
 from .jobcontext import JobContext
 from .jsonutil import JsonObject, get_dict, get_int, get_object, get_str, get_str_map, get_strv
-from .s3streamer import Index, LogStreamer
 from .spawn import run, spawn
 from .util import gather_and_cancel, read_utf8
 
@@ -74,7 +73,7 @@ async def poll_pr(api: Forge, repo: str, pull_nr: int, expected_sha: str) -> Nev
         await asyncio.sleep(60)
 
 
-async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStreamer) -> None:
+async def run_container(job: Job, subject: Subject, ctx: JobContext, log: Log) -> None:
     with tempfile.TemporaryDirectory() as tmpdir_path:
         tmpdir = Path(tmpdir_path)
         cidfile = tmpdir / 'cidfile'
@@ -144,7 +143,7 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
                 await run([*ctx.container_cmd, 'cp', '--', f'{cid}:/var/tmp/attachments/.', f'{attachments}'])
                 for file in attachments.rglob('*'):
                     with contextlib.suppress(IsADirectoryError):
-                        log.index.write(str(file.relative_to(attachments)), file.read_bytes())
+                        log.write_attachment(str(file.relative_to(attachments)), file.read_bytes())
 
                 if returncode := await container.wait():
                     raise Failure(f'Container exited with code {returncode}')
@@ -162,10 +161,7 @@ async def run_job(job: Job, ctx: JobContext) -> None:
     title = job.title or f'{job.context}@{job.subject.repo}#{subject.sha[:12]}'
     slug = job.slug or f'{job.subject.repo}/{job.context or "-"}/{subject.sha[:12]}'
 
-    async with ctx.logs.get_destination(slug) as destination:
-        index = Index(destination)
-        log = LogStreamer(index, destination.proxy_location)
-
+    async with ctx.logs.get_log(slug) as log:
         status = subject.forge.get_status(job.subject.repo, subject.sha, job.context, log.url)
         logger.info('Log: %s', log.url)
 
@@ -224,4 +220,3 @@ async def run_job(job: Job, ctx: JobContext) -> None:
 
         finally:
             log.close()
-            index.sync()

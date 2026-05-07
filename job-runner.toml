@@ -42,7 +42,9 @@ default-image = 'ghcr.io/cockpit-project/tasks:latest'
 # ]
 
 [logs]
-driver='local'   # 's3' or 'local'
+driver='stdout'   # 'stdout', 'local', or 's3'
+
+[logs.stdout]
 
 [logs.s3]
 # hint: podman run --rm --net=host quay.io/minio/minio server /var

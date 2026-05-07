@@ -21,8 +21,9 @@ from pathlib import Path
 
 from yarl import URL
 
-from .base import Destination, LogDriver
+from .base import Destination, Log, LogDriver
 from .jsonutil import JsonObject, get_str
+from .s3streamer import Index, LogStreamer
 
 logger = logging.getLogger(__name__)
 
@@ -54,5 +55,6 @@ class LocalLogDriver(LogDriver, contextlib.AsyncExitStack):
         self.link = URL(get_str(config, 'link'))
 
     @contextlib.asynccontextmanager
-    async def get_destination(self, slug: str) -> AsyncIterator[Destination]:
-        yield LocalDestination(self.directory / slug, self.link / slug)
+    async def get_log(self, slug: str) -> AsyncIterator[Log]:
+        destination = LocalDestination(self.directory / slug, self.link / slug)
+        yield LogStreamer(Index(destination), destination.proxy_location)

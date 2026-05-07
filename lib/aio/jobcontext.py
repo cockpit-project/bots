@@ -43,6 +43,7 @@ from .jsonutil import (
 )
 from .local import LocalLogDriver
 from .s3 import S3LogDriver
+from .stdout import StdoutLogDriver
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,7 @@ FORGE_DRIVERS: Mapping[str, Callable[[str, JsonObject], AsyncContextManager[Forg
 LOG_DRIVERS: Mapping[str, Callable[[JsonObject], AsyncContextManager[LogDriver]]] = {
     's3': S3LogDriver,
     'local': LocalLogDriver,
+    'stdout': StdoutLogDriver,
 }
 
 

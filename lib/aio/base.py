@@ -89,10 +89,22 @@ class Destination:
         raise NotImplementedError
 
 
-class LogDriver:
-    def get_destination(self, slug: str) -> AsyncContextManager[Destination]:
+class Log:
+    url: URL
+
+    def start(self, data: str) -> None:
         raise NotImplementedError
 
-    @classmethod
-    def new(cls, config: JsonObject) -> Self:
+    def write(self, data: str) -> None:
+        raise NotImplementedError
+
+    def write_attachment(self, filename: str, data: bytes) -> None:
+        raise NotImplementedError
+
+    def close(self) -> None:
+        raise NotImplementedError
+
+
+class LogDriver:
+    def get_log(self, slug: str) -> AsyncContextManager[Log]:
         raise NotImplementedError

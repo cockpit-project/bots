@@ -20,15 +20,16 @@ import hmac
 import logging
 import mimetypes
 import time
-from collections.abc import Collection, Mapping
+from collections.abc import AsyncIterator, Collection, Mapping
 from types import TracebackType
 from typing import NamedTuple, Self
 
 import httpx
 from yarl import URL
 
-from .base import Destination, LogDriver
+from .base import Destination, Log, LogDriver
 from .jsonutil import JsonError, JsonObject, get_nested, get_str
+from .s3streamer import Index, LogStreamer
 from .util import AsyncQueue, create_http_session
 
 logger = logging.getLogger(__name__)
@@ -195,9 +196,13 @@ class S3LogDriver(LogDriver, contextlib.AsyncExitStack):
             with get_nested(config, 'key') as key:
                 self.key = S3Key(get_str(key, 'access'), get_str(key, 'secret'))
 
-    def get_destination(self, slug: str) -> contextlib.AbstractAsyncContextManager[S3Destination]:
+    @contextlib.asynccontextmanager
+    async def get_log(self, slug: str) -> AsyncIterator[Log]:
         quoted_slug = slug.replace('//', '--').replace(':', '-')
-        return S3Destination(self.session, self.url / quoted_slug, self.proxy_url / quoted_slug, self.key, self.acl)
+        destination = S3Destination(
+            self.session, self.url / quoted_slug, self.proxy_url / quoted_slug, self.key, self.acl)
+        async with destination:
+            yield LogStreamer(Index(destination), destination.proxy_location)
 
     async def __aenter__(self) -> Self:
         self.session = await self.enter_async_context(create_http_session(self.config))
