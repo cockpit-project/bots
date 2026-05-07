@@ -151,7 +151,6 @@ class TestingFarmClient(contextlib.AsyncExitStack):
                         'JOB_RUNNER_CONFIG_JSON': config_json,
                     },
                     'hardware': {
-                        'disk.size': '>= 80 GB',
                         'virtualization': {
                             'is-virtualized': True,
                             'is-supported': True,
