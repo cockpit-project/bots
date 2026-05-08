@@ -113,7 +113,10 @@ class DistributedQueue:
 
         for queue in queues:
             try:
-                result = self.channel.queue_declare(queue=queue, arguments=arguments.get(queue, None), **kwargs)
+                result = self.channel.queue_declare(queue=queue,
+                                                    durable=True,
+                                                    arguments=arguments.get(queue, None),
+                                                    **kwargs)
                 assert result.method.message_count is not None
                 self.queue_counts[queue] = result.method.message_count
             except pika.exceptions.ChannelClosedByBroker as e:
