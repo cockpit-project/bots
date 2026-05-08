@@ -246,7 +246,8 @@ systemctl restart systemd-networkd.service || true
 
 # HACK: work around for broken libsss-sudo postinst
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1129522
-if [ "$IMAGE" = "debian-testing" ] ; then
+# https://launchpad.net/bugs/2151950
+if [ "$IMAGE" = "debian-testing" ] || [ "$IMAGE" = "ubuntu-2604" ]; then
     echo 'sudoers:        files' >> /etc/nsswitch.conf
 fi
 
