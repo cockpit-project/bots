@@ -353,7 +353,7 @@ async def test_inline_secrets(tmp_path: Path) -> None:
     config_file.write_text('''
         [secrets.inline]
         github-token = 'ghp_secret123'
-        s3-keys = {"linodeobjects.com" = "ABCD Zx2xPa"}
+        s3-keys = {"s3.example.com" = "ABCD Zx2xPa"}
 
         [container]
         command = ['podman']
@@ -378,7 +378,7 @@ async def test_inline_secrets(tmp_path: Path) -> None:
         # Check s3-keys
         assert ctx.secrets_args['s3-keys'][0] == '-e=COCKPIT_S3_KEY_DIR=/y'
         s3_path = Path(ctx.secrets_args['s3-keys'][1].removeprefix('-v=').removesuffix(':/y'))
-        assert (s3_path / 'linodeobjects.com').read_text() == 'ABCD Zx2xPa'
+        assert (s3_path / 's3.example.com').read_text() == 'ABCD Zx2xPa'
 
     # After context closes, temp files should be cleaned up
     assert not token_path.exists()
