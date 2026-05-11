@@ -171,7 +171,10 @@ class S3Destination(Destination, contextlib.AsyncExitStack):
 
     def write(self, filename: str, data: bytes) -> None:
         content_type, content_encoding = mimetypes.guess_type(filename)
-        headers = {'x-amz-acl': self.acl, 'Content-Type': content_type or 'text/plain; charset=utf-8'}
+        headers: dict[str, str] = {'Content-Type': content_type or 'text/plain; charset=utf-8'}
+        # Only set ACL header if acl is non-empty (AWS BucketOwnerEnforced buckets don't allow ACLs)
+        if self.acl:
+            headers['x-amz-acl'] = self.acl
         if content_encoding:
             headers['Content-Encoding'] = content_encoding
 
