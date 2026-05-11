@@ -32,8 +32,8 @@ jobs:
           driver = 's3'
 
           [logs.s3]
-          url = 'https://cockpit-logs.us-east-1.linodeobjects.com/'
-          key = '${{ secrets.S3_KEY_LOGS }}'
+          url = 'https://cockpit-ci-logs.s3.us-east-1.amazonaws.com/'
+          key = '${{ secrets.AWS_KEY_LOGS }}'
 
           [forge.github]
           post = true
