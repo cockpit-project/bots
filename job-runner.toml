@@ -25,7 +25,7 @@
 
 [secrets.inline]
 # github-token = 'ghp_...'
-# s3-keys = {"linodeobjects.com"="ABCD... Zx2xPa..."}
+# s3-keys = {"s3.example.com"="ABCD... Zx2xPa..."}
 
 [container]
 command = ['podman']

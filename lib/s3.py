@@ -49,7 +49,7 @@ def get_key(url: urllib.parse.ParseResult) -> tuple[str, str]:
         raise KeyError
     hostname = url.hostname
 
-    # ie: 'cockpit-images.eu.linode.com' then 'eu.linode.com', then 'linode.com'
+    # ie: 'cockpit.s3.example.com' then 's3.example.com', then 'example.com'
     while '.' in hostname:
         try:
             with open(os.path.join(s3_key_dir, hostname)) as fp:
