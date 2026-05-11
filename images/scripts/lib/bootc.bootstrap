@@ -73,7 +73,7 @@ oci_image.flush()
 m.kill()
 
 # it's too small by default
-subprocess.check_call(['qemu-img', 'resize', '-f', 'qcow2', args.vmpath, '+20G'])
+subprocess.check_call(['qemu-img', 'resize', '-f', 'qcow2', args.vmpath, '+10G'])
 
 # booting the image will cause bootc-generic-growpart to grow the /sysroot partition
 m = testvm.VirtMachine(image=os.path.abspath(args.vmpath), maintain=True, verbose=True)
