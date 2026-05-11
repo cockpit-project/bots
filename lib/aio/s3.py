@@ -124,13 +124,20 @@ def s3_sign(
     amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
     assert url.host is not None
 
+    # Extract region from hostname for AWS S3 (e.g., 's3.us-east-1.amazonaws.com' -> 'us-east-1')
+    # AWS requires the actual region; other S3-compatible services accept 'any'
+    region = 'any'
+    if url.host.endswith('.amazonaws.com'):
+        # Format: [bucket.]s3.REGION.amazonaws.com - region is third-last component
+        region = url.host.split('.')[-3]
+
     # Header canonicalisation demands all header names in lowercase
     headers = {key.lower(): value for key, value in headers.items()}
     headers.update({'host': url.host, 'x-amz-content-sha256': checksum, 'x-amz-date': amzdate})
     headers_str = ''.join(f'{k}:{v}\n' for k, v in sorted(headers.items()))
     headers_list = ';'.join(sorted(headers))
 
-    credential_scope = f'{amzdate[:8]}/any/s3/aws4_request'
+    credential_scope = f'{amzdate[:8]}/{region}/s3/aws4_request'
     signing_key = f'AWS4{keys.secret}'.encode('ascii')
     for item in credential_scope.split('/'):
         signing_key = hmac.new(signing_key, item.encode('ascii'), hashlib.sha256).digest()
