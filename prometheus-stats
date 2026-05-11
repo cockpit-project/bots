@@ -229,8 +229,11 @@ merged_failures {merged_failures}
 
     print(output)
     if opts.s3:
-        with s3.urlopen(opts.s3, data=output.encode("UTF-8"), method="PUT",
-                        headers={"Content-Type": "text/plain", s3.ACL: s3.PUBLIC}):
+        headers = {"Content-Type": "text/plain"}
+        # AWS S3 buckets with BucketOwnerEnforced don't allow ACLs; bucket policy provides public access
+        if not opts.s3.hostname.endswith('.amazonaws.com'):
+            headers[s3.ACL] = s3.PUBLIC
+        with s3.urlopen(opts.s3, data=output.encode("UTF-8"), method="PUT", headers=headers):
             pass
 
     return 0
