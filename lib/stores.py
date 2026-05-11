@@ -40,4 +40,4 @@ except FileNotFoundError:
 LOCAL_STORES: Sequence[str] = data.splitlines()
 
 
-LOG_STORE = "https://cockpit-logs.us-east-1.linodeobjects.com/"
+LOG_STORE = "https://cockpit-ci-logs.s3.us-east-1.amazonaws.com/"
