@@ -34,6 +34,7 @@ jobs:
           [logs.s3]
           url = 'https://cockpit-ci-logs.s3.us-east-1.amazonaws.com/'
           key = '${{ secrets.AWS_KEY_LOGS }}'
+          acl = '' # BucketOwnerEnforced - bucket policy handles public access, ACLs disabled
 
           [forge.github]
           post = true
