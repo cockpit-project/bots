@@ -116,8 +116,10 @@ class MachineBuilder:
         # Avoid too long boot times -- they cause painfully long tests, and are a bug
         # However, prefer failing on broken/flaky images over having to occasionally re-run
         # builds due to nested KVM issues.
+        # FIXME: ubuntu-2604 is achingly slow on nested kvm PSI machines, fast locally
         try:
-            self.machine.boot(timeout_sec=30, nested_kvm_retry=False)
+            timeout_sec = 60 if self.machine.image in ["ubuntu-2604"] else 30
+            self.machine.boot(timeout_sec=timeout_sec, nested_kvm_retry=False)
         finally:
             self.machine.stop(timeout_sec=30)
 
