@@ -60,7 +60,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('opensuse-tumbleweed', COCKPIT_SCENARIOS - {'networking', 'storage', 'expensive'}),
             *contexts('rhel-8-10', ['ws-container'], COCKPIT_SCENARIOS),
             *contexts('rhel-9-9', COCKPIT_SCENARIOS),
-            *contexts('rhel-10-2', COCKPIT_SCENARIOS),
+            *contexts('rhel-10-3', COCKPIT_SCENARIOS),
             *contexts('centos-10', COCKPIT_SCENARIOS),
         ],
         'rhel-8': [
