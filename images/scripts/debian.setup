@@ -157,7 +157,7 @@ Package: *
 Pin: release a=unstable
 Pin-Priority: -1
 
-Package: *targetcli-fb*
+Package: *[sssd|freeipa-client]*
 Pin: release a=unstable
 Pin-Priority: 10
 EOF
