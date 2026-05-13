@@ -47,8 +47,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *contexts('debian-testing', COCKPIT_SCENARIOS),
             *contexts('debian-trixie', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2404', COCKPIT_SCENARIOS),
-            # FIXME: some remaining failures
-            *contexts('ubuntu-2604', COCKPIT_SCENARIOS - {'other', 'expensive'}),
+            *contexts('ubuntu-2604', COCKPIT_SCENARIOS),
             *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
             *contexts('fedora-43', COCKPIT_SCENARIOS),
             *contexts('fedora-44', COCKPIT_SCENARIOS),
