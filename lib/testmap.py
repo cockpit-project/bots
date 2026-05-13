@@ -59,7 +59,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             # TODO: gradually fix the remaining scenarios
             *contexts('opensuse-tumbleweed', COCKPIT_SCENARIOS - {'networking', 'storage', 'expensive'}),
             *contexts('rhel-8-10', ['ws-container'], COCKPIT_SCENARIOS),
-            *contexts('rhel-9-8', COCKPIT_SCENARIOS),
+            *contexts('rhel-9-9', COCKPIT_SCENARIOS),
             *contexts('rhel-10-2', COCKPIT_SCENARIOS),
             *contexts('centos-10', COCKPIT_SCENARIOS),
         ],
@@ -74,7 +74,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'opensuse-tumbleweed',
             *contexts('fedora-44', COCKPIT_SCENARIOS),
             *contexts('rhel-10-3', COCKPIT_SCENARIOS),
-            *contexts('rhel-9-9', COCKPIT_SCENARIOS),
             *contexts('ubuntu-2604', COCKPIT_SCENARIOS),
         ],
     },
