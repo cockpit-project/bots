@@ -28,6 +28,7 @@ libvirt-daemon-system \
 libvirt-dbus \
 network-manager \
 packagekit \
+pkexec \
 pcp \
 python3-pcp \
 python3-dbus \
@@ -42,18 +43,6 @@ udisks2-lvm2 \
 unattended-upgrades \
 xdg-utils \
 "
-
-# udisks >= 2.10 depends on libblockdev-mdraid, so add it manually only for older OSes
-if [ "$IMAGE" = "ubuntu-2204" ] ; then
-    COCKPIT_DEPS="$COCKPIT_DEPS libblockdev-mdraid2"
-fi
-
-# policykit-1 was split into multiple packages on debian, ubuntu-2204 kept the old name
-if [ "$IMAGE" = "ubuntu-2204" ]; then
-    COCKPIT_DEPS="$COCKPIT_DEPS policykit-1"
-else
-    COCKPIT_DEPS="$COCKPIT_DEPS pkexec"
-fi
 
 # We also install the packages necessary to join a FreeIPA domain so
 # that we don't have to go to the network during a test run.
@@ -125,12 +114,7 @@ if [ "$IMAGE" = "ubuntu-2604" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/qemu-kvm/qemu-system-x86}"
 fi
 
-# older libvirt have this builtin
-if [ "$IMAGE" = "ubuntu-2204" ] ; then
-    TEST_PACKAGES="${TEST_PACKAGES/virtiofsd/}"
-fi
-
-if [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
+if [ "$IMAGE" = "ubuntu-2404" ]; then
     # introduced in util-linux 2.40.1-5
     TEST_PACKAGES="${TEST_PACKAGES/lastlog2/}"
     # renamed at some point
@@ -154,11 +138,6 @@ PACKAGE_SET_CHRONYD="\
 chrony
 tzdata-legacy
 "
-
-# introduced in debian 13 (trixie) and Ubuntu 23.10
-if [ "$IMAGE" = "ubuntu-2204" ] ; then
-    PACKAGE_SET_CHRONYD="${PACKAGE_SET_CHRONYD/tzdata-legacy/}"
-fi
 
 PACKAGE_SET_TIMESYNCD="\
 systemd-timesyncd
@@ -196,7 +175,7 @@ EOF
 fi
 
 # systemd-cryptsetup was split out in 256.1-2, older releases don't have it yet
-if [ "$IMAGE" = "ubuntu-2204" ] || [ "$IMAGE" = "ubuntu-2404" ]; then
+if [ "$IMAGE" = "ubuntu-2404" ]; then
     TEST_PACKAGES="${TEST_PACKAGES/systemd-cryptsetup /}"
 fi
 
@@ -308,11 +287,6 @@ EOF
 $APT install dpkg-dev pbuilder
 
 pbuilder --create --extrapackages "fakeroot $PBUILDER_EXTRA"
-# our static build deps approach cannot resolve alternate build dependencies,
-# so hide systemd-dev on older releases which don't have it yet
-if [ "$IMAGE" = "ubuntu-2204" ] ; then
-    sed -i 's/systemd-dev |.*,/systemd,/' /tmp/out/tools/debian/control
-fi
 
 cat <<EOS >> /tmp/pbuilder_script
 #!/bin/sh
@@ -356,14 +330,12 @@ systemctl disable --now systemd-networkd-wait-online.service
 # "unattended-upgrades" changes the default of 5 seconds to 30
 # seconds. Let's override that.
 
-if [ "$1" != "ubuntu-2204" ]; then
-    mkdir -p /etc/systemd/logind.conf.d
-    cat >/etc/systemd/logind.conf.d/zz-quick.conf <<EOF
+mkdir -p /etc/systemd/logind.conf.d
+cat >/etc/systemd/logind.conf.d/zz-quick.conf <<EOF
 [Login]
 InhibitDelayMaxSec=5
 EOF
-    systemctl reload systemd-logind
-fi
+systemctl reload systemd-logind
 
 # Enable persistent journal
 mkdir -p /var/log/journal
