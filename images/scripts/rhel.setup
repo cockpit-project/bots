@@ -421,9 +421,22 @@ EOF
     version=$(cut -d '-' -f 2 <<< "$IMAGE")
     su builder -c "/usr/bin/mock --verbose --no-bootstrap-image -i $(/var/lib/testvm/build-deps.sh "$opsys $version")"
 
-    # We need to make sure mock has the same selinux-policy as we do
+    # cockpit-ws-selinux has Requires: selinux-policy >= {build version}, so we need to
+    # ensure that mock's selinux-policy is old enough for any target image.
+    # For centos-9-stream: use an older version from koji so that packages built here
+    # can install on centos-9-bootc, which may lag behind centos-9-stream.
+    # https://github.com/cockpit-project/bots/pull/8975
     mkdir /tmp/selinux-policy-rpms
-    dnf download --downloaddir /tmp/selinux-policy-rpms selinux-policy{,-devel,-targeted}
+    if [ "$IMAGE" = "centos-9-stream" ]; then
+        selinux_vr="38.1.76-1.el9"
+        koji_url="https://kojihub.stream.centos.org/kojifiles/packages/selinux-policy"
+        for p in selinux-policy selinux-policy-devel selinux-policy-targeted; do
+            curl -fsS -L -o "/tmp/selinux-policy-rpms/${p}-${selinux_vr}.noarch.rpm" \
+                "${koji_url}/${selinux_vr%-*}/${selinux_vr##*-}/noarch/${p}-${selinux_vr}.noarch.rpm"
+        done
+    else
+        dnf download --downloaddir /tmp/selinux-policy-rpms selinux-policy{,-devel,-targeted}
+    fi
     su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
 fi
 
