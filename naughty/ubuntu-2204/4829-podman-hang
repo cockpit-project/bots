@@ -1,5 +1,0 @@
-  File "test/check-application", line *, in testPruneUnusedContainers*
-*
-    self.execute("podman ps -a >&2", system=auth)
-*
-RuntimeError: Timed out on 'podman ps -a >&2'
