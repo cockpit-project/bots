@@ -156,6 +156,11 @@ class TestingFarmClient(contextlib.AsyncExitStack):
                             'is-supported': True,
                         }
                     },
+                    'settings': {
+                        'pipeline': {
+                            'skip_guest_setup': True,
+                        }
+                    },
                 }
             ],
             'settings': {
