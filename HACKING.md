@@ -46,16 +46,39 @@ pushing PRs that will fail on trivial errors:
     ln -s ../../test/run .git/hooks/pre-push
 
 ### Updating pixel tests code
- 
+
 > [!NOTE]
 > This will only update the `log.html` page and redirect all links there to the log URL set in `<head>`. For `pixeldiff.html` there is currently no written dev guide.
 
 
-* Easiest way to develop is to go to `./lib/s3-html/log.html` and within `<head>` add a test URL for what you want to improve layout for. 
-``html
+* Easiest way to develop is to go to `./lib/s3-html/log.html` and within `<head>` add a test URL for what you want to improve layout for.
+```html
 <base href="https://log-url/log.html" />
 <meta http-equiv="refresh" content="5" >
 ```
 * Start a server for the `lib/` directory with `python -m http.server -d ./lib/s3-html`
 * Open up the URL echoed in terminal and go to `/log.html`
 * Make changes in `log.html` and see changes refresh live in the browser
+
+## Debugging tips
+
+### Boot stock OS images
+
+Our image refreshes find a lot of OS regressions. For reporting these to their respective bug trackers it is useful to reproduce them on stock cloud images. First, locate the current cloud image for e.g. [Fedora rawhide](https://download.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/); look at [images/scripts/*.bootstrap/](images/scripts/) scripts for the other distributions. Download it with
+
+```sh
+curl -o os.qcow2 -L IMAGE_URL
+```
+
+Then download cockpit CI's cloud config, and boot it in QEMU:
+
+```sh
+# nothing fancy, just admin:foobar and root:foobar
+curl -L -O https://github.com/cockpit-project/bots/raw/main/machine/cloud-init.iso
+qemu-system-x86_64 -cpu host -enable-kvm -nographic -m 2048 -drive file=os.qcow2,if=virtio -snapshot -cdrom cloud-init.iso -net nic,model=virtio -net user,hostfwd=tcp::2201-:22
+```
+
+Then log in as user "admin" and password "foobar" on the VT or with ssh
+```sh
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o CheckHostIP=no -p 2201 admin@localhost
+```
