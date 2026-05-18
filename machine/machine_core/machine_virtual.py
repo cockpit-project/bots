@@ -627,27 +627,23 @@ class VirtMachine(Machine):
         assert self._domain is not None
 
         index = len(self._disks)
+        temporary = False
 
-        if path:
-            fd, image = tempfile.mkstemp(suffix='.qcow2', prefix=os.path.basename(path), dir=self.run_dir)
-            os.close(fd)
-            subprocess.check_call(["qemu-img", "create", "-q", "-f", "qcow2",
-                                   "-o", f"backing_file={os.path.realpath(path)},backing_fmt=qcow2", image])
-
-        else:
+        if not path:
             assert self._domain is not None
             assert size is not None
             name = f"disk-{self._domain.name()}"
-            fd, image = tempfile.mkstemp(suffix='qcow2', prefix=name, dir=self.run_dir)
+            fd, path = tempfile.mkstemp(suffix='qcow2', prefix=name, dir=self.run_dir)
             os.close(fd)
-            subprocess.check_call(["qemu-img", "create", "-q", "-f", "raw", image, size])
+            subprocess.check_call(["qemu-img", "create", "-q", "-f", "raw", path, size])
+            temporary = True
 
         if not serial:
             serial = f"DISK{index}"
         dev = 'sd' + string.ascii_lowercase[index]
         extra = "<boot order='1'/>" if boot_disk else ""
         disk_desc = TEST_DISK_XML % {
-            'file': image,
+            'file': os.path.realpath(path),
             'serial': serial,
             'unit': index,
             'dev': dev,
@@ -659,13 +655,14 @@ class VirtMachine(Machine):
             raise Failure("Unable to add disk to vm")
 
         disk = {
-            "path": image,
+            "path": path,
             "serial": serial,
-            "filename": image,
+            "filename": path,
             "dev": dev,
             "index": index,
             "type": image_type,
             "extra": extra,
+            "temporary": temporary,
         }
 
         self._disks.append(disk)
@@ -685,7 +682,8 @@ class VirtMachine(Machine):
             if self._domain:
                 if self._domain.detachDeviceFlags(disk_desc, libvirt.VIR_DOMAIN_AFFECT_LIVE) != 0:
                     raise Failure("Unable to remove disk from vm")
-        os.unlink(disk['filename'])
+        if disk["temporary"]:
+            os.unlink(disk['filename'])
 
     def _qemu_monitor(self, command: str) -> str:
         self.message("& " + command)
