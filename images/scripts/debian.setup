@@ -81,6 +81,7 @@ sos \
 strace \
 systemd-coredump \
 systemd-cryptsetup \
+swtpm-tools \
 tang \
 targetcli-fb \
 tcsh \
