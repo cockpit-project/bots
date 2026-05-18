@@ -190,30 +190,15 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-43',
         ],
         'subscription-manager-1.28': [
-            'rhel-8-8',
             'rhel-8-10',
-        ],
-        'subscription-manager-1.28.36': [
-            'rhel-8-8',
         ],
         'subscription-manager-1.29': [
             'centos-9-stream',
-            'rhel-9-2',
-            'rhel-9-4',
             'rhel-9-6',
             'rhel-9-8',
         ],
-        'subscription-manager-1.29.33': [
-            'rhel-9-2',
-        ],
-        'subscription-manager-1.29.40': [
-            'rhel-9-4',
-        ],
         'subscription-manager-1.29.45': [
             'rhel-9-6',
-        ],
-        'subscription-manager-1.30.6': [
-            'rhel-10-0',
         ],
         '_manual': [
             'fedora-44',
