@@ -46,13 +46,13 @@ pushing PRs that will fail on trivial errors:
     ln -s ../../test/run .git/hooks/pre-push
 
 ### Updating pixel tests code
- 
+
 > [!NOTE]
 > This will only update the `log.html` page and redirect all links there to the log URL set in `<head>`. For `pixeldiff.html` there is currently no written dev guide.
 
 
-* Easiest way to develop is to go to `./lib/s3-html/log.html` and within `<head>` add a test URL for what you want to improve layout for. 
-``html
+* Easiest way to develop is to go to `./lib/s3-html/log.html` and within `<head>` add a test URL for what you want to improve layout for.
+```html
 <base href="https://log-url/log.html" />
 <meta http-equiv="refresh" content="5" >
 ```
