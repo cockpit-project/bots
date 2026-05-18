@@ -185,9 +185,9 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'candlepin/subscription-manager': {
         'main': [
             'centos-10',
-            'rhel-10-2',
-            'fedora-42',
+            'rhel-10-3',
             'fedora-43',
+            'fedora-44',
         ],
         'subscription-manager-1.28': [
             'rhel-8-8',
@@ -216,8 +216,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-0',
         ],
         '_manual': [
-            'fedora-44',
-            'rhel-10-3',
         ],
     },
     'cockpit-project/subscription-manager-cockpit': {
