@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "test/verify/check-storage-mdraid", line *, in testBitmap
+    b.wait_in_text('.pf-v6-c-alert', 'This MDRAID device has no write-intent bitmap')
+*
+testlib.Error: timeout
