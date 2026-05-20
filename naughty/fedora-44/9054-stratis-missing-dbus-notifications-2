@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "test/verify/check-storage-stratis", line *, in testPoolResizeLegacy
+    b.wait_not_present('.pf-v6-c-alert')
+*
+testlib.Error: timeout
