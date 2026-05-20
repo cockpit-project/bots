@@ -246,6 +246,9 @@ def main() -> None:
 
     if cmd == 'get':
         args = sign_curl(url)
+    elif cmd == 'url':
+        print(sign_url(url))
+        sys.exit(0)
     elif cmd == 'ls':
         for items in parse_list(list_bucket(url), "Size", "LastModified", "Key"):
             print('\t'.join(items))
