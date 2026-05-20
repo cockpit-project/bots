@@ -6,7 +6,6 @@
 # https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html
 
 import asyncio
-import base64
 import hashlib
 import hmac
 import logging
@@ -186,22 +185,54 @@ def parse_list(result: ET.Element, *keys: str) -> Iterable[Iterable[str]]:
 
 
 def sign_url(
-    url: urllib.parse.ParseResult, method: str = 'GET', headers: Sequence[str] = (), duration: int = 12 * 60 * 60
+    url: urllib.parse.ParseResult,
+    method: str = 'GET',
+    headers: Sequence[str] = (),
+    duration: int = 12 * 60 * 60,
+    key: tuple[str, str] | None = None,
 ) -> str:
-    """Returns a "pre-signed" url for the given method and headers"""
+    """Returns a "pre-signed" url for the given method and headers, using AWS4-HMAC-SHA256"""
     assert url.hostname is not None
-    access, secret = get_key(url)
-    bucket = url.hostname.split('.')[0]
+    access_key, secret_key = key or get_key(url)
 
-    expires = int(time.time()) + duration
-    headers = ''.join(f'{h}\n' for h in headers)
+    amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
 
-    h = hmac.HMAC(secret.encode('ascii'), digestmod='sha1')
-    h.update(f'{method}\n\n\n{expires}\n{headers}/{bucket}{url.path}'.encode('ascii'))
-    signature = urllib.parse.quote_plus(base64.b64encode(h.digest()))
+    region = 'any'
+    if url.hostname.endswith('.amazonaws.com'):
+        region = url.hostname.split('.')[-3]
 
-    query = f'AWSAccessKeyId={access}&Expires={expires}&Signature={signature}'
-    return url._replace(query=query).geturl()
+    credential_scope = f'{amzdate[:8]}/{region}/s3/aws4_request'
+    credential = f'{access_key}/{credential_scope}'
+
+    # Parse "key:value" header strings and add the required host header
+    signed_headers: dict[str, str] = {k.lower(): v for h in headers for k, v in [h.split(':', 1)]}
+    signed_headers['host'] = url.hostname
+    headers_str = ''.join(f'{k}:{v}\n' for k, v in sorted(signed_headers.items()))
+    headers_list = ';'.join(sorted(signed_headers))
+
+    # Query parameters must be sorted for canonical request
+    query_params = {
+        'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+        'X-Amz-Credential': credential,
+        'X-Amz-Date': amzdate,
+        'X-Amz-Expires': str(duration),
+        'X-Amz-SignedHeaders': headers_list,
+    }
+    query_string = urllib.parse.urlencode(sorted(query_params.items()), quote_via=urllib.parse.quote)
+
+    canonical_request = f'{method}\n{url.path}\n{query_string}\n{headers_str}\n{headers_list}\nUNSIGNED-PAYLOAD'
+    logger.debug('canonical request: %r', canonical_request)
+
+    algorithm = 'AWS4-HMAC-SHA256'
+    request_hash = hashlib.sha256(canonical_request.encode('ascii')).hexdigest()
+    string_to_sign = f'{algorithm}\n{amzdate}\n{credential_scope}\n{request_hash}'
+
+    signing_key = f'AWS4{secret_key}'.encode('ascii')
+    for item in credential_scope.split('/'):
+        signing_key = hmac.new(signing_key, item.encode('ascii'), hashlib.sha256).digest()
+    signature = hmac.new(signing_key, string_to_sign.encode('ascii'), hashlib.sha256).hexdigest()
+
+    return url._replace(query=f'{query_string}&X-Amz-Signature={signature}').geturl()
 
 
 def main() -> None:
