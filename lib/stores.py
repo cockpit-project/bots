@@ -24,9 +24,10 @@ PUBLIC_STORES: Sequence[str] = (
     "https://cockpit-images.us-east-1.linodeobjects.com/",
 )
 
-# hosted on the public internet, only accessible with a private token
+# hosted on the public internet, requires a private token for some/all images
 PRIVATE_STORES: Sequence[str] = (
     "https://cockpit-images.eu-central-1.linodeobjects.com/",
+    "https://cockpit-ci-images.s3.us-east-1.amazonaws.com/",
 )
 
 # locally configured stores in ~/.config/cockpit-dev/image-stores or $COCKPIT_IMAGE_STORES_FILE
