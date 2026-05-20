@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "test/verify/check-storage-stratis", line *, in testReboot
+    b.wait_text(self.card_row_col("Stratis filesystems", 1, 1), "fsys1")
+*
+testlib.Error: timeout
