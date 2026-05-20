@@ -133,12 +133,7 @@ def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[
     name = os.path.basename(dest)
 
     if not stores:
-        # Due to AI scraper-bot mitigation all public stores currently require
-        # an access token: if we don't have one, then don't bother.
-        stores = [
-            store for store in (*LOCAL_STORES, *PUBLIC_STORES, *PRIVATE_STORES)
-            if s3.is_key_present(urllib.parse.urlparse(store))
-        ]
+        stores = [*LOCAL_STORES, *PUBLIC_STORES, *PRIVATE_STORES]
         image_upload_store = os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE')
         if image_upload_store:
             # NB: This is an *addition* to the built-in stores, used for
