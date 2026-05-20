@@ -74,7 +74,11 @@ def is_key_present(url: urllib.parse.ParseResult) -> bool:
 
 
 def sign_request(
-    url: urllib.parse.ParseResult, method: str, headers: Mapping[str, str], checksum: str
+    url: urllib.parse.ParseResult,
+    method: str,
+    headers: Mapping[str, str],
+    checksum: str,
+    key: tuple[str, str, str | None] | None = None,
 ) -> dict[str, str]:
     """Signs an AWS request using the AWS4-HMAC-SHA256 algorithm
 
@@ -87,7 +91,7 @@ def sign_request(
     if url.scheme not in ['http', 'https']:
         sys.exit("S3 URLs must be http(s)")
     try:
-        access_key, secret_key = get_key(url)
+        access_key, secret_key, session_token = key or (*get_key(url), None)
     except KeyError:
         sys.exit(f"No key found for {url.hostname}")
 
@@ -95,7 +99,10 @@ def sign_request(
 
     # Header canonicalisation demands all header names in lowercase
     headers = {key.lower(): value for key, value in headers.items()}
-    headers.update({'host': url.hostname, 'x-amz-content-sha256': checksum, 'x-amz-date': amzdate})
+    headers.update({
+        'host': url.hostname, 'x-amz-content-sha256': checksum, 'x-amz-date': amzdate,
+        **({'x-amz-security-token': session_token} if session_token is not None else {}),
+    })
     headers_str = ''.join(f'{k}:{v}\n' for k, v in sorted(headers.items()))
     headers_list = ';'.join(sorted(headers))
 
@@ -124,10 +131,14 @@ def sign_request(
 
 
 def sign_curl(
-    url: urllib.parse.ParseResult, method: str = 'GET', headers: Mapping[str, str] = {}, checksum: str = SHA256_NIL
+    url: urllib.parse.ParseResult,
+    method: str = 'GET',
+    headers: Mapping[str, str] = {},
+    checksum: str = SHA256_NIL,
+    key: tuple[str, str, str | None] | None = None,
 ) -> Sequence[str]:
     """Same as sign_request() but formats the result as an argument list for curl, including the url"""
-    headers = sign_request(url, method, headers, checksum)
+    headers = sign_request(url, method, headers, checksum, key=key)
     return [f'-H{key}:{value}' for key, value in headers.items()] + [url.geturl()]
 
 
@@ -183,11 +194,11 @@ def sign_url(
     method: str = 'GET',
     headers: Sequence[str] = (),
     duration: int = 12 * 60 * 60,
-    key: tuple[str, str] | None = None,
+    key: tuple[str, str, str | None] | None = None,
 ) -> str:
     """Returns a "pre-signed" url for the given method and headers, using AWS4-HMAC-SHA256"""
     assert url.hostname is not None
-    access_key, secret_key = key or get_key(url)
+    access_key, secret_key, session_token = key or (*get_key(url), None)
 
     amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
 
@@ -211,6 +222,7 @@ def sign_url(
         'X-Amz-Date': amzdate,
         'X-Amz-Expires': str(duration),
         'X-Amz-SignedHeaders': headers_list,
+        **({'X-Amz-Security-Token': session_token} if session_token is not None else {}),
     }
     query_string = urllib.parse.urlencode(sorted(query_params.items()), quote_via=urllib.parse.quote)
 
