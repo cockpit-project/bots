@@ -32,7 +32,7 @@ from lib.network import get_curl_ca_arg
 from lib.stores import LOCAL_STORES, PRIVATE_STORES, PUBLIC_STORES
 
 
-def upload(store: str, source: str, public: bool, prune: bool = False) -> bool:
+def upload(store: str, source: str, prune: bool = False) -> bool:
     dest = urllib.parse.urljoin(store, os.path.basename(source))
     url = urllib.parse.urlparse(dest)
 
@@ -43,14 +43,12 @@ def upload(store: str, source: str, public: bool, prune: bool = False) -> bool:
     # Start building the command
     cmd = ["curl", "--no-progress-meter", "--fail", "--upload-file", source, *get_curl_ca_arg(url.netloc)]
 
-    headers = {s3.ACL: s3.PUBLIC} if public else {}
-
     # slightly magic: we already know the checksum: it's part of the filename
     match = re.search(r'[0-9a-f]{64}', source)
     assert match is not None
     hash_value = match.group(0)
 
-    cmd += s3.sign_curl(url, method='PUT', headers=headers, checksum=hash_value)
+    cmd += s3.sign_curl(url, method='PUT', checksum=hash_value)
 
     # Only prune after the above checks, to ensure that we have credentials.
     if prune:
@@ -95,8 +93,6 @@ def main() -> None:
         sources.append(source)
 
     for source in sources:
-        public = not os.path.basename(source).startswith('rhel')
-
         stores = args.store
         if not stores:
             if image_upload_store := os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE'):
@@ -105,17 +101,15 @@ def main() -> None:
                 # adds this to the list, if it's present.
                 stores = [image_upload_store]
         if not stores:
-            stores = list(LOCAL_STORES) + list(PRIVATE_STORES)
-            if public:
+            stores = [*LOCAL_STORES, *PRIVATE_STORES]
+            if not os.path.basename(source).startswith('rhel'):
                 # NB: We currently have a well-known S3 token which is capable
                 # of accessing all data uploaded to these buckets, regardless
-                # of ACL.  Only upload public images here.
+                # of ACL.  Only upload non-RHEL images here.
                 stores += PUBLIC_STORES
         success = False
         for store in stores:
-            # Temporarily make all images private, until we figure out if it's
-            # images or logs which cause so much traffic these days (AI scrapers?)
-            success |= upload(store, source, public=False, prune=args.prune_s3)
+            success |= upload(store, source, prune=args.prune_s3)
 
         if not success:
             sys.exit('Failed to upload to any image store')

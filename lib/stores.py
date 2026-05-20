@@ -39,5 +39,4 @@ except FileNotFoundError:
 
 LOCAL_STORES: Sequence[str] = data.splitlines()
 
-
 LOG_STORE = "https://cockpit-ci-logs.s3.us-east-1.amazonaws.com/"

@@ -23,9 +23,6 @@ from .directories import xdg_config_home
 from .network import host_ssl_context
 
 __all__ = (
-    "ACL",
-    "ACL_PUBLIC",
-    "PUBLIC",
     "is_key_present",
     "list_bucket",
     "parse_list",
@@ -33,9 +30,6 @@ __all__ = (
     "urlopen",
 )
 
-ACL = 'x-amz-acl'
-PUBLIC = 'public-read'
-ACL_PUBLIC = f'{ACL}:{PUBLIC}'
 SHA256_NIL = hashlib.sha256(b'').hexdigest()
 
 logger = logging.getLogger('s3')
@@ -257,8 +251,6 @@ def main() -> None:
         args = ["-XDELETE", *sign_curl(url, method="DELETE")]
     elif cmd == 'put':
         args = [sign_url(url, method='PUT')]
-    elif cmd == 'put-public':
-        args = [sign_url(url, method='PUT', headers=[ACL_PUBLIC])]
     else:
         sys.exit(f'unknown command {cmd}')
 
