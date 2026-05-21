@@ -22,23 +22,27 @@ from .directories import xdg_config_home
 from .network import host_ssl_context
 
 __all__ = (
-    "is_key_present",
+    "S3Key",
+    "get_key",
     "list_bucket",
     "parse_list",
     "sign_curl",
+    "sign_url",
     "urlopen",
 )
+
+type S3Key = tuple[str, str, str | None]
 
 SHA256_NIL = hashlib.sha256(b'').hexdigest()
 
 logger = logging.getLogger('s3')
 
 
-def get_key(url: urllib.parse.ParseResult) -> tuple[str, str]:
+def get_key(url: urllib.parse.ParseResult) -> S3Key | None:
     s3_key_dir = xdg_config_home('cockpit-dev/s3-keys', envvar='COCKPIT_S3_KEY_DIR')
 
     if url.hostname is None:
-        raise KeyError
+        return None
     hostname = url.hostname
 
     # ie: 'cockpit.s3.example.com' then 's3.example.com', then 'example.com'
@@ -46,7 +50,7 @@ def get_key(url: urllib.parse.ParseResult) -> tuple[str, str]:
         try:
             with open(os.path.join(s3_key_dir, hostname)) as fp:
                 access, secret = fp.read().split()
-                return access, secret
+                return access, secret, None
         except ValueError:
             print(f'ignoring invalid content of {s3_key_dir}/{hostname}', file=sys.stderr)
         except FileNotFoundError:
@@ -58,18 +62,11 @@ def get_key(url: urllib.parse.ParseResult) -> tuple[str, str]:
     if url.hostname == 'cockpit-images.us-east-1.linodeobjects.com':
         return (
             '2RI8J2WQEIC8NI5YS85Z',
-            'V6N8xbuIIDUGXlkHtIXRnje2e9HpIdCGK9nmxaM4'
+            'V6N8xbuIIDUGXlkHtIXRnje2e9HpIdCGK9nmxaM4',
+            None,
         )
 
-    raise KeyError
-
-
-def is_key_present(url: urllib.parse.ParseResult) -> bool:
-    """Checks if an S3 key is available for the given url"""
-    try:
-        return get_key(url) is not None
-    except KeyError:
-        return False
+    return None
 
 
 def sign_request(
@@ -77,7 +74,7 @@ def sign_request(
     method: str,
     headers: Mapping[str, str],
     checksum: str,
-    key: tuple[str, str, str | None] | None = None,
+    key: S3Key,
 ) -> dict[str, str]:
     """Signs an AWS request using the AWS4-HMAC-SHA256 algorithm
 
@@ -89,10 +86,7 @@ def sign_request(
 
     if url.scheme not in ['http', 'https']:
         sys.exit("S3 URLs must be http(s)")
-    try:
-        access_key, secret_key, session_token = key or (*get_key(url), None)
-    except KeyError:
-        sys.exit(f"No key found for {url.hostname}")
+    access_key, secret_key, session_token = key
 
     amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
 
@@ -134,21 +128,31 @@ def sign_curl(
     method: str = 'GET',
     headers: Mapping[str, str] = {},
     checksum: str = SHA256_NIL,
-    key: tuple[str, str, str | None] | None = None,
+    key: S3Key | None = None,
 ) -> Sequence[str]:
     """Same as sign_request() but formats the result as an argument list for curl, including the url"""
-    headers = sign_request(url, method, headers, checksum, key=key)
-    return [f'-H{key}:{value}' for key, value in headers.items()] + [url.geturl()]
+    if key is None:
+        return [url.geturl()]
+    signed = sign_request(url, method, headers, checksum, key=key)
+    return [f'-H{k}:{v}' for k, v in signed.items()] + [url.geturl()]
 
 
 def urlopen(
-    url: urllib.parse.ParseResult, method: str = 'GET', headers: Mapping[str, str] = {}, data: bytes = b''
+    url: urllib.parse.ParseResult,
+    method: str = 'GET',
+    headers: Mapping[str, str] = {},
+    data: bytes = b'',
+    key: S3Key | None = None,
 ) -> http.client.HTTPResponse:
-    """Same as sign_request() but calls urlopen() on the result"""
+    """Perform an S3 HTTP request, optionally signing it.
+
+    If key is given, signs the request.  Otherwise makes a plain unsigned request.
+    """
     retries = 0
     while True:
-        headers = sign_request(url, method, headers, hashlib.sha256(data).hexdigest())
-        request = urllib.request.Request(url.geturl(), headers=headers, method=method, data=data)
+        if key is not None:
+            headers = sign_request(url, method, headers, hashlib.sha256(data).hexdigest(), key=key)
+        request = urllib.request.Request(url.geturl(), headers=dict(headers), method=method, data=data)
         try:
             result = urllib.request.urlopen(request, context=host_ssl_context(url.netloc))
             return result
@@ -164,9 +168,9 @@ def urlopen(
             raise
 
 
-def list_bucket(url: urllib.parse.ParseResult) -> ET.Element:
+def list_bucket(url: urllib.parse.ParseResult, key: S3Key | None = None) -> ET.Element:
     """Get the ListBucketResult as a xml.etree.ElementTree"""
-    with urlopen(url) as response:
+    with urlopen(url, key=key) as response:
         return ET.fromstring(response.read())
 
 
@@ -183,11 +187,12 @@ def sign_url(
     method: str = 'GET',
     headers: Sequence[str] = (),
     duration: int = 12 * 60 * 60,
-    key: tuple[str, str, str | None] | None = None,
+    *,
+    key: S3Key,
 ) -> str:
     """Returns a "pre-signed" url for the given method and headers, using AWS4-HMAC-SHA256"""
     assert url.hostname is not None
-    access_key, secret_key, session_token = key or (*get_key(url), None)
+    access_key, secret_key, session_token = key
 
     amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
 
@@ -236,22 +241,23 @@ def main() -> None:
 
     url = urllib.parse.urlparse(uri)
 
-    if not is_key_present(url):
+    key = get_key(url)
+    if key is None:
         sys.exit(f'no key is available for {url.hostname}')
 
     if cmd == 'get':
-        args = sign_curl(url)
+        args = sign_curl(url, key=key)
     elif cmd == 'url':
-        print(sign_url(url))
+        print(sign_url(url, key=key))
         sys.exit(0)
     elif cmd == 'ls':
-        for items in parse_list(list_bucket(url), "Size", "LastModified", "Key"):
+        for items in parse_list(list_bucket(url, key=key), "Size", "LastModified", "Key"):
             print('\t'.join(items))
         sys.exit(0)
     elif cmd == 'rm':
-        args = ["-XDELETE", *sign_curl(url, method="DELETE")]
+        args = ["-XDELETE", *sign_curl(url, method="DELETE", key=key)]
     elif cmd == 'put':
-        args = [sign_url(url, method='PUT')]
+        args = [sign_url(url, method='PUT', key=key)]
     else:
         sys.exit(f'unknown command {cmd}')
 

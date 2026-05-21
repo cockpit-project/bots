@@ -160,12 +160,16 @@ class LocalImageDirectory(ImageCache):
 class S3ImageStore(ImageCache):
     def __init__(self, url: urllib.parse.ParseResult):
         self.url = url
+        key = s3.get_key(url)
+        if key is None:
+            raise KeyError(f'no S3 key available for {url.hostname}')
+        self.key = key
         # A bit magic: we have 2 buckets and 250GB quota.  Try to keep each bucket below ca. 100GB.
         self.max_bytes = float(os.environ.get("S3_IMAGES_MAX_GB", 100)) * 1000 * 1000 * 1000
         self.sizes: dict[str, str] = {}
 
     def list_files(self) -> Iterator[tuple[float, str]]:
-        result = s3.list_bucket(self.url)
+        result = s3.list_bucket(self.url, key=self.key)
 
         # make sure this gets done before we start iterating
         self.sizes = dict(s3.parse_list(result, "Key", "Size"))  # type: ignore[arg-type]  # https://github.com/python/typeshed/issues/11532
@@ -176,7 +180,9 @@ class S3ImageStore(ImageCache):
 
     def delete_file(self, filename: str) -> None:
         try:
-            with s3.urlopen(self.url._replace(path=os.path.join(self.url.path, filename)), method='DELETE'):
+            with s3.urlopen(
+                self.url._replace(path=os.path.join(self.url.path, filename)), method='DELETE', key=self.key
+            ):
                 pass
         except urllib.error.HTTPError as e:
             # 404 → already gone? *shrug* eventual consistency or parallel image-prune run

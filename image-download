@@ -88,21 +88,12 @@ def find(name: str, stores: Sequence[str], latest: float, quiet: bool) -> tuple[
 
         args = get_curl_ca_arg(url.netloc)
 
-        # First, check if this is an S3 store for which we have a key
-        if s3.is_key_present(url):
-            result = check_curl_args((*args, *s3.sign_curl(url, method='HEAD')))
-            if result:
-                show_status(quiet, 'present', store, '(authenticated)')
-                found.append(([*args, *s3.sign_curl(url)], result, store))  # GET
-                continue
-        else:
-            # access the URL directly, without further authentication
-            args.append(url.geturl())
-            result = check_curl_args(args)
-            if result:
-                show_status(quiet, 'present', store)
-                found.append((args, result, store))
-                continue
+        key = s3.get_key(url)
+        result = check_curl_args((*args, *s3.sign_curl(url, method='HEAD', key=key)))
+        if result:
+            show_status(quiet, 'present', store, '(authenticated)' if key else '')
+            found.append(([*args, *s3.sign_curl(url, key=key)], result, store))  # GET
+            continue
 
         show_status(quiet, 'absent', store)
 
