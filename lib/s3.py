@@ -5,7 +5,6 @@
 # and
 # https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html
 
-import asyncio
 import hashlib
 import hmac
 import logging
@@ -163,16 +162,6 @@ def urlopen(
                     retries += 1
                     continue
             raise
-
-
-async def request(
-    url: urllib.parse.ParseResult, method: str, headers: Mapping[str, str] = {}, data: bytes = b''
-) -> None:
-    def run() -> None:
-        with urlopen(url, method, headers, data) as _:
-            pass
-
-    await asyncio.get_running_loop().run_in_executor(None, run)
 
 
 def list_bucket(url: urllib.parse.ParseResult) -> ET.Element:
