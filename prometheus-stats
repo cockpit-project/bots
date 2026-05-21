@@ -202,8 +202,8 @@ merged_failures {merged_failures}
     for uri in stores.PUBLIC_STORES:
         url = urllib.parse.urlparse(uri)
 
-        if s3.is_key_present(url):
-            space_usage[uri] = sum(int(size) for size, in s3.parse_list(s3.list_bucket(url), "Size"))
+        if key := s3.get_key(url):
+            space_usage[uri] = sum(int(size) for size, in s3.parse_list(s3.list_bucket(url, key=key), "Size"))
     if space_usage:
         output += """
 # HELP s3_usage_bytes How much disk space an S3 store is using
@@ -229,11 +229,12 @@ merged_failures {merged_failures}
 
     print(output)
     if opts.s3:
+        key = s3.get_key(opts.s3)
         headers = {"Content-Type": "text/plain"}
         # AWS S3 buckets with BucketOwnerEnforced don't allow ACLs; bucket policy provides public access
         if not opts.s3.hostname.endswith('.amazonaws.com'):
             headers['x-amz-acl'] = 'public-read'
-        with s3.urlopen(opts.s3, data=output.encode("UTF-8"), method="PUT", headers=headers):
+        with s3.urlopen(opts.s3, data=output.encode("UTF-8"), method="PUT", headers=headers, key=key):
             pass
 
     return 0

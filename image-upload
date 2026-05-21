@@ -36,7 +36,8 @@ def upload(store: str, source: str, prune: bool = False) -> bool:
     dest = urllib.parse.urljoin(store, os.path.basename(source))
     url = urllib.parse.urlparse(dest)
 
-    if not s3.is_key_present(url):
+    key = s3.get_key(url)
+    if key is None:
         # No credentials?  That's not going to work...
         raise SystemExit(f"image-upload: no credentials for {dest}")
 
@@ -48,7 +49,7 @@ def upload(store: str, source: str, prune: bool = False) -> bool:
     assert match is not None
     hash_value = match.group(0)
 
-    cmd += s3.sign_curl(url, method='PUT', checksum=hash_value)
+    cmd += s3.sign_curl(url, method='PUT', checksum=hash_value, key=key)
 
     # Only prune after the above checks, to ensure that we have credentials.
     if prune:
