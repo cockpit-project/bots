@@ -91,9 +91,11 @@ def sign_request(
     amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
 
     # Header canonicalisation demands all header names in lowercase
-    headers = {key.lower(): value for key, value in headers.items()}
+    headers = {k.lower(): v for k, v in headers.items()}
     headers.update({
-        'host': url.hostname, 'x-amz-content-sha256': checksum, 'x-amz-date': amzdate,
+        'host': url.hostname,
+        'x-amz-content-sha256': checksum,
+        'x-amz-date': amzdate,
         **({'x-amz-security-token': session_token} if session_token is not None else {}),
     })
     headers_str = ''.join(f'{k}:{v}\n' for k, v in sorted(headers.items()))
@@ -162,7 +164,7 @@ def urlopen(
             if exc.status == 503:
                 if retries <= 3:
                     # 1 → 4 → 16 → 64 s back-off
-                    time.sleep(4 ** retries)
+                    time.sleep(4**retries)
                     retries += 1
                     continue
             raise
