@@ -68,6 +68,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             # all skipped
             *contexts('rhel-8-10-distropkg', COCKPIT_SCENARIOS - {'networking'}),
         ],
+        'rhel-9.8': [
+            *contexts('rhel-9-8', COCKPIT_SCENARIOS),
+            *contexts('rhel-10-2', COCKPIT_SCENARIOS),
+        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
