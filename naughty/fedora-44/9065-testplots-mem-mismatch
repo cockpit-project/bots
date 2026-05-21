@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "*verify/check-pages", line *, in testPlots
+    b.wait_js_func("ph_plot_data_plateau", "direct", mem_avail *, mem_avail *, *, "mem")
+*
+testlib.Error: timeout
+wait_js_cond(ph_plot_data_plateau("direct",*,"mem")): Error: condition did not become true
