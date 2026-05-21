@@ -7,6 +7,7 @@
 
 import hashlib
 import hmac
+import http.client
 import logging
 import os.path
 import shlex
@@ -16,7 +17,6 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any
 
 from .directories import xdg_config_home
 from .network import host_ssl_context
@@ -143,7 +143,7 @@ def sign_curl(
 
 def urlopen(
     url: urllib.parse.ParseResult, method: str = 'GET', headers: Mapping[str, str] = {}, data: bytes = b''
-) -> Any:  # https://github.com/python/typersshed/issues/3026
+) -> http.client.HTTPResponse:
     """Same as sign_request() but calls urlopen() on the result"""
     retries = 0
     while True:
