@@ -263,8 +263,7 @@ def main() -> None:
     else:
         sys.exit(f'unknown command {cmd}')
 
-    # shlex.join() only from Python 3.8
-    print('curl', ' '.join(map(shlex.quote, args)))
+    print('curl', shlex.join(args))
 
 
 if __name__ == '__main__':
