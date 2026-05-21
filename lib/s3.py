@@ -83,9 +83,6 @@ def sign_request(
     @headers, if given, are a dict of additional headers to be signed (eg: `x-amz-acl`)
     """
     assert url.hostname is not None
-
-    if url.scheme not in ['http', 'https']:
-        sys.exit("S3 URLs must be http(s)")
     access_key, secret_key, session_token = key
 
     amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
