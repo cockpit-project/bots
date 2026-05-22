@@ -230,6 +230,8 @@ merged_failures {merged_failures}
     print(output)
     if opts.s3:
         key = s3.get_key(opts.s3)
+        if key is None:
+            sys.exit(f'no key is available for {opts.s3.hostname}')
         headers = {"Content-Type": "text/plain"}
         # AWS S3 buckets with BucketOwnerEnforced don't allow ACLs; bucket policy provides public access
         if not opts.s3.hostname.endswith('.amazonaws.com'):

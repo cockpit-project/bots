@@ -144,7 +144,7 @@ def urlopen(
             headers = sign_request(url, method, headers, hashlib.sha256(data).hexdigest(), key=key)
         request = urllib.request.Request(url.geturl(), headers=dict(headers), method=method, data=data)
         try:
-            result = urllib.request.urlopen(request, context=host_ssl_context(url.netloc))
+            result = urllib.request.urlopen(request, context=host_ssl_context(url.netloc), timeout=10)
             return result
         except urllib.error.HTTPError as exc:
             logger.debug('%s %s %s attempt #%i → %s:', method, url.geturl(), headers, retries, exc.status)

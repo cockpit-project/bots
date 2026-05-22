@@ -1,305 +1,251 @@
 #!/usr/bin/env python3
 
-# This file is part of Cockpit.
-#
-# Copyright (C) 2013 Red Hat, Inc.
-#
-# Cockpit is free software; you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 2.1 of the License, or
-# (at your option) any later version.
-#
-# Cockpit is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+"""Download images from S3 stores.
 
-#
-# Download images or other state
-#
-# Images usually have a name specific link committed to git. These
-# are referred to as 'committed'
-#
-# Other state is simply referenced by name without a link in git
-# This is referred to as 'state'
-#
-# The stores are places to look for images or other state
-#
+Probes configured stores via HEAD, picks the fastest, and downloads with
+resume support, progress reporting, and SHA256 verification.
+
+For RHEL images on the AWS cockpit-ci-images bucket, authenticates via
+Kerberos → SAML → STS (requires kinit and the gssapi package).
+"""
 
 import argparse
 import contextlib
-import email
-import fcntl
+import hashlib
 import io
+import logging
 import os
-import shutil
-import stat
-import subprocess
+import re
 import sys
 import time
+import urllib.error
 import urllib.parse
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
+from pathlib import Path
 
-from lib import s3
+from lib import gssapi_saml_sts, s3
+from lib.ansi import BLUE, GREEN, RED, RESET
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
-from lib.network import get_curl_ca_arg
+from lib.locking import file_locked
+from lib.progressbar import ProgressBar
+from lib.s3 import S3Key
 from lib.stores import IMAGE_STORES, LOCAL_STORES
-from lib.testmap import get_test_image
 
-EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
-
-if os.isatty(1):
-    SYMBOLS = {'present': ' ✔', 'absent': ' ⨯', 'selected': '❯❯'}  # noqa: RUF001
-else:
-    SYMBOLS = {'present': ' >', 'absent': ' x', 'selected': '=>'}
+logger = logging.getLogger(__name__)
 
 
-def show_status(quiet: bool, status: str, *args: str, prefix: str = '') -> None:
-    if not quiet:
-        message = ' '.join(args)
-        sys.stderr.write(f'{prefix}{SYMBOLS[status]} {message}\n')
+def resolve_key(url: urllib.parse.ParseResult, use_cache: bool = True) -> S3Key | None:
+    """Determine the S3 key for a store URL, or None for unauthenticated access."""
+    return s3.get_key(url) or gssapi_saml_sts.try_key(url.geturl(), use_cache=use_cache)
 
 
-def curl_cmd(args: Sequence[str]) -> Sequence[str]:
-    return ['curl', '--connect-timeout', '10', '--fail', *args]
-
-
-def check_curl_args(args: Sequence[str]) -> tuple[str, float] | None:
-    head_args = ['--silent', '--head']  # only used for this check
-
-    try:
-        start = time.time()
-        output = subprocess.check_output(curl_cmd((*args, *head_args)), text=True)
-        duration = time.time() - start
-        return output, duration
-    except subprocess.CalledProcessError:
-        return None
-
-
-def find(name: str, stores: Sequence[str], latest: float, quiet: bool) -> tuple[list[str], str] | None:
-    found = []
+def find_store(
+    name: str, stores: Sequence[str], use_cache: bool = True, quiet: bool = False,
+) -> tuple[urllib.parse.ParseResult, S3Key | None, int] | None:
+    """HEAD-probe stores to find the image.  Returns (url, key, total) or None."""
+    best: tuple[urllib.parse.ParseResult, S3Key | None, int] | None = None
+    best_elapsed = float('inf')
 
     for store in stores:
         url = urllib.parse.urlparse(urllib.parse.urljoin(store, name))
 
-        args = get_curl_ca_arg(url.netloc)
-
-        key = s3.get_key(url)
-        result = check_curl_args((*args, *s3.sign_curl(url, method='HEAD', key=key)))
-        if result:
-            show_status(quiet, 'present', store, '(authenticated)' if key else '')
-            found.append(([*args, *s3.sign_curl(url, key=key)], result, store))  # GET
-            continue
-
-        show_status(quiet, 'absent', store)
-
-    # If we couldn't find the file, but it exists, we're good
-    if not found:
-        return None
-
-    # Find the most recent version of this file
-    def header_date(args: tuple[Sequence[str], tuple[str, float], str]) -> str | float:
-        _, (output, _duration), _message = args
         try:
-            _reply_line, headers_alone = output.split('\n', 1)
-            last_modified = email.message_from_file(io.StringIO(headers_alone)).get("Last-Modified", "")
-            return time.mktime(time.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z'))
-        except ValueError:
-            return ""
+            key = resolve_key(url, use_cache=use_cache)
+            auth = '' if key is None else ' 🎫' if key[2] else ' 🔑'  # key[2] is session_token
+            start = time.monotonic()
+            with s3.urlopen(url, method='HEAD', key=key) as response:
+                total = int(response.headers['Content-Length'])
+            elapsed = time.monotonic() - start
+            logger.debug('HEAD %r: %r bytes, %.3fs', store, total, elapsed)
+            symbol = f'{GREEN}✔{RESET}'
+            detail = f' {elapsed * 1000:.0f}ms'
+            if elapsed < best_elapsed:
+                best = (url, key, total)
+                best_elapsed = elapsed
+        except (urllib.error.URLError, OSError, gssapi_saml_sts.AuthError) as exc:
+            logger.debug('HEAD %r failed: %s', store, exc)
+            symbol = f'{RED}✗{RESET}'
+            auth = ''
+            detail = f' {exc}'
 
-    if latest:
-        # if we depend on getting the latest info, only download it from that one store
-        found.sort(reverse=True, key=header_date)
-    else:
-        found.sort(reverse=False, key=lambda x: x[1][1])
+        if not quiet:
+            sys.stderr.write(f'  {symbol} {store}{auth}{detail}\n')
 
-    return found[0][0], found[0][2]
-
-
-def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[str]) -> None:
-    name = os.path.basename(dest)
-
-    if not stores:
-        stores = [*LOCAL_STORES, *IMAGE_STORES]
-        image_upload_store = os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE')
-        if image_upload_store:
-            # NB: This is an *addition* to the built-in stores, used for
-            # testing.  Compare with image-upload which *only* uploads to this
-            # store, if it's present.
-            stores += [image_upload_store]
-
-    # The time condition for If-Modified-Since
-    exists = not force and os.path.exists(dest)
-    if exists:
-        since = dest
-    else:
-        since = EPOCH
-
-    result = find(name, stores, latest=state, quiet=quiet)
-
-    # If we couldn't find the file, but it exists, we're good
-    if result is None:
-        if exists:
-            return
-        raise RuntimeError(f"image-download: couldn't find file anywhere: {name}")
-
-    args, message = result
-    show_status(quiet, 'selected', urllib.parse.urljoin(message, name))
-
-    temp = dest + ".partial"
-
-    # Adjust the arguments above that worked to make it visible and download real stuff
-    args.append("--show-error")
-    if not quiet and os.isatty(sys.stdout.fileno()):
-        args.append("--progress-bar")
-    else:
-        args.append("--silent")
-    args.append("--remote-time")
-    args.append("--time-cond")
-    args.append(since)
-    args.append("--output")
-    args.append(temp)
-    if os.path.exists(temp):
-        if force:
-            os.remove(temp)
-        else:
-            args.append("-C")
-            args.append("-")
-
-    # Always create the destination file (because --state)
-    else:
-        open(temp, 'a').close()
-
-    curl = subprocess.Popen(curl_cmd(args))
-    ret = curl.wait()
-    if ret != 0:
-        raise RuntimeError(f"curl: unable to download {message} (returned: {ret})")
-
-    os.chmod(temp, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
-
-    # Due to time-cond the file size may be zero
-    # A new file downloaded, put it in place
-    if not exists or os.path.getsize(temp) > 0:
-        shutil.move(temp, dest)
+    if not quiet and best is not None:
+        sys.stderr.write(f'\n  Using: {BLUE}{best[0].geturl()}{RESET}\n\n')
+    return best
 
 
-# Calculate a place to put images where links are not committed in git
-def state_target(path: str) -> str:
-    data_dir = get_images_data_dir()
-    os.makedirs(data_dir, mode=0o775, exist_ok=True)
-    return os.path.join(data_dir, path)
+# --- Download ---
 
 
-# Calculate a place to put images where links are committed in git
-def committed_target(image: str) -> str:
-    link = os.path.join(IMAGES_DIR, image)
-    if not os.path.islink(link):
-        raise RuntimeError("image link does not exist: " + image)
+def download_to(
+    url: urllib.parse.ParseResult, key: S3Key | None, total: int, fp: io.BufferedRandom,
+) -> str:
+    """Download an image into an open file, returning the sha256 hex digest."""
+    sha = hashlib.sha256()
+    offset = 0
 
-    dest = os.readlink(link)
-    relative_dir = os.path.dirname(os.path.abspath(link))
-    full_dest = os.path.join(relative_dir, dest)
-    while os.path.islink(full_dest):
-        link = full_dest
-        dest = os.readlink(link)
-        relative_dir = os.path.dirname(os.path.abspath(link))
-        full_dest = os.path.join(relative_dir, dest)
+    with ProgressBar(total) as progress:
+        # Hash existing partial data for resume
+        progress.status = 'hashing partial file content'
+        while block := os.pread(fp.fileno(), 256 * 1024, offset):
+            sha.update(block)
+            offset += len(block)
+            progress.update(len(block))
+        logger.debug('partial file: hashed %r existing bytes', offset)
 
-    dest = os.path.join(get_images_data_dir(), dest)
+        progress.track_rate()
+        if offset < total:
+            request_headers = {'Range': f'bytes={offset}-{total - 1}'}
+            with s3.urlopen(url, headers=request_headers, key=key) as response:
+                while True:
+                    chunk = response.read(256 * 1024)
+                    if not chunk:
+                        break
+                    written = 0
+                    while written < len(chunk):
+                        written += os.pwrite(fp.fileno(), chunk[written:], offset + written)
+                    offset += len(chunk)
+                    sha.update(chunk)
+                    progress.update(len(chunk))
 
-    # We have the file but there is not valid link
-    if os.path.exists(dest):
-        try:
-            os.symlink(dest, os.path.join(IMAGES_DIR, os.readlink(link)))
-        except FileExistsError:
-            # can happen in unclean trees and deleting the image in the cache dir directly
-            pass
+    if offset != total:
+        raise RuntimeError(f'short read: got {offset} bytes, expected {total}')
 
-    # The image file in the images directory, may be same as dest
-    image_file = os.path.join(IMAGES_DIR, os.readlink(link))
-
-    # Double check that symlink in place
-    if os.path.abspath(dest) != os.path.abspath(image_file):
-        try:
-            os.symlink(os.path.abspath(dest), image_file)
-        except FileExistsError:
-            # .. but never make a cycle
-            pass
-
-    return dest
+    return sha.hexdigest()
 
 
-@contextlib.contextmanager
-def wait_lock(target: str) -> Iterator[None]:
-    lockfile = os.path.join(os.path.dirname(target), ".lock." + os.path.basename(target))
+def download(
+    name: str, dest: Path, sha256: str,
+    stores: Sequence[str],
+    use_cache: bool = True, quiet: bool = False,
+) -> bool:
+    """Find an image across stores and download it.  Returns True on success."""
+    temp = dest.with_suffix(dest.suffix + '.partial')
 
-    # we need to keep the lock fd open throughout the entire runtime, so remember it in a global-scoped variable
-    with open(lockfile, "w") as file:
-        for retry in range(360):
+    with file_locked(dest):
+        if dest.exists():
+            logger.debug('%r already downloaded', dest)
+            return True
+
+        sys.stderr.write(f'\nDownloading {GREEN}{name}{RESET}\n\n')
+
+        result = find_store(name, stores, use_cache=use_cache, quiet=quiet)
+        if result is None:
+            sys.stderr.write(f"{RED}couldn't find {name} in any store{RESET}\n")
+            return False
+        url, key, total = result
+
+        with open(os.open(temp, os.O_CREAT | os.O_RDWR, 0o666), 'r+b') as fp:
+            orig_stat = os.fstat(fp.fileno())
             try:
-                fcntl.flock(file, fcntl.LOCK_NB | fcntl.LOCK_EX)
-                break
-            except BlockingIOError:
-                if retry == 0:
-                    print("Waiting for concurrent image-download of %s..." % os.path.basename(target))
-                time.sleep(10)
-        else:
-            raise TimeoutError("timed out waiting for concurrent downloads of %s\n" % target)
+                actual_hash = download_to(url, key, total, fp)
+            except (urllib.error.HTTPError, OSError) as exc:
+                if os.fstat(fp.fileno()).st_size == 0:
+                    temp.unlink(missing_ok=True)
+                sys.stderr.write(f'{RED}{exc}{RESET}\n')
+                return False
 
-        yield
+        if actual_hash != sha256:
+            temp.unlink()
+            sys.stderr.write(f'{RED}sha256 mismatch: expected {sha256}, got {actual_hash}{RESET}\n')
+            return False
+        sys.stderr.write(f'  🔒 sha256 verified [{actual_hash}]\n')
+        logger.debug('sha256 verified: %r', actual_hash)
 
-        # clean up lock file
-        try:
-            os.unlink(lockfile)
-        except FileNotFoundError:
-            # parallel runs may remove it already
-            pass
+        temp.chmod(orig_stat.st_mode & 0o444)
+        temp.rename(dest)
+        logger.debug('downloaded %r to %r', name, dest)
+        sys.stderr.write('\n')
+
+    return True
 
 
-def download_images(image_list: Sequence[str], force: bool, quiet: bool, state: bool, stores: Sequence[str]) -> None:
-    data_dir = get_images_data_dir()
-    os.makedirs(data_dir, exist_ok=True)
+def committed_target(image: str) -> tuple[Path, str] | None:
+    """Resolve an image name to its versioned destination path in the data dir.
 
-    # A default set of images are all links in git.  These links have
-    # no directory part.  Other links might exist, such as the
-    # auxiliary links created by committed_target above, and we ignore
-    # them.
-    if not image_list:
-        image_list = []
-        if not state:
-            for filename in os.listdir(IMAGES_DIR):
-                link = os.path.join(IMAGES_DIR, filename)
-                if os.path.islink(link) and os.path.dirname(os.readlink(link)) == "":
-                    image_list.append(filename)
+    If image is a short name (e.g. 'rhel-10'), reads the symlink in
+    IMAGES_DIR to get the versioned filename.  If it's already versioned
+    (e.g. 'rhel-10-abc123.qcow2'), uses it directly.
 
-    for image in image_list:
-        image = get_test_image(image)
-        if state:
-            target = state_target(image)
-        else:
-            target = committed_target(image)
+    Ensures the symlink images/versioned-name → /cache/.../versioned-name exists.
+    Returns (dest, expected_sha256) or None.
+    """
+    link = Path(IMAGES_DIR) / image
+    try:
+        target_name = os.readlink(link)
+    except OSError:
+        # not a symlink — assume it's already a versioned filename
+        target_name = image
 
-        # don't download the same thing multiple times in parallel
-        with wait_lock(target):
-            if force or state or not os.path.exists(target):
-                download(target, force, state, quiet, stores)
+    dest = Path(get_images_data_dir()) / target_name
+
+    # Ensure images/rhel-10-abc123.qcow2 → /cache/.../rhel-10-abc123.qcow2
+    image_file = Path(IMAGES_DIR) / target_name
+    if not image_file.is_symlink():
+        with contextlib.suppress(FileExistsError):
+            image_file.symlink_to(dest)
+
+    match = re.search(r'-([0-9a-f]{64})\.', target_name)
+    if not match:
+        sys.stderr.write(f'\n{RED}no sha256 hash in image name: {target_name}{RESET}\n')
+        return None
+    return dest, match.group(1)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description='Download a bot state or images')
-    parser.add_argument("--force", action="store_true", help="Force unnecessary downloads")
-    parser.add_argument("--store", action="append", help="Where to find state or images")
-    parser.add_argument("--quiet", action="store_true", help="Make downloading quieter")
-    parser.add_argument("--state", action="store_true", help="Images or state not recorded in git")
-    parser.add_argument('image', nargs='*')
+    parser = argparse.ArgumentParser(description='Download images from S3 stores')
+    parser.add_argument('-d', '--debug', action='store_true', help='Enable debug logging')
+    parser.add_argument('-q', '--quiet', action='store_true', help='Quieter output')
+    parser.add_argument('--no-cache', action='store_true', help='Ignore cached credentials')
+    parser.add_argument('--store', action='append', help='Store URL to search')
+    parser.add_argument('image', nargs='*', help='Image name(s) to download (default: all)')
     args = parser.parse_args()
 
-    download_images(args.image, args.force, args.quiet, args.state, args.store)
+    logging.basicConfig(
+        level=logging.DEBUG if args.debug else logging.INFO,
+        format='%(name)s: %(message)s',
+    )
+
+    data_dir = Path(get_images_data_dir())
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    images = args.image
+    if not images:
+        # Default: all symlinks in IMAGES_DIR with no directory component
+        images = [
+            entry.name for entry in Path(IMAGES_DIR).iterdir()
+            if entry.is_symlink() and '/' not in os.readlink(entry)
+        ]
+
+    stores = args.store
+    if not stores:
+        stores = [*LOCAL_STORES, *IMAGE_STORES]
+        if upload_store := os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE'):
+            # NB: This is an *addition* to the built-in stores, used for
+            # testing.  Compare with image-upload which *only* uploads to this
+            # store, if it's present.
+            stores.append(upload_store)
+
+    failures = 0
+    for image in images:
+        image = image.replace('-distropkg', '')
+        result = committed_target(image)
+        if result is None:
+            failures += 1
+            continue
+        dest, sha256 = result
+        if not download(dest.name, dest, sha256, stores=stores,
+                        use_cache=not args.no_cache, quiet=args.quiet):
+            failures += 1
+
+    sys.exit(f'\n{RED}Some downloads failed.{RESET}' if failures else None)
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit('Aborted by user')
