@@ -19,13 +19,8 @@ from collections.abc import Sequence
 
 from lib.directories import xdg_config_home
 
-# hosted on public internet
-PUBLIC_STORES: Sequence[str] = (
-    "https://cockpit-images.us-east-1.linodeobjects.com/",
-)
-
 # hosted on the public internet, requires a private token for some/all images
-PRIVATE_STORES: Sequence[str] = (
+IMAGE_STORES: Sequence[str] = (
     "https://cockpit-images.eu-central-1.linodeobjects.com/",
     "https://cockpit-ci-images.s3.us-east-1.amazonaws.com/",
 )

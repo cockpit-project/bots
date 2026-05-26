@@ -26,7 +26,7 @@ jobs:
           cat > ~/.config/cockpit-dev/job-runner.toml << EOF
           [secrets.inline]
           github-token = '${{ secrets.COCKPITUOUS_TOKEN }}'
-          s3-keys = {"eu-central-1.linodeobjects.com"='${{ secrets.S3_KEY_EU }}', "us-east-1.linodeobjects.com"='${{ secrets.S3_KEY_US }}', "s3.us-east-1.amazonaws.com"='${{ secrets.AWS_KEY_LOGS }}'}
+          s3-keys = {"eu-central-1.linodeobjects.com"='${{ secrets.S3_KEY_EU }}', "s3.us-east-1.amazonaws.com"='${{ secrets.AWS_KEY_LOGS }}'}
 
           [logs]
           driver = 's3'

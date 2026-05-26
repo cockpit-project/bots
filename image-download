@@ -47,7 +47,7 @@ from lib import s3
 from lib.constants import IMAGES_DIR
 from lib.directories import get_images_data_dir
 from lib.network import get_curl_ca_arg
-from lib.stores import LOCAL_STORES, PRIVATE_STORES, PUBLIC_STORES
+from lib.stores import IMAGE_STORES, LOCAL_STORES
 from lib.testmap import get_test_image
 
 EPOCH = "Thu, 1 Jan 1970 00:00:00 GMT"
@@ -124,7 +124,7 @@ def download(dest: str, force: bool, state: bool, quiet: bool, stores: Sequence[
     name = os.path.basename(dest)
 
     if not stores:
-        stores = [*LOCAL_STORES, *PUBLIC_STORES, *PRIVATE_STORES]
+        stores = [*LOCAL_STORES, *IMAGE_STORES]
         image_upload_store = os.environ.get('COCKPIT_IMAGE_UPLOAD_STORE')
         if image_upload_store:
             # NB: This is an *addition* to the built-in stores, used for
