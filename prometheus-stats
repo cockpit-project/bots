@@ -199,7 +199,7 @@ merged_failures {merged_failures}
 
     # S3 space usage
     space_usage = {}
-    for uri in stores.PUBLIC_STORES:
+    for uri in stores.IMAGE_STORES:
         url = urllib.parse.urlparse(uri)
 
         if key := s3.get_key(url):
