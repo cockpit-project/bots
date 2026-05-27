@@ -1,112 +1,182 @@
 #!/usr/bin/env python3
 
-# This file is part of Cockpit.
-#
 # Copyright (C) 2016-2024 Red Hat, Inc.
-#
-# Cockpit is free software; you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 2.1 of the License, or
-# (at your option) any later version.
-#
-# Cockpit is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+# SPDX-License-Identifier: GPL-3.0-or-later
 
+import argparse
 import json
 import os
+import platform
+import re
 import shlex
 import subprocess
 import sys
-from typing import Any
+import time
+from datetime import datetime, timezone
 
-from lib import github, task, testmap
+from lib import github, testmap
+from lib.aio.jsonutil import JsonObject, get_nested, get_str, typechecked
 from lib.constants import BOTS_DIR, SCRIPTS_DIR
 
+api = github.GitHub()
 
-def run(*cmd: str, check: bool = True, **kwargs: Any) -> int:
-    print('\n+', shlex.join(cmd), file=sys.stderr)
-    result = subprocess.run(cmd, **kwargs, check=check)
+
+def would(*args: object) -> None:
+    print('\n** Would', *args)
+
+
+def run(
+    *cmd: str,
+    check: bool = True,
+    verbose: bool = False,
+    dry_run: bool = False,
+    env: dict[str, str] | None = None,
+) -> int:
+    if dry_run:
+        would(shlex.join(cmd))
+        return 0
+    if verbose:
+        print('\n+', shlex.join(cmd), file=sys.stderr)
+    result = subprocess.run(cmd, check=check, env=env)
     return result.returncode
 
 
-def with_logs(n: int, log_url: str | None) -> int | tuple[int, str]:
-    if log_url:
-        return n, log_url
-    return n
+def comment(issue_nr: int, body: str, *, dry_run: bool = False) -> None:
+    if dry_run:
+        would(f'comment on {api.repo}#{issue_nr}:', body)
+    else:
+        api.post(f"issues/{issue_nr}/comments", {"body": body})
 
 
-def image_refresh(image: str, **kwargs: Any) -> int | tuple[int, str]:
-    try:
-        log_url = os.environ.get('COCKPIT_CI_LOG_URL')
+def commit_and_push(image: str, *, issue_nr: int, verbose: bool = False, dry_run: bool = False) -> str:
+    """Commit the updated image and push it to a new remote branch."""
+    if api.token:
+        subprocess.check_call(['git', 'config', 'credential.https://github.com.username', api.token])
+    # --allow-empty: vanishingly unlikely, but if the image didn't change we
+    # still want to record that it was successfully refreshed on this date.
+    run(
+        'git',
+        'commit',
+        '--allow-empty',
+        '-m',
+        f'images: Update {image} image\n\nCloses #{issue_nr}',
+        '--',
+        f'images/{image}',
+        verbose=verbose,
+    )
 
-        dry_run: bool = kwargs['dry']
-        triggers = testmap.tests_for_image(image)
+    branch_name = f'image-refresh-{image}-{datetime.now(tz=timezone.utc):%Y%m%d-%H%M%S}'
+    branch_name = re.sub(r'[^A-Za-z0-9]+', '-', branch_name)
 
-        # Cleanup any extraneous disk usage elsewhere
-        run('./vm-reset')
+    run('git', 'push', api.remote, f'HEAD:refs/heads/{branch_name}', verbose=verbose, dry_run=dry_run)
 
-        # download the current image, for comparing them; that may not exist yet for newly introduced images
-        if run('./image-download', image, check=False) == 0:
-            old_image = os.path.realpath(f'{BOTS_DIR}/images/{image}')
-        else:
-            old_image = None
+    return branch_name
 
-        # create the new image
-        run('./image-create', '--verbose', image,
-            env={**os.environ, 'VIRT_BUILDER_NO_CACHE': "yes"})
 
-        # upload the new image
-        if dry_run:
-            task.would('./image-upload', '--prune-s3', image)
-        else:
-            run('./image-upload', '--prune-s3', image)
+def convert_issue_to_pull(issue_nr: int, branch: str, *, dry_run: bool = False) -> str | None:
+    data: JsonObject = {"head": branch, "base": "main", "issue": issue_nr}
 
-        # compare it to the previous one (on hosts we can ssh to)
-        if old_image and os.path.exists(f'{SCRIPTS_DIR}/{image}.setup'):
-            run('./image-diff', old_image, image)
+    if dry_run:
+        would(f'open PR on {api.repo}:', json.dumps(data, indent=4))
+        return None
 
-        # create branch and push it
-        branch = task.branch(image, f"images: Update {image} image", pathspec="images", **kwargs)
+    pull = typechecked(api.post("pulls", data), dict)
+    with get_nested(pull, 'head') as head:
+        return get_str(head, 'sha')
 
-        # trigger tests if it is not a pull request
-        if branch and "pull" not in kwargs:
-            pull = task.pull(branch, labels=['bot', 'no-test'], run_tests=False, **kwargs)
 
-            if log_url:
-                # Create a synthetic status for the log URL
-                log_status = {
+def image_refresh(image: str, issue_nr: int, *, verbose: bool = False, dry_run: bool = False) -> str:
+    """Run the image refresh. Returns the branch name."""
+    log_url = os.environ.get('COCKPIT_CI_LOG_URL', None)
+    comment(
+        issue_nr,
+        f"image-refresh {image} started on {platform.node()}. Log: {log_url or 'unknown'}",
+        dry_run=dry_run,
+    )
+
+    # Cleanup any extraneous disk usage elsewhere
+    run('./vm-reset', verbose=verbose)
+
+    # download the current image, for comparing them; that may not exist yet for newly introduced images
+    if run('./image-download', image, check=False, verbose=verbose) == 0:
+        old_image = os.path.realpath(f'{BOTS_DIR}/images/{image}')
+    else:
+        old_image = None
+
+    # create the new image
+    verbose_args = ['--verbose'] if verbose else []
+    run(
+        './image-create',
+        *verbose_args,
+        image,
+        env={**os.environ, 'VIRT_BUILDER_NO_CACHE': "yes"},
+        verbose=verbose,
+    )
+
+    # upload the new image
+    run('./image-upload', '--prune-s3', image, verbose=verbose, dry_run=dry_run)
+
+    # compare it to the previous one (on images we can ssh to)
+    if old_image and os.path.exists(f'{SCRIPTS_DIR}/{image}.setup'):
+        run('./image-diff', old_image, image, verbose=verbose)
+
+    # create branch and push it
+    branch = commit_and_push(image, issue_nr=issue_nr, verbose=verbose, dry_run=dry_run)
+
+    # Check if the issue is already a pull request (and do nothing if so)
+    issue = api.get(f"issues/{issue_nr}")
+    if issue and "pull_request" in issue:
+        return branch
+
+    # ... else, create a PR and trigger tests.
+    triggers = testmap.tests_for_image(image)
+    if head := convert_issue_to_pull(issue_nr, branch, dry_run=dry_run):
+        # Create a synthetic status to forward the log URL to the new HEAD
+        if log_url:
+            api.post(
+                f"statuses/{head}",
+                {
                     'state': 'success',
                     'context': f'image-refresh/{image}',
                     'description': 'Forwarded status',
-                    'target_url': log_url
-                }
-                if dry_run:
-                    task.would('add status', json.dumps(log_status, indent=4))
-                else:
-                    task.api.post(f"statuses/{pull['head']['sha']}", log_status)
+                    'target_url': log_url,
+                },
+            )
 
-            # Trigger this pull request
-            if dry_run:
-                task.would('trigger tests:', json.dumps(triggers, indent=4))
-            else:
-                head = pull["head"]["sha"]
-                for trigger in triggers:
-                    task.api.post(f"statuses/{head}", {
-                        "state": "pending",
-                        "context": trigger,
-                        "description": github.NOT_TESTED_DIRECT
-                    })
-
-    except subprocess.CalledProcessError as exc:
-        return with_logs(exc.returncode, log_url)
+        for trigger in triggers:
+            api.post(
+                f"statuses/{head}",
+                {"state": "pending", "context": trigger, "description": github.NOT_TESTED_DIRECT},
+            )
     else:
-        return with_logs(0, log_url)
+        would('trigger tests:', json.dumps(triggers, indent=4))
+
+    return branch
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Refresh image")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
+    parser.add_argument("--issue", required=True, type=int, help="GitHub issue number to act on")
+    parser.add_argument("--dry-run", "-n", action="store_true", help="Dry run to validate this task if supported")
+    parser.add_argument("image")
+    args = parser.parse_args()
+
+    start_time = time.time()
+    try:
+        branch = image_refresh(args.image, args.issue, verbose=args.verbose, dry_run=args.dry_run)
+    except BaseException as exc:
+        result = f"image-refresh {args.image} failed: {exc}"
+        sys.stderr.write(f"\n# {result}\n# Duration: {time.time() - start_time}s\n")
+        if not args.dry_run:
+            comment(args.issue, result)
+        raise
+    else:
+        result = f"image-refresh {args.image} succeeded: https://github.com/{api.repo}/commits/{branch}"
+        sys.stderr.write(f"\n# {result}\n# Duration: {time.time() - start_time}s\n")
+        if not args.dry_run:
+            comment(args.issue, result)
 
 
 if __name__ == '__main__':
-    task.main(function=image_refresh, title="Refresh image")
+    main()
