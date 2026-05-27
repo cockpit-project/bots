@@ -22,7 +22,6 @@ import json
 import os
 import re
 import shlex
-import shutil
 import socket
 import subprocess
 import sys
@@ -369,11 +368,6 @@ def comment(issue, comment, dry=False):
 def comment_done(issue, name, clean, branch, context=None, dry=False):
     message = f"{name} {context or ''} done: {clean}/commits/{branch}"
     comment(issue, message, dry=dry)
-
-
-def attach(filename):
-    if "TEST_ATTACHMENTS" in os.environ:
-        shutil.copy(filename, os.environ["TEST_ATTACHMENTS"])
 
 
 def default_branch():
