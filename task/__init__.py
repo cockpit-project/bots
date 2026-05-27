@@ -15,15 +15,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-"""Task automation module for GitHub-based workflows.
-
-This module provides utilities for automating GitHub-based workflows including
-issue management, pull request creation, and task execution.
-"""
+"""Backwards compatibility shim - import from lib.task instead."""
 
 from lib.task import (
     api,
-    attach,
     branch,
     comment,
     comment_done,
@@ -43,7 +38,6 @@ from . import github
 
 __all__ = (
     "api",
-    "attach",
     "branch",
     "comment",
     "comment_done",
