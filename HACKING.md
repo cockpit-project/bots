@@ -8,20 +8,44 @@ The bots work in containers that are built in the [cockpituous](https://github.c
 repository. New dependencies should be added there in the `tasks/container/Containerfile`
 file in that repository.
 
-## Bots filing issues
+## Bots filing issues and pull requests
 
-Many bots file or work with issues in GitHub repository. We can use issues to tell
-bots what to do. Often certan bots will just file issues for tasks that are outstanding.
-And in many cases other bots will then perform those tasks.
+Many bots file or work with issues in GitHub repository. Often, certain bots
+will file issues or pull requests for tasks that are outstanding.
 
-These bots are listed in the `./issue-scan` file. They are written using the
-`tasks/__init__.py` code. These are deprecated in favor of GitHub workflows.
+### Workflows in this repo
 
-## Bots printing output
+These scripts are triggered via GitHub workflows defined in this repo:
 
-The bots which run on our own infrastructure post their output into the
-requesting GitHub issue. This currently only applies to `image-refresh`, all
-other bots run in GitHub actions.
+- **image-trigger** (`.github/workflows/image-trigger.yml`): Runs on a daily
+  schedule (and can be triggered manually).  Checks which images are due for a
+  refresh and creates issues with `/image-refresh` commands to kick them off.
+
+- **issue-comment** (`.github/workflows/issue-comment.yml`): Reacts to
+  `/image-refresh <image>` comments on issues and PRs.  Submits the image
+  build as a job (currently via Testing Farm).
+
+- **naughty-prune** (`.github/workflows/naughty-prune.yml`): Runs weekly to
+  clean up the naughty list.
+
+### Scripts used from project repos
+
+These scripts are invoked from GitHub workflows in project repos (e.g. cockpit,
+cockpit-podman, etc.):
+
+- **cockpit-lib-update** (`cockpit-lib-update.yml`): Updates
+  `COCKPIT_REPO_COMMIT` in Makefiles to track cockpit HEAD and creates a pull
+  request.  Not run in the main `cockpit-project/cockpit` repo but used from
+  the repos (e.g. cockpit-podman, cockpit-machines, cockpit-files,
+  starter-kit) to keep them up to date.
+
+- **po-refresh** (`weblate-sync-po.yml`): Pulls translation updates from
+  Fedora Weblate, filters languages below a coverage threshold, and creates a
+  pull request.
+
+- **tasks-container-update** (`tasks-container-update.yml`): Fetches the
+  latest tag from a container registry and updates the configuration file,
+  then creates a pull request.
 
 ## Contributing to bots
 
