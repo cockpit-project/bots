@@ -27,8 +27,8 @@ from typing import Any
 
 import pika
 
-from lib import ALLOWLIST, distributed_queue, github, task, testmap
-from lib.aio.jsonutil import JsonObject, get_int, get_nested, get_object, get_str
+from lib import ALLOWLIST, distributed_queue, github, testmap
+from lib.aio.jsonutil import JsonObject, get_int, get_nested, get_object, get_objv, get_str
 from lib.jobqueue import QueueEntry, SubjectSpecification
 
 logging.basicConfig(level=logging.INFO)
@@ -159,7 +159,7 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
 
         logging.info("Processing #%s titled '%s' on revision %s", number, title, revision)
 
-        labels = task.labels_of_pull(pull)
+        labels = get_objv(pull, "labels", lambda lbl: get_str(lbl, "name"), ())
 
         # Create list of statuses to process: always process the requested contexts, if given
         todos: dict[str, JsonObject] = {context: {} for context in contexts}
