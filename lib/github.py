@@ -439,6 +439,9 @@ class GitHub:
             return {"body": body}
         return self.post_obj(f"issues/{issue_nr}/comments", {"body": body})
 
+    def set_labels(self, issue_nr: int, labels: Sequence[str] = ('bot',)) -> None:
+        self.post(f"issues/{issue_nr}/labels", list(labels))
+
     def convert_issue_to_pull(
         self,
         branch: str,
