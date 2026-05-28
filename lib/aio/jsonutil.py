@@ -111,6 +111,14 @@ def get_object(
     return _get(obj, lambda v: constructor(typechecked(v, dict)), key, default)
 
 
+def get_objv(
+    obj: JsonObject, key: str, constructor: Callable[[JsonObject], T], default: DT | _Empty = _empty,
+) -> DT | Sequence[T]:
+    def as_objv(value: JsonValue) -> Sequence[T]:
+        return tuple(constructor(typechecked(item, dict)) for item in typechecked(value, list))
+    return _get(obj, as_objv, key, default)
+
+
 def get_str_map(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> DT | Mapping[str, str]:
     def as_str_map(value: JsonValue) -> Mapping[str, str]:
         return {key: typechecked(value, str) for key, value in typechecked(value, dict).items()}

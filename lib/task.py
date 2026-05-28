@@ -27,11 +27,9 @@ import subprocess
 import sys
 import time
 import traceback
-from collections.abc import Sequence
 from datetime import datetime, timezone
 
 from lib import github
-from lib.aio.jsonutil import JsonObject, get_dictv, get_str
 from lib.constants import BASE_DIR
 
 # Module-level state
@@ -341,15 +339,6 @@ def label(issue, labels=('bot',)):
     except TypeError:
         resource = f"issues/{issue}/labels"
     return api.post(resource, labels)
-
-
-def labels_of_pull(pull: JsonObject) -> Sequence[str]:
-    if "labels" in pull:
-        labels = get_dictv(pull, "labels")
-    else:
-        labels = api.get_objv(f"issues/{pull['number']}/labels")
-
-    return [get_str(label, "name") for label in labels]
 
 
 def comment(issue, comment, dry=False):
