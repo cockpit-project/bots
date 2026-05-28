@@ -7,22 +7,15 @@ import argparse
 import json
 import os
 import platform
-import re
 import shlex
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
 
-from lib import github, testmap
-from lib.aio.jsonutil import JsonObject, get_nested, get_str, typechecked
+from lib import git, testmap
+from lib.aio.jsonutil import get_dict, get_str
 from lib.constants import BOTS_DIR, SCRIPTS_DIR
-
-api = github.GitHub()
-
-
-def would(*args: object) -> None:
-    print('\n** Would', *args)
+from lib.github import NOT_TESTED_DIRECT, GitHub
 
 
 def run(
@@ -33,7 +26,7 @@ def run(
     env: dict[str, str] | None = None,
 ) -> int:
     if dry_run:
-        would(shlex.join(cmd))
+        print('\n+ #', shlex.join(cmd))
         return 0
     if verbose:
         print('\n+', shlex.join(cmd), file=sys.stderr)
@@ -41,54 +34,12 @@ def run(
     return result.returncode
 
 
-def comment(issue_nr: int, body: str, *, dry_run: bool = False) -> None:
-    if dry_run:
-        would(f'comment on {api.repo}#{issue_nr}:', body)
-    else:
-        api.post(f"issues/{issue_nr}/comments", {"body": body})
-
-
-def commit_and_push(image: str, *, issue_nr: int, verbose: bool = False, dry_run: bool = False) -> str:
-    """Commit the updated image and push it to a new remote branch."""
-    if api.token:
-        subprocess.check_call(['git', 'config', 'credential.https://github.com.username', api.token])
-    # --allow-empty: vanishingly unlikely, but if the image didn't change we
-    # still want to record that it was successfully refreshed on this date.
-    run(
-        'git',
-        'commit',
-        '--allow-empty',
-        '-m',
-        f'images: Update {image} image\n\nCloses #{issue_nr}',
-        '--',
-        f'images/{image}',
-        verbose=verbose,
-    )
-
-    branch_name = f'image-refresh-{image}-{datetime.now(tz=timezone.utc):%Y%m%d-%H%M%S}'
-    branch_name = re.sub(r'[^A-Za-z0-9]+', '-', branch_name)
-
-    run('git', 'push', api.remote, f'HEAD:refs/heads/{branch_name}', verbose=verbose, dry_run=dry_run)
-
-    return branch_name
-
-
-def convert_issue_to_pull(issue_nr: int, branch: str, *, dry_run: bool = False) -> str | None:
-    data: JsonObject = {"head": branch, "base": "main", "issue": issue_nr}
-
-    if dry_run:
-        would(f'open PR on {api.repo}:', json.dumps(data, indent=4))
-        return None
-
-    pull = typechecked(api.post("pulls", data), dict)
-    with get_nested(pull, 'head') as head:
-        return get_str(head, 'sha')
-
-
-def image_refresh(image: str, issue_nr: int, *, verbose: bool = False, dry_run: bool = False) -> str:
+def image_refresh(
+    github: GitHub, image: str, issue_nr: int, *, verbose: bool = False, dry_run: bool = False,
+) -> str:
     """Run the image refresh. Returns the branch name."""
     log_url = os.environ.get('COCKPIT_CI_LOG_URL', None)
-    comment(
+    github.comment(
         issue_nr,
         f"image-refresh {image} started on {platform.node()}. Log: {log_url or 'unknown'}",
         dry_run=dry_run,
@@ -121,19 +72,30 @@ def image_refresh(image: str, issue_nr: int, *, verbose: bool = False, dry_run: 
         run('./image-diff', old_image, image, verbose=verbose)
 
     # create branch and push it
-    branch = commit_and_push(image, issue_nr=issue_nr, verbose=verbose, dry_run=dry_run)
+    # --allow-empty: vanishingly unlikely, but if the image didn't change we
+    # still want to record that it was successfully refreshed on this date.
+    git.add(f'images/{image}')
+    git.commit(
+        f'images: Update {image} image\n\nCloses #{issue_nr}',
+        allow_empty=True,
+        dry_run=dry_run,
+    )
+    branch = git.push(github, f"image-refresh-{image}", dry_run=dry_run)
 
     # Check if the issue is already a pull request (and do nothing if so)
-    issue = api.get(f"issues/{issue_nr}")
-    if issue and "pull_request" in issue:
+    issue = github.get_obj(f"issues/{issue_nr}", {})
+    if "pull_request" in issue:
         return branch
 
     # ... else, create a PR and trigger tests.
     triggers = testmap.tests_for_image(image)
-    if head := convert_issue_to_pull(issue_nr, branch, dry_run=dry_run):
+    pull = github.convert_issue_to_pull(branch, issue_nr, dry_run=dry_run)
+    if pull is not None:
+        head = get_str(get_dict(pull, "head"), "sha")
+
         # Create a synthetic status to forward the log URL to the new HEAD
         if log_url:
-            api.post(
+            github.post(
                 f"statuses/{head}",
                 {
                     'state': 'success',
@@ -144,12 +106,12 @@ def image_refresh(image: str, issue_nr: int, *, verbose: bool = False, dry_run: 
             )
 
         for trigger in triggers:
-            api.post(
+            github.post(
                 f"statuses/{head}",
-                {"state": "pending", "context": trigger, "description": github.NOT_TESTED_DIRECT},
+                {"state": "pending", "context": trigger, "description": NOT_TESTED_DIRECT},
             )
     else:
-        would('trigger tests:', json.dumps(triggers, indent=4))
+        print('\n** Would trigger tests:', json.dumps(triggers, indent=4))
 
     return branch
 
@@ -162,20 +124,21 @@ def main() -> None:
     parser.add_argument("image")
     args = parser.parse_args()
 
+    github = GitHub()
     start_time = time.time()
     try:
-        branch = image_refresh(args.image, args.issue, verbose=args.verbose, dry_run=args.dry_run)
+        branch = image_refresh(github, args.image, args.issue, verbose=args.verbose, dry_run=args.dry_run)
     except BaseException as exc:
         result = f"image-refresh {args.image} failed: {exc}"
         sys.stderr.write(f"\n# {result}\n# Duration: {time.time() - start_time}s\n")
         if not args.dry_run:
-            comment(args.issue, result)
+            github.comment(args.issue, result)
         raise
     else:
-        result = f"image-refresh {args.image} succeeded: https://github.com/{api.repo}/commits/{branch}"
+        result = f"image-refresh {args.image} succeeded: https://github.com/{github.repo}/commits/{branch}"
         sys.stderr.write(f"\n# {result}\n# Duration: {time.time() - start_time}s\n")
         if not args.dry_run:
-            comment(args.issue, result)
+            github.comment(args.issue, result)
 
 
 if __name__ == '__main__':

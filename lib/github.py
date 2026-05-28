@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import base64
 import functools
 import http.client
 import json
@@ -175,6 +176,16 @@ class GitHub:
         self.log = Logger(self.cache.directory)
         self.log.write("")
 
+    def config(self) -> Mapping[str, str]:
+        """Git config overrides for authenticating with this remote."""
+        if self.token:
+            basic = base64.b64encode(f'x-access-token:{self.token}'.encode()).decode()
+            return {
+                'credential.helper': '',
+                'http.https://github.com/.extraHeader': f'Authorization: Basic {basic}',
+            }
+        return {}
+
     @functools.cached_property
     def remote(self) -> str:
         repo = os.environ.get("GITHUB_BASE", None) or get_repo()
@@ -295,6 +306,10 @@ class GitHub:
         self.cache.mark()
         return json.loads(response['data'])
 
+    def post_obj(self, resource: str, data: JsonValue, accept: Container[int] = ()) -> JsonObject:
+        """Like post(), but typechecks that the response is a JSON object."""
+        return typechecked(self.post(resource, data, accept), dict)
+
     def put(self, resource: str, data: JsonValue, accept: Container[int] = ()) -> JsonValue:
         response = self.request("PUT", resource, json.dumps(data), {"Content-Type": "application/json"})
         status = response['status']
@@ -413,6 +428,32 @@ class GitHub:
     def get_head(self, pr: int) -> str | None:
         pull = self.get_obj(f"pulls/{pr}", {})
         return get_str(get_dict(pull, "head", {}), "sha", None)
+
+    @functools.cached_property
+    def default_branch(self) -> str:
+        return get_str(self.get_obj(), "default_branch")
+
+    def comment(self, issue_nr: int, body: str, *, dry_run: bool = False) -> JsonObject:
+        if dry_run:
+            print(f'\n** Would comment on {self.repo}#{issue_nr}:', body)
+            return {"body": body}
+        return self.post_obj(f"issues/{issue_nr}/comments", {"body": body})
+
+    def convert_issue_to_pull(
+        self,
+        branch: str,
+        issue_nr: int,
+        *,
+        dry_run: bool = False,
+    ) -> JsonObject | None:
+        base = os.path.basename(os.getenv("GITHUB_REF", self.default_branch))
+        data: JsonObject = {"head": branch, "base": base, "issue": issue_nr}
+
+        if dry_run:
+            print(f'\n** Would open PR on {self.repo}:', json.dumps(data, indent=4))
+            return None
+
+        return self.post_obj("pulls", data)
 
 
 class Checklist:
