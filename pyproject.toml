@@ -33,7 +33,6 @@ module = [
     'cockpit-lib-update',
     'image-refresh',
     'naughty-prune',
-    'npm-update',
     'po-refresh',
     'tasks-container-update',
 ]
