@@ -29,8 +29,6 @@ disallow_untyped_defs = false
 warn_return_any = false
 module = [
     'lib.task',
-
-    'po-refresh',
 ]
 
 [tool.ruff]
