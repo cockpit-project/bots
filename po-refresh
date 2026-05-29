@@ -1,170 +1,123 @@
 #!/usr/bin/env python3
 
-# This file is part of Cockpit.
-#
-# Copyright (C) 2017 Red Hat, Inc.
-#
-# Cockpit is free software; you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation; either version 2.1 of the License, or
-# (at your option) any later version.
-#
-# Cockpit is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
+# Copyright (C) 2017-2026 Red Hat, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
 
-import glob
+import argparse
 import json
 import os
 import subprocess
-import sys
+from pathlib import Path
+from typing import Literal
 
-from lib import github, task, testmap
+from lib import git, testmap
+from lib.aio.jsonutil import get_dict, get_str
 from lib.constants import BASE_DIR
+from lib.github import NOT_TESTED_DIRECT, GitHub
+
+MANIFEST_PATH = Path("pkg/shell/manifest.json")
+LANGUAGE_MAP_PATH = Path("po/language_map.txt")
 
 
-def run(context, verbose=False, **kwargs):
-    cwd = BASE_DIR
+def modify_shell_manifest(op: Literal['+', '-'], lang: str) -> None:
+    """Add or remove a language from the shell's locale list, if it exists."""
+    try:
+        data = json.loads(MANIFEST_PATH.read_text())
+        language_map = LANGUAGE_MAP_PATH.read_text()
+    except FileNotFoundError:
+        return
 
-    def output(*args):
-        if verbose:
-            sys.stderr.write("+ " + " ".join(args) + "\n")
-        return subprocess.check_output(args, cwd=cwd, text=True)
+    locales = dict(data["locales"])
+    for line in language_map.splitlines():
+        map_lang, display_name, locale_code = line.strip().split(":")
+        if map_lang == lang:
+            if op == '+':
+                locales[locale_code] = display_name
+            else:
+                locales.pop(locale_code, None)
+            break
+    else:
+        raise KeyError(f"Language {lang!r} not found in {LANGUAGE_MAP_PATH}")
 
-    def output_with_stderr(*args):
-        if verbose:
-            sys.stderr.write("+ " + " ".join(args) + "\n")
-        return subprocess.check_output(args, cwd=cwd, text=True, stderr=subprocess.STDOUT)
+    MANIFEST_PATH.write_text(
+        json.dumps(
+            {
+                **data,
+                "locales": {k: locales[k] for k in sorted(locales)},
+            },
+            ensure_ascii=False,
+            indent=4,
+        )
+        + "\n"
+    )
+    git.add(MANIFEST_PATH)
 
-    def execute(*args):
-        if verbose:
-            sys.stderr.write("+ " + " ".join(args) + "\n")
-        subprocess.check_call(args, cwd=cwd)
 
-    local_branch = None
-    current_manifest = None
-    current_linguas = []
-    language_map = {}
-    # LINGUAS file in use and therefore needs updating
-    linguas_exists = os.path.isfile("po/LINGUAS")
-    # Manifest file is use - and for its updating we also need language map
-    manifest_exists = os.path.isfile("pkg/shell/manifest.json") and os.path.isfile("po/language_map.txt")
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Update translations from Fedora Weblate")
+    parser.add_argument("--dry-run", "-n", action="store_true", help="Dry run to validate this task if supported")
+    args = parser.parse_args()
 
-    # Get locale from language-map file. Fail with keyError when not found
-    def get_locale(file_name):
-        language = os.path.splitext(os.path.basename(file_name))[0]
-        if manifest_exists:
-            return language_map[language]
-        return [language]
+    github = GitHub()
+    lang_changes = 0
 
-    def add_and_commit_lang(name, language, action):
-        git_cmd = ["git", "add", "--"]
-        if linguas_exists:
-            with open("po/LINGUAS", "w", encoding='utf-8') as lngs:
-                print("\n".join(current_linguas), file=lngs)
-            git_cmd.append("po/LINGUAS")
-        if manifest_exists:
-            with open("pkg/shell/manifest.json", "w", encoding='utf-8') as mnfst:
-                text = json.dumps(current_manifest, ensure_ascii=False, indent=4)
-                print(text, file=mnfst)
-            git_cmd.append("pkg/shell/manifest.json")
-        execute(*git_cmd, name)
-        return task.branch(context, f"po: {action} '{language}' language",
-                           pathspec=None, branch=local_branch, push=False, **kwargs)
+    # Remove languages that fall under the coverage threshold
+    coverage_limit = float(os.getenv("COVERAGE_THRESHOLD", "0.8"))
+    for po in Path("po").glob("*.po"):
+        stats = subprocess.check_output(
+            ["msgfmt", "--statistics", str(po)],
+            cwd=BASE_DIR, text=True, stderr=subprocess.STDOUT,
+        )
 
-    # Build language map a read manifest
-    if manifest_exists:
-        with open("po/language_map.txt") as lm:
-            for line in lm:
-                line = line.strip()
-                if not line:
-                    continue
-                items = line.split(":")
-                language_map[items[0]] = items
+        # "2310 translated messages, 4 fuzzy translations, 4 untranslated messages."
+        counts = [int(part.split()[0]) for part in stats.split(", ")]
+        n_translated_messages = counts[0]
+        n_messages_total = sum(counts)
 
-        # Read manifest
-        with open("pkg/shell/manifest.json", encoding='utf-8') as mnfst:
-            current_manifest = json.load(mnfst)
-
-    # Read linguas
-    if linguas_exists:
-        with open("po/LINGUAS", encoding='utf-8') as lngs:
-            current_linguas = lngs.read().strip().split()
-
-    # Remove all files that have less than X% coverage
-    # By default 80% is used but can be overridden by COVERAGE_THRESHOLD env variable
-    for po in glob.glob("po/*.po"):
-        all_types = output_with_stderr("msgfmt", "--statistics", po).split(", ")
-        translated = int(all_types[0].split(" ")[0])
-        untranslated = 0
-        for u in all_types[1:]:
-            untranslated += int(u.split(" ")[0])
-        coverage = translated / (translated + untranslated)
-        coverage_limit = os.getenv("COVERAGE_THRESHOLD", 0.8)
-        if coverage < float(coverage_limit):
-            output("rm", po)
-
-    # Remove languages that fall under 80% translated
-    files = output("git", "ls-files", "--deleted", "po/")
-    for name in files.splitlines():
-        if name.endswith(".po"):
-            locale = get_locale(name)
-            if current_manifest:
-                current_manifest["locales"].pop(locale[2])
-            if current_linguas:
-                current_linguas.remove(locale[0])
-            local_branch = add_and_commit_lang(name, locale[0], "Drop")
-
-    # HACK: Semicolon in some languages in 'Plural-Forms' header key can break translations
-    # https://github.com/mikeedwards/po2json/issues/87
-    # Removing all semicolons is safe way around this
-    output('sed', '-ri', r'/^"Plural-Forms:/ s/;(\\n")$/\1/', *glob.glob("po/*.po"))
+        if n_translated_messages / n_messages_total < coverage_limit:
+            lang = po.stem
+            po.unlink()  # to avoid "remove modified file?" from git
+            try:
+                git.rm(po)  # fails if the file was never tracked
+            except subprocess.CalledProcessError:
+                continue
+            modify_shell_manifest('-', lang)
+            git.commit(f"po: Drop '{lang}' language")
+            lang_changes += 1
 
     # Add languages that got over 80% translated
-    files = output("git", "ls-files", "--others", "--exclude-standard", "po/")
-    for name in files.splitlines():
-        if name.endswith(".po"):
-            locale = get_locale(name)
-            if current_manifest:
-                current_manifest["locales"][locale[2]] = locale[1]
-                current_manifest["locales"] = dict(sorted(current_manifest["locales"].items()))
-            if current_linguas:
-                current_linguas.append(locale[0])
-                current_linguas.sort()
-            local_branch = add_and_commit_lang(name, locale[0], "Add")
+    for po in git.untracked("po/"):
+        if po.suffix == ".po":
+            git.add(po)
+            modify_shell_manifest('+', po.stem)
+            git.commit(f"po: Add '{po.stem}' language")
+            lang_changes += 1
 
-    branch = task.branch(context, "po: Update from Fedora Weblate", pathspec="po/",
-                         branch=local_branch, **kwargs)
+    # Add anything else (ie: updates of existing languages)
+    git.add("po/")
+    if git.changes_staged():
+        git.commit("po: Update from Fedora Weblate")
+        lang_changes += 1
 
-    api = github.GitHub()
-
-    if local_branch and not branch:  # We only introduced/dropped language but otherwise no updates
-        if kwargs["issue"]:
-            clean = f"https://github.com/{api.repo}"
-            task.comment_done(kwargs["issue"], "po-refresh", clean, local_branch, context)
-
-        task.push_branch(local_branch)
-        branch = local_branch
-
-    if not branch:
-        # Nothing to update
+    if not lang_changes or args.dry_run:
         return
 
     # Create a pull request from these changes
-    pull = task.pull(branch, labels=['bot', 'no-test', 'release-blocker'], run_tests=False, **kwargs)
+    branch = git.push(github, "po-refresh")
+    pull = github.create_pull_request(
+        branch,
+        "Update translations from Fedora Weblate",
+        labels=['bot', 'no-test', 'release-blocker'],
+    )
 
-    # Trigger this pull request
-    head = pull["head"]["sha"]
-
-    triggers = testmap.tests_for_po_refresh(api.repo)
-    for trigger in triggers:
-        api.post(f"statuses/{head}", {"state": "pending", "context": trigger,
-                                               "description": task.github.NOT_TESTED_DIRECT})
+    # Trigger the tests for po-refresh
+    head = get_str(get_dict(pull, "head"), "sha")
+    for trigger in testmap.tests_for_po_refresh(github.repo):
+        github.post(
+            f"statuses/{head}",
+            {"context": trigger, "state": "pending", "description": NOT_TESTED_DIRECT},
+        )
 
 
 if __name__ == '__main__':
-    task.main(function=run, title="Update translations from Fedora Weblate")
+    main()

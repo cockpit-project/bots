@@ -100,6 +100,11 @@ def commit(message: str, *, allow_empty: bool = False) -> None:
     _git("commit", *(["--allow-empty"] if allow_empty else []), "-m", message, "--")
 
 
+def untracked(path: str) -> list[Path]:
+    """List untracked files, respecting .gitignore."""
+    return [Path(p) for p in _git("ls-files", "--others", "--exclude-standard", "--", path).splitlines()]
+
+
 def push(remote: GitHub, topic: str, *, dry_run: bool = False) -> str:
     """Generate a branch name and pushes HEAD to the remote, returning the branch name."""
     branch = f'{topic}-{datetime.now(tz=timezone.utc):%Y%m%d-%H%M%S}'
