@@ -67,6 +67,15 @@ def shortlog(rev_range: str, *paths: str) -> str:
     return _git("shortlog", rev_range, "--", *paths)
 
 
+def detach_head(ref: str) -> None:
+    """Detach HEAD at the given ref."""
+    # Bail out if there are unstaged or staged changes — checkout --detach
+    # would silently carry them across into whatever we commit next.
+    _git("diff", "--exit-code", "HEAD", "--")
+    _git("diff", "--cached", "--exit-code", "HEAD", "--")
+    _git("checkout", "--detach", ref, "--")
+
+
 def add(*paths: Path | str) -> None:
     """Stage files for commit."""
     _git("add", "--", *[str(p) for p in paths])
