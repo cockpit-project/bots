@@ -30,7 +30,6 @@ warn_return_any = false
 module = [
     'lib.task',
 
-    'naughty-prune',
     'po-refresh',
     'tasks-container-update',
 ]
