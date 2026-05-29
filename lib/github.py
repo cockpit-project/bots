@@ -42,7 +42,6 @@ __all__ = (
     'NOT_TESTED_DIRECT',
     'NO_TESTING',
     'TESTING',
-    'Checklist',
     'GitHub',
     'GitHubError',
 )
@@ -479,54 +478,3 @@ class GitHub:
             return None
 
         return self.post_obj("pulls", data)
-
-
-class Checklist:
-    # NB: GitHub sends `body: null` for issues with empty bodies
-    def __init__(self, body: str | None):
-        self.process(body or '')
-
-    @staticmethod
-    def format_line(item: str, check: bool | str) -> str:
-        if isinstance(check, bool):
-            return f' * [{" x"[check]}] {item}'  # ' * [ ] item' or ' * [x] item'
-        else:
-            return f' * [ ] {check}: {item}'  # eg ' * [ ] FAIL: item'
-
-    @staticmethod
-    def parse_line(line: str) -> tuple[str | None, str | bool | None]:
-        match = re.fullmatch(r'[*-] \[(?P<checked>[ xX])\]\s+((?P<status>[A-Z]+):\s+)?(?P<item>.+)', line.strip())
-        if match is None:
-            return None, None
-        return match['item'], match['status'] or match['checked'] in 'xX'
-
-    def process(self, body: str, items: Mapping[str, str | bool] = {}) -> None:
-        self.items = {}
-        lines = []
-        items = dict(items)
-        for line in body.splitlines():
-            item, check = self.parse_line(line)
-            if item:
-                if item in items:
-                    check = items[item]
-                    del items[item]
-                    line = self.format_line(item, check)
-                self.items[item] = check
-            lines.append(line)
-        for item, check in items.items():
-            lines.append(self.format_line(item, check))
-            self.items[item] = check
-        self.body = "\n".join(lines)
-
-    def check(self, item: str, checked: str | bool = True) -> None:
-        self.process(self.body, {item: checked})
-
-    def add(self, item: str) -> None:
-        self.process(self.body, {item: False})
-
-    def checked(self) -> Mapping[str, str | bool]:
-        result = {}
-        for item, check in self.items.items():
-            if check:
-                result[item] = check
-        return result
