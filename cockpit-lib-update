@@ -21,26 +21,28 @@
 # Makefile as input optionally the full path can be provided. (For example
 # Anaconda uses ui/webui/Makefile.am).
 
-import os
+import argparse
 import re
-import subprocess
-import tempfile
-from pathlib import Path
 
-from lib import task
-from lib.constants import BASE_DIR
+from lib import git
+from lib.github import GitHub
 
 GIT_URL_RE = r'COCKPIT_REPO_URL\s*=\s*(.*)'
 GIT_COMMIT_RE = r'COCKPIT_REPO_COMMIT\s*=\s*(.*)'
 
 
-def run(context, verbose=False, **kwargs):
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Update COCKPIT_REPO_COMMIT for cockpit projects")
+    parser.add_argument("--dry", action="store_true", help="Dry run to validate this task if supported")
+    parser.add_argument("context", nargs="?", help="Path to makefile (default: Makefile)")
+
+    args = parser.parse_args()
+
     cockpit_repo_url = 'https://github.com/cockpit-project/cockpit.git'
     cockpit_repo_commit = 'HEAD'
-    makefile = context or 'Makefile'
-    makefile_path = os.path.join(BASE_DIR, makefile)
+    makefile = args.context or 'Makefile'
 
-    with open(makefile_path) as fp:
+    with open(makefile) as fp:
         content = fp.read()
 
     m = re.search(GIT_URL_RE, content)
@@ -52,16 +54,13 @@ def run(context, verbose=False, **kwargs):
         cockpit_repo_commit = m.group(1)
 
     # Figure out latest cockpit tip commit
-    with tempfile.TemporaryDirectory('cockpit-repo') as tmpdir:
-        tmpdir = Path(tmpdir)
-        clone_dir = 'cockpit'
-        commit = cockpit_repo_commit.partition('#')[0].strip()
-        subprocess.check_call(['git', 'clone', cockpit_repo_url, clone_dir], cwd=tmpdir)
-        git_describe = subprocess.check_output(['git', 'describe'], cwd=tmpdir / clone_dir).decode().strip()
-        git_head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=tmpdir / clone_dir).decode().strip()
-        git_shortlog = subprocess.check_output(['git', 'shortlog', f'{commit}...', '--',
-                                                'pkg/lib', 'test/common', 'test/static-code', 'tools/node-modules'],
-                                               cwd=tmpdir / clone_dir).decode().strip()
+    commit = cockpit_repo_commit.partition('#')[0].strip()
+    with git.temporary_checkout(cockpit_repo_url):
+        git_describe = git.describe()
+        git_head = git.get_current_head()
+        git_shortlog = git.shortlog(
+            f'{commit}...', 'pkg/lib', 'test/common', 'test/static-code', 'tools/node-modules'
+        ).strip()
 
     try:
         # when HEAD is not tagged, this looks like "290-9-g4a6d86f5b"
@@ -76,15 +75,20 @@ def run(context, verbose=False, **kwargs):
         print("COCKPIT_REPO_COMMIT is already up to date, nothing to do")
         return
 
-    with open(makefile_path, 'w') as fp:
+    with open(makefile, 'w') as fp:
         fp.write(new_content)
 
     title = f"Makefile: Update Cockpit lib to {git_head[:32]}"
-    branch = task.branch('cockpit-lib', title, pathspec=makefile, **kwargs)
-    kwargs["title"] = title
-    kwargs["body"] = git_shortlog
-    task.pull(branch, **kwargs)
+    git.add(makefile)
+    if not git.changes_staged():
+        # No change?  No PR.
+        return
+    git.commit(title)
+
+    github = GitHub()
+    branch = git.push(github, 'cockpit-lib', dry_run=args.dry)
+    github.create_pull_request(branch, title, body=git_shortlog, dry_run=args.dry)
 
 
 if __name__ == '__main__':
-    task.main(function=run, title="Update COCKPIT_REPO_COMMIT for cockpit projects")
+    main()

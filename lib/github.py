@@ -33,7 +33,7 @@ from types import EllipsisType
 from typing import Any, TypedDict, TypeVar
 
 from lib import cache
-from lib.aio.jsonutil import JsonObject, JsonValue, get_dict, get_dictv, get_str, typechecked
+from lib.aio.jsonutil import JsonObject, JsonValue, get_dict, get_dictv, get_int, get_str, typechecked
 from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
 
@@ -441,6 +441,28 @@ class GitHub:
 
     def set_labels(self, issue_nr: int, labels: Sequence[str] = ('bot',)) -> None:
         self.post(f"issues/{issue_nr}/labels", list(labels))
+
+    def create_pull_request(
+        self,
+        branch: str,
+        title: str,
+        body: str = '',
+        labels: Sequence[str] = ('bot',),
+        *,
+        dry_run: bool = False,
+    ) -> JsonObject:
+        base = os.path.basename(os.getenv("GITHUB_REF", self.default_branch))
+        data: JsonObject = {"head": branch, "base": base, "title": title, "body": body}
+
+        if dry_run:
+            print(f'\n** Would open PR on {self.repo}:', json.dumps(data, indent=4))
+            return dict(data)
+
+        pr = self.post_obj("pulls", data)
+        if labels:
+            self.set_labels(get_int(pr, "number"), labels)
+
+        return pr
 
     def convert_issue_to_pull(
         self,
