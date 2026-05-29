@@ -43,7 +43,7 @@ GITHUB_DATA: dict[str, JsonValue] = {
     },
     "/repos/project/repo/issues/3333": {
         "title": "The issue title",
-        "body": "Some bug\n - [ ] image-refresh foonux\n",
+        "body": "Some bug",
     },
     "/repos/project/repo/pulls/1": {
         "title": "PR title",
