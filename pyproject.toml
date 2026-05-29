@@ -19,18 +19,6 @@ module = [
 ]
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
-# https://github.com/python/mypy/issues/11401 prevents us from enabling strict
-# mode for a given set of files, so instead, we disable the failing checks for
-# the files which aren't strictly typed.  Hopefully this decreases with time.
-check_untyped_defs = false
-disallow_untyped_calls = false
-disallow_untyped_defs = false
-warn_return_any = false
-module = [
-    'lib.task',
-]
-
 [tool.ruff]
 exclude = [
     ".git/",
