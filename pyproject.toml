@@ -31,7 +31,6 @@ module = [
     'lib.task',
 
     'po-refresh',
-    'tasks-container-update',
 ]
 
 [tool.ruff]

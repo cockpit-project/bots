@@ -20,17 +20,17 @@
 # Update .cockpit-ci/container to the latest tasks container tag automatically
 
 import argparse
-import asyncio
 import logging
 from pathlib import Path
 
 import httpx
 
-from lib import task
+from lib import git
 from lib.aio.jsonutil import get_str, get_strv, typechecked
+from lib.github import GitHub
 
 
-async def main() -> None:
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug', action='store_true', help="Print debugging messages")
     parser.add_argument('--dry-run', '-n', action='store_true', help="Don't push or open a PR")
@@ -47,20 +47,20 @@ async def main() -> None:
 
     service, _, repository = args.image.partition('/')
     if not service or not repository:
-        args.error(f'Invalid image name: {args.image}')
+        parser.error(f'Invalid image name: {args.image}')
 
-    async with httpx.AsyncClient() as client:
+    with httpx.Client() as client:
         token_url = httpx.URL(f'https://{service}/token').copy_with(params={
             'scope': f'repository:{repository}:pull',
             'service': service
         })
-        response = await client.get(str(token_url), headers=headers)
+        response = client.get(str(token_url), headers=headers)
         response.raise_for_status()
         logging.debug('token response: %r', response.json())
         token = get_str(typechecked(response.json(), dict), 'token')
         headers['Authorization'] = f'Bearer {token}'
 
-        response = await client.get(f'https://{service}/v2/{repository}/tags/list', headers=headers)
+        response = client.get(f'https://{service}/v2/{repository}/tags/list', headers=headers)
         response.raise_for_status()
         logging.debug('list response: %r', response.json())
         tags = get_strv(response.json(), 'tags')
@@ -70,10 +70,16 @@ async def main() -> None:
     Path(args.file).write_text(f'{args.image}:{tag}\n')
 
     title = f"cockpit-ci: Update container to {tag}"
-    branch = task.branch('cockpit-ci-container', title, pathspec=args.file, dry=args.dry_run)
-    if branch is not None:
-        task.pull(branch, title=title, dry=args.dry_run)
+    git.add(args.file)
+    if not git.changes_staged():
+        # No change?  No PR.
+        return
+    git.commit(title)
+
+    github = GitHub()
+    branch = git.push(github, 'cockpit-ci-container', dry_run=args.dry_run)
+    github.create_pull_request(branch, title, dry_run=args.dry_run)
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()
