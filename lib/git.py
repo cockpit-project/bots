@@ -1,12 +1,14 @@
 # Copyright (C) 2026 Red Hat, Inc.
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import contextlib
 import os
 import re
 import shlex
 import subprocess
 import sys
-from collections.abc import Mapping
+import tempfile
+from collections.abc import Iterator, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -37,9 +39,51 @@ def _git(
     return subprocess.check_output(cmd, env=env, text=True)
 
 
+@contextlib.contextmanager
+def temporary_checkout(url: str) -> Iterator[Path]:
+    """Clone a repo into a temporary directory and chdir into it."""
+    saved = os.getcwd()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        _git("clone", "--", url, tmpdir)
+        os.chdir(tmpdir)
+        try:
+            yield Path(tmpdir)
+        finally:
+            os.chdir(saved)
+
+
+def get_current_head() -> str:
+    """Return the current HEAD commit sha."""
+    return _git("rev-parse", "HEAD").strip()
+
+
+def describe() -> str:
+    """Return the output of git describe."""
+    return _git("describe").strip()
+
+
+def shortlog(rev_range: str, *paths: str) -> str:
+    """Return the output of git shortlog."""
+    return _git("shortlog", rev_range, "--", *paths)
+
+
 def add(*paths: Path | str) -> None:
     """Stage files for commit."""
     _git("add", "--", *[str(p) for p in paths])
+
+
+def rm(*paths: Path | str) -> None:
+    """git-rm the given paths."""
+    _git("rm", "--", *[str(p) for p in paths])
+
+
+def changes_staged() -> bool:
+    """Check if there are staged changes."""
+    try:
+        _git("diff", "--cached", "--quiet", "--")
+        return False
+    except subprocess.CalledProcessError:
+        return True
 
 
 def commit(message: str, *, allow_empty: bool = False) -> None:
