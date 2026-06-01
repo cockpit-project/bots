@@ -19,7 +19,6 @@
 
 import argparse
 import json
-import os
 import shlex
 import subprocess
 import sys
@@ -83,9 +82,9 @@ def main() -> int:
     return 0
 
 
-def last_update(pathspec: str, ref: str = "HEAD", verbose: bool = False) -> tuple[str, int] | None:
-    """Return (commit_sha, age_in_days) of the last commit touching pathspec, or None."""
-    cmd = ["git", "log", "--max-count=1", "--pretty=format:%ct %H", ref, "--", pathspec]
+def last_update(image: str, ref: str = "HEAD", verbose: bool = False) -> tuple[str, int] | None:
+    """Return (commit_sha, age_in_days) of the last commit for the given image, or None."""
+    cmd = ["git", "log", f"--grep=images: Update {image} image", "--max-count=1", "--pretty=format:%ct %H", ref]
     if verbose:
         sys.stderr.write("+ " + shlex.join(cmd) + "\n")
     output = subprocess.check_output(cmd, cwd=BASE_DIR, text=True)
@@ -111,7 +110,7 @@ def scan(api: github.GitHub, force: str | None, verbose: bool, dry: bool = False
     }
 
     for (image, options) in REFRESH.items():
-        update = last_update(os.path.join("images", image), "origin/main", verbose)
+        update = last_update(image, "origin/main", verbose)
 
         if force:
             if image != force:
