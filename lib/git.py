@@ -1,7 +1,6 @@
 # Copyright (C) 2026 Red Hat, Inc.
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import logging
 import os
 import re
 import shlex
@@ -13,8 +12,6 @@ from pathlib import Path
 
 from lib.github import GitHub
 
-logger = logging.getLogger(__name__)
-
 
 def _git(
     *args: str,
@@ -23,11 +20,12 @@ def _git(
 ) -> str:
     """Run a git command, logging and returning stdout."""
     cmd = ["git", *args]
-    logger.debug("+ %s", shlex.join(cmd))
 
     if dry_run:
-        print('\n** Would', shlex.join(cmd))
+        sys.stderr.write(f"# {shlex.join(cmd)}\n")
         return ''
+
+    sys.stderr.write(f"+ {shlex.join(cmd)}\n")
 
     env = {**os.environ, 'GIT_TERMINAL_PROMPT': '0'}
     if config:
@@ -36,9 +34,7 @@ def _git(
             env[f'GIT_CONFIG_KEY_{i}'] = key
             env[f'GIT_CONFIG_VALUE_{i}'] = value
 
-    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=env, text=True)
-    sys.stderr.write(output)
-    return output
+    return subprocess.check_output(cmd, env=env, text=True)
 
 
 def add(*paths: Path | str) -> None:
@@ -46,8 +42,8 @@ def add(*paths: Path | str) -> None:
     _git("add", "--", *[str(p) for p in paths])
 
 
-def commit(message: str, *, allow_empty: bool = False, dry_run: bool = False) -> None:
-    """Commit staged changes. Returns True if a commit was created."""
+def commit(message: str, *, allow_empty: bool = False) -> None:
+    """Commit staged changes.  Raises if nothing was staged, unless allow_empty."""
     _git("commit", *(["--allow-empty"] if allow_empty else []), "-m", message, "--")
 
 

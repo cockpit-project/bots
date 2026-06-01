@@ -78,7 +78,6 @@ def image_refresh(
     git.commit(
         f'images: Update {image} image\n\nCloses #{issue_nr}',
         allow_empty=True,
-        dry_run=dry_run,
     )
     branch = git.push(github, f"image-refresh-{image}", dry_run=dry_run)
 
