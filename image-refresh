@@ -48,11 +48,8 @@ def image_refresh(
     # Cleanup any extraneous disk usage elsewhere
     run('./vm-reset', verbose=verbose)
 
-    # download the current image, for comparing them; that may not exist yet for newly introduced images
-    if run('./image-download', image, check=False, verbose=verbose) == 0:
-        old_image = os.path.realpath(f'{BOTS_DIR}/images/{image}')
-    else:
-        old_image = None
+    # Remember where the symlink points before image-create changes it
+    old_image = os.path.realpath(f'{BOTS_DIR}/images/{image}')
 
     # create the new image
     verbose_args = ['--verbose'] if verbose else []
@@ -64,21 +61,21 @@ def image_refresh(
         verbose=verbose,
     )
 
-    # upload the new image
-    run('./image-upload', '--prune-s3', image, verbose=verbose, dry_run=dry_run)
-
-    # compare it to the previous one (on images we can ssh to)
-    if old_image and os.path.exists(f'{SCRIPTS_DIR}/{image}.setup'):
-        run('./image-diff', old_image, image, verbose=verbose)
-
-    # create branch and push it
-    # --allow-empty: vanishingly unlikely, but if the image didn't change we
-    # still want to record that it was successfully refreshed on this date.
     git.add(f'images/{image}')
-    git.commit(
-        f'images: Update {image} image\n\nCloses #{issue_nr}',
-        allow_empty=True,
-    )
+
+    if git.changes_staged():
+        # download the old image for diffing, upload the new one
+        diff_text = ''
+        if os.path.exists(f'{SCRIPTS_DIR}/{image}.setup'):
+            run('./image-download', image, check=False, verbose=verbose)
+            print(f'+ ./image-diff {old_image} {image}', file=sys.stderr)
+            diff_text = subprocess.check_output(['./image-diff', old_image, image], text=True)
+            print(diff_text)
+
+        run('./image-upload', '--prune-s3', image, verbose=verbose, dry_run=dry_run)
+        git.commit(f'images: Update {image} image\n\n{diff_text}\nCloses #{issue_nr}')
+    else:
+        git.commit(f'images: Update {image} image (unchanged)\n\nCloses #{issue_nr}', allow_empty=True)
     branch = git.push(github, f"image-refresh-{image}", dry_run=dry_run)
 
     # Check if the issue is already a pull request (and do nothing if so)
