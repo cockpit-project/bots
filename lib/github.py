@@ -175,15 +175,22 @@ class GitHub:
         self.log = Logger(self.cache.directory)
         self.log.write("")
 
-    def config(self) -> Mapping[str, str]:
+    def config(self) -> Sequence[tuple[str, str]]:
         """Git config overrides for authenticating with this remote."""
-        if self.token:
-            basic = base64.b64encode(f'x-access-token:{self.token}'.encode()).decode()
-            return {
-                'credential.helper': '',
-                'http.https://github.com/.extraHeader': f'Authorization: Basic {basic}',
-            }
-        return {}
+
+        # We do this the same way as GitHub's checkout action:
+        # https://github.com/actions/checkout/blob/df4cb1c069e1874edd31b4311f1884172cec0e10/src/git-auth-helper.ts#L55
+        # which means we also need to use an empty value to reset the
+        # multi-value list to empty before adding our own value, just in case
+        # we're running on such a checkout.
+        if not self.token:
+            return ()
+        basic = base64.b64encode(f'x-access-token:{self.token}'.encode()).decode()
+        return (
+            ('credential.helper', ''),
+            ('http.https://github.com/.extraheader', ''),
+            ('http.https://github.com/.extraheader', f'Authorization: Basic {basic}'),
+        )
 
     @functools.cached_property
     def remote(self) -> str:
