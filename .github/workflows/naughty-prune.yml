@@ -28,4 +28,4 @@ jobs:
           git config --global user.email "cockpituous@cockpit-project.org"
           mkdir -p ~/.config/cockpit-dev
           echo ${{ github.token }} >> ~/.config/cockpit-dev/github-token
-          ./naughty-prune --verbose
+          ./naughty-prune
