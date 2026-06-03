@@ -83,7 +83,7 @@ def add(*paths: Path | str) -> None:
 
 def rm(*paths: Path | str) -> None:
     """git-rm the given paths."""
-    _git("rm", "--", *[str(p) for p in paths])
+    _git("rm", "--ignore-unmatch", "--", *[str(p) for p in paths])
 
 
 def changes_staged() -> bool:
