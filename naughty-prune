@@ -20,7 +20,6 @@
 import argparse
 import textwrap
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 from lib import git
 from lib.aio.jsonutil import get_int, get_str
@@ -70,9 +69,7 @@ def main() -> None:
 
         # Start from our original HEAD and remove matching naughties
         git.detach_head(head)
-        paths = list(Path("naughty").glob(f"*/{number}-*"))
-        if paths:
-            git.rm(*paths)
+        git.rm(f"naughty/*/{number}-*")
 
         # Even if somehow no files are removed we should still file an empty
         # pull request to get the issue closed, otherwise we'll never find out
