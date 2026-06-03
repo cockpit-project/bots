@@ -8,7 +8,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -17,7 +17,7 @@ from lib.github import GitHub
 
 def _git(
     *args: str,
-    config: Mapping[str, str] | None = None,
+    config: Sequence[tuple[str, str]] = (),
     dry_run: bool = False,
 ) -> str:
     """Run a git command, logging and returning stdout."""
@@ -32,7 +32,7 @@ def _git(
     env = {**os.environ, 'GIT_TERMINAL_PROMPT': '0'}
     if config:
         env['GIT_CONFIG_COUNT'] = str(len(config))
-        for i, (key, value) in enumerate(config.items()):
+        for i, (key, value) in enumerate(config):
             env[f'GIT_CONFIG_KEY_{i}'] = key
             env[f'GIT_CONFIG_VALUE_{i}'] = value
 
