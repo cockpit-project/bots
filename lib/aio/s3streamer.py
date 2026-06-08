@@ -14,9 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-import codecs
 import json
-import locale
 import logging
 import os
 import textwrap
@@ -94,8 +92,6 @@ class LogStreamer:
     send_at: float | None
 
     def __init__(self, index: Index, proxy_url: URL | None = None) -> None:
-        assert locale.getpreferredencoding() == 'UTF-8'
-        self.input_decoder = codecs.getincrementaldecoder('UTF-8')(errors='replace')
         self.suffixes = {'chunks'}
         self.chunks = []
         self.index = index
