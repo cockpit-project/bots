@@ -71,6 +71,7 @@ tang \
 tpm2-tools \
 jq \
 ntfs-3g \
+ntfsprogs \
 wireguard-tools \
 xfsprogs \
 "
