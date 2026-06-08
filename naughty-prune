@@ -77,8 +77,8 @@ def main() -> None:
         git.commit(f"{title}\n\n{body}", allow_empty=True)
 
         branch = git.push(github, f"naughty-prune-{number}")
-        pull = github.create_pull_request(branch, body=body, title=title)
-        github.comment(get_int(pull, "number"),
+        pr_number = github.create_pull_request(branch, body=body, title=title)
+        github.comment(pr_number,
                        "Please comment on the upstream distro bug manually before accepting this "
                        "pull request.\n\nIf you wish to keep this known issue open, then update it")
 

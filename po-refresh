@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Literal
 
 from lib import git, testmap
-from lib.aio.jsonutil import get_dict, get_str
 from lib.constants import BASE_DIR
 from lib.github import NOT_TESTED_DIRECT, GitHub
 
@@ -104,14 +103,14 @@ def main() -> None:
 
     # Create a pull request from these changes
     branch = git.push(github, "po-refresh")
-    pull = github.create_pull_request(
+    head = git.get_current_head()
+    github.create_pull_request(
         branch,
         "Update translations from Fedora Weblate",
         labels=['bot', 'no-test', 'release-blocker'],
     )
 
     # Trigger the tests for po-refresh
-    head = get_str(get_dict(pull, "head"), "sha")
     for trigger in testmap.tests_for_po_refresh(github.repo):
         github.post(
             f"statuses/{head}",

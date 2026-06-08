@@ -456,19 +456,21 @@ class GitHub:
         labels: Sequence[str] = ('bot',),
         *,
         dry_run: bool = False,
-    ) -> JsonObject:
+    ) -> int:
+        """Create a pull request.  Returns the PR number (0 for dry run)."""
         base = os.path.basename(os.getenv("GITHUB_REF", self.default_branch))
         data: JsonObject = {"head": branch, "base": base, "title": title, "body": body}
 
         if dry_run:
             print(f'\n** Would open PR on {self.repo}:', json.dumps(data, indent=4))
-            return dict(data)
+            return 0
 
         pr = self.post_obj("pulls", data)
+        number = get_int(pr, "number")
         if labels:
-            self.set_labels(get_int(pr, "number"), labels)
+            self.set_labels(number, labels)
 
-        return pr
+        return number
 
     def convert_issue_to_pull(
         self,
