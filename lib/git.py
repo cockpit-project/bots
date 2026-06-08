@@ -113,3 +113,19 @@ def push(remote: GitHub, topic: str, *, dry_run: bool = False) -> str:
     _git("push", "--", remote.remote, f"+HEAD:refs/heads/{branch}", config=remote.config(), dry_run=dry_run)
 
     return branch
+
+
+def amend_and_forcepush(remote: GitHub, branch: str, *, closes: int, dry_run: bool = False) -> None:
+    """Amend the commit with a Closes trailer and force-push.
+
+    This is needed to trigger CI: PRs created with GITHUB_TOKEN don't
+    generate workflow-triggering events, but a force-push via the deploy
+    key (SSH) generates a pull_request:synchronize event attributed to
+    the key owner.
+    """
+    if dry_run:
+        return
+    expected = get_current_head()
+    _git("commit", "--amend", "--no-edit", "--trailer", f"Closes: #{closes}", "--")
+    _git("push", f"--force-with-lease=refs/heads/{branch}:{expected}",
+         "--", remote.remote, f"HEAD:refs/heads/{branch}", config=remote.config())

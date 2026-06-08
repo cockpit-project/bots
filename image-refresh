@@ -86,6 +86,7 @@ def image_refresh(
     triggers = testmap.tests_for_image(image)
     pull = github.convert_issue_to_pull(branch, issue_nr, dry_run=dry_run)
     if pull is not None:
+        git.amend_and_forcepush(github, branch, closes=issue_nr)
         head = git.get_current_head()
 
         # Create a synthetic status to forward the log URL to the new HEAD
