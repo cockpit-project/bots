@@ -78,7 +78,8 @@ def main() -> None:
 
     github = GitHub()
     branch = git.push(github, 'cockpit-ci-container', dry_run=args.dry_run)
-    github.create_pull_request(branch, title, dry_run=args.dry_run)
+    pr_number = github.create_pull_request(branch, title, dry_run=args.dry_run)
+    git.amend_and_forcepush(github, branch, closes=pr_number, dry_run=args.dry_run)
 
 
 if __name__ == '__main__':

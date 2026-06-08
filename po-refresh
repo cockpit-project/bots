@@ -103,12 +103,13 @@ def main() -> None:
 
     # Create a pull request from these changes
     branch = git.push(github, "po-refresh")
-    head = git.get_current_head()
-    github.create_pull_request(
+    pr_number = github.create_pull_request(
         branch,
         "Update translations from Fedora Weblate",
         labels=['bot', 'no-test', 'release-blocker'],
     )
+    git.amend_and_forcepush(github, branch, closes=pr_number)
+    head = git.get_current_head()
 
     # Trigger the tests for po-refresh
     for trigger in testmap.tests_for_po_refresh(github.repo):

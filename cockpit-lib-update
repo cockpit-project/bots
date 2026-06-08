@@ -87,7 +87,8 @@ def main() -> None:
 
     github = GitHub()
     branch = git.push(github, 'cockpit-lib', dry_run=args.dry)
-    github.create_pull_request(branch, title, body=git_shortlog, dry_run=args.dry)
+    pr_number = github.create_pull_request(branch, title, body=git_shortlog, dry_run=args.dry)
+    git.amend_and_forcepush(github, branch, closes=pr_number, dry_run=args.dry)
 
 
 if __name__ == '__main__':
