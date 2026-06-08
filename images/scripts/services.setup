@@ -161,8 +161,8 @@ chmod 755 /root/run-candlepin
 #############################
 
 # use mirror to avoid pull rate limits in the RH VPN
-podman pull quay.io/glueops/mirror/grafana/grafana:12.1.0
-podman tag quay.io/glueops/mirror/grafana/grafana:12.1.0 docker.io/grafana/grafana:latest
+podman pull quay.io/glueops/mirror/grafana/grafana:12.3.0-17814087142
+podman tag quay.io/glueops/mirror/grafana/grafana:12.3.0-17814087142 docker.io/grafana/grafana:latest
 
 cat <<EOF > /root/run-grafana
 #!/bin/sh
