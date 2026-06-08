@@ -47,8 +47,11 @@ def image_refresh(
     # Cleanup any extraneous disk usage elsewhere
     run('./vm-reset', verbose=verbose)
 
-    # Remember where the symlink points before image-create changes it
-    old_image = os.path.realpath(f'{BOTS_DIR}/images/{image}')
+    # download the current image, for comparing them; that may not exist yet for newly introduced images
+    if run('./image-download', image, check=False, verbose=verbose) == 0:
+        old_image = os.path.realpath(f'{BOTS_DIR}/images/{image}')
+    else:
+        old_image = None
 
     # create the new image
     verbose_args = ['--verbose'] if verbose else []
@@ -63,10 +66,9 @@ def image_refresh(
     git.add(f'images/{image}')
 
     if git.changes_staged():
-        # download the old image for diffing, upload the new one
+        # diff against the old image, upload the new one
         diff_text = ''
-        if os.path.exists(f'{SCRIPTS_DIR}/{image}.setup'):
-            run('./image-download', image, check=False, verbose=verbose)
+        if old_image and os.path.exists(f'{SCRIPTS_DIR}/{image}.setup'):
             print(f'+ ./image-diff {old_image} {image}', file=sys.stderr)
             diff_text = subprocess.check_output(['./image-diff', old_image, image], text=True)
             print(diff_text)
