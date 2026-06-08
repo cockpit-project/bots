@@ -187,9 +187,11 @@ chmod 755 /root/run-grafana
 # plugin isn't installed yet, so it can't be enabled yet
 /root/run-grafana
 
-# wait until set up completed
+# wait until set up completed and stop the container. Give Grafana a
+# lot of time to stop cleanly. Otherwise we might end up with
+# non-working plugins.
 until curl http://localhost:3000; do sleep 5; done
-podman stop grafana
+podman stop --time=600 grafana
 
 # create PCP plugin enablement config, for next start
 cat <<EOF > /root/pcp.yaml
