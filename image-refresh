@@ -13,7 +13,6 @@ import sys
 import time
 
 from lib import git, testmap
-from lib.aio.jsonutil import get_dict, get_str
 from lib.constants import BOTS_DIR, SCRIPTS_DIR
 from lib.github import NOT_TESTED_DIRECT, GitHub
 
@@ -87,7 +86,7 @@ def image_refresh(
     triggers = testmap.tests_for_image(image)
     pull = github.convert_issue_to_pull(branch, issue_nr, dry_run=dry_run)
     if pull is not None:
-        head = get_str(get_dict(pull, "head"), "sha")
+        head = git.get_current_head()
 
         # Create a synthetic status to forward the log URL to the new HEAD
         if log_url:

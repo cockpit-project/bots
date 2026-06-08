@@ -82,9 +82,8 @@ class TestGitHubHelpers(unittest.TestCase):
         self.github.set_labels(1234, ['xxx'])
 
     def test_create_pull_request(self) -> None:
-        pull = self.github.create_pull_request("branch", "Task title", body="This is the body")
-        self.assertEqual(pull["title"], "Task title")
-        self.assertEqual(pull["body"], "This is the body")
+        number = self.github.create_pull_request("branch", "Task title", body="This is the body")
+        self.assertIsInstance(number, int)
 
 
 if __name__ == '__main__':
