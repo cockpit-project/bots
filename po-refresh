@@ -76,10 +76,9 @@ def main() -> None:
         if n_translated_messages / n_messages_total < coverage_limit:
             lang = po.stem
             po.unlink()  # to avoid "remove modified file?" from git
-            try:
-                git.rm(po)  # fails if the file was never tracked
-            except subprocess.CalledProcessError:
-                continue
+            git.rm(po)
+            if not git.changes_staged():
+                continue  # file was never tracked
             modify_shell_manifest('-', lang)
             git.commit(f"po: Drop '{lang}' language")
             lang_changes += 1
