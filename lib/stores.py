@@ -21,7 +21,6 @@ from lib.directories import xdg_config_home
 
 # hosted on the public internet, requires a private token for some/all images
 IMAGE_STORES: Sequence[str] = (
-    "https://cockpit-images.eu-central-1.linodeobjects.com/",
     "https://cockpit-ci-images-fra.s3.eu-central-1.amazonaws.com/",
     "https://cockpit-ci-images.s3.us-east-1.amazonaws.com/",
 )
