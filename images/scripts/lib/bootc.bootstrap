@@ -37,13 +37,11 @@ m.execute(f'podman build -f lib/bootc.Containerfile -t {OCI_TAG} --build-arg bas
 
 pubkey = Path(DEFAULT_IDENTITY_PUB_FILE).read_text().strip()
 config = {
-    'blueprint': {
-        'customizations': {
-            'user': [
-                {'name': 'root', 'password': 'foobar', 'key': pubkey},
-                {'name': 'admin', 'password': 'foobar', 'key': pubkey, 'groups': ['wheel']},
-            ]
-        }
+    'customizations': {
+        'user': [
+            {'name': 'root', 'password': 'foobar', 'key': pubkey},
+            {'name': 'admin', 'password': 'foobar', 'key': pubkey, 'groups': ['wheel']},
+        ]
     }
 }
 m.write('/root/config.json', json.dumps(config))
@@ -55,15 +53,18 @@ m.execute(['podman', 'run', '--rm', '-i', '--privileged', '--security-opt=label=
            '--volume=/var/lib/containers/storage:/var/lib/containers/storage',
            '--volume=./config.json:/config.json',
            '--volume=./output:/output',
-           'quay.io/centos-bootc/bootc-image-builder:latest',
+           'ghcr.io/osbuild/image-builder-cli:latest',
            # image-builder args
-           '--type=qcow2',
-           '--local',
-           '--config', '/config.json',
-           OCI_TAG], timeout=720, stdout=None)
+           'build',
+           'qcow2',
+           '--bootc-ref', OCI_TAG,
+           '--blueprint', '/config.json',
+           '--output-dir', '/output',
+           '--output-name', 'disk.qcow2',
+           ], timeout=720, stdout=None)
 
 # copy out the converted qcow2 image
-m.download('output/qcow2/disk.qcow2', args.vmpath)
+m.download('output/disk.qcow2', args.vmpath)
 
 # copy out the container image
 oci_image = tempfile.NamedTemporaryFile()
