@@ -100,6 +100,7 @@ def aws_sts_assume_role(role_arn: str, provider_arn: str, saml_assertion: str) -
         'RoleArn': role_arn,
         'PrincipalArn': provider_arn,
         'SAMLAssertion': saml_assertion,
+        'DurationSeconds': 43200,  # 12 hours
     }).encode()
 
     request = urllib.request.Request(_STS_URL, data=params, method='POST')
