@@ -144,9 +144,18 @@ if [ "${VERSION_ID}" = "43" ]; then
     TEST_PACKAGES="${TEST_PACKAGES} gobject-introspection"
 fi
 
+# Fedora ELN only contains packages in RHEL
+if [ "$IMAGE" = "fedora-eln" ] ; then
+    COCKPIT_DEPS="${COCKPIT_DEPS/NetworkManager-team/}"
+    COCKPIT_DEPS="${COCKPIT_DEPS/python3-tracer/}"
+    COCKPIT_STORAGE_DEPS="${COCKPIT_STORAGE_DEPS/udisks2-btrfs/}"
+fi
+
+if [ "$IMAGE" != "fedora-eln" ] ; then
 # avoid NM-wait-online hanging on disconnected interfaces
 mkdir -p /etc/NetworkManager/conf.d/
 printf '[main]\nno-auto-default=*\n' > /etc/NetworkManager/conf.d/noauto.conf
+fi
 
 # our cloud-init.iso does not set up the host name
 echo "127.0.1.1 $(hostname)" >> /etc/hosts
@@ -164,9 +173,9 @@ dnf remove -y cloud-init
 
 # fedora-eln image is just used for building/fetching the anaconda-webui RPM dependencies
 # no need to install all dependencies there
-ALL_DEPS="$COCKPIT_DEPS"
+ALL_DEPS="$COCKPIT_DEPS $COCKPIT_DEPS $COCKPIT_STORAGE_DEPS"
 if [ "fedora-eln" != "$IMAGE" ]; then
-    ALL_DEPS="$COCKPIT_MACHINES_DEPS $COCKPIT_STORAGE_DEPS $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $TEST_PACKAGES"
+    ALL_DEPS="$COCKPIT_MACHINES_DEPS $IPA_CLIENT_PACKAGES $TEST_PACKAGES"
 fi
 dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $ALL_DEPS
