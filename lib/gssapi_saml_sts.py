@@ -140,7 +140,7 @@ def _parse_sts_response(xml: str) -> tuple[S3Key, datetime]:
             raise AuthError(f'🤔 STS XML response missing {tag}')
 
         expiration = datetime.fromisoformat(text('Expiration'))
-        key = (text('AccessKeyId'), text('SecretAccessKey'), text('SessionToken'))
+        key = S3Key(text('AccessKeyId'), text('SecretAccessKey'), text('SessionToken'))
         return key, expiration
 
     except (ET.ParseError, ValueError, TypeError) as exc:
