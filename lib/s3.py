@@ -39,6 +39,9 @@ class S3Key(NamedTuple):
     secret: str
     token: str | None = None
 
+    def __str__(self) -> str:
+        return ' '.join(v for v in self if v is not None)
+
 
 SHA256_NIL = hashlib.sha256(b'').hexdigest()
 
