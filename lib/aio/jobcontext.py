@@ -90,8 +90,11 @@ class JobContext(contextlib.AsyncExitStack):
         logger.debug('Loading %s configuration from %s', name, path)
         try:
             with path.open('rb') as file:
-                content = tomllib.load(file)
-        except tomllib.TOMLDecodeError as exc:
+                if path.suffix == '.json':
+                    content = json.load(file)
+                else:
+                    content = tomllib.load(file)
+        except (tomllib.TOMLDecodeError, json.JSONDecodeError) as exc:
             sys.exit(f'{path}: {exc}')
         except FileNotFoundError as exc:
             if missing_ok:
