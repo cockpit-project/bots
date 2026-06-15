@@ -16,10 +16,8 @@
 import asyncio
 import contextlib
 import hashlib
-import hmac
 import logging
 import mimetypes
-import time
 from collections.abc import Collection, Mapping
 from types import TracebackType
 from typing import NamedTuple, Self
@@ -27,16 +25,12 @@ from typing import NamedTuple, Self
 import httpx
 from yarl import URL
 
+from ..s3 import S3Key, s3_sign
 from .base import Destination, LogDriver
 from .jsonutil import JsonError, JsonObject, get_nested, get_str
 from .util import AsyncQueue, create_http_session
 
 logger = logging.getLogger(__name__)
-
-
-class S3Key(NamedTuple):
-    access: str
-    secret: str
 
 
 class HttpRequest(NamedTuple):
@@ -56,7 +50,11 @@ class HttpQueue:
 
     async def request_once(self, request: HttpRequest, checksum: str) -> None:
         # NB: Re-sign each attempt.  Time's arrow neither stands still nor reverses.
-        headers = s3_sign(request.url, request.method, request.headers, checksum, self._s3_key)
+        assert request.url.host is not None
+        headers = s3_sign(
+            request.url.host, request.url.raw_path, request.url.query_string,
+            request.method, request.headers, checksum, self._s3_key,
+        )
         logger.log(self._level, '%s %s', request.method, request.url)
         response = await self.session.request(request.method, str(request.url), content=request.data, headers=headers)
         response.raise_for_status()
@@ -112,48 +110,6 @@ class HttpQueue:
         self.request_soon(HttpRequest('DELETE', url, {}))
 
 
-def s3_sign(
-    url: URL, method: str, headers: Mapping[str, str], checksum: str, keys: S3Key
-) -> Mapping[str, str]:
-    """Signs an AWS request using the AWS4-HMAC-SHA256 algorithm
-
-    Returns a dictionary of extra headers which need to be sent along with the request.
-    If the method is PUT then the checksum of the data to be uploaded must be provided.
-    @headers, if given, are a dict of additional headers to be signed (eg: `x-amz-acl`)
-    """
-    amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
-    assert url.host is not None
-
-    # Extract region from hostname for AWS S3 (e.g., 's3.us-east-1.amazonaws.com' -> 'us-east-1')
-    # AWS requires the actual region; other S3-compatible services accept 'any'
-    region = 'any'
-    if url.host.endswith('.amazonaws.com'):
-        # Format: [bucket.]s3.REGION.amazonaws.com - region is third-last component
-        region = url.host.split('.')[-3]
-
-    # Header canonicalisation demands all header names in lowercase
-    headers = {key.lower(): value for key, value in headers.items()}
-    headers.update({'host': url.host, 'x-amz-content-sha256': checksum, 'x-amz-date': amzdate})
-    headers_str = ''.join(f'{k}:{v}\n' for k, v in sorted(headers.items()))
-    headers_list = ';'.join(sorted(headers))
-
-    credential_scope = f'{amzdate[:8]}/{region}/s3/aws4_request'
-    signing_key = f'AWS4{keys.secret}'.encode('ascii')
-    for item in credential_scope.split('/'):
-        signing_key = hmac.new(signing_key, item.encode('ascii'), hashlib.sha256).digest()
-
-    algorithm = 'AWS4-HMAC-SHA256'
-    canonical_request = f'{method}\n{url.raw_path}\n{url.query_string}\n{headers_str}\n{headers_list}\n{checksum}'
-    request_hash = hashlib.sha256(canonical_request.encode('ascii')).hexdigest()
-    string_to_sign = f'{algorithm}\n{amzdate}\n{credential_scope}\n{request_hash}'
-    signature = hmac.new(signing_key, string_to_sign.encode('ascii'), hashlib.sha256).hexdigest()
-    headers['Authorization'] = (
-        f'{algorithm} Credential={keys.access}/{credential_scope},SignedHeaders={headers_list},Signature={signature}'
-    )
-
-    return headers
-
-
 class S3Destination(Destination, contextlib.AsyncExitStack):
     def __init__(self, session: httpx.AsyncClient, url: URL, proxy_url: URL, key: S3Key, acl: str) -> None:
         super().__init__()
@@ -199,11 +155,11 @@ class S3LogDriver(LogDriver, contextlib.AsyncExitStack):
         self.proxy_url = URL(get_str(config, 'proxy_url', str(self.url)))
         self.acl = get_str(config, 'acl')
         try:
-            access, secret = get_str(config, 'key').split()
-            self.key = S3Key(access, secret)
-        except (ValueError, JsonError):
+            self.key = S3Key(*get_str(config, 'key').split())
+        except (TypeError, JsonError):
             with get_nested(config, 'key') as key:
-                self.key = S3Key(get_str(key, 'access'), get_str(key, 'secret'))
+                self.key = S3Key(get_str(key, 'access'), get_str(key, 'secret'),
+                                get_str(key, 'token', '') or None)
 
     def get_destination(self, slug: str) -> contextlib.AbstractAsyncContextManager[S3Destination]:
         quoted_slug = slug.replace('//', '--').replace(':', '-')

@@ -17,6 +17,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from collections.abc import Iterable, Mapping, Sequence
+from typing import NamedTuple
 
 from .directories import xdg_config_home
 from .network import host_ssl_context
@@ -26,12 +27,18 @@ __all__ = (
     "get_key",
     "list_bucket",
     "parse_list",
+    "s3_sign",
     "sign_curl",
     "sign_url",
     "urlopen",
 )
 
-type S3Key = tuple[str, str, str | None]
+
+class S3Key(NamedTuple):
+    access: str
+    secret: str
+    token: str | None = None
+
 
 SHA256_NIL = hashlib.sha256(b'').hexdigest()
 
@@ -49,9 +56,8 @@ def get_key(url: urllib.parse.ParseResult) -> S3Key | None:
     while '.' in hostname:
         try:
             with open(os.path.join(s3_key_dir, hostname)) as fp:
-                access, secret = fp.read().split()
-                return access, secret, None
-        except ValueError:
+                return S3Key(*fp.read().split())
+        except (TypeError, ValueError):
             print(f'ignoring invalid content of {s3_key_dir}/{hostname}', file=sys.stderr)
         except FileNotFoundError:
             pass
@@ -60,8 +66,10 @@ def get_key(url: urllib.parse.ParseResult) -> S3Key | None:
     return None
 
 
-def sign_request(
-    url: urllib.parse.ParseResult,
+def s3_sign(
+    hostname: str,
+    path: str,
+    query: str,
     method: str,
     headers: Mapping[str, str],
     checksum: str,
@@ -73,44 +81,52 @@ def sign_request(
     If the method is PUT then the checksum of the data to be uploaded must be provided.
     @headers, if given, are a dict of additional headers to be signed (eg: `x-amz-acl`)
     """
-    assert url.hostname is not None
-    access_key, secret_key, session_token = key
-
     amzdate = time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())
-
-    # Header canonicalisation demands all header names in lowercase
-    headers = {k.lower(): v for k, v in headers.items()}
-    headers.update({
-        'host': url.hostname,
-        'x-amz-content-sha256': checksum,
-        'x-amz-date': amzdate,
-        **({'x-amz-security-token': session_token} if session_token is not None else {}),
-    })
-    headers_str = ''.join(f'{k}:{v}\n' for k, v in sorted(headers.items()))
-    headers_list = ';'.join(sorted(headers))
 
     # Extract region from hostname for AWS S3 (e.g., 's3.us-east-1.amazonaws.com' -> 'us-east-1')
     # AWS requires the actual region; other S3-compatible services accept 'any'
     region = 'any'
-    if url.hostname.endswith('.amazonaws.com'):
-        # Format: [bucket.]s3.REGION.amazonaws.com - region is third-last component
-        region = url.hostname.split('.')[-3]
+    if hostname.endswith('.amazonaws.com'):
+        region = hostname.split('.')[-3]
+
+    # Header canonicalisation demands all header names in lowercase
+    headers = {k.lower(): v for k, v in headers.items()}
+    headers.update({
+        'host': hostname,
+        'x-amz-content-sha256': checksum,
+        'x-amz-date': amzdate,
+        **({'x-amz-security-token': key.token} if key.token is not None else {}),
+    })
+    headers_str = ''.join(f'{k}:{v}\n' for k, v in sorted(headers.items()))
+    headers_list = ';'.join(sorted(headers))
 
     credential_scope = f'{amzdate[:8]}/{region}/s3/aws4_request'
-    signing_key = f'AWS4{secret_key}'.encode('ascii')
+    signing_key = f'AWS4{key.secret}'.encode('ascii')
     for item in credential_scope.split('/'):
         signing_key = hmac.new(signing_key, item.encode('ascii'), hashlib.sha256).digest()
 
     algorithm = 'AWS4-HMAC-SHA256'
-    canonical_request = f'{method}\n{url.path}\n{url.query}\n{headers_str}\n{headers_list}\n{checksum}'
+    canonical_request = f'{method}\n{path}\n{query}\n{headers_str}\n{headers_list}\n{checksum}'
+    logger.debug('canonical request: %r', canonical_request)
     request_hash = hashlib.sha256(canonical_request.encode('ascii')).hexdigest()
     string_to_sign = f'{algorithm}\n{amzdate}\n{credential_scope}\n{request_hash}'
     signature = hmac.new(signing_key, string_to_sign.encode('ascii'), hashlib.sha256).hexdigest()
     headers['Authorization'] = (
-        f'{algorithm} Credential={access_key}/{credential_scope},SignedHeaders={headers_list},Signature={signature}'
+        f'{algorithm} Credential={key.access}/{credential_scope},SignedHeaders={headers_list},Signature={signature}'
     )
 
     return headers
+
+
+def sign_request(
+    url: urllib.parse.ParseResult,
+    method: str,
+    headers: Mapping[str, str],
+    checksum: str,
+    key: S3Key,
+) -> dict[str, str]:
+    assert url.hostname is not None
+    return s3_sign(url.hostname, url.path, url.query, method, headers, checksum, key)
 
 
 def sign_curl(

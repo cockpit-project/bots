@@ -14,8 +14,9 @@ from lib.aio.base import SubjectSpecification
 from lib.aio.github import GitHub
 from lib.aio.jobcontext import JobContext
 from lib.aio.jsonutil import JsonObject, JsonValue, json_merge_patch
-from lib.aio.s3 import S3Key, S3LogDriver
+from lib.aio.s3 import S3LogDriver
 from lib.aio.util import LRUCache
+from lib.s3 import S3Key
 
 
 class MockResponse:
