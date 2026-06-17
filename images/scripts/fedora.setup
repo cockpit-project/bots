@@ -211,6 +211,9 @@ su builder -c "/usr/bin/mock --install /tmp/selinux-policy-rpms/*.rpm"
 # host system gets the versions with fedora-updates enabled
 dnf install -y $selinux_pkgs
 
+# For building bootc images
+dnf install -y image-builder
+
 # for c-podman tests
 /var/lib/testvm/podman-images.setup
 

@@ -1,8 +1,5 @@
 #!/usr/bin/python3
 
-# osbuild needs a privileged container with kvm, so we can't build or run this
-# directly in our CI tasks container or GitHub workflows; so run it in a VM.
-
 import argparse
 import json
 import os
@@ -33,7 +30,7 @@ m.execute(f'podman build -f lib/bootc.Containerfile -t {OCI_TAG} --build-arg bas
           timeout=720, stdout=None)
 
 # convert container to qcow2 with image builder
-# see https://github.com/osbuild/bootc-image-builder?tab=readme-ov-file
+# see https://github.com/osbuild/image-builder-cli
 
 pubkey = Path(DEFAULT_IDENTITY_PUB_FILE).read_text().strip()
 config = {
@@ -48,18 +45,12 @@ m.write('/root/config.json', json.dumps(config))
 
 m.execute('mkdir output')
 
-m.execute(['podman', 'run', '--rm', '-i', '--privileged', '--security-opt=label=type:unconfined_t',
-           # for --local
-           '--volume=/var/lib/containers/storage:/var/lib/containers/storage',
-           '--volume=./config.json:/config.json',
-           '--volume=./output:/output',
-           'ghcr.io/osbuild/image-builder-cli:latest',
-           # image-builder args
+m.execute(['image-builder',
            'build',
            'qcow2',
            '--bootc-ref', OCI_TAG,
-           '--blueprint', '/config.json',
-           '--output-dir', '/output',
+           '--blueprint', 'config.json',
+           '--output-dir', 'output',
            '--output-name', 'disk.qcow2',
            ], timeout=720, stdout=None)
 
