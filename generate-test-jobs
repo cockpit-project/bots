@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2026 Red Hat, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import json
+import logging
+import sys
+import time
+
+from lib import github, testmap
+from lib.aio.jsonutil import get_str
+
+logger = logging.getLogger(__name__)
+
+
+def main() -> None:
+    logging.basicConfig(level=logging.INFO)
+
+    sha_cache: dict[tuple[str, str], str] = {}
+
+    for repo, branches in testmap.REPO_BRANCH_CONTEXT.items():
+        if ':' in repo:
+            logger.debug("skipping non-github repo %r", repo)
+            continue
+
+        api = github.GitHub(repo=repo)
+
+        for branch, contexts in branches.items():
+            if branch.startswith('_'):
+                continue
+
+            cache_key = (repo, branch)
+            if cache_key not in sha_cache:
+                commit = api.get_obj(f"commits/{branch}")
+                sha_cache[cache_key] = get_str(commit, "sha")
+                logger.info("%s/%s → %s", repo, branch, sha_cache[cache_key][:8])
+
+            revision = sha_cache[cache_key]
+
+            for context in contexts:
+                image_scenario = context.split("@")[0]
+                image, _, scenario = image_scenario.partition("/")
+                slug_suffix = context.replace('/', '-').replace('@', '-')
+                slug = f"{time.strftime('%Y%m%d-%H%M%S')}-ec2-test-{revision[:8]}-{slug_suffix}"
+
+                env: dict[str, str] = {
+                    "TEST_OS": image,
+                    "TEST_REVISION": revision,
+                }
+                if scenario:
+                    env["TEST_SCENARIO"] = scenario
+                if branch:
+                    env["BASE_BRANCH"] = branch
+
+                entry = {
+                    "job": {
+                        "repo": repo,
+                        "sha": revision,
+                        "context": context,
+                        "pull": None,
+                        "report": {
+                            "title": f"Tests failed on {revision}",
+                            "labels": ["nightly"],
+                        },
+                        "command_subject": None,
+                        "slug": slug,
+                        "env": env,
+                    },
+                    "human": f"{'nightly':11} {image_scenario:25} {revision[:7]:10}  ({repo})   {{{branch}}}",
+                }
+
+                print(json.dumps(entry))
+
+
+if __name__ == '__main__':
+    main()

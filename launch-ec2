@@ -1,96 +1,61 @@
 #!/usr/bin/env python3
+
 # Copyright (C) 2026 Red Hat, Inc.
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""Launch a CI job on a Fedora CoreOS EC2 instance.
-
-Gets scoped STS credentials, builds an Ignition config that embeds the
-job-runner config and a bootstrap script, and launches an instance.
-The instance runs the job, uploads logs to S3, and terminates itself.
-"""
-
 import argparse
-import base64
 import json
 import logging
-import sys
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import boto3
+import botocore.exceptions
 
-from lib.aio.jsonutil import JsonObject, get_str, typechecked
-from lib.s3 import S3Key
+from lib.aio.jsonutil import get_str, typechecked
+from lib.launch_ec2 import REGION, launch_instance
+
+if TYPE_CHECKING:
+    from boto3.ec2 import EC2Client
 
 logger = logging.getLogger(__name__)
 
-ACCOUNT_ID = '727920394381'
-DOWNLOAD_ROLE = f'arn:aws:iam::{ACCOUNT_ID}:role/{ACCOUNT_ID}-cockpit-ci-images-download'
-LOGS_ROLE = f'arn:aws:iam::{ACCOUNT_ID}:role/cockpit-logs-write'
-LOGS_BUCKET = 'cockpit-ci-logs'
-LOGS_URL = f'https://{LOGS_BUCKET}.s3.us-east-1.amazonaws.com/'
 
-FCOS_AWS_OWNER = '125523088429'
-SECURITY_GROUP = 'cockpit-ci-ssh'
-REGION = 'us-east-1'
+def watch_instance(ec2: EC2Client, instance_id: str, start: float = 0) -> None:
+    prev_state = None
+    while True:
+        try:
+            desc = ec2.describe_instances(InstanceIds=[instance_id])
+        except botocore.exceptions.ClientError as exc:
+            # https://docs.aws.amazon.com/ec2/latest/devguide/eventual-consistency.html
+            if exc.response['Error']['Code'] == 'InvalidInstanceID.NotFound':
+                elapsed = time.clock_gettime(time.CLOCK_BOOTTIME) - start
+                if elapsed < 30:
+                    print(f'instance not yet visible after {elapsed:.0f}s')
+                    time.sleep(2.5)
+                    continue
+                if elapsed > 30 * 60:
+                    break
+            raise
+        instance = desc['Reservations'][0]['Instances'][0]
+        state = instance['State']['Name']
+        ip = instance.get('PublicIpAddress', '')
+        private_ip = instance.get('PrivateIpAddress', '')
 
+        if state != prev_state:
+            parts = [state]
+            if ip:
+                parts.append(f'public={ip}')
+            if private_ip:
+                parts.append(f'private={private_ip}')
+            print(' '.join(parts))
+            prev_state = state
 
-TAGS = [
-    {'Key': 'app-code', 'Value': 'ARR-001'},
-    {'Key': 'cost-center', 'Value': '700'},
-    {'Key': 'service-owner', 'Value': 'cockpit'},
-    {'Key': 'service-phase', 'Value': 'prod'},
-]
+        if state == 'terminated':
+            break
 
-
-def assume_role(role_arn: str, session_name: str, policy: JsonObject | None = None) -> S3Key:
-    logger.debug('assuming role %r as %r', role_arn, session_name)
-    response = boto3.client('sts', region_name=REGION).assume_role(
-        RoleArn=role_arn,
-        RoleSessionName=session_name,
-        **({'Policy': json.dumps(policy)} if policy is not None else {}),
-    )
-    creds = response['Credentials']
-    logger.debug('got credentials expiring %s', creds['Expiration'])
-    return S3Key(creds['AccessKeyId'], creds['SecretAccessKey'], creds['SessionToken'])
-
-
-def string_contents(content: str) -> dict[str, str]:
-    return {'source': f'data:;base64,{base64.b64encode(content.encode()).decode()}'}
-
-
-def json_contents(obj: object) -> dict[str, str]:
-    return string_contents(json.dumps(obj))
-
-
-def find_fcos_ami() -> str:
-    logger.debug('looking up latest FCOS AMI')
-    response = boto3.client('ec2', region_name=REGION).describe_images(
-        Owners=[FCOS_AWS_OWNER],
-        Filters=[
-            {'Name': 'name', 'Values': ['fedora-coreos-*']},
-            {'Name': 'architecture', 'Values': ['x86_64']},
-            {'Name': 'state', 'Values': ['available']},
-        ],
-    )
-    images = sorted(response['Images'], key=lambda i: i['CreationDate'], reverse=True)
-    if not images:
-        sys.exit('no FCOS AMI found')
-    logger.debug('found FCOS AMI %s (%s)', images[0]['ImageId'], images[0]['Name'])
-    return images[0]['ImageId']
-
-
-def resolve_security_group(name_or_id: str) -> str:
-    if name_or_id.startswith('sg-'):
-        return name_or_id
-    response = boto3.client('ec2', region_name=REGION).describe_security_groups(
-        Filters=[{'Name': 'group-name', 'Values': [name_or_id]}],
-    )
-    groups = response['SecurityGroups']
-    if not groups:
-        sys.exit(f'security group not found: {name_or_id!r}')
-    logger.debug('resolved security group %r to %r', name_or_id, groups[0]['GroupId'])
-    return groups[0]['GroupId']
+        time.sleep(2.5)
 
 
 def main() -> None:
@@ -98,9 +63,6 @@ def main() -> None:
     parser.add_argument('job_json', help='Job specification as JSON string')
     parser.add_argument('--ami', help='FCOS AMI ID (default: latest)')
     parser.add_argument('--instance-type', default='m8id.large')
-    parser.add_argument('--subnet', help='Subnet ID')
-    parser.add_argument('--security-group', default=SECURITY_GROUP, help='Security group name or ID')
-    parser.add_argument('--key-name', help='SSH key pair name (for debugging)')
     parser.add_argument('--ssh-key', type=Path, help='SSH public key file to authorize for the core user')
     parser.add_argument('--timeout-min', type=int, default=150, help='Instance timeout in minutes (default: 150)')
     parser.add_argument('--debug', action='store_true', help='Enable debug logging')
@@ -112,229 +74,23 @@ def main() -> None:
     slug = get_str(job, 'slug')
     logger.debug('slug: %r', slug)
 
-    s3_keys = {
-        'amazonaws.com': assume_role(DOWNLOAD_ROLE, 'cockpit-image-download'),
-    }
-    logs_key = assume_role(
-        LOGS_ROLE,
-        'cockpit-logs-write',
-        policy={
-            'Version': '2012-10-17',
-            'Statement': [
-                {
-                    'Effect': 'Allow',
-                    'Action': ['s3:PutObject', 's3:DeleteObject'],
-                    'Resource': f'arn:aws:s3:::{LOGS_BUCKET}/{slug}/*',
-                }
-            ],
-        },
-    )
-
-    ignition = {
-        'ignition': {'version': '3.4.0'},
-        'storage': {
-            'filesystems': [
-                {
-                    'device': '/dev/nvme1n1',
-                    'format': 'btrfs',
-                    'path': '/var/lib/containers',
-                    'wipeFilesystem': True,
-                },
-            ],
-            'files': [
-                {
-                    'path': '/etc/cockpit-ci/job-runner.json',
-                    'contents': json_contents({
-                        'logs': {
-                            'driver': 's3',
-                            's3': {
-                                'url': LOGS_URL,
-                                'key': logs_key._asdict(),
-                                'acl': '',
-                                'user-agent': 'job-runner (cockpit-project/bots)',
-                            },
-                        },
-                        'container': {
-                            'run-args': [
-                                '--device=/dev/kvm',
-                                '--userns=auto',
-                                '--volume=/etc/cockpit-ci/s3-keys:/run/secrets/s3-keys:ro,z,U',
-                                '--env=COCKPIT_S3_KEY_DIR=/run/secrets/s3-keys',
-                            ],
-                        },
-                        'forge': {
-                            'github': {
-                                'post': False,
-                            },
-                        },
-                    }),
-                    'mode': 0o644,
-                },
-                *(
-                    {
-                        'path': f'/etc/cockpit-ci/s3-keys/{host}',
-                        'contents': string_contents(str(key)),
-                        'mode': 0o600,
-                    }
-                    for host, key in s3_keys.items()
-                ),
-                {
-                    'path': '/etc/cockpit-ci/job.json',
-                    'contents': json_contents(job),
-                    'mode': 0o644,
-                },
-                {
-                    'path': '/etc/subuid',
-                    'contents': string_contents('containers:2147483647:2147483648\n'),
-                    'overwrite': True,
-                    'mode': 0o644,
-                },
-                {
-                    'path': '/etc/subgid',
-                    'contents': string_contents('containers:2147483647:2147483648\n'),
-                    'overwrite': True,
-                    'mode': 0o644,
-                },
-                {
-                    'path': '/usr/local/bin/run-job',
-                    'contents': string_contents(r'''#!/bin/bash
-                        set -euxo pipefail
-
-                        debug_pause() {
-                            # If there are ssh keys configured, let the user to inspect it
-                            if [ -s /home/core/.ssh/authorized_keys.d/ignition ]; then
-                                sleep 10m
-                            fi
-                        }
-                        trap '[ $? != 0 ] && debug_pause' EXIT
-
-                        # Download bots and unpack it (we don't need git history)
-                        curl --silent --show-error --location --fail \
-                            https://github.com/cockpit-project/bots/archive/json-config.tar.gz | \
-                            tar xz --strip-components=1
-
-                        # Download uv and install it into the cwd
-                        curl --silent --show-error --location --fail \
-                            https://astral.sh/uv/install.sh | \
-                            UV_INSTALL_DIR=. sh
-
-                        # Run the job using uv to install Python and deps
-                        ./uv run \
-                            --no-project \
-                            --python 3.14 \
-                            --with-requirements requirements.txt \
-                            ./job-runner \
-                                -F /etc/cockpit-ci/job-runner.json \
-                                json "$(cat "$1")"
-                        '''),
-                    'mode': 0o755,
-                },
-            ],
-        },
-        'systemd': {
-            'units': [
-                {
-                    'name': 'var-lib-containers.mount',
-                    'enabled': True,
-                    'contents': '''\
-                            [Unit]
-                            Description=Mount instance store for containers
-
-                            [Mount]
-                            What=/dev/nvme1n1
-                            Where=/var/lib/containers
-                            Type=btrfs
-
-                            [Install]
-                            WantedBy=local-fs.target
-                        ''',
-                },
-                {
-                    'name': 'run-job.service',
-                    'enabled': True,
-                    'contents': f'''\
-                            [Unit]
-                            Description=Run CI job
-                            Wants=network-online.target
-                            After=network-online.target
-
-                            [Service]
-                            Type=oneshot
-                            RuntimeDirectory=run-job
-                            WorkingDirectory=/run/run-job
-                            ExecStart=/usr/local/bin/run-job /etc/cockpit-ci/job.json
-                            ExecStopPost=/sbin/poweroff
-                            TimeoutStartSec={args.timeout_min}min
-                            StandardOutput=journal+console
-
-                            [Install]
-                            WantedBy=multi-user.target
-                        ''',
-                },
-            ],
-        },
-        'passwd': {
-            'users': [
-                {
-                    'name': 'core',
-                    'sshAuthorizedKeys': args.ssh_key.read_text().strip().splitlines() if args.ssh_key else [],
-                }
-            ],
-        },
-    }
-
     ec2 = boto3.client('ec2', region_name=REGION)
-    response = ec2.run_instances(
-        ImageId=args.ami or find_fcos_ami(),
-        InstanceType=args.instance_type,
-        MinCount=1,
-        MaxCount=1,
-        UserData=json.dumps(ignition),
-        InstanceInitiatedShutdownBehavior='terminate',
-        CpuOptions={'NestedVirtualization': 'enabled'},
-        TagSpecifications=[
-            {'ResourceType': rt, 'Tags': [*TAGS, {'Key': 'Name', 'Value': f'cockpit-ci/{slug}'}]}
-            for rt in ('instance', 'volume')
-        ],
-        **({'SecurityGroupIds': [resolve_security_group(args.security_group)]} if args.ssh_key else {}),
-        **({'SubnetId': args.subnet} if args.subnet else {}),
-        **({'KeyName': args.key_name} if args.key_name else {}),
+    sts = boto3.client('sts', region_name=REGION)
+
+    instance_id = launch_instance(
+        ec2, sts, job,
+        instance_type=args.instance_type,
+        timeout_min=args.timeout_min,
+        ami=args.ami,
+        ssh_keys=args.ssh_key.read_text().strip().splitlines() if args.ssh_key else (),
     )
-    instance_id = response['Instances'][0]['InstanceId']
-    print(f'launched {instance_id}')
 
-    prev_state = None
     try:
-        while True:
-            desc = ec2.describe_instances(InstanceIds=[instance_id])
-            instance = desc['Reservations'][0]['Instances'][0]
-            state = instance['State']['Name']
-            ip = instance.get('PublicIpAddress', '')
-            private_ip = instance.get('PrivateIpAddress', '')
-
-            if state != prev_state:
-                parts = [state]
-                if ip:
-                    parts.append(f'public={ip}')
-                if private_ip:
-                    parts.append(f'private={private_ip}')
-                print(' '.join(parts))
-                prev_state = state
-
-            if state == 'terminated':
-                break
-
-            time.sleep(2.5)
-    except KeyboardInterrupt:
-        print(f'\nterminating {instance_id}')
+        print(f'launched {instance_id}')
+        watch_instance(ec2, instance_id, start=time.clock_gettime(time.CLOCK_BOOTTIME))
+    finally:
         ec2.terminate_instances(InstanceIds=[instance_id])
-        while True:
-            desc = ec2.describe_instances(InstanceIds=[instance_id])
-            state = desc['Reservations'][0]['Instances'][0]['State']['Name']
-            if state == 'terminated':
-                print('terminated')
-                break
-            time.sleep(2.5)
+        watch_instance(ec2, instance_id)
 
 
 if __name__ == '__main__':

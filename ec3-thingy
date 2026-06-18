@@ -1,0 +1,453 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2026 Red Hat, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import argparse
+import asyncio
+import functools
+import json
+import logging
+from collections import defaultdict
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from datetime import datetime, timezone
+from enum import Enum
+from typing import TYPE_CHECKING
+
+import boto3
+import botocore.exceptions
+import httpx
+from rich import box
+from rich.console import Console
+from rich.table import Table
+
+from pika import BasicProperties
+from pika.channel import Channel
+from pika.spec import Basic
+
+if TYPE_CHECKING:
+    from boto3.ec2 import EC2Client
+
+from lib.aio.jsonutil import JsonObject
+from lib.launch_ec2 import LOGS_BUCKET, LOGS_URL, REGION, launch_instance
+from lib.mock_queue import DistributedQueue
+
+logger = logging.getLogger(__name__)
+
+SLUG_TAG = "cockpit-ci-slug"
+
+
+class InstanceState(Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    SHUTTING_DOWN = "shutting-down"
+    TERMINATED = "terminated"
+    STOPPING = "stopping"
+    STOPPED = "stopped"
+
+
+@dataclass
+class Instance:
+    instance_id: str
+    slug: str
+    state: InstanceState
+    launch_time: datetime
+    ip: str | None
+
+    def to_json(self) -> JsonObject:
+        return {
+            "slug": self.slug,
+            "state": self.state.value,
+            "launch_time": self.launch_time.isoformat(),
+            "ip": self.ip,
+        }
+
+
+class Job:
+    def __init__(self) -> None:
+        self.job_json: JsonObject | None = None
+        self.delivery_tag: int | None = None
+        self.launched_instance: str | None = None
+        self.observed_instances: set[str] = set()
+        self.logs_visible: bool | None = None
+
+    def should_check_logs(self, instances: Mapping[str, Instance]) -> bool:
+        if self.logs_visible is None:
+            return True
+        if self.logs_visible:
+            return False
+        return any(
+            instances.get(iid) is not None
+            and instances[iid].state == InstanceState.RUNNING
+            for iid in self.observed_instances
+        )
+
+    def to_json(self) -> JsonObject:
+        return {
+            "job": self.job_json,
+            "launched_instance": self.launched_instance,
+            "observed_instances": sorted(self.observed_instances),
+            "logs_visible": self.logs_visible,
+        }
+
+
+MAX_RUNNING = 10
+MAX_AWAITING_LOGS = 2
+
+
+class Dispatcher:
+    def __init__(self, dq: DistributedQueue, ssh_keys: Sequence[str] = ()) -> None:
+        self.dq = dq
+        self.ssh_keys = ssh_keys
+        self.instances: dict[str, Instance] = {}
+        self.jobs: defaultdict[str, Job] = defaultdict(Job)
+        self.jobs_pending = asyncio.Event()
+        self.logs_pending = asyncio.Event()
+        self._consumer_tags: list[str] = []
+
+    @property
+    def n_running(self) -> int:
+        observed = sum(
+            1
+            for inst in self.instances.values()
+            if inst.state in (InstanceState.PENDING, InstanceState.RUNNING)
+        )
+        unobserved = sum(
+            1
+            for job in self.jobs.values()
+            if not job.observed_instances
+        )
+        return observed + unobserved
+
+    @property
+    def n_awaiting_logs(self) -> int:
+        return sum(
+            1
+            for job in self.jobs.values()
+            if job.launched_instance and not job.logs_visible
+        )
+
+    def can_take_job(self) -> bool:
+        return (
+            self.n_running < MAX_RUNNING
+            and self.n_awaiting_logs < MAX_AWAITING_LOGS
+        )
+
+    def on_message(
+        self,
+        _channel: Channel,
+        method: Basic.Deliver,
+        _properties: BasicProperties | None,
+        body: bytes,
+    ) -> None:
+        job_json = json.loads(body)["job"]
+        slug = job_json["slug"]
+        logger.info("got job %r", slug)
+
+        job = self.jobs[slug]
+        if job.observed_instances:
+            logger.info("ignoring job %r: already running", slug)
+            self.dq.channel.basic_ack(method.delivery_tag)
+            return
+        job.job_json = job_json
+        job.delivery_tag = method.delivery_tag
+        self.jobs_pending.set()
+
+    def start_consumers(self) -> None:
+        if self._consumer_tags:
+            return
+        for queue in self.dq.queues:
+            tag = self.dq.channel.basic_consume(
+                queue, on_message_callback=self.on_message
+            )
+            logger.debug("consuming queue=%r tag=%r", queue, tag)
+            self._consumer_tags.append(tag)
+
+    def stop_consumers(self) -> None:
+        for tag in self._consumer_tags:
+            self.dq.channel.basic_cancel(tag)
+            logger.debug("cancelled consumer tag=%r", tag)
+        self._consumer_tags.clear()
+
+    def ack_job(self, slug: str) -> None:
+        job = self.jobs[slug]
+        if job.delivery_tag is None:
+            return
+        if not self.can_take_job():
+            self.stop_consumers()
+        self.dq.channel.basic_ack(job.delivery_tag)
+        logger.debug("acked job %r tag=%r", slug, job.delivery_tag)
+        job.delivery_tag = None
+
+    async def ec2_launcher(self) -> None:
+        ec2 = boto3.client("ec2", region_name=REGION)
+        sts = boto3.client("sts", region_name=REGION)
+        loop = asyncio.get_running_loop()
+        backoff = 0.0
+
+        while await self.jobs_pending.wait():
+            pending = [
+                s
+                for s, j in self.jobs.items()
+                if j.job_json is not None and j.launched_instance is None
+            ]
+            if not pending:
+                self.jobs_pending.clear()
+                continue
+
+            slug = pending[0]
+            job = self.jobs[slug]
+            assert job.job_json is not None
+
+            if backoff:
+                logger.info("backing off %rs before launching %r", backoff, slug)
+                await asyncio.sleep(backoff)
+
+            try:
+                instance_id = await loop.run_in_executor(
+                    None,
+                    functools.partial(
+                        launch_instance,
+                        ec2, sts, job.job_json,
+                        instance_type="m8id.large",
+                        timeout_min=150,
+                        ssh_keys=self.ssh_keys,
+                    ),
+                )
+                job.launched_instance = instance_id
+                self.ack_job(slug)
+                self.logs_pending.set()
+                backoff = 0.0
+            except botocore.exceptions.ClientError as e:
+                code = e.response["Error"]["Code"]
+                if code in (
+                    "InsufficientInstanceCapacity",
+                    "RequestLimitExceeded",
+                    "ServiceUnavailable",
+                ):
+                    logger.warning("launch failed for %r: %s", slug, code)
+                    backoff = min((backoff or 15) * 2, 300)
+                else:
+                    raise
+
+
+    async def s3_observer(self) -> None:
+        http = httpx.AsyncClient()
+
+        while await self.logs_pending.wait():
+            unchecked = [
+                (s, j)
+                for s, j in self.jobs.items()
+                if j.should_check_logs(self.instances)
+            ]
+            if not unchecked:
+                self.logs_pending.clear()
+                continue
+
+            for slug, job in unchecked:
+                try:
+                    resp = await http.head(
+                        f"{LOGS_URL}{slug}/log.html", timeout=5.0
+                    )
+                    job.logs_visible = resp.is_success
+                    if resp.is_success:
+                        logger.debug("logs visible for %r", slug)
+                except httpx.HTTPError:
+                    job.logs_visible = False
+
+            if self.can_take_job():
+                self.start_consumers()
+
+            await asyncio.sleep(10)
+
+    async def scan_instances(self, ec2: 'EC2Client') -> None:
+        loop = asyncio.get_running_loop()
+
+        response = await loop.run_in_executor(
+            None,
+            functools.partial(
+                ec2.describe_instances,
+                Filters=[
+                    {"Name": f"tag:{SLUG_TAG}", "Values": ["*"]},
+                    {
+                        "Name": "instance-state-name",
+                        "Values": [
+                            "pending",
+                            "running",
+                            "shutting-down",
+                            "terminated",
+                        ],
+                    },
+                ],
+            ),
+        )
+
+        self.instances = {
+            obj["InstanceId"]: Instance(
+                instance_id=obj["InstanceId"],
+                slug=next(t["Value"] for t in obj["Tags"] if t["Key"] == SLUG_TAG),
+                state=InstanceState(obj["State"]["Name"]),
+                launch_time=obj["LaunchTime"].astimezone(timezone.utc),
+                ip=obj.get("PublicIpAddress"),
+            )
+            for reservation in response["Reservations"]
+            for obj in reservation["Instances"]
+        }
+
+        for inst in self.instances.values():
+            job = self.jobs[inst.slug]
+            job.observed_instances.add(inst.instance_id)
+            if job.should_check_logs(self.instances):
+                self.logs_pending.set()
+
+        for slug in [
+            s
+            for s, j in self.jobs.items()
+            if j.observed_instances
+            and not j.observed_instances & self.instances.keys()
+        ]:
+            logger.debug("pruning job %r", slug)
+            del self.jobs[slug]
+
+    async def ec2_observer(self) -> None:
+        ec2 = boto3.client("ec2", region_name=REGION)
+
+        while True:
+            await self.scan_instances(ec2)
+
+            if self.can_take_job():
+                self.start_consumers()
+
+            await asyncio.sleep(5)
+
+    def to_json(self) -> JsonObject:
+        return {
+            "instances": {iid: inst.to_json() for iid, inst in self.instances.items()},
+            "jobs": {slug: job.to_json() for slug, job in self.jobs.items()},
+        }
+
+    def format_table(self) -> Table:
+        table = Table(
+            title="cockpit CI instances",
+            box=box.ROUNDED,
+            border_style="blue",
+            header_style="bold cyan",
+            title_style="bold",
+        )
+        table.add_column("slug", style="bold")
+        table.add_column("instance_id", style="dim")
+        table.add_column("state")
+        table.add_column("ip", style="cyan")
+        table.add_column("age", justify="right")
+        table.add_column("logs")
+
+        now = datetime.now(timezone.utc)
+
+        for slug, job in sorted(self.jobs.items()):
+            instances = [
+                self.instances[iid]
+                for iid in job.observed_instances
+                if iid in self.instances
+            ]
+            instances.sort(key=lambda i: i.launch_time)
+
+            logs = "[green]yes[/green]" if job.logs_visible else ""
+
+            if not instances:
+                table.add_row(slug, "", "queued", "", "", logs)
+                continue
+
+            for i, inst in enumerate(instances):
+                minutes = int((now - inst.launch_time).total_seconds() / 60)
+                age = f"{minutes}m"
+
+                table.add_row(
+                    slug if i == 0 else "",
+                    inst.instance_id,
+                    inst.state.value,
+                    inst.ip or "",
+                    age,
+                    logs if i == 0 else "",
+                )
+
+            table.add_section()
+
+        return table
+
+
+async def main() -> None:
+    parser = argparse.ArgumentParser(description="EC2 CI job dispatcher")
+    parser.add_argument("--poll-interval", type=float, default=3)
+    parser.add_argument("--jobs", type=Path, help="JSONL file of jobs to deliver")
+    parser.add_argument("--ssh-key", type=Path, help="SSH public key file to authorize for the core user")
+    parser.add_argument("--debug", action="store_true")
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
+    logging.getLogger("botocore").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+    console = Console()
+
+    s3 = boto3.client("s3", region_name=REGION)
+    loop = asyncio.get_running_loop()
+
+    dashboard = Path(__file__).parent / "lib" / "dashboard.html"
+    logger.debug("uploading %s", dashboard)
+    await loop.run_in_executor(
+        None,
+        functools.partial(
+            s3.put_object,
+            Bucket=LOGS_BUCKET,
+            Key="dashboard.html",
+            Body=dashboard.read_bytes(),
+            ContentType="text/html",
+        ),
+    )
+
+    jobs = open(args.jobs) if args.jobs else None  # noqa: SIM115
+
+    async with DistributedQueue(["public"], jobs=jobs) as dq:
+        dq.channel.basic_qos(prefetch_count=1, global_qos=True)
+        ssh_keys = args.ssh_key.read_text().strip().splitlines() if args.ssh_key else ()
+        dispatcher = Dispatcher(dq, ssh_keys=ssh_keys)
+
+        ec2 = boto3.client("ec2", region_name=REGION)
+        await dispatcher.scan_instances(ec2)
+        logger.info("initial scan: %d instances, %d running",
+                     len(dispatcher.instances), dispatcher.n_running)
+
+        if dispatcher.can_take_job():
+            dispatcher.start_consumers()
+
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(dispatcher.ec2_launcher())
+            tg.create_task(dispatcher.ec2_observer())
+            tg.create_task(dispatcher.s3_observer())
+
+            prev_summary = ""
+            while True:
+                console.print(dispatcher.format_table())
+
+                summary = json.dumps(dispatcher.to_json(), default=str, indent=4)
+                if summary != prev_summary:
+                    logger.debug("uploading summary.json")
+                    await loop.run_in_executor(
+                        None,
+                        functools.partial(
+                            s3.put_object,
+                            Bucket=LOGS_BUCKET,
+                            Key="summary.json",
+                            Body=summary,
+                            ContentType="application/json",
+                        ),
+                    )
+                    prev_summary = summary
+
+                await asyncio.sleep(args.poll_interval)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

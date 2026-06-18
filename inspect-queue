@@ -20,6 +20,7 @@
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from lib import distributed_queue
 
@@ -31,8 +32,8 @@ def main() -> int:
     parser.add_argument('--amqp', default=distributed_queue.DEFAULT_AMQP_SERVER,
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
     parser.add_argument('--human', action='store_true', help="Print the 'human' field, if present")
-    parser.add_argument('--secrets-dir', default=distributed_queue.DEFAULT_SECRETS_DIR,
-                        help='Directory with ca.pem and amqp-client.{pem,key} (default: %(default)s)')
+    parser.add_argument('--secrets-dir', type=Path,
+                        help=f'Directory with ca.pem and amqp-client.{{pem,key}} (default: {distributed_queue.DEFAULT_SECRETS_DIR})')
     opts = parser.parse_args()
 
     with distributed_queue.DistributedQueue(opts.amqp, ['public', 'rhel', 'statistics', 'webhook'],

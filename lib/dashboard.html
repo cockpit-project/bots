@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cockpit CI</title>
+  <style>
+    :root {
+      --bg: #fff; --fg: #24292f; --border: #d0d7de;
+      --dim: #656d76; --cyan: #0550ae; --green: #1a7f37;
+      --yellow: #9a6700; --red: #cf222e; --blue: #0969da;
+      --instance-bg: #f6f8fa;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1b26; --fg: #c0caf5; --border: #3b4261;
+        --dim: #565f89; --cyan: #7dcfff; --green: #9ece6a;
+        --yellow: #e0af68; --red: #f7768e; --blue: #7aa2f7;
+        --instance-bg: #24283b;
+      }
+    }
+    body { background: var(--bg); color: var(--fg); font-family: 'JetBrains Mono', monospace; margin: 2rem; }
+    a { color: var(--blue); }
+  </style>
+</head>
+<body>
+  <ci-dashboard></ci-dashboard>
+
+  <script type="importmap">
+    { "imports": { "lit": "https://esm.sh/lit@3" } }
+  </script>
+  <script type="module">
+    import {LitElement, html, css} from 'lit';
+
+    class CiDashboard extends LitElement {
+      static properties = {
+        data: {state: true},
+        error: {state: true},
+        _now: {state: true},
+      };
+
+      static styles = css`
+        :host { display: block; }
+        table { border-collapse: collapse; width: 100%; max-width: 900px; }
+        th, td { padding: 0.4rem 0.8rem; text-align: left; }
+        th { color: var(--cyan); font-weight: bold; font-size: 0.85rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+
+        .job-row td { border-top: 1px solid var(--border); }
+        .slug { font-weight: bold; }
+        .slug a { text-decoration: none; }
+        .slug a:hover { text-decoration: underline; }
+        .state-queued { color: var(--dim); font-style: italic; }
+
+        .instance-row td { font-size: 0.85rem; color: var(--dim); background: var(--instance-bg); }
+        .instance-row td:first-child { padding-left: 2rem; }
+        .instance-row.ours td:first-child { border-left: 2px solid var(--blue); padding-left: calc(2rem - 2px); }
+        .instance-id { font-size: 0.8rem; }
+        .ip { color: var(--cyan); }
+        .age { text-align: right; }
+        .state-running { color: var(--green); }
+        .state-pending { color: var(--yellow); }
+        .state-terminated, .state-shutting-down { color: var(--red); }
+
+        .error { color: var(--red); }
+        h1 { color: var(--fg); font-size: 1.1rem; margin-bottom: 1rem; }
+        .meta { color: var(--dim); font-size: 0.8rem; margin-top: 1rem; }
+      `;
+
+      constructor() {
+        super();
+        this.data = null;
+        this.error = null;
+        this._now = Date.now();
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        this._fetch();
+        this._fetchInterval = setInterval(() => this._fetch(), 5000);
+        this._tickInterval = setInterval(() => { this._now = Date.now(); }, 1000);
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        clearInterval(this._fetchInterval);
+        clearInterval(this._tickInterval);
+      }
+
+      async _fetch() {
+        try {
+          const resp = await fetch('summary.json');
+          if (!resp.ok) throw new Error(`${resp.status}`);
+          this.data = await resp.json();
+          this.error = null;
+        } catch (e) {
+          this.error = e.message;
+        }
+      }
+
+      _formatAge(isoString) {
+        const ms = this._now - new Date(isoString).getTime();
+        const mins = Math.floor(ms / 60000);
+        if (mins < 60) return `${mins}m`;
+        return `${Math.floor(mins / 60)}h${mins % 60}m`;
+      }
+
+      _renderJob(slug, job) {
+        const instances = (job.observed_instances || [])
+          .filter(iid => this.data.instances[iid])
+          .sort((a, b) => this.data.instances[a].launch_time.localeCompare(this.data.instances[b].launch_time));
+
+        const slugCell = job.logs_visible
+          ? html`<a href="${slug}/log.html">${slug}</a>`
+          : slug;
+
+        const status = !instances.length
+          ? html`<span class="state-queued">queued</span>`
+          : '';
+
+        return html`
+          <tr class="job-row">
+            <td class="slug">${slugCell}</td>
+            <td>${status}</td>
+            <td></td>
+            <td></td>
+          </tr>
+          ${instances.map(iid => { const inst = this.data.instances[iid]; return html`
+            <tr class="instance-row ${iid === job.launched_instance ? 'ours' : ''}">
+              <td class="instance-id">${iid}</td>
+              <td class="state-${inst.state}">${inst.state}</td>
+              <td class="ip">${inst.ip || ''}</td>
+              <td class="age">${this._formatAge(inst.launch_time)}</td>
+            </tr>
+          `; })}
+        `;
+      }
+
+      render() {
+        if (this.error && !this.data) {
+          return html`<p class="error">${this.error}</p>`;
+        }
+        if (!this.data) {
+          return html`<p>loading...</p>`;
+        }
+
+        const slugs = Object.keys(this.data.jobs).sort();
+
+        return html`
+          <h1>cockpit CI</h1>
+          ${this.error ? html`<p class="error">fetch error: ${this.error}</p>` : ''}
+          <table>
+            <thead>
+              <tr>
+                <th>job</th>
+                <th>state</th>
+                <th>ip</th>
+                <th class="age">age</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${slugs.map(s => this._renderJob(s, this.data.jobs[s]))}
+            </tbody>
+          </table>
+          <p class="meta">${slugs.length} jobs</p>
+        `;
+      }
+    }
+
+    customElements.define('ci-dashboard', CiDashboard);
+  </script>
+</body>
+</html>

@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import contextlib
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Container, Iterator, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
 from typing import TypeVar, Union
@@ -92,6 +92,16 @@ def get_int(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> DT | in
 
 def get_str(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> DT | str:
     return _get(obj, lambda v: typechecked(v, str), key, default)
+
+
+def get_enum(
+    obj: JsonObject, key: str, choices: Container[str], default: DT | _Empty = _empty
+) -> DT | str:
+    def as_choice(value: JsonValue) -> str:
+        if isinstance(value, str) and value in choices:
+            return value
+        raise JsonError(value, f'invalid value "{value}" not in {choices}')
+    return _get(obj, as_choice, key, default)
 
 
 def get_dict(obj: JsonObject, key: str, default: DT | _Empty = _empty) -> DT | JsonObject:

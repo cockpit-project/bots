@@ -19,6 +19,7 @@
 
 import argparse
 import sys
+from pathlib import Path
 
 import pika
 
@@ -31,8 +32,8 @@ def main() -> int:
                         help='Queue name')
     parser.add_argument('--amqp', default=distributed_queue.DEFAULT_AMQP_SERVER,
                         help='The host:port of the AMQP server to publish to (default: %(default)s)')
-    parser.add_argument('--secrets-dir', default=distributed_queue.DEFAULT_SECRETS_DIR,
-                        help='Directory with ca.pem and amqp-client.{pem,key} (default: %(default)s)')
+    parser.add_argument('--secrets-dir', type=Path,
+                        help=f'Directory with ca.pem and amqp-client.{{pem,key}} (default: {distributed_queue.DEFAULT_SECRETS_DIR})')
     parser.add_argument('--create', action='store_true',
                         help='Create the queue if it does not exist yet')
     opts = parser.parse_args()

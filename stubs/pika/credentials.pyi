@@ -1,0 +1,6 @@
+class PlainCredentials:
+    def __init__(self, username: str, password: str) -> None: ...
+
+
+class ExternalCredentials:
+    def __init__(self) -> None: ...
