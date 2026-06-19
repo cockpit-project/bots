@@ -11,21 +11,20 @@ import logging
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
 from datetime import datetime, timezone
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import boto3
 import botocore.exceptions
 import httpx
-from rich import box
-from rich.console import Console
-from rich.table import Table
-
 from pika import BasicProperties
 from pika.channel import Channel
 from pika.spec import Basic
+from rich import box
+from rich.console import Console
+from rich.table import Table
 
 if TYPE_CHECKING:
     from boto3.ec2 import EC2Client
@@ -72,6 +71,7 @@ class Job:
         self.launched_instance: str | None = None
         self.observed_instances: set[str] = set()
         self.logs_visible: bool | None = None
+        self.human: str | None = None
 
     def should_check_logs(self, instances: Mapping[str, Instance]) -> bool:
         if self.logs_visible is None:
@@ -87,6 +87,7 @@ class Job:
     def to_json(self) -> JsonObject:
         return {
             "job": self.job_json,
+            "human": self.human,
             "launched_instance": self.launched_instance,
             "observed_instances": sorted(self.observed_instances),
             "logs_visible": self.logs_visible,
@@ -95,6 +96,7 @@ class Job:
 
 MAX_RUNNING = 10
 MAX_AWAITING_LOGS = 2
+MAX_AGE_MIN = 65
 
 
 class Dispatcher:
@@ -142,7 +144,8 @@ class Dispatcher:
         _properties: BasicProperties | None,
         body: bytes,
     ) -> None:
-        job_json = json.loads(body)["job"]
+        message = json.loads(body)
+        job_json = message["job"]
         slug = job_json["slug"]
         logger.info("got job %r", slug)
 
@@ -152,6 +155,7 @@ class Dispatcher:
             self.dq.channel.basic_ack(method.delivery_tag)
             return
         job.job_json = job_json
+        job.human = message.get("human")
         job.delivery_tag = method.delivery_tag
         self.jobs_pending.set()
 
@@ -211,8 +215,8 @@ class Dispatcher:
                     functools.partial(
                         launch_instance,
                         ec2, sts, job.job_json,
-                        instance_type="m8id.large",
-                        timeout_min=150,
+                        instance_type="m8id.4xlarge",
+                        timeout_min=55,
                         ssh_keys=self.ssh_keys,
                     ),
                 )
@@ -231,7 +235,6 @@ class Dispatcher:
                     backoff = min((backoff or 15) * 2, 300)
                 else:
                     raise
-
 
     async def s3_observer(self) -> None:
         http = httpx.AsyncClient()
@@ -296,11 +299,26 @@ class Dispatcher:
             for obj in reservation["Instances"]
         }
 
+        now = datetime.now(timezone.utc)
+
         for inst in self.instances.values():
             job = self.jobs[inst.slug]
             job.observed_instances.add(inst.instance_id)
             if job.should_check_logs(self.instances):
                 self.logs_pending.set()
+
+        overdue = [
+            inst.instance_id
+            for inst in self.instances.values()
+            if inst.state in (InstanceState.PENDING, InstanceState.RUNNING)
+            and (now - inst.launch_time).total_seconds() > MAX_AGE_MIN * 60
+        ]
+        if overdue:
+            logger.warning("terminating overdue instances: %r", overdue)
+            await loop.run_in_executor(
+                None,
+                functools.partial(ec2.terminate_instances, InstanceIds=overdue),
+            )
 
         for slug in [
             s
@@ -407,7 +425,7 @@ async def main() -> None:
         ),
     )
 
-    jobs = open(args.jobs) if args.jobs else None  # noqa: SIM115
+    jobs = args.jobs.read_text().splitlines() if args.jobs else None
 
     async with DistributedQueue(["public"], jobs=jobs) as dq:
         dq.channel.basic_qos(prefetch_count=1, global_qos=True)

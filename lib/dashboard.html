@@ -109,9 +109,10 @@
           .filter(iid => this.data.instances[iid])
           .sort((a, b) => this.data.instances[a].launch_time.localeCompare(this.data.instances[b].launch_time));
 
+        const label = job.human || slug;
         const slugCell = job.logs_visible
-          ? html`<a href="${slug}/log.html">${slug}</a>`
-          : slug;
+          ? html`<a href="${slug}/log.html">${label}</a>`
+          : label;
 
         const status = !instances.length
           ? html`<span class="state-queued">queued</span>`

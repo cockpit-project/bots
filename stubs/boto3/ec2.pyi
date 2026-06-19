@@ -1,6 +1,6 @@
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, NotRequired, TypedDict
+from typing import NotRequired, TypedDict
 
 
 class Tag(TypedDict):
@@ -43,6 +43,30 @@ class CpuOptions(TypedDict, total=False):
     NestedVirtualization: str
 
 
+class MetadataOptions(TypedDict, total=False):
+    HttpTokens: str
+    HttpPutResponseHopLimit: int
+
+
+class Image(TypedDict):
+    ImageId: str
+    Name: str
+    CreationDate: str
+
+
+class DescribeImagesResult(TypedDict):
+    Images: Sequence[Image]
+
+
+class SecurityGroup(TypedDict):
+    GroupId: str
+    GroupName: str
+
+
+class DescribeSecurityGroupsResult(TypedDict):
+    SecurityGroups: Sequence[SecurityGroup]
+
+
 class EC2Client:
     def describe_instances(
         self,
@@ -56,18 +80,31 @@ class EC2Client:
         *,
         Owners: Sequence[str] = ...,
         Filters: Sequence[Filter] = ...,
-    ) -> Mapping[str, Any]: ...
+    ) -> DescribeImagesResult: ...
 
     def describe_security_groups(
         self,
         *,
         Filters: Sequence[Filter] = ...,
-    ) -> Mapping[str, Any]: ...
+    ) -> DescribeSecurityGroupsResult: ...
 
-    def run_instances(self, **kwargs: Any) -> Reservation: ...
+    def run_instances(
+        self,
+        *,
+        ImageId: str,
+        InstanceType: str,
+        MinCount: int,
+        MaxCount: int,
+        UserData: str = ...,
+        InstanceInitiatedShutdownBehavior: str = ...,
+        MetadataOptions: MetadataOptions = ...,
+        CpuOptions: CpuOptions = ...,
+        TagSpecifications: Sequence[TagSpecification] = ...,
+        SecurityGroupIds: Sequence[str] = ...,
+    ) -> Reservation: ...
 
     def terminate_instances(
         self,
         *,
         InstanceIds: Sequence[str],
-    ) -> Mapping[str, Any]: ...
+    ) -> object: ...

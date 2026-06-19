@@ -140,7 +140,16 @@ def launch_instance(
                         },
                         'container': {
                             'run-args': [
+                                # resources
                                 '--device=/dev/kvm',
+                                '--memory=24g',
+                                '--pids-limit=16384',
+                                '--shm-size=1024m',
+
+                                # qcow overlays on tmpfs
+                                '--tmpfs=/tmp:size=14g',
+                                '--env=TEST_OVERLAY_DIR=/tmp',
+
                                 '--userns=auto',
                                 '--volume=/etc/cockpit-ci/s3-keys:/run/secrets/s3-keys:ro,z,U',
                                 '--env=COCKPIT_S3_KEY_DIR=/run/secrets/s3-keys',
@@ -165,18 +174,6 @@ def launch_instance(
                     'mode': 0o644,
                 },
                 {
-                    'path': '/etc/subuid',
-                    'contents': string_contents('containers:2147483647:2147483648\n'),
-                    'overwrite': True,
-                    'mode': 0o644,
-                },
-                {
-                    'path': '/etc/subgid',
-                    'contents': string_contents('containers:2147483647:2147483648\n'),
-                    'overwrite': True,
-                    'mode': 0o644,
-                },
-                {
                     'path': '/usr/local/bin/run-job',
                     'contents': string_contents(r'''#!/bin/bash
                         set -euxo pipefail
@@ -189,6 +186,11 @@ def launch_instance(
                         }
                         trap maybe_sit ERR
 
+                        # Block IMDS — ignition is done, nobody needs it,
+                        # and the container shouldn't have access
+                        iptables --append OUTPUT --destination 169.254.169.254 --jump REJECT
+
+                        # Setup containers storage on local (fast) NVMe disk
                         instance_store_device=$(
                             lsblk -dpno NAME --filter 'MODEL=="Amazon EC2 NVMe Instance Storage"'
                         )
@@ -205,6 +207,9 @@ def launch_instance(
                             https://astral.sh/uv/install.sh | \
                             UV_INSTALL_DIR=. sh
 
+                        # Required for 'podman run --userns=auto'
+                        tee -a /etc/sub{u,g}id <<< 'containers:2147483647:2147483648'
+
                         # Run the job using uv to install Python and deps
                         ./uv run \
                             --no-project \
@@ -220,6 +225,13 @@ def launch_instance(
         },
         'systemd': {
             'units': [
+                {
+                    # SSH keys come from ignition, not IMDS.  run-job
+                    # blocks IMDS via iptables, causing this to fail
+                    # and delay boot with retries.
+                    'name': 'afterburn-sshkeys@core.service',
+                    'mask': True,
+                },
                 {
                     'name': 'run-job.service',
                     'enabled': True,
@@ -262,6 +274,10 @@ def launch_instance(
         MaxCount=1,
         UserData=json.dumps(ignition),
         InstanceInitiatedShutdownBehavior='terminate',
+        MetadataOptions={
+            'HttpTokens': 'required',
+            'HttpPutResponseHopLimit': 1,
+        },
         CpuOptions={'NestedVirtualization': 'enabled'},
         TagSpecifications=[
             {

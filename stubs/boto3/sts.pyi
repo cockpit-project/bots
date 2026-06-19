@@ -1,5 +1,15 @@
-from collections.abc import Mapping
-from typing import Any
+from typing import TypedDict
+
+
+class Credentials(TypedDict):
+    AccessKeyId: str
+    SecretAccessKey: str
+    SessionToken: str
+    Expiration: str
+
+
+class AssumeRoleResponse(TypedDict):
+    Credentials: Credentials
 
 
 class STSClient:
@@ -9,5 +19,4 @@ class STSClient:
         RoleArn: str,
         RoleSessionName: str,
         Policy: str = ...,
-        **kwargs: Any,
-    ) -> Mapping[str, Any]: ...
+    ) -> AssumeRoleResponse: ...
