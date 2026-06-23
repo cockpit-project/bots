@@ -15,7 +15,6 @@
 
 import asyncio
 import contextlib
-import itertools
 import json
 import logging
 import os
@@ -88,6 +87,11 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
 
         log.write(f'Using container image: {container_image}\n')
 
+        try:
+            secret_args = ctx.prepare_secrets(job.secrets, tmpdir / 'secrets')
+        except LookupError as exc:
+            raise Failure(str(exc)) from exc
+
         args = [
             *ctx.container_cmd, 'run',
             # we run arbitrary commands in that container, which aren't prepared for being pid 1; reap zombies
@@ -97,7 +101,7 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
             *(f'--env={k}={v}' for k, v in job.env.items()),
             '--env=TEST_ATTACHMENTS=/var/tmp/attachments',
             f'--env=COCKPIT_CI_LOG_URL={log.url}',
-            *itertools.chain.from_iterable(args for name, args in ctx.secrets_args.items() if name in job.secrets),
+            *secret_args,
 
             container_image,
 

@@ -130,7 +130,7 @@ async def mock_job_context(tmp_path: Path) -> AsyncGenerator[Mock, None]:
         mock_ctx.default_image = 'registry.fedoraproject.org/fedora:latest'
         mock_ctx.container_cmd = ['podman']
         mock_ctx.container_run_args = ['--pull=newer']
-        mock_ctx.secrets_args = {}
+        mock_ctx.prepare_secrets = Mock(return_value=[])
         mock_ctx.resolve_subject = AsyncMock(wraps=forge.resolve_subject)
         mock_ctx.server = server
 
@@ -271,6 +271,33 @@ class TestRunJob:
         assert failure_data['state'] == 'failure'
         assert get_str(failure_data, 'description').startswith('Container exited with code 1')
         assert failure_data['target_url'] == 'http://localhost:9000/test-job/log.html'
+
+    @pytest.mark.parametrize('side_effect', [
+        LookupError('no container.secrets.github-token entry'),
+        LookupError('container.secrets.github-token references %{github-token} but no value is configured'),
+    ])
+    async def test_run_job_missing_secret(
+        self,
+        side_effect: LookupError,
+        log_streamer_mocks: LogStreamerMocks,
+        mock_job_context: Mock,
+    ) -> None:
+        job = Job({
+            'repo': 'cockpit-project/cockpit',
+            'sha': 'abc123',
+            'context': 'verify/rhel-9',
+            'secrets': ['github-token'],
+        })
+        mock_job_context.prepare_secrets = Mock(side_effect=side_effect)
+
+        await run_job(job, mock_job_context)
+
+        post_calls = MockGitHubHandler.get_post_calls()
+        assert len(post_calls) == 2
+        failure_path, failure_data = post_calls[1]
+        assert failure_path == '/repos/cockpit-project/cockpit/statuses/abc123'
+        assert failure_data['state'] == 'failure'
+        assert str(side_effect) in get_str(failure_data, 'description')
 
     @patch('lib.aio.job.run_container')
     async def test_run_job_failure_with_report(

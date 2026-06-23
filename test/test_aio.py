@@ -14,7 +14,7 @@ from yarl import URL
 from lib.aio.base import SubjectSpecification
 from lib.aio.github import GitHub
 from lib.aio.jobcontext import JobContext
-from lib.aio.jsonutil import JsonObject, JsonValue, json_merge_patch
+from lib.aio.jsonutil import JsonError, JsonObject, JsonValue, json_merge_patch
 from lib.aio.s3 import S3LogDriver
 from lib.aio.util import LRUCache
 from lib.s3 import S3Key
@@ -327,10 +327,10 @@ async def test_secrets_expansion(tmp_path: Path) -> None:
 
     home = Path.home()
     async with JobContext(config_file) as context:
-        assert context.secrets_args == {
-            's3-keys': (f'--volume={home}/.config/s3-keys:/run/secrets/s3-keys:ro',),
-            'github-token': ('--env=GITHUB_TOKEN_FILE=/etc/github-token',),
-        }
+        assert context.prepare_secrets(['s3-keys', 'github-token'], tmp_path / 'secrets') == [
+            f'--volume={home}/.config/s3-keys:/run/secrets/s3-keys:ro',
+            '--env=GITHUB_TOKEN_FILE=/etc/github-token',
+        ]
 
 
 async def test_secrets_undefined_error(tmp_path: Path) -> None:
@@ -349,9 +349,9 @@ async def test_secrets_undefined_error(tmp_path: Path) -> None:
         local.directory = '/tmp/logs'
     ''')
 
-    with pytest.raises(SystemExit, match=r"undefined secret '%\{undefined\}'"):
-        async with JobContext(config_file):
-            pass
+    async with JobContext(config_file) as ctx:
+        with pytest.raises(LookupError, match='undefined'):
+            ctx.prepare_secrets(['bad'], tmp_path / 'secrets')
 
 
 async def test_inline_secrets(tmp_path: Path) -> None:
@@ -375,21 +375,19 @@ async def test_inline_secrets(tmp_path: Path) -> None:
         local.directory = '/tmp/logs'
     ''')
 
+    secrets_dir = tmp_path / 'secrets'
     async with JobContext(config_file) as ctx:
+        result = ctx.prepare_secrets(['github-token', 's3-keys'], secrets_dir)
+
         # Check github-token
-        assert ctx.secrets_args['github-token'][0] == '-e=COCKPIT_GITHUB_TOKEN_FILE=/x'
-        token_path = Path(ctx.secrets_args['github-token'][1].removeprefix('-v=').removesuffix(':/x'))
+        assert result[0] == '-e=COCKPIT_GITHUB_TOKEN_FILE=/x'
+        token_path = Path(result[1].removeprefix('-v=').removesuffix(':/x'))
         assert token_path.read_text() == 'ghp_secret123'
 
         # Check s3-keys
-        assert ctx.secrets_args['s3-keys'][0] == '-e=COCKPIT_S3_KEY_DIR=/y'
-        s3_path = Path(ctx.secrets_args['s3-keys'][1].removeprefix('-v=').removesuffix(':/y'))
+        assert result[2] == '-e=COCKPIT_S3_KEY_DIR=/y'
+        s3_path = Path(result[3].removeprefix('-v=').removesuffix(':/y'))
         assert (s3_path / 's3.example.com').read_text() == 'ABCD Zx2xPa'
-
-    # After context closes, temp files should be cleaned up
-    assert not token_path.exists()
-    assert not s3_path.exists()
-    assert not token_path.parent.exists()
 
 
 async def test_inline_path_nested_error(tmp_path: Path) -> None:
@@ -404,19 +402,19 @@ async def test_inline_path_nested_error(tmp_path: Path) -> None:
         default-image = 'ghcr.io/test:latest'
 
         [container.secrets]
+        mydir = ['--volume=%{mydir}:/mnt']
 
         [logs]
         driver = 'local'
         local.directory = '/tmp/logs'
     ''')
 
-    with pytest.raises(
-        SystemExit,
-        match=r"attribute 'secrets': attribute 'inline': attribute 'mydir': "
-              r"attribute 'subdir': invalid filename: '\.\./escape'",
-    ):
-        async with JobContext(config_file):
-            pass
+    async with JobContext(config_file) as ctx:
+        with pytest.raises(
+            JsonError,
+            match=r"attribute 'mydir': attribute 'subdir': invalid filename: '\.\./escape'",
+        ):
+            ctx.prepare_secrets(['mydir'], tmp_path / 'secrets')
 
 
 async def test_inline_path_invalid_type(tmp_path: Path) -> None:
@@ -431,17 +429,18 @@ async def test_inline_path_invalid_type(tmp_path: Path) -> None:
         default-image = 'ghcr.io/test:latest'
 
         [container.secrets]
+        badvalue = ['--env=X=%{badvalue}']
 
         [logs]
         driver = 'local'
         local.directory = '/tmp/logs'
     ''')
 
-    with pytest.raises(
-        SystemExit, match=r"attribute 'secrets': attribute 'inline': attribute 'badvalue': must be string or object"
-    ):
-        async with JobContext(config_file):
-            pass
+    async with JobContext(config_file) as ctx:
+        with pytest.raises(
+            JsonError, match=r"attribute 'badvalue': must be string or object"
+        ):
+            ctx.prepare_secrets(['badvalue'], tmp_path / 'secrets')
 
 
 async def test_secrets_conflict_error(tmp_path: Path) -> None:
@@ -514,5 +513,5 @@ async def test_serialize_roundtrip(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     # Load from serialized config (simulating remote execution)
     monkeypatch.setenv('JOB_RUNNER_CONFIG_JSON', json.dumps(serialized))
     async with JobContext() as ctx2:
-        # Secrets should work the same way
-        assert ctx2.secrets_args['github-token'][0].endswith('/github-token')
+        result = ctx2.prepare_secrets(['github-token'], tmp_path / 'secrets2')
+        assert result[0].endswith('/github-token')

@@ -19,7 +19,6 @@ import logging
 import os
 import re
 import sys
-import tempfile
 import tomllib
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
@@ -40,6 +39,7 @@ from .jsonutil import (
     get_strv,
     json_merge_patch,
     load_external_files,
+    typechecked,
 )
 from .local import LocalLogDriver
 from .s3 import S3LogDriver
@@ -84,7 +84,6 @@ class JobContext(contextlib.AsyncExitStack):
     logs: LogDriver
     _forges: dict[str, Forge]
     _default_forge: str
-    _secret_paths: dict[str, str]
 
     def load_config(self, path: Path, name: str, *, missing_ok: bool = False) -> None:
         logger.debug('Loading %s configuration from %s', name, path)
@@ -128,43 +127,46 @@ class JobContext(contextlib.AsyncExitStack):
         else:
             self.load_config(Path(xdg_config_home('cockpit-dev/job-runner.toml')), 'user', missing_ok=True)
 
-    def expand_secret(self, arg: str) -> str:
-        def replace(m: re.Match[str]) -> str:
+    def prepare_secrets(self, names: Sequence[str], tmpdir: Path) -> Sequence[str]:
+        resolved: dict[str, str] = {}
+        all_args: list[str] = []
+        for name in names:
             try:
-                return self._secret_paths[m.group(1)]
+                secret_args = self._container_secrets[name]
             except KeyError:
-                raise JsonError(None, f"undefined secret '{m.group(0)}'") from None
-
-        return re.sub(r'%\{([^}]+)\}', replace, arg)
-
-    def expand_secrets(self, args: Sequence[str]) -> tuple[str, ...]:
-        return tuple(self.expand_secret(arg) for arg in args)
+                raise LookupError(f'no container.secrets.{name} entry') from None
+            for arg in secret_args:
+                for ref in re.findall(r'%\{([^}]+)\}', arg):
+                    if ref not in resolved:
+                        if ref in self._external_secrets:
+                            resolved[ref] = os.path.expanduser(self._external_secrets[ref])
+                        else:
+                            try:
+                                tmpdir.mkdir(parents=True, exist_ok=True)
+                                resolved[ref] = str(unpack_inline_secret(tmpdir, self._inline_secrets, ref))
+                            except KeyError:
+                                raise LookupError(f'container.secrets.{name} references %{{{ref}}} but no value is configured') from None
+                all_args.append(re.sub(r'%\{([^}]+)\}', lambda m: resolved[m.group(1)], arg))
+        return all_args
 
     async def __aenter__(self) -> Self:
         try:
-            # Build secrets mapping for %{name} substitution
             with get_nested(self.config, 'secrets') as secrets_section:
-                external = get_str_map(secrets_section, 'external')
-                secret_paths = {k: os.path.expanduser(v) for k, v in external.items()}
-
-                with get_nested(secrets_section, 'inline') as inline:
-                    if conflicts := secret_paths.keys() & inline.keys():
-                        msg = f"secret(s) defined in both 'external' and 'inline': {', '.join(sorted(conflicts))}"
-                        raise JsonError(inline, msg)
-                    if len(inline) > 0:
-                        tmpdir = Path(self.enter_context(tempfile.TemporaryDirectory()))
-                        secret_paths.update({
-                            name: str(unpack_inline_secret(tmpdir, inline, name)) for name in inline
-                        })
-
-            self._secret_paths = secret_paths
+                self._external_secrets = get_str_map(secrets_section, 'external')
+                self._inline_secrets = get_dict(secrets_section, 'inline')
+                if conflicts := self._external_secrets.keys() & self._inline_secrets.keys():
+                    msg = f"secret(s) defined in both 'external' and 'inline': {', '.join(sorted(conflicts))}"
+                    raise JsonError(secrets_section, msg)
 
             with get_nested(self.config, 'container') as container:
                 self.container_cmd = get_strv(container, 'command')
                 self.container_run_args = get_strv(container, 'run-args')
                 with get_nested(container, 'secrets') as secrets:
-                    # expand here to catch configuration errors early
-                    self.secrets_args = {name: self.expand_secrets(get_strv(secrets, name)) for name in secrets}
+                    self._container_secrets = {
+                        name: [
+                            typechecked(arg, str) for arg in typechecked(args, list)
+                        ] for name, args in secrets.items()
+                    }
                 self.default_image = get_str(container, 'default-image')
 
             with get_nested(self.config, 'logs') as logs:
