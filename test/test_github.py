@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
-import fnmatch
 import json
 import shutil
 import tempfile
@@ -88,21 +87,15 @@ class TestGitHub(unittest.TestCase):
         self.assertEqual(count, 1)
 
     def test_log(self) -> None:
-        self.api.get("/test/user")
-        self.api.cache.mark(time.time() + 1)
-        self.api.get("/test/user")
+        with self.assertLogs('lib.github', level='DEBUG') as logs:
+            self.api.get("/test/user")
+            self.api.cache.mark(time.time() + 1)
+            self.api.get("/test/user")
 
-        expect = (
-            '127.0.0.8:9898 - - * "GET /test/user HTTP/1.1" 200 -\n'
-            '127.0.0.8:9898 - - * "GET /test/user HTTP/1.1" 304 -\n'
-        )
-
-        with open(self.api.log.path, "r") as f:
-            data = f.read()
-
-        match = fnmatch.fnmatch(data, expect)
-        if not match:
-            self.fail(f"'{data}' did not match '{expect}'")
+        self.assertEqual(logs.output, [
+            'DEBUG:lib.github:127.0.0.8:9898 GET /test/user → 200',
+            'DEBUG:lib.github:127.0.0.8:9898 GET /test/user → 304',
+        ])
 
     def test_issues_since(self) -> None:
         issues = self.api.issues(since=1499838499)

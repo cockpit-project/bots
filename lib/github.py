@@ -22,7 +22,6 @@ import json
 import logging
 import os
 import re
-import socket
 import subprocess
 import time
 import urllib.parse
@@ -36,6 +35,8 @@ from lib import cache
 from lib.aio.jsonutil import JsonObject, JsonValue, get_dict, get_dictv, get_int, get_str, typechecked
 from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
+
+logger = logging.getLogger(__name__)
 
 __all__ = (
     'NOT_TESTED',
@@ -63,20 +64,6 @@ ISSUE_TITLE_IMAGE_REFRESH = "Image refresh for {0}"
 
 _T = TypeVar('_T')
 _DT = TypeVar('_DT')
-
-
-class Logger:
-    def __init__(self, directory: str):
-        hostname = socket.gethostname().split(".")[0]
-        month = time.strftime("%Y%m")
-        self.path = os.path.join(directory, f"{hostname}-{month}.log")
-
-        os.makedirs(directory, exist_ok=True)
-
-    # Yes, we open the file each time
-    def write(self, value: str) -> None:
-        with open(self.path, 'a') as f:
-            f.write(value)
 
 
 class Response(TypedDict):
@@ -150,10 +137,12 @@ class GitHub:
         try:
             with open(xdg_config_home('cockpit-dev', 'github-token', envvar='COCKPIT_GITHUB_TOKEN_FILE')) as f:
                 self.token = f.read().strip()
+                logger.debug("github token loaded from %s", f.name)
         except FileNotFoundError:
             try:
                 with open(xdg_config_home('github-token')) as f:
                     self.token = f.read().strip()
+                    logger.debug("github token loaded from %s", f.name)
             except FileNotFoundError:
                 # fall back to GitHub's CLI token
                 try:
@@ -161,19 +150,17 @@ class GitHub:
                         match = re.search(r'oauth_token:\s*(\S+)', f.read())
                     if match:
                         self.token = match.group(1)
+                        logger.debug("github token loaded from %s", f.name)
+                    else:
+                        logger.debug("no oauth_token found in %s", f.name)
                 except FileNotFoundError:
-                    # token not found anywhere, so only reading operations are available
-                    pass
+                    logger.debug("no github token found; only reading operations are available")
 
         # default cache directory
         if not cacher:
             cacher = cache.Cache(xdg_cache_home('github'))
 
         self.cache = cacher
-
-        # Create a log for debugging our GitHub access
-        self.log = Logger(self.cache.directory)
-        self.log.write("")
 
     def config(self) -> Sequence[tuple[str, str]]:
         """Git config overrides for authenticating with this remote."""
@@ -249,7 +236,7 @@ class GitHub:
                     # success!
                     break
             except (ConnectionResetError, http.client.BadStatusLine, OSError, SSLEOFError) as e:
-                logging.warning("Transient error during GitHub request, attempt #%s: %s", retry, e)
+                logger.warning("Transient error during GitHub request, attempt #%s: %s", retry, e)
 
             self.conn = None
             time.sleep(2 ** retry)
@@ -259,8 +246,7 @@ class GitHub:
         heads = {}
         for (header, value) in response.getheaders():
             heads[header.lower()] = value
-        self.log.write(
-            f'{self.url.netloc} - - [{time.asctime()}] "{method} {resource} HTTP/1.1" {response.status} -\n')
+        logger.debug("%s %s %s → %d", self.url.netloc, method, resource, response.status)
         return {
             "status": response.status,
             "reason": response.reason,
