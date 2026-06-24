@@ -1,0 +1,24 @@
+name: workflow watch
+on:
+  schedule:
+    - cron: '15 7 * * *' # 7:15 UTC, daily
+  # can be run manually on https://github.com/cockpit-project/bots/actions
+  workflow_dispatch:
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    permissions:
+      projects: write
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v5
+
+      - name: Set up GitHub token
+        run: |
+          mkdir -p ~/.config
+          echo '${{ github.token }}' > ~/.config/github-token
+
+      - name: Check workflows
+        run: ./workflow-watch --post-to-board
+        env:
+          FORCE_COLOR: 1
