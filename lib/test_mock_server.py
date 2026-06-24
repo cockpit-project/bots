@@ -53,14 +53,17 @@ class MockServer[T]:
         self.handler = handler
         self.data = data
 
-    def run(self) -> None:
+    def run(self, ready: multiprocessing.synchronize.Event) -> None:
         srv = HTTPServer[T](self.address, self.handler)
         srv.data = self.data
+        ready.set()
         srv.serve_forever()
 
     def start(self) -> None:
-        self.process = multiprocessing.Process(target=self.run)
+        ready = multiprocessing.Event()
+        self.process = multiprocessing.Process(target=self.run, args=(ready,))
         self.process.start()
+        ready.wait()
 
     def kill(self) -> None:
         self.process.terminate()
