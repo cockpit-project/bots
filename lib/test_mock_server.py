@@ -20,7 +20,9 @@ from __future__ import annotations
 import http.server
 import json
 import multiprocessing
-from collections.abc import Mapping
+import queue
+from collections.abc import Mapping, Sequence
+from typing import Never
 
 from lib.aio.jsonutil import JsonValue
 
@@ -40,30 +42,39 @@ from lib.aio.jsonutil import JsonValue
 # which is why we can pass in mutable state but it's never modified.
 
 
-class HTTPServer[T](http.server.HTTPServer):
+class HTTPServer[T, Q = Never](http.server.HTTPServer):
     reply_count = 0
     data: T
+    queue: multiprocessing.Queue[Q]
 
 
-class MockServer[T]:
-    def __init__(
-        self, address: tuple[str, int], handler: type[MockHandler[T]], data: T
-    ):
+class MockServer[T, Q = Never]:
+    def __init__(self, address: tuple[str, int], handler: type[MockHandler[T, Q]], data: T):
         self.address = address
         self.handler = handler
         self.data = data
+        self.queue: multiprocessing.Queue[Q] = multiprocessing.Queue()
 
-    def run(self, ready: multiprocessing.synchronize.Event) -> None:
-        srv = HTTPServer[T](self.address, self.handler)
+    def run(self, port_queue: multiprocessing.Queue[int]) -> None:
+        srv = HTTPServer[T, Q](self.address, self.handler)
         srv.data = self.data
-        ready.set()
+        srv.queue = self.queue
+        port_queue.put(srv.server_address[1])
         srv.serve_forever()
 
     def start(self) -> None:
-        ready = multiprocessing.Event()
-        self.process = multiprocessing.Process(target=self.run, args=(ready,))
+        port_queue: multiprocessing.Queue[int] = multiprocessing.Queue()
+        self.process = multiprocessing.Process(target=self.run, args=(port_queue,))
         self.process.start()
-        ready.wait()
+        self.address = (self.address[0], port_queue.get())
+
+    def drain_queue(self) -> Sequence[Q]:
+        result: list[Q] = []
+        try:
+            while True:
+                result.append(self.queue.get_nowait())
+        except queue.Empty:
+            return result
 
     def kill(self) -> None:
         self.process.terminate()
@@ -71,13 +82,13 @@ class MockServer[T]:
         assert self.process.exitcode is not None
 
 
-class MockHandler[T](http.server.BaseHTTPRequestHandler):
+class MockHandler[T, Q = Never](http.server.BaseHTTPRequestHandler):
     # This is wrong and broken and unsafe, but we kinda need to do it.  We know
     # that we'll only ever use this with the correct server type, but this
     # information doesn't get carried through the library stack (in fact, we
     # can't even be sure that .server here is even an HTTP server: it could be
     # any socket server).  So let's add it back.  It's just tests...
-    server: HTTPServer[T]
+    server: HTTPServer[T, Q]
 
     def replyData(self, value: str, headers: Mapping[str, str] = {}, status: int = 200) -> None:
         self.send_response(status)

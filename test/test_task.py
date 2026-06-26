@@ -27,9 +27,6 @@ from lib.aio.jsonutil import JsonObject
 from lib.github import GitHub
 from lib.test_mock_server import MockHandler, MockServer
 
-ADDRESS = ("127.0.0.9", 9898)
-
-
 GITHUB_DATA: JsonObject = {
     "/repos/project/repo": {
         "default_branch": "main"
@@ -61,10 +58,10 @@ class Handler(MockHandler[JsonObject]):
 
 class TestGitHubHelpers(unittest.TestCase):
     def setUp(self) -> None:
-        self.server = MockServer(ADDRESS, Handler, GITHUB_DATA)
+        self.server = MockServer(("127.0.0.1", 0), Handler, GITHUB_DATA)
         self.server.start()
         self.temp = tempfile.mkdtemp()
-        os.environ["GITHUB_API"] = "http://127.0.0.9:9898"
+        os.environ["GITHUB_API"] = f"http://{self.server.address[0]}:{self.server.address[1]}"
         os.environ["GITHUB_BASE"] = "project/repo"
         self.github = GitHub()
 
