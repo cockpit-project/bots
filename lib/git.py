@@ -36,6 +36,11 @@ def _git(
             env[f'GIT_CONFIG_KEY_{i}'] = key
             env[f'GIT_CONFIG_VALUE_{i}'] = value
 
+    # stdout is fully buffered when piped (eg. in GitHub Actions), so flush
+    # both streams before spawning git to keep output in execution order
+    sys.stdout.flush()
+    sys.stderr.flush()
+
     return subprocess.check_output(cmd, env=env, text=True)
 
 
