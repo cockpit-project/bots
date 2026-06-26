@@ -4,6 +4,7 @@ import time
 from collections.abc import AsyncIterator, Iterator, Sequence
 from pathlib import Path
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
@@ -159,9 +160,13 @@ async def test_github_404(service: GitHubService, api: GitHub) -> None:
 
 async def test_github_api_flakes(service: GitHubService, api: GitHub) -> None:
     # Make sure 5xx errors and network issues get retries
-    service.flake([(503, 'Busy'), httpx.ConnectError('connection failed')])
-    service.update('x', {'a': 'b'}, etag=True)
-    assert await api.get('x') == {'a': 'b'}
+    mock_sleep = AsyncMock()
+    with patch('asyncio.sleep', mock_sleep):
+        service.flake([(503, 'Busy'), httpx.ConnectError('connection failed')])
+        service.update('x', {'a': 'b'}, etag=True)
+        assert await api.get('x') == {'a': 'b'}
+    # verify exponential backoff: 2^0=1s, 2^1=2s
+    assert mock_sleep.call_args_list == [((1,),), ((2,),)]
 
 
 async def test_github_cache(service: GitHubService, api: GitHub) -> None:

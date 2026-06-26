@@ -43,27 +43,27 @@ def test_read_write(tmp_path: Path) -> None:
 
 
 def test_current(tmp_path: Path) -> None:
-    c = cache.Cache[object](f'{tmp_path}', lag=3)
+    c = cache.Cache[object](f'{tmp_path}', lag=1)
 
     c.write("resource2", {"value": 2})
     assert c.current('resource2') is True
 
-    time.sleep(2)
+    time.sleep(0.6)
     assert c.current('resource2') is True
 
-    time.sleep(2)
+    time.sleep(0.6)
     assert c.current('resource2') is False
 
 
 def test_current_mark(tmp_path: Path) -> None:
-    c = cache.Cache[object](f'{tmp_path}', lag=3)
+    c = cache.Cache[object](f'{tmp_path}', lag=1)
 
     assert c.current('resource') is False
 
     c.write("resource", {"value": 1})
     assert c.current('resource') is True
 
-    time.sleep(2)
+    time.sleep(0.5)
     assert c.current('resource') is True
 
     c.mark()
