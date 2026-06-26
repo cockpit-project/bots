@@ -34,9 +34,6 @@ from lib.aio.jsonutil import JsonValue
 from lib.constants import BOTS_DIR
 from lib.test_mock_server import MockHandler, MockServer
 
-ADDRESS = ("127.0.0.7", 9898)
-
-
 GITHUB_DATA: dict[str, JsonValue] = {
     "/repos/project/repo": {
         "default_branch": "main"
@@ -133,13 +130,13 @@ class TestTestsScan(unittest.TestCase):
         self.temp = tempfile.mkdtemp()
         self.cache_dir = os.path.join(self.temp, "cache")
         os.environ["XDG_CACHE_HOME"] = self.cache_dir
-        self.server = MockServer(ADDRESS, Handler, GITHUB_DATA)
+        self.server = MockServer(("127.0.0.1", 0), Handler, GITHUB_DATA)
         self.server.start()
         self.repo = "project/repo"
         self.pull_number = 1
         self.context = "fedora/nightly"
         self.revision = "abcdef"
-        os.environ["GITHUB_API"] = f"http://{ADDRESS[0]}:{ADDRESS[1]}"
+        os.environ["GITHUB_API"] = f"http://{self.server.address[0]}:{self.server.address[1]}"
 
         # expected human output for our standard mock PR #1 above
         self.expected_human_output = (

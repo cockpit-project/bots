@@ -1,6 +1,5 @@
 import asyncio
 import json
-import tempfile
 from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, NamedTuple
 from unittest.mock import AsyncMock, Mock, patch
@@ -13,11 +12,6 @@ from lib.aio.job import Failure, Job, run_job
 from lib.aio.jsonutil import JsonObject, get_str, typechecked
 from lib.aio.local import LocalLogDriver
 from lib.test_mock_server import MockHandler, MockServer
-
-ADDRESS = ("127.0.0.1", 9999)
-
-# Global path for recording POST calls across processes
-POST_CALLS_FILE = Path(tempfile.gettempdir()) / "test_job_post_calls.json"
 
 # Mock GitHub API responses
 GITHUB_DATA: JsonObject = {
@@ -35,18 +29,7 @@ GITHUB_DATA: JsonObject = {
 }
 
 
-class MockGitHubHandler(MockHandler[JsonObject]):
-    @staticmethod
-    def clear_post_calls() -> None:
-        POST_CALLS_FILE.unlink(missing_ok=True)
-
-    @staticmethod
-    def get_post_calls() -> list[tuple[str, JsonObject]]:
-        try:
-            return json.loads(POST_CALLS_FILE.read_text())
-        except FileNotFoundError:
-            return []
-
+class MockGitHubHandler(MockHandler[JsonObject, tuple[str, JsonObject]]):
     def do_GET(self) -> None:
         data = self.server.data
         if self.path in data:
@@ -60,11 +43,8 @@ class MockGitHubHandler(MockHandler[JsonObject]):
         post_body = self.rfile.read(content_length)
         post_data = typechecked(json.loads(post_body.decode('utf-8')), dict)
 
-        # Record the POST call to file
-        existing_calls = self.get_post_calls()
-        existing_calls.append((self.path, post_data))
-        with POST_CALLS_FILE.open('w') as f:
-            json.dump(existing_calls, f)
+        # Record the POST call via queue
+        self.server.queue.put((self.path, post_data))
 
         if self.path.startswith('/repos/') and '/statuses/' in self.path:
             # Mock status posting
@@ -120,16 +100,13 @@ def log_streamer_mocks() -> Generator[LogStreamerMocks, None, None]:
 async def mock_job_context(tmp_path: Path) -> AsyncGenerator[Mock, None]:
     """Mock JobContext with mock GitHub forge"""
 
-    # Clear any previous POST calls from other tests
-    MockGitHubHandler.clear_post_calls()
-
-    server = MockServer(ADDRESS, MockGitHubHandler, GITHUB_DATA)
+    server = MockServer(("127.0.0.1", 0), MockGitHubHandler, GITHUB_DATA)
     server.start()
 
     try:
         github_config: JsonObject = {
-            'clone-url': f'http://{ADDRESS[0]}:{ADDRESS[1]}/',
-            'api-url': f'http://{ADDRESS[0]}:{ADDRESS[1]}/',
+            'clone-url': f'http://{server.address[0]}:{server.address[1]}/',
+            'api-url': f'http://{server.address[0]}:{server.address[1]}/',
             'user-agent': 'test-runner',
             'post': True,  # Enable actual POST requests
             'token': 'dummy-token'  # Required when post is True
@@ -155,6 +132,7 @@ async def mock_job_context(tmp_path: Path) -> AsyncGenerator[Mock, None]:
         mock_ctx.container_run_args = ['--pull=newer']
         mock_ctx.secrets_args = {}
         mock_ctx.resolve_subject = AsyncMock(wraps=forge.resolve_subject)
+        mock_ctx.server = server
 
         yield mock_ctx
 
@@ -243,7 +221,7 @@ class TestRunJob:
         log_streamer_mocks.log_streamer_class.assert_called_once_with(log_streamer_mocks.index_instance, None)
 
         # Verify status posts were made
-        post_calls = MockGitHubHandler.get_post_calls()
+        post_calls = mock_job_context.server.drain_queue()
         assert len(post_calls) == 2
 
         # First call is the 'pending' status
@@ -279,7 +257,7 @@ class TestRunJob:
         )
 
         # Verify status posts were made
-        post_calls = MockGitHubHandler.get_post_calls()
+        post_calls = mock_job_context.server.drain_queue()
         assert len(post_calls) == 2
 
         # First call is the 'pending' status
@@ -308,7 +286,7 @@ class TestRunJob:
         await run_job(job_with_report, mock_job_context)
 
         # Verify status posts were made
-        post_calls = MockGitHubHandler.get_post_calls()
+        post_calls = mock_job_context.server.drain_queue()
         assert len(post_calls) == 3
 
         # First two are the status updates
@@ -354,7 +332,7 @@ class TestRunJob:
         )
 
         # Verify status posts were made
-        post_calls = MockGitHubHandler.get_post_calls()
+        post_calls = mock_job_context.server.drain_queue()
         assert len(post_calls) == 2
 
         # Last call is the 'error' status with 'Cancelled' message
@@ -387,7 +365,7 @@ class TestRunJob:
         )
 
         # Verify status posts were made
-        post_calls = MockGitHubHandler.get_post_calls()
+        post_calls = mock_job_context.server.drain_queue()
         assert len(post_calls) == 2
 
         # Last call is the 'failure' status with timeout message
@@ -428,7 +406,7 @@ class TestRunJob:
             )
 
             # Verify status posts were made with proxy URL
-            post_calls = MockGitHubHandler.get_post_calls()
+            post_calls = mock_job_context.server.drain_queue()
             assert len(post_calls) == 2
 
             # First call is the 'pending' status

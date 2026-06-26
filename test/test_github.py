@@ -27,7 +27,6 @@ import urllib.parse
 from lib import cache, github
 from lib.test_mock_server import MockHandler, MockServer
 
-ADDRESS = ("127.0.0.8", 9898)
 GITHUB_ISSUES = [{"number": "5", "state": "open", "created_at": "2011-04-22T13:33:48Z"},
                  {"number": "6", "state": "closed", "closed_at": "2011-04-21T13:33:48Z"},
                  {"number": "7", "state": "open"}]
@@ -69,10 +68,11 @@ class Handler(MockHandler[list[dict[str, str]]]):
 
 class TestGitHub(unittest.TestCase):
     def setUp(self) -> None:
-        self.server = MockServer(ADDRESS, Handler, GITHUB_ISSUES)
+        self.server = MockServer(("127.0.0.1", 0), Handler, GITHUB_ISSUES)
         self.server.start()
         self.temp = tempfile.mkdtemp()
-        self.api = github.GitHub(f"http://{ADDRESS[0]}:{ADDRESS[1]}/", cacher=cache.Cache(self.temp))
+        url = f"http://{self.server.address[0]}:{self.server.address[1]}/"
+        self.api = github.GitHub(url, cacher=cache.Cache(self.temp))
 
     def tearDown(self) -> None:
         self.server.kill()
@@ -92,9 +92,10 @@ class TestGitHub(unittest.TestCase):
             self.api.cache.mark(time.time() + 1)
             self.api.get("/test/user")
 
+        netloc = f'{self.server.address[0]}:{self.server.address[1]}'
         self.assertEqual(logs.output, [
-            'DEBUG:lib.github:127.0.0.8:9898 GET /test/user → 200',
-            'DEBUG:lib.github:127.0.0.8:9898 GET /test/user → 304',
+            f'DEBUG:lib.github:{netloc} GET /test/user → 200',
+            f'DEBUG:lib.github:{netloc} GET /test/user → 304',
         ])
 
     def test_issues_since(self) -> None:
