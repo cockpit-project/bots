@@ -9,6 +9,8 @@ import asyncio
 import re
 import sys
 
+import httpx
+
 from lib import testmap
 from lib.aio.base import SubjectSpecification
 from lib.aio.jobcontext import JobContext
@@ -29,9 +31,15 @@ async def main() -> None:
                 if branch.startswith("_"):
                     continue
 
-                subject = await ctx.resolve_subject(
-                    SubjectSpecification({"forge": forge, "repo": repo, "branch": branch})
-                )
+                try:
+                    subject = await ctx.resolve_subject(
+                        SubjectSpecification({"forge": forge, "repo": repo, "branch": branch})
+                    )
+                except httpx.HTTPStatusError as exc:
+                    if exc.response.status_code == 404:
+                        print(f"Note: {repo}/{branch} branch doesn't exist", file=sys.stderr)
+                        continue
+                    raise
                 content = await subject.read_file(".cockpit-ci/container")
                 if content is None:
                     print(f"Note: {repo}/{branch} has no .cockpit-ci/container", file=sys.stderr)
