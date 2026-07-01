@@ -46,6 +46,7 @@ class JiraClient:
                      issue_type: str,
                      summary: str, description: str,
                      components: list[str] | None = None,
+                     labels: list[str] | None = None,
                      fix_versions: list[str] | None = None) -> JsonObject:
         url = f"{self.base_url}/rest/api/2/issue"
 
@@ -64,6 +65,9 @@ class JiraClient:
             # Test Coverage
             "customfield_10638": [{"value": "Automated"}]
         }
+
+        if labels:
+            fields["labels"] = labels
 
         if components:
             fields["components"] = [{"name": comp} for comp in components]
@@ -147,6 +151,10 @@ def cmd_rhel_rebase_issue(args: argparse.Namespace) -> None:
         issue_type="Bug",
         summary=summary,
         description=description,
+        labels=[
+            # Helps us find these issues easier
+            "cockpit-release-meta-tracker"
+        ],
         components=[args.package],
         fix_versions=[fix_version]
     )
