@@ -2,11 +2,15 @@
 name = "bots"
 requires-python = ">= 3.14"
 
+[tool.pyright]
+stubPath = "lib/stubs"
+
 [tool.mypy]
 python_version = "3.14"
 strict = true
 follow_imports = 'silent'  # https://github.com/python-lsp/pylsp-mypy/issues/81
 scripts_are_modules = true  # allow checking all scripts in one invocation
+mypy_path = 'lib/stubs'
 warn_return_any = false
 
 [[tool.mypy.overrides]]
@@ -15,7 +19,6 @@ module = [
     'libvirt',
     'libvirt_qemu',
     'nacl',
-    'pika.*',
 ]
 ignore_missing_imports = true
 
