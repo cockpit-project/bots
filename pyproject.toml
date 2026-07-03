@@ -16,9 +16,18 @@ warn_return_any = false
 [[tool.mypy.overrides]]
 # things which may be unavailable when running checks
 module = [
+    'boto3',
+    'botocore',
+    'botocore.*',
     'libvirt',
     'libvirt_qemu',
     'nacl',
+    'types_boto3_autoscaling.*',
+    'types_boto3_ec2',
+    'types_boto3_ec2.*',
+    'types_boto3_s3.*',
+    'types_boto3_ssm.*',
+    'types_boto3_sts',
 ]
 ignore_missing_imports = true
 
