@@ -17,12 +17,12 @@
 
 from collections.abc import Sequence
 
+from lib.aws.account import CI_IMAGES_BUCKETS, LOGS_URL
 from lib.directories import xdg_config_home
 
 # hosted on the public internet, requires a private token for some/all images
 IMAGE_STORES: Sequence[str] = (
-    "https://cockpit-ci-images-fra.s3.eu-central-1.amazonaws.com/",
-    "https://cockpit-ci-images.s3.us-east-1.amazonaws.com/",
+    *(f'https://{name}.s3.{region}.amazonaws.com/' for name, region in CI_IMAGES_BUCKETS.items()),
 )
 
 # locally configured stores in ~/.config/cockpit-dev/image-stores or $COCKPIT_IMAGE_STORES_FILE
@@ -35,4 +35,4 @@ except FileNotFoundError:
 
 LOCAL_STORES: Sequence[str] = data.splitlines()
 
-LOG_STORE = "https://cockpit-ci-logs.s3.us-east-1.amazonaws.com/"
+LOG_STORE = LOGS_URL
