@@ -21,6 +21,13 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from lib.aws.account import (
+    ACCOUNT_ID,
+    REDHAT_SSO_IDP_URL,
+    REDHAT_SSO_IMAGE_DOWNLOAD_MAX_SESSION,
+    REDHAT_SSO_IMAGE_DOWNLOAD_ROLE,
+    REDHAT_SSO_SAML_PROVIDER_ARN,
+)
 from lib.directories import xdg_cache_home
 from lib.s3 import S3Key
 
@@ -87,11 +94,12 @@ def _get_saml_assertion(idp_url: str) -> str:
     return result[0]
 
 
-def aws_sts_assume_role(role_arn: str, provider_arn: str, saml_assertion: str) -> str:
+def aws_sts_assume_role(account_id: str, role: str, provider_arn: str, saml_assertion: str, duration: timedelta) -> str:
     """Exchange a SAML assertion for temporary AWS credentials via STS.
 
     Returns the raw XML response body.
     """
+    role_arn = f'arn:aws:iam::{account_id}:role/{role}'
     logger.debug('assuming role %r via STS', role_arn)
 
     params = urllib.parse.urlencode({
@@ -100,7 +108,7 @@ def aws_sts_assume_role(role_arn: str, provider_arn: str, saml_assertion: str) -
         'RoleArn': role_arn,
         'PrincipalArn': provider_arn,
         'SAMLAssertion': saml_assertion,
-        'DurationSeconds': 43200,  # 12 hours
+        'DurationSeconds': int(duration.total_seconds()),
     }).encode()
 
     request = urllib.request.Request(_STS_URL, data=params, method='POST')
@@ -180,16 +188,20 @@ def load_from_cache(role_name: str) -> S3Key | None:
 class SAMLTarget:
     idp_url: str
     provider_arn: str
-    role_arn: str
+    account_id: str
+    role: str
+    max_session_duration: timedelta
 
 
 # Red Hat employee IdP (SAML via Kerberos) → AWS IAM role for cockpit-ci-images
 # Rover group: https://rover.redhat.com/groups/group/it-cloud-aws-727920394381-cockpit-ci-images-download
 TARGETS = {
     'https://cockpit-ci-images*.s3.*.amazonaws.com/rhel-*': SAMLTarget(
-        idp_url='https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/saml/clients/itaws',
-        provider_arn='arn:aws:iam::727920394381:saml-provider/RedHatInternal',
-        role_arn='arn:aws:iam::727920394381:role/727920394381-cockpit-ci-images-download',
+        idp_url=REDHAT_SSO_IDP_URL,
+        provider_arn=REDHAT_SSO_SAML_PROVIDER_ARN,
+        account_id=ACCOUNT_ID,
+        role=REDHAT_SSO_IMAGE_DOWNLOAD_ROLE,
+        max_session_duration=REDHAT_SSO_IMAGE_DOWNLOAD_MAX_SESSION,
     ),
 }
 
@@ -207,14 +219,12 @@ def try_key(url: str, use_cache: bool = True) -> S3Key | None:
     if target is None:
         return None
 
-    role_name = target.role_arn.rsplit('/', 1)[-1]
-
     if use_cache:
-        if key := load_from_cache(role_name):
+        if key := load_from_cache(target.role):
             return key
 
     saml = _get_saml_assertion(target.idp_url)
-    xml = aws_sts_assume_role(target.role_arn, target.provider_arn, saml)
+    xml = aws_sts_assume_role(target.account_id, target.role, target.provider_arn, saml, target.max_session_duration)
 
     key, _expiration = save_to_cache(role_name, xml)
     return key

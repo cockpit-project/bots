@@ -48,7 +48,7 @@ def main() -> None:
     def on_saml_message_received(_manager: WebKit.UserContentManager, message: JavaScriptCore.Value) -> None:
         saml_assertion = message.to_string()
         logger.debug('captured SAML assertion (%d bytes)', len(saml_assertion))
-        xml = aws_sts_assume_role(target.role_arn, target.provider_arn, saml_assertion)
+        xml = aws_sts_assume_role(target.role_arn, target.provider_arn, saml_assertion, target.max_session_duration)
 
         role_name = target.role_arn.rsplit('/', 1)[-1]
         try:
