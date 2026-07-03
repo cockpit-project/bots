@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>cockpit CI</title>
+        <style>
+        :root {
+            --bg: #fff;
+            --fg: #24292f;
+            --border: #d0d7de;
+            --dim: #656d76;
+            --cyan: #0550ae;
+            --green: #1a7f37;
+            --yellow: #9a6700;
+            --red: #cf222e;
+            --blue: #0969da;
+            --instance-bg: #f6f8fa;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #1a1b26;
+                --fg: #c0caf5;
+                --border: #3b4261;
+                --dim: #565f89;
+                --cyan: #7dcfff;
+                --green: #9ece6a;
+                --yellow: #e0af68;
+                --red: #f7768e;
+                --blue: #7aa2f7;
+                --instance-bg: #24283b;
+            }
+        }
+        body {
+            background: var(--bg);
+            color: var(--fg);
+            font-family: "JetBrains Mono", monospace;
+            margin: 2rem;
+        }
+        a {
+            color: var(--blue);
+        }
+        </style>
+    </head>
+    <body>
+        <ci-dashboard></ci-dashboard>
+        <script type="module" src="dashboard.js"></script>
+    </body>
+</html>
