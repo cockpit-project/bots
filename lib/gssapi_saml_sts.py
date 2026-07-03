@@ -94,7 +94,9 @@ def _get_saml_assertion(idp_url: str) -> str:
     return result[0]
 
 
-def aws_sts_assume_role(account_id: str, role: str, provider_arn: str, saml_assertion: str, duration: timedelta) -> str:
+def aws_sts_assume_role(
+    account_id: str, role: str, provider_arn: str, saml_assertion: str, duration: timedelta
+) -> str:
     """Exchange a SAML assertion for temporary AWS credentials via STS.
 
     Returns the raw XML response body.
