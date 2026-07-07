@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "test/check-machines-storage-pools", line *, in testStoragePoolsDeletion
+*
+RuntimeError: Timed out on 'virsh pool-start nfs-pool-1'
