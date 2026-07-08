@@ -73,7 +73,7 @@ def build_payload(image: str, output: str) -> None:
         )
 
         # Change directory to /mnt/sysimage/ and create archive
-        machine.execute("cd /mnt/sysimage && tar --selinux --acls --xattrs -zcvf /root/liveimg.tar.gz *", timeout=100)
+        machine.execute("cd /mnt/sysimage && tar --selinux --acls --xattrs --exclude='var/lib/os-prober' -zcvf /root/liveimg.tar.gz *", timeout=180)
 
         machine.download("/root/liveimg.tar.gz", output)
     finally:
