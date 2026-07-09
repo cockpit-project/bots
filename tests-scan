@@ -285,6 +285,7 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
                     },
                     "command_subject": command_subject,
                     "slug": slug,
+                    "timeout": 120,
                     "env": env,
                     "secrets": secrets,
                 },

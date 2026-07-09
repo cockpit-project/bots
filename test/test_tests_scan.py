@@ -195,6 +195,7 @@ class TestTestsScan(unittest.TestCase):
             'repo': self.repo,
             'command_subject': None,
             'report': None,
+            'timeout': 120,
             'secrets': ['github-token', 'image-download'],
             'sha': self.revision,
             'slug': f'pull-{self.pull_number}-{self.revision}-20240102-030405-fedora-nightly',
@@ -271,6 +272,7 @@ class TestTestsScan(unittest.TestCase):
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
                 "command_subject": None,
+                "timeout": 120,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
@@ -311,6 +313,7 @@ class TestTestsScan(unittest.TestCase):
                     "labels": ["nightly"],
                 },
                 "command_subject": None,
+                "timeout": 120,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "COCKPIT_BOTS_REF": "main",
@@ -350,6 +353,7 @@ class TestTestsScan(unittest.TestCase):
                     "labels": ["nightly"],
                 },
                 "command_subject": None,
+                "timeout": 120,
                 "secrets": ["github-token", "image-download", "fedora-wiki", "fedora-wiki-staging"],
                 "env": {
                     "COCKPIT_BOTS_REF": "main",
@@ -386,6 +390,7 @@ class TestTestsScan(unittest.TestCase):
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly",
                 "command_subject": None,
+                "timeout": 120,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": "stable-1.0",
@@ -435,6 +440,7 @@ class TestTestsScan(unittest.TestCase):
                 "report": None,
                 "sha": "abcdef",
                 "slug": f"pull-{self.pull_number}-abcdef-20240102-030405-fedora-nightly-{slug_repo_branch}",
+                "timeout": 120,
                 "secrets": ["github-token", "image-download"],
                 "env": {
                     "BASE_BRANCH": branch,
