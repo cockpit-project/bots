@@ -453,6 +453,36 @@ class TestTestsScan(unittest.TestCase):
             },
         }
 
+    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
+    def test_amqp_subman_rhel_goes_to_rhel_queue(self, mock_queue: unittest.mock.MagicMock) -> None:
+        args = ["--dry", "--context", "rhel-9-9/subscription-manager-1.29",
+                "--pull-number", "1", "--amqp", "amqp.example.com:1234"]
+        self.run_success(args, "")
+
+        channel = mock_queue.return_value.__enter__.return_value.channel
+        channel.basic_publish.assert_called_once()
+        self.assertEqual(channel.basic_publish.call_args[0][1], "rhel")
+
+    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
+    def test_amqp_subman_non_rhel_goes_to_public_queue(self, mock_queue: unittest.mock.MagicMock) -> None:
+        args = ["--dry", "--context", "fedora-41/subscription-manager-1.29",
+                "--pull-number", "1", "--amqp", "amqp.example.com:1234"]
+        self.run_success(args, "")
+
+        channel = mock_queue.return_value.__enter__.return_value.channel
+        channel.basic_publish.assert_called_once()
+        self.assertEqual(channel.basic_publish.call_args[0][1], "public")
+
+    @unittest.mock.patch("lib.distributed_queue.DistributedQueue")
+    def test_amqp_rhel_non_subman_goes_to_public_queue(self, mock_queue: unittest.mock.MagicMock) -> None:
+        args = ["--dry", "--context", "rhel-10-3",
+                "--pull-number", "1", "--amqp", "amqp.example.com:1234"]
+        self.run_success(args, "")
+
+        channel = mock_queue.return_value.__enter__.return_value.channel
+        channel.basic_publish.assert_called_once()
+        self.assertEqual(channel.basic_publish.call_args[0][1], "public")
+
     def test_amqp_sha_pr_cross_project_default_branch(self) -> None:
         """Default branch cross-project status event on PR"""
 
