@@ -8,7 +8,6 @@ provision:
         disk:
           - size: ">= 60 GiB"
         virtualization:
-            #is-virtualized: true
             is-supported: true
 
 prepare:

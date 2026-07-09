@@ -140,6 +140,7 @@ class TestingFarmClient(contextlib.AsyncExitStack):
             },
             'environments': [
                 {
+                    'arch': 'x86_64',
                     'variables': {
                         'JOB_JSON': job_json,
                     },
