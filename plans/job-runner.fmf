@@ -4,8 +4,6 @@ provision:
     image: Fedora-44
     hardware:
         memory: ">= 4 GB"
-        disk:
-          - size: ">= 60 GiB"
         virtualization:
             is-supported: true
 
