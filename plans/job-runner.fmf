@@ -1,6 +1,5 @@
 summary: Run job-runner task remotely
 provision:
-    how: virtual
     arch: x86_64
     image: Fedora-44
     hardware:
