@@ -1,4 +1,12 @@
 summary: Run job-runner task remotely
+provision:
+    arch: x86_64
+    image: Fedora-44
+    hardware:
+        memory: ">= 4 GB"
+        virtualization:
+            is-supported: true
+
 prepare:
     how: install
     package:
@@ -16,4 +24,4 @@ execute:
 /job-runner:
     summary: Run job-runner task
     test: ../job-runner json "$JOB_JSON"
-    duration: 2h
+    duration: 4h
