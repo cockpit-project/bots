@@ -21,13 +21,6 @@
             margin-block-end: var(--pf-t--global--spacer--sm);
         }
 
-        /* Filters start */
-        /* Only show failed */
-        body.c-filter-only-failed-retried .test-entry:not(.failed:not(.skipped), .retried) {
-            display: none;
-        }
-        /* Filters end */
-
         .test-entry.failed .test-entry-toggle {
             background-color: var(--pf-t--global--icon--color--status--danger--default);
         }
@@ -61,60 +54,6 @@
         <script type="module" src="log.js"></script>
 </head>
     <body>
-        <h1 id="test-info" class="pf-v6-c-title pf-m-2xl">Logs</h1>
-        <div class="pf-v6-c-toolbar pf-m-no-padding">
-            <div class="pf-v6-c-toolbar__content">
-                <div class="pf-v6-c-toolbar__content-section">
-                    <div class="pf-v6-c-toolbar__item">
-                        <a
-                            class="pf-v6-c-button pf-m-small pf-m-link"
-                            href="./index.html"
-                        >
-                            <span class="pf-v6-c-button__icon pf-m-start">
-                                <i class="fas fa-folder" aria-hidden="true"></i>
-                            </span>
-                            <span class="pf-v6-c-button__text">Result directory</span>
-                        </a>
-                    </div>
-                    <div class="pf-v6-c-toolbar__item">
-                        <a
-                            class="pf-v6-c-button pf-m-small pf-m-link"
-                            href="./log"
-                        >
-                            <span class="pf-v6-c-button__icon pf-m-start">
-                                <i class="fas fa-clipboard-check" aria-hidden="true"></i>
-                            </span>
-                            <span class="pf-v6-c-button__text">Raw log</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="status" style="display:none">
-            Done: <span id="message"></span>.
-        </div>
-        <div id="testing-progress"></div>
-        <div id="testing"></div>
-        <div id="testing-toolbar">
-            <label class="pf-v6-c-switch" for="switch-for-failed-filtering">
-                            <input
-                                class="pf-v6-c-switch__input"
-                                type="checkbox"
-                                role="switch"
-                                id="switch-for-failed-filtering"
-                                aria-labelledby="switch-for-failed-filtering-text"
-                                checked
-                            />
-
-                            <span class="pf-v6-c-switch__toggle"></span>
-
-                            <span
-                                class="pf-v6-c-switch__label"
-                                id="switch-for-failed-filtering-text"
-                                aria-hidden="true"
-                            >Show only failed</span>
-                        </label>
-        </div>
-        <div id="log"></div>
+        <log-viewer href="log"></log-viewer>
     </body>
 </html>
