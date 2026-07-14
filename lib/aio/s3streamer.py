@@ -212,12 +212,12 @@ class LogStreamer:
 
     def start(self, data: str) -> None:
         # Send the initial data immediately, to get the chunks file written out.
-        self.pending = data.encode()
+        self.pending = data.encode(errors='replace')
         self.send_pending()
         AttachmentsDirectory(self.index, f'{LIB_DIR}/s3-html').scan()
 
     def write(self, data: str) -> None:
-        self.pending += data.encode()
+        self.pending += data.encode(errors='replace')
 
         if len(self.pending) > LogStreamer.SIZE_LIMIT:
             self.send_pending()
