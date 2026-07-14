@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title>Cockpit Integration Tests</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -7,7 +7,7 @@
         <link href="https://cdn.jsdelivr.net/npm/@patternfly/patternfly/patternfly.css" rel="stylesheet">
         <style>
         * {
-            font-family: "Open Sans";
+            font-family: "Open Sans", sans-serif;
         }
         body {
             margin: 10px;
@@ -35,24 +35,25 @@
         }
         </style>
         <script type="text/javascript">
-            // Automatic dark mode based on system preference
-            const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        // Automatic dark mode based on system preference
+        const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
-            function applyTheme(e) {
-                const cl = document.documentElement.classList;
-                if (e.matches)
-                    cl.add('pf-v6-theme-dark');
-                else
-                    cl.remove('pf-v6-theme-dark');
+        function applyTheme(e) {
+            const cl = document.documentElement.classList;
+            if (e.matches) {
+                cl.add("pf-v6-theme-dark");
+            } else {
+                cl.remove("pf-v6-theme-dark");
             }
+        }
 
-            // Apply theme on page load
-            applyTheme(darkModeMediaQuery);
-            // Listen for changes to the color scheme preference
-            darkModeMediaQuery.addEventListener('change', applyTheme);
+        // Apply theme on page load
+        applyTheme(darkModeMediaQuery);
+        // Listen for changes to the color scheme preference
+        darkModeMediaQuery.addEventListener("change", applyTheme);
         </script>
         <script type="module" src="log.js"></script>
-</head>
+    </head>
     <body>
         <log-viewer href="log"></log-viewer>
     </body>
