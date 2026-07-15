@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "strict": true,
+        "noEmit": true,
+        "incremental": true,
+        "noImplicitOverride": true,
+        "target": "ES2022",
+        "module": "ES2022",
+        "moduleResolution": "bundler"
+    },
+    "include": ["*/*.js"],
+    "files": ["types/lit-cdn.d.ts"]
+}
