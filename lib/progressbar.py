@@ -70,12 +70,32 @@ class ProgressBar(threading.Thread):
         self.offset = 0
         self.status: RateTracker | str | None = None
         self._done = threading.Event()
+        self._percent_shown = 0.0
 
     def track_rate(self) -> None:
         self.status = RateTracker(start_time=time.monotonic(), start_offset=self.offset)
 
     def update(self, n: int) -> None:
         self.offset += n
+
+        # on tty the thread does updates; on non-tty we do it here
+        if not IS_TTY and self.total:
+            while self._percent_shown <= self.offset * 100 / self.total:
+                if self._percent_shown == 100:
+                    sys.stderr.write('\n')  # before the summary line
+                elif self._percent_shown % 10 == 0:
+                    sys.stderr.write(f' {self._percent_shown:.0f}% ')  # every 10%
+                else:
+                    sys.stderr.write('.')  # every 2.5%
+                sys.stderr.flush()
+
+                # We show one update (either a "." or a "n%") per 2.5% of
+                # progress, getting us output like "0% ... 10% ... 20% ...
+                # etc".  This number should be cleanly representable in
+                # floating point (so we don't get errors) and should also
+                # divide into 10 and 100 (so we hit each `% 10 == 0` exactly,
+                # and also the `== 100` at the end).
+                self._percent_shown += 2.5
 
     @staticmethod
     def _bar_color(i: int, width: int) -> str:
