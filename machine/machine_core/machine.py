@@ -34,7 +34,7 @@ TTY LOGIN
 """
 REMOTE_MESSAGE = """
 SSH ACCESS
-  $ ssh -p {ssh_port} -i bots/machine/identity {ssh_user}@{ssh_address}
+  $ ssh -p {ssh_port} -i bots/machine/identity {ssh_user}@{ssh_address} {key_options}
 
 COCKPIT
   https://{web_address}:{web_port}
@@ -125,6 +125,7 @@ class Machine(ssh_connection.SSHConnection):
             "ssh_port": self.ssh_port,
             "web_address": self.web_address,
             "web_port": self.web_port,
+            "key_options": '-o "UserKnownHostsFile=/dev/null" "-o StrictHostKeyChecking=accept-new"',
         }
         message = (LOCAL_MESSAGE if tty else '') + REMOTE_MESSAGE
         return message.format(**keys)
