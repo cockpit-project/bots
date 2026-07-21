@@ -11,30 +11,75 @@ for use by image-download.
 """
 
 import argparse
+import json
 import logging
+import shlex
 import sys
+from datetime import timedelta
+from typing import Literal
 
 import gi  # type: ignore [import-untyped]
 
 from lib.ansi import GREEN, RESET
+from lib.aws.account import (
+    ACCOUNT_ID,
+    REDHAT_SSO_IDP_URL,
+    REDHAT_SSO_IMAGE_DOWNLOAD_MAX_SESSION,
+    REDHAT_SSO_IMAGE_DOWNLOAD_ROLE,
+    REDHAT_SSO_SAML_PROVIDER_ARN,
+)
 from lib.gssapi_saml_sts import (
-    TARGETS,
     AuthError,
     aws_sts_assume_role,
     cache_path,
+    load_from_cache,
     save_to_cache,
 )
+from lib.s3 import S3Key
 
 logger = logging.getLogger(__name__)
 
 
+def print_credentials(key: S3Key, output: Literal['awscreds', 'env']) -> None:
+    match output:
+        case 'env':
+            print(f'export AWS_ACCESS_KEY_ID={shlex.quote(key.access)}')
+            print(f'export AWS_SECRET_ACCESS_KEY={shlex.quote(key.secret)}')
+            if key.token:
+                print(f'export AWS_SESSION_TOKEN={shlex.quote(key.token)}')
+        case 'awscreds':
+            print(json.dumps({
+                'Version': 1,
+                'AccessKeyId': key.access,
+                'SecretAccessKey': key.secret,
+                'SessionToken': key.token,
+            }))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description='Log in to AWS via SAML using a web browser')
+    # fmt: off
     parser.add_argument('-d', '--debug', action='store_true', help='Enable debug logging')
+    parser.add_argument('role', nargs='?', default=REDHAT_SSO_IMAGE_DOWNLOAD_ROLE,
+                        help='IAM role name to assume (default: %(default)s)')
+    parser.add_argument('--duration', type=lambda s: timedelta(hours=float(s)),
+                        default=REDHAT_SSO_IMAGE_DOWNLOAD_MAX_SESSION,
+                        help='session duration in hours (default: %(default)s)')
+    parser.add_argument('--output', choices=['env', 'awscreds'],
+                        help='output credentials in the given format')
+    # fmt: on
     args = parser.parse_args()
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
+
+    cached = load_from_cache(args.role)
+    if cached is not None:
+        if args.output:
+            print_credentials(cached, args.output)
+        else:
+            print(f'{GREEN}Cached credentials for {args.role} still valid{RESET}')
+        return
 
     gi.require_version('Gtk', '4.0')
     gi.require_version('JavaScriptCore', '6.0')
@@ -42,22 +87,23 @@ def main() -> None:
 
     from gi.repository import GLib, Gtk, JavaScriptCore, WebKit  # type: ignore [import-untyped]
 
-    target, = TARGETS.values()  # only one for now
     loop = GLib.MainLoop()
 
     def on_saml_message_received(_manager: WebKit.UserContentManager, message: JavaScriptCore.Value) -> None:
         saml_assertion = message.to_string()
         logger.debug('captured SAML assertion (%d bytes)', len(saml_assertion))
-        xml = aws_sts_assume_role(target.role_arn, target.provider_arn, saml_assertion, target.max_session_duration)
+        xml = aws_sts_assume_role(ACCOUNT_ID, args.role, REDHAT_SSO_SAML_PROVIDER_ARN, saml_assertion, args.duration)
 
-        role_name = target.role_arn.rsplit('/', 1)[-1]
         try:
-            _key, expiration = save_to_cache(role_name, xml)
+            key, expiration = save_to_cache(args.role, xml)
         except AuthError as exc:
             sys.exit(str(exc))
 
-        local = expiration.astimezone()
-        print(f'\n{GREEN}STS credentials saved to {cache_path(role_name)}\nValid until {local:%c}{RESET}\n')
+        if args.output:
+            print_credentials(key, args.output)
+        else:
+            local = expiration.astimezone()
+            print(f'\n{GREEN}STS credentials saved to {cache_path(args.role)}\nValid until {local:%c}{RESET}\n')
         loop.quit()
 
     content_manager = WebKit.UserContentManager()
@@ -88,7 +134,7 @@ def main() -> None:
     )
 
     webview = WebKit.WebView(user_content_manager=content_manager)
-    webview.load_uri(target.idp_url)
+    webview.load_uri(REDHAT_SSO_IDP_URL)
 
     win = Gtk.Window(
         title='SAML Login',
