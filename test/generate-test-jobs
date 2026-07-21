@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2026 Red Hat, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import argparse
+import json
+import logging
+import time
+from collections.abc import Sequence
+
+import pika
+
+from lib import distributed_queue, github, testmap
+from lib.aio.jsonutil import get_dict, get_str
+from lib.jobqueue import QueueEntry
+
+logger = logging.getLogger(__name__)
+
+
+def resolve_ref(api: github.GitHub, ref: str) -> tuple[str, str | None]:
+    """Resolve a ref to (sha, branch).
+
+    ref can be 'pr:NUMBER', a branch name, or a SHA.
+    For PRs, branch is the base branch.  For branches, branch is the ref itself.
+    For bare SHAs, branch is None.
+    """
+    if ref.startswith('pr:'):
+        pr_nr = int(ref[3:])
+        pull = api.get_obj(f"pulls/{pr_nr}")
+        sha = get_str(get_dict(pull, "head"), "sha")
+        branch = get_str(get_dict(pull, "base"), "ref")
+        logger.info("pr %d → sha %s, base branch %r", pr_nr, sha, branch)
+        return sha, branch
+
+    result = api.get_obj(f"commits/{ref}", None)
+    if result is None:
+        raise SystemExit(f"ref {ref!r} not found on github.com/{api.repo}")
+
+    sha = get_str(result, "sha")
+    logger.debug("resolved %r to %r", ref, sha)
+
+    branches = testmap.tests_for_project(api.repo)
+    if ref in branches:
+        return sha, ref
+
+    return sha, None
+
+
+def resolve_bots_ref(ref: str) -> str:
+    api = github.GitHub(repo="cockpit-project/bots")
+    result = api.get_obj(f"commits/{ref}", None)
+    if result is None:
+        raise SystemExit(f"bots ref {ref!r} not found on github.com/cockpit-project/bots")
+
+    sha = get_str(result, "sha")
+    logger.info("bots ref %r → %s", ref, sha)
+    return sha
+
+
+def filter_contexts(
+    contexts: Sequence[str],
+    os_filter: Sequence[str],
+    scenario_filter: Sequence[str],
+) -> Sequence[str]:
+    result: list[str] = []
+    for context in contexts:
+        # skip cross-repo contexts
+        if '@' in context:
+            continue
+
+        image_scenario = context.split('@')[0]
+        image, _, scenario = image_scenario.partition('/')
+
+        if os_filter and image not in os_filter:
+            continue
+        if scenario_filter and not any(s in scenario for s in scenario_filter):
+            continue
+
+        result.append(context)
+
+    return result
+
+
+def generate_entries(
+    repo: str,
+    sha: str,
+    branch: str | None,
+    contexts: Sequence[str],
+    bots_ref: str | None,
+    extra_env: Sequence[str],
+    pull: int | None,
+) -> Sequence[QueueEntry]:
+    entries: list[QueueEntry] = []
+    timestamp = time.strftime('%Y%m%d-%H%M%S')
+
+    for context in contexts:
+        image_scenario = context.split('@')[0]
+        image, _, scenario = image_scenario.partition('/')
+
+        slug_suffix = context.replace('/', '-').replace('@', '-')
+        slug = f"ec2-full-{timestamp}-{repo.replace('/', '-')}-{sha[:8]}-{slug_suffix}"
+
+        env: dict[str, str] = {
+            "TEST_OS": image,
+            "TEST_REVISION": sha,
+        }
+        if scenario:
+            env["TEST_SCENARIO"] = scenario
+        if branch:
+            env["BASE_BRANCH"] = branch
+        if bots_ref:
+            env["COCKPIT_BOTS_REF"] = bots_ref
+        if pull is not None:
+            env["TEST_PULL"] = str(pull)
+
+        for item in extra_env:
+            key, _, value = item.partition('=')
+            env[key] = value
+
+        secrets: list[str] = ["github-token", "image-download"]
+        if repo == "rhinstaller/anaconda-webui":
+            secrets.extend(["fedora-wiki", "fedora-wiki-staging"])
+
+        entries.append({
+            "job": {
+                "repo": repo,
+                "sha": sha,
+                "context": context,
+                "pull": pull,
+                "command_subject": None,
+                "slug": slug,
+                "env": env,
+                "secrets": secrets,
+            },
+            "human": f"{context}@{repo}#{sha[:12]}",
+        })
+
+    return entries
+
+
+def publish(entries: Sequence[QueueEntry]) -> None:
+    queue = 'public'
+    with distributed_queue.DistributedQueue('localhost', [queue]) as dq:
+        for entry in entries:
+            context = entry['job']['context']
+            priority = distributed_queue.MAX_PRIORITY if '/devel' in context else distributed_queue.BASELINE_PRIORITY
+            properties = pika.BasicProperties(priority=priority)
+            dq.channel.basic_publish('', queue, json.dumps(entry), properties=properties)
+            logger.info("published %s", entry['human'])
+        logger.info("published %d entries", len(entries))
+
+
+def collect_entries(
+    repo: str,
+    branches: dict[str, Sequence[str]],
+    ref: str | None,
+    os_filter: Sequence[str],
+    scenario_filter: Sequence[str],
+    bots_ref: str | None,
+    extra_env: Sequence[str],
+) -> Sequence[QueueEntry]:
+    api = github.GitHub(repo=repo)
+    entries: list[QueueEntry] = []
+
+    pull: int | None = None
+    if ref is not None:
+        sha, resolved_branch = resolve_ref(api, ref)
+        if ref.startswith('pr:'):
+            pull = int(ref[3:])
+
+        if resolved_branch and resolved_branch in branches:
+            branch_list = {resolved_branch: branches[resolved_branch]}
+        elif resolved_branch is None:
+            # bare SHA: run against default branch contexts
+            default = testmap.get_default_branch(repo)
+            if default in branches:
+                branch_list = {default: branches[default]}
+            else:
+                branch_list = {}
+        else:
+            logger.warning("branch %r not in testmap for %r", resolved_branch, repo)
+            branch_list = {}
+
+        for branch, contexts in branch_list.items():
+            filtered = filter_contexts(contexts, os_filter, scenario_filter)
+            entries.extend(generate_entries(repo, sha, branch, filtered, bots_ref, extra_env, pull))
+    else:
+        for branch, contexts in branches.items():
+            if branch.startswith('_'):
+                continue
+            sha, _ = resolve_ref(api, branch)
+            filtered = filter_contexts(contexts, os_filter, scenario_filter)
+            entries.extend(generate_entries(repo, sha, branch, filtered, bots_ref, extra_env, None))
+
+    return entries
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description='Generate test jobs from the testmap',
+        epilog='With no arguments, generates jobs for all repos and branches in the testmap.',
+    )
+    parser.add_argument('repo', nargs='?',
+                        help='repository (e.g. cockpit-project/cockpit)')
+    parser.add_argument('ref', nargs='?',
+                        help='branch, SHA, or pr:NUMBER')
+    parser.add_argument('--os', action='append', default=[], dest='os_filter',
+                        help='filter by OS image (repeatable)')
+    parser.add_argument('--scenario', action='append', default=[], dest='scenario_filter',
+                        help='filter by scenario (repeatable)')
+    parser.add_argument('--bots-ref',
+                        help='bots ref to resolve and set as COCKPIT_BOTS_REF')
+    parser.add_argument('--env', action='append', default=[], dest='extra_env',
+                        help='extra env var as KEY=VALUE (repeatable)')
+    parser.add_argument('--amqp', action='store_true',
+                        help='publish to AMQP on localhost instead of printing JSONL')
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO)
+
+    bots_ref: str | None = None
+    if args.bots_ref:
+        bots_ref = resolve_bots_ref(args.bots_ref)
+
+    all_entries: list[QueueEntry] = []
+
+    if args.repo:
+        branches = dict(testmap.tests_for_project(args.repo))
+        if not branches:
+            raise SystemExit(f"repo {args.repo!r} not found in testmap")
+        all_entries.extend(collect_entries(
+            args.repo, branches, args.ref, args.os_filter, args.scenario_filter, bots_ref, args.extra_env,
+        ))
+    else:
+        for repo, branch_map in testmap.REPO_BRANCH_CONTEXT.items():
+            if ':' in repo:
+                logger.debug("skipping non-github repo %r", repo)
+                continue
+            branches = dict(branch_map)
+            all_entries.extend(collect_entries(
+                repo, branches, args.ref, args.os_filter, args.scenario_filter, bots_ref, args.extra_env,
+            ))
+
+    if not all_entries:
+        raise SystemExit("no matching test contexts found")
+
+    logger.info("%d entries", len(all_entries))
+
+    if args.amqp:
+        publish(all_entries)
+        for entry in all_entries:
+            print(entry['job']['slug'])
+    else:
+        for entry in all_entries:
+            print(json.dumps(entry))
+
+
+if __name__ == '__main__':
+    main()
