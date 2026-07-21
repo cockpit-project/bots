@@ -173,10 +173,22 @@ async def run_job(job: Job, ctx: JobContext) -> None:
         status = subject.forge.get_status(job.subject.repo, subject.sha, job.context, log.url)
         logger.info('Log: %s', log.url)
 
+        journal = ''
+        # https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#%24INVOCATION_ID
+        invocation_id = os.getenv("INVOCATION_ID")
+        if ctx.attach_journal and invocation_id:
+            async with spawn(
+                ["journalctl", f"_SYSTEMD_INVOCATION_ID={invocation_id}"],
+                stdout=asyncio.subprocess.PIPE,
+            ) as journalctl:
+                stdout, _stderr = await journalctl.communicate()
+                journal = stdout.decode()
+
         try:
             log.start(
                 f'{title}\n\n'
-                f'Running on: {platform.node()}\n\n'
+                f'Running on: {platform.node()} as {invocation_id or "(unknown invocation)"}\n'
+                f'{journal}\n'
                 f'Job({json.dumps(job, default=lambda obj: obj.__dict__, indent=4)})\n\n'
             )
             await status.post('pending', 'In progress')

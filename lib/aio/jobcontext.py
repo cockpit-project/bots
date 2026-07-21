@@ -33,6 +33,7 @@ from .jsonutil import (
     JsonError,
     JsonObject,
     JsonValue,
+    get_bool,
     get_dict,
     get_nested,
     get_str,
@@ -172,6 +173,7 @@ class JobContext(contextlib.AsyncExitStack):
                 self.default_image = get_str(container, 'default-image')
 
             with get_nested(self.config, 'logs') as logs:
+                self.attach_journal = get_bool(logs, 'attach-journal')
                 driver = get_str(logs, 'driver')
                 if driver not in LOG_DRIVERS:
                     sys.exit(f'Unknown log driver {driver}')
