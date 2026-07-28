@@ -89,6 +89,14 @@ sssd-dbus \
 libsss_sudo \
 "
 
+SUB_MAN_PACKAGES="\
+python3-devel
+python3-setuptools
+openssl-devel
+intltool
+gcc
+"
+
 TEST_PACKAGES="\
 acl \
 ansible-core \
@@ -166,7 +174,7 @@ dnf remove -y cloud-init
 # no need to install all dependencies there
 ALL_DEPS="$COCKPIT_DEPS"
 if [ "fedora-eln" != "$IMAGE" ]; then
-    ALL_DEPS="$COCKPIT_MACHINES_DEPS $COCKPIT_STORAGE_DEPS $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $TEST_PACKAGES"
+    ALL_DEPS="$COCKPIT_MACHINES_DEPS $COCKPIT_STORAGE_DEPS $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $SUB_MAN_PACKAGES $TEST_PACKAGES"
 fi
 dnf $DNF_OPTS -y upgrade
 dnf $DNF_OPTS -y install $ALL_DEPS
