@@ -213,6 +213,14 @@ sssd \
 sssd-dbus \
 "
 
+SUB_MAN_PACKAGES="\
+python3-devel
+python3-setuptools
+openssl-devel
+intltool
+gcc
+"
+
 TEST_PACKAGES="\
 acl \
 ansible-core \
@@ -314,7 +322,7 @@ PACKAGE_SET_STRATIS="\
 stratisd
 "
 
-dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES
+dnf install -y $TEST_PACKAGES $COCKPIT_DEPS $IPA_CLIENT_PACKAGES $SUB_MAN_PACKAGES
 
 mkdir -p /var/lib/package-sets/clevis
 dnf download --downloaddir=/var/lib/package-sets/clevis $PACKAGE_SET_CLEVIS
