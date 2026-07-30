@@ -1,0 +1,1 @@
+apparmor="DENIED" operation="open" class="file" profile="nslookup" name="/proc/sys/net/ipv4/ip_local_port_range" * comm="nslookup" requested_mask="r" denied_mask="r"
