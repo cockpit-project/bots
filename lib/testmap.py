@@ -70,8 +70,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         'rhel-9.8': [
             *contexts('rhel-9-8', COCKPIT_SCENARIOS),
-        ],
-        'rhel-10.2': [
             *contexts('rhel-10-2', COCKPIT_SCENARIOS),
         ],
         # These can be triggered manually with bots/tests-trigger
