@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2026 Red Hat, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import argparse
+import datetime
+import logging
+
+from lib.aio.jsonutil import get_dict, get_dictv, get_str
+from lib.ansi import GREEN, RED, RESET
+from lib.github import GitHub
+
+logger = logging.getLogger(__name__)
+
+ISSUE_TITLE_PREFIX = "Scheduled workflow failing: "
+
+# cockpit-project/projects/4 "Status" field
+STATUS_FIELD_ID = "PVTSSF_lADOAFf38M4AZN4WzgQH4MI"
+STATUS_TRIAGE_ID = "4b73a073"
+
+
+def get_project_items(api: GitHub, org: str, project: int) -> tuple[str, set[str]]:
+    """Returns (project_node_id, set of existing item titles)."""
+    result = api.post_obj(
+        "graphql",
+        {
+            "query": """
+                query($org: String!, $project: Int!) {
+                    organization(login: $org) {
+                        projectV2(number: $project) {
+                            id
+                            items(first: 100) {
+                                nodes {
+                                    content {
+                                        ... on DraftIssue { title }
+                                        ... on Issue { title }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            """,
+            "variables": {"org": org, "project": project},
+        },
+    )
+    logger.debug("graphql response: %r", result)
+    errors = get_dictv(result, "errors", ())
+    if errors:
+        raise RuntimeError(f"GraphQL error: {errors}")
+    data = get_dict(get_dict(result, "data"), "organization")
+    project_data = get_dict(data, "projectV2")
+    project_id = get_str(project_data, "id")
+
+    titles: set[str] = set()
+    for node in get_dictv(get_dict(project_data, "items"), "nodes"):
+        content = get_dict(node, "content", {})
+        title = get_str(content, "title", None)
+        if title is not None:
+            titles.add(title)
+
+    logger.debug("project %s has %d items", project_id, len(titles))
+    return project_id, titles
+
+
+def add_draft_issue(api: GitHub, project_id: str, title: str, body: str) -> None:
+    api.post(
+        "graphql",
+        {
+            "query": """
+                mutation($projectId: ID!, $title: String!, $body: String!) {
+                    addProjectV2DraftIssue(input: {projectId: $projectId, title: $title, body: $body}) {
+                        projectItem { id }
+                    }
+                }
+            """,
+            "variables": {"projectId": project_id, "title": title, "body": body},
+        },
+    )
+
+
+def main() -> None:
+    # fmt: off
+    parser = argparse.ArgumentParser(description="Check for failing workflows")
+    parser.add_argument("-d", "--debug", action="store_true",
+                        help="Enable debug logging")
+    parser.add_argument("--org", default="cockpit-project",
+                        help="GitHub organization to check")
+    parser.add_argument("--project", default=4, type=int,
+                        help="GitHub project number for filing issues")
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument("--dry-run", "-n", action="store_true",
+                        help="Only report failures, do not update the pilot board")
+    action.add_argument("--post-to-board", action="store_true",
+                        help="Add failing workflows to the pilot board")
+    # fmt: on
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    api = GitHub(base="https://api.github.com")
+
+    project_id, existing_titles = get_project_items(api, args.org, args.project)
+
+    repos = api.get_objv(f"orgs/{args.org}/repos?per_page=100")
+    assert len(repos) < 100, f"org has at least {len(repos)} repos; need pagination"
+    repo_names = sorted(get_str(r, "name") for r in repos if not r.get("fork"))
+    logger.debug("found %d repos in %s", len(repo_names), args.org)
+
+    for repo in repo_names:
+        print(f"{repo}:")
+        body = api.get_obj(f"repos/{args.org}/{repo}/actions/runs?event=schedule&per_page=100")
+        runs = get_dictv(body, "workflow_runs", ())
+
+        seen: set[str] = set()
+        for run in runs:
+            name = get_str(run, "name")
+            if name in seen:
+                continue
+            seen.add(name)
+
+            conclusion = get_str(run, "conclusion", get_str(run, "status"))
+            run_date = datetime.datetime.fromisoformat(get_str(run, "created_at"))
+
+            ok = conclusion in ("success", "skipped")
+            if ok:
+                status = f"{GREEN}ok{RESET}"
+            else:
+                status = f"{RED}{conclusion}{RESET}"
+
+            print(f"  {name} (last run {run_date:%A %Y-%m-%d %H:%M UTC}): {status}")
+            if not ok:
+                html_url = get_str(run, "html_url", "")
+                print(f"    {html_url}")
+
+                title = f"{ISSUE_TITLE_PREFIX}{repo}/{name}"
+                if title in existing_titles:
+                    print("    already on project board")
+                elif args.dry_run:
+                    print(f"    would file: {title}")
+                else:
+                    issue_body = (
+                        f"**{conclusion}** on {run_date:%Y-%m-%d %H:%M UTC}\n\n"
+                        f"{html_url}\n\n(created by workflow-watch)"
+                    )
+                    add_draft_issue(api, project_id, title, issue_body)
+                    existing_titles.add(title)
+                    print(f"    filed: {title}")
+
+
+if __name__ == "__main__":
+    main()
