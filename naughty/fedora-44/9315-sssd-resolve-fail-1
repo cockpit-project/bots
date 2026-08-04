@@ -1,0 +1,4 @@
+id: ‘alice’: no such user
+*
+  File "check-system-realms", line *, in checkClientCertAuthentication
+    m.execute('while ! id alice; do sleep 5; done', timeout=300)
