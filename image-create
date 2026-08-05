@@ -184,8 +184,8 @@ class MachineBuilder:
 
 try:
     if args.image == 'services':
-        # deploying candlepin needs oodles of memory
-        memory_mb = 3072
+        # deploying candlepin or freeipa needs oodles of memory
+        memory_mb = 4096
     else:
         memory_mb = 2048
 
