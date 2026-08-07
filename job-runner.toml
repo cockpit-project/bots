@@ -42,6 +42,7 @@ default-image = 'ghcr.io/cockpit-project/tasks:latest'
 # ]
 
 [logs]
+attach-journal = false
 driver='local'   # 's3' or 'local'
 
 [logs.s3]

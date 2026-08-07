@@ -15,7 +15,6 @@
 
 import asyncio
 import contextlib
-import itertools
 import json
 import logging
 import os
@@ -88,6 +87,11 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
 
         log.write(f'Using container image: {container_image}\n')
 
+        try:
+            secret_args = ctx.prepare_secrets(job.secrets, tmpdir / 'secrets')
+        except LookupError as exc:
+            raise Failure(str(exc)) from exc
+
         args = [
             *ctx.container_cmd, 'run',
             # we run arbitrary commands in that container, which aren't prepared for being pid 1; reap zombies
@@ -97,7 +101,7 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
             *(f'--env={k}={v}' for k, v in job.env.items()),
             '--env=TEST_ATTACHMENTS=/var/tmp/attachments',
             f'--env=COCKPIT_CI_LOG_URL={log.url}',
-            *itertools.chain.from_iterable(args for name, args in ctx.secrets_args.items() if name in job.secrets),
+            *secret_args,
 
             container_image,
 
@@ -169,10 +173,22 @@ async def run_job(job: Job, ctx: JobContext) -> None:
         status = subject.forge.get_status(job.subject.repo, subject.sha, job.context, log.url)
         logger.info('Log: %s', log.url)
 
+        journal = ''
+        # https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#%24INVOCATION_ID
+        invocation_id = os.getenv("INVOCATION_ID")
+        if ctx.attach_journal and invocation_id:
+            async with spawn(
+                ["journalctl", f"_SYSTEMD_INVOCATION_ID={invocation_id}"],
+                stdout=asyncio.subprocess.PIPE,
+            ) as journalctl:
+                stdout, _stderr = await journalctl.communicate()
+                journal = stdout.decode()
+
         try:
             log.start(
                 f'{title}\n\n'
-                f'Running on: {platform.node()}\n\n'
+                f'Running on: {platform.node()} as {invocation_id or "(unknown invocation)"}\n'
+                f'{journal}\n'
                 f'Job({json.dumps(job, default=lambda obj: obj.__dict__, indent=4)})\n\n'
             )
             await status.post('pending', 'In progress')
