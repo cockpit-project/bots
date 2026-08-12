@@ -115,13 +115,6 @@ if [ "$IMAGE" = "ubuntu-2604" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/qemu-kvm/qemu-system-x86}"
 fi
 
-if [ "$IMAGE" = "ubuntu-2404" ]; then
-    # introduced in util-linux 2.40.1-5
-    TEST_PACKAGES="${TEST_PACKAGES/lastlog2/}"
-    # renamed at some point
-    TEST_PACKAGES="${TEST_PACKAGES/sos/sosreport}"
-fi
-
 # apt-ftparchive moved to apt-utils in ubuntu-2510
 if [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" != "22.04" ]; then
     TEST_PACKAGES="$TEST_PACKAGES apt-utils"
@@ -173,11 +166,6 @@ Package: *
 Pin: release a=*-proposed
 Pin-Priority: 600
 EOF
-fi
-
-# systemd-cryptsetup was split out in 256.1-2, older releases don't have it yet
-if [ "$IMAGE" = "ubuntu-2404" ]; then
-    TEST_PACKAGES="${TEST_PACKAGES/systemd-cryptsetup /}"
 fi
 
 # smaller and faster initrd; see https://launchpad.net/bugs/1592684
@@ -371,12 +359,6 @@ fi
 # set ubuntu-2510 to use sudo by default instead of sudo-rs
 if [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" = "25.10" ]; then
     update-alternatives --set sudo /usr/bin/sudo.ws
-fi
-
-# HACK: https://launchpad.net/bugs/2040483
-if [ "$IMAGE" = "ubuntu-2404" ]; then
-    mkdir -p /etc/containers/containers.conf.d
-    printf '[CONTAINERS]\napparmor_profile=""\n' > /etc/containers/containers.conf.d/disable-apparmor.conf
 fi
 
 # pmlogger.service sometimes causes long shutdown hangs; disable all PCP services and timers
