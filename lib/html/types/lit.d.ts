@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-declare module "https://cdn.jsdelivr.net/gh/lit/dist@3/all/lit-all.min.js" {
+declare module "lit" {
     export type CSSResultOrNative = CSSResult | CSSStyleSheet;
     export type CSSResultArray = Array<CSSResultOrNative | CSSResultArray>;
     export type CSSResultGroup = CSSResultOrNative | CSSResultArray;

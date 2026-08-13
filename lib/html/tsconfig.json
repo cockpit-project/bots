@@ -10,5 +10,5 @@
         "moduleResolution": "bundler"
     },
     "include": ["*/*.js"],
-    "files": ["types/lit-cdn.d.ts"]
+    "files": ["types/lit.d.ts"]
 }

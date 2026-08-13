@@ -4,7 +4,12 @@
         <title>Cockpit Integration Tests</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="https://cdn.jsdelivr.net/npm/@patternfly/patternfly/patternfly.css" rel="stylesheet">
+        <link
+            href="https://cdn.jsdelivr.net/npm/@patternfly/patternfly@6.6.1/patternfly.css"
+            rel="stylesheet"
+            integrity="sha384-g5M+EcibNLBAxBtzXCtuIXjifI9I6483ybcC7TsDXBYa46ZI0P0d5r1/pKefIAJ7"
+            crossorigin="anonymous"
+        >
         <style>
         * {
             font-family: "Open Sans", sans-serif;
@@ -51,6 +56,16 @@
         applyTheme(darkModeMediaQuery);
         // Listen for changes to the color scheme preference
         darkModeMediaQuery.addEventListener("change", applyTheme);
+        </script>
+        <script type="importmap">
+        {
+            "imports": {
+                "lit": "https://cdn.jsdelivr.net/gh/lit/dist@3.3.3/all/lit-all.min.js"
+            },
+            "integrity": {
+                "https://cdn.jsdelivr.net/gh/lit/dist@3.3.3/all/lit-all.min.js": "sha384-qSoE0anPDAzsBuoT95C270Wd5oKtOOlLdEvSXEk9bRYTg+5ygjyt20ZuhzH0oNbt"
+            }
+        }
         </script>
         <script type="module" src="log.js"></script>
     </head>
