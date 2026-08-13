@@ -115,11 +115,6 @@ if [ "$IMAGE" = "ubuntu-2604" ] ; then
     TEST_PACKAGES="${TEST_PACKAGES/qemu-kvm/qemu-system-x86}"
 fi
 
-# apt-ftparchive moved to apt-utils in ubuntu-2510
-if [ "${ID}" = "ubuntu" ] && [ "${VERSION_ID}" != "22.04" ]; then
-    TEST_PACKAGES="$TEST_PACKAGES apt-utils"
-fi
-
 # These packages are downloaded to the image so that the tests can
 # install them on-demand.
 
@@ -235,20 +230,6 @@ mkdir -p /var/lib/package-sets/timesyncd
 
 # Pre-install distribution cockpit packages, for testing cockpit extensions offline and for convenient interactive debugging
 $APT --no-install-recommends install cockpit
-
-if [ "$ID" = "ubuntu" ] && [ "$VERSION_ID" = "22.04" -o "$VERSION_ID" = "24.04" ]; then
-    # Extract scsi_debug and team modules from full kernel; let's not install linux-image-generic
-    # just for that, it increases boot time by over 10s and image size by > 600 MB
-    EXTRAS=$(apt-cache show linux-image-generic | grep Depends: | grep -o 'linux-modules-extra[^,]*')
-    (cd /tmp/
-     apt-get download $EXTRAS
-     for pkg in $EXTRAS; do
-        dpkg-deb --fsys-tarfile ${pkg}_*.deb | tar -C / --wildcards -xv '*/scsi_debug.ko*' '*/team*.ko*'
-        rm ${pkg}_*.deb
-        depmod "${pkg#linux-modules-extra-}"
-     done
-    )
-fi
 
 # Prepare for building
 #
