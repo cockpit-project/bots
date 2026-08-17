@@ -65,6 +65,9 @@ def build_payload(image: str, output: str) -> None:
         machine.boot()
         machine.execute("dnf install -y anaconda", timeout=300)
 
+        # anaconda dirinstall can break host SELinux labels, preventing new SSH logins
+        machine.execute("setenforce 0")
+
         # Create directory /mnt/sysimage and start installation
         machine.write(KICKSTART_PATH, KICKSTART.format(fedora_version=fedora_version))
         machine.execute(
