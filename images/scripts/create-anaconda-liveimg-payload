@@ -69,7 +69,7 @@ def build_payload(image: str, output: str) -> None:
         machine.write(KICKSTART_PATH, KICKSTART.format(fedora_version=fedora_version))
         machine.execute(
             f"mkdir -p /mnt/sysimage && anaconda --kickstart {KICKSTART_PATH} --dirinstall /mnt/sysimage",
-            timeout=600
+            timeout=1200
         )
 
         # Change directory to /mnt/sysimage/ and create archive
