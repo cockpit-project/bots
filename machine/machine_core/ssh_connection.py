@@ -302,7 +302,7 @@ class SSHConnection:
     def execute(
         self,
         command: str | Sequence[str],
-        input: str | None = None,  # noqa:A002  # shadows `input()` but so does subprocess module
+        input: str | None = None,  # ruff: ignore[builtin-argument-shadowing]  # shadows `input()` but so does subprocess module
         environment: Mapping[str, str] = {},
         stdout: int | IO[str] | IO[bytes] | None = subprocess.PIPE,
         quiet: bool = False,
