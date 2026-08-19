@@ -225,6 +225,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'fedora-eln-boot',
+            *contexts('fedora-45-boot', ANACONDA_SCENARIOS),
         ]
     },
 }
