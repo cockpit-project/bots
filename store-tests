@@ -109,16 +109,16 @@ def main() -> None:
         if get_str(status, "state") == "pending":
             if "progress" in desc:
                 cc[-1].url = get_str(status, "target_url")
-                cc[-1].started = datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # noqa:DTZ007
+                cc[-1].started = datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # ruff: ignore[call-datetime-strptime-without-zone]
             elif "Not yet tested" in desc:
                 cc.append(TestRun(
-                    posted=datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp(),  # noqa:DTZ007
+                    posted=datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp(),  # ruff: ignore[call-datetime-strptime-without-zone]
                     state="pending",
                 ))
             else:
                 logging.warning("Pending status has unexpected description '%s', skipping.", desc)
         elif get_str(status, "state") in ["success", "failure", "error"]:
-            cc[-1].finished = datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # noqa:DTZ007
+            cc[-1].finished = datetime.strptime(get_str(status, "created_at"), DATE_FORMAT).timestamp()  # ruff: ignore[call-datetime-strptime-without-zone]
             cc[-1].state = get_str(status, "state")
             if get_str(status, "state") == "error":
                 cc[-1].description = desc
