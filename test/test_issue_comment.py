@@ -120,7 +120,7 @@ def mocks(config_file: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[MockGitHu
     monkeypatch.setenv('JOB_RUNNER_CONFIG', str(config_file))
     monkeypatch.setenv('TESTING_FARM_API_TOKEN', 'test-tf-token')
 
-    async def fake_get_git_upstream() -> tuple[str, str]:  # noqa: RUF029
+    async def fake_get_git_upstream() -> tuple[str, str]:  # ruff: ignore[unused-async]
         return ('https://github.com/cockpit-project/bots', 'main')
 
     monkeypatch.setattr('lib.aio.git.get_git_upstream', fake_get_git_upstream)

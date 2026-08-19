@@ -80,7 +80,7 @@ def unpack_inline_secret(parent: Path, obj: JsonObject, name: str) -> Path:
 
 
 class JobContext(contextlib.AsyncExitStack):
-    config: JsonObject = {}  # noqa:RUF012  # JsonObject is immutable
+    config: JsonObject = {}  # ruff: ignore[mutable-class-default]  # JsonObject is immutable
     logs: LogDriver
     _forges: dict[str, Forge]
     _default_forge: str

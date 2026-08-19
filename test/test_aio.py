@@ -36,7 +36,7 @@ class GitHubService:
     TOKEN = 'token_ABCDEFG'
     USER_AGENT = __file__  # or any magic unique string
 
-    db: JsonObject = {}  # noqa:RUF012  # JsonObject is immutable
+    db: JsonObject = {}  # ruff: ignore[mutable-class-default]  # JsonObject is immutable
 
     def __init__(self) -> None:
         self.resources: dict[str, MockResponse] = {}
