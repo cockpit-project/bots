@@ -64,4 +64,17 @@
       <packagereq type="mandatory">kernel</packagereq>
     </packagelist>
   </group>
+
+  <environment>
+    <id>custom-environment</id>
+    <name>Custom Operating System</name>
+    <description>Basic building block for a custom operating system.</description>
+    <display_order>99</display_order>
+    <grouplist>
+      <groupid>core</groupid>
+    </grouplist>
+    <optionlist>
+      <groupid>anaconda-tools</groupid>
+    </optionlist>
+  </environment>
 </comps>
