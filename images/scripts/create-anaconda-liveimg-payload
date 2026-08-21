@@ -63,6 +63,7 @@ def build_payload(image: str, output: str) -> None:
     machine = testvm.VirtMachine(image=image, memory_mb=4096)
     try:
         machine.boot()
+        machine.execute("rm -f /usr/share/dnf5/repos.d/fedora-cisco-openh264.repo")
         machine.execute("dnf install -y anaconda", timeout=300)
 
         # anaconda dirinstall can break host SELinux labels, preventing new SSH logins
