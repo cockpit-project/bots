@@ -62,6 +62,7 @@ def build_dnf_payload(image: str, output: str) -> None:
     machine = testvm.VirtMachine(image=image, memory_mb=4096)
     try:
         machine.boot()
+        machine.execute("rm -f /usr/share/dnf5/repos.d/fedora-cisco-openh264.repo")
         machine.execute("dnf install -y createrepo_c", timeout=300)
 
         # Ensure target repo directory exists
