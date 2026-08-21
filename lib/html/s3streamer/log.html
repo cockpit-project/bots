@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Cockpit Integration Tests</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link
+            href="https://cdn.jsdelivr.net/npm/@patternfly/patternfly@6.6.1/patternfly.css"
+            rel="stylesheet"
+            integrity="sha384-g5M+EcibNLBAxBtzXCtuIXjifI9I6483ybcC7TsDXBYa46ZI0P0d5r1/pKefIAJ7"
+            crossorigin="anonymous"
+        >
+        <style>
+        * {
+            font-family: "Open Sans", sans-serif;
+        }
+        body {
+            margin: 10px;
+        }
+
+        body a {
+            text-decoration: none;
+        }
+
+        body > div {
+            margin-block-end: var(--pf-t--global--spacer--sm);
+        }
+
+        .test-entry.failed .test-entry-toggle {
+            background-color: var(--pf-t--global--icon--color--status--danger--default);
+        }
+        .test-entry.retried .test-entry-toggle {
+            background-color: var(--pf-t--global--color--nonstatus--purple--default);
+        }
+        .test-entry.skipped .test-entry-toggle {
+            background-color: var(--pf-t--global--color--nonstatus--orange--default);
+        }
+        .pf-v6-c-data-list.pf-m-compact {
+            --pf-v6-c-data-list--m-compact--FontSize: var(--pf-t--global--font--size--body--md);
+        }
+        </style>
+        <script type="text/javascript">
+        // Automatic dark mode based on system preference
+        const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+        function applyTheme(e) {
+            const cl = document.documentElement.classList;
+            if (e.matches) {
+                cl.add("pf-v6-theme-dark");
+            } else {
+                cl.remove("pf-v6-theme-dark");
+            }
+        }
+
+        // Apply theme on page load
+        applyTheme(darkModeMediaQuery);
+        // Listen for changes to the color scheme preference
+        darkModeMediaQuery.addEventListener("change", applyTheme);
+        </script>
+        <script type="importmap">
+        {
+            "imports": {
+                "lit": "https://cdn.jsdelivr.net/gh/lit/dist@3.3.3/all/lit-all.min.js"
+            },
+            "integrity": {
+                "https://cdn.jsdelivr.net/gh/lit/dist@3.3.3/all/lit-all.min.js": "sha384-qSoE0anPDAzsBuoT95C270Wd5oKtOOlLdEvSXEk9bRYTg+5ygjyt20ZuhzH0oNbt"
+            }
+        }
+        </script>
+        <script type="module" src="log.js"></script>
+    </head>
+    <body>
+        <log-viewer href="log"></log-viewer>
+    </body>
+</html>
