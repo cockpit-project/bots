@@ -175,6 +175,9 @@ grub2-mkconfig -o /boot/grub2/grub.cfg
 # https://github.com/openssh/openssh-portable/pull/593
 echo 100::55:4e4b:4e4f:574e UNKNOWN | tee -a /etc/hosts
 
+# Unlock root on openSUSE
+usermod root --unlock
+
 # reduce image size
 zypper clean
 
