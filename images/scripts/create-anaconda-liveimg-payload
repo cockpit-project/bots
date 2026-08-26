@@ -76,6 +76,9 @@ def build_payload(image: str, output: str) -> None:
             timeout=1200
         )
 
+        # dirinstall labels files using the host's SELinux policy; relabel with the target's
+        machine.execute("chroot /mnt/sysimage restorecon -R /", timeout=600)
+
         # Change directory to /mnt/sysimage/ and create archive
         machine.execute("""
             cd /mnt/sysimage
