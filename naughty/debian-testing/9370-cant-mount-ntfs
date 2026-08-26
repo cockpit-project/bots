@@ -1,0 +1,3 @@
+> warn: mount: /var/lib/cockpittest/mnt/foo: unknown filesystem type 'ntfs3'.
+*
+  File "check-storage-resize", line *, in testResizeNtfs
