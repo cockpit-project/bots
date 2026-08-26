@@ -76,6 +76,17 @@ def build_payload(image: str, output: str) -> None:
             timeout=1200
         )
 
+        # setenforce 0 above prevents anaconda dirinstall from corrupting host SELinux
+        # labels, but it also means files in /mnt/sysimage get labeled by the host's
+        # policy based on their /mnt/sysimage/* paths, not their intended paths within
+        # the installed system. Relabel using the installed system's own file_contexts.
+        machine.execute(
+            "setfiles -r /mnt/sysimage"
+            " /mnt/sysimage/etc/selinux/targeted/contexts/files/file_contexts"
+            " /mnt/sysimage",
+            timeout=300
+        )
+
         # Change directory to /mnt/sysimage/ and create archive
         machine.execute("""
             cd /mnt/sysimage
