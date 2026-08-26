@@ -76,6 +76,17 @@ def build_payload(image: str, output: str) -> None:
             timeout=1200
         )
 
+        # dirinstall produces wrong SELinux labels (host is in permissive mode);
+        # relabel from the host using the target's file_contexts — no chroot needed;
+        # exclude os-prober mount dir which creates a directory cycle
+        machine.execute(
+            "setfiles -r /mnt/sysimage"
+            " -e /mnt/sysimage/var/lib/os-prober"
+            " /mnt/sysimage/etc/selinux/targeted/contexts/files/file_contexts"
+            " /mnt/sysimage/",
+            timeout=600
+        )
+
         # Change directory to /mnt/sysimage/ and create archive
         machine.execute("""
             cd /mnt/sysimage
