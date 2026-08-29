@@ -234,6 +234,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
 # their non-Atomic siblings.
 OSTREE_BUILD_IMAGE = {
     "centos-9-bootc": "centos-9-stream",
+    "centos-10-bootc": "centos-10",
     "fedora-coreos": "fedora-44",
 }
 
