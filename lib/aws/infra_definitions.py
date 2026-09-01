@@ -497,6 +497,10 @@ def update_bots_urls(
         ensure_parameter(f"{DISPATCHER_PARAMS}/runner-url", cockpit_bots_url)
 
 
+def update_amqp_server(server: str) -> None:
+    ensure_parameter(f"{DISPATCHER_PARAMS}/amqp-server", server)
+
+
 def update_max_jobs(count: int) -> None:
     ensure_parameter(f"{DISPATCHER_PARAMS}/max-active", str(count))
 
@@ -514,17 +518,11 @@ def upload_secrets(secrets: Mapping[str, str]) -> None:
 
 def sync_ssm(*, cockpit_bots_url: str, secrets: Mapping[str, str]) -> None:
     print("\n## SSM")
-    ensure_parameter(
-        f"{DISPATCHER_PARAMS}/amqp-server",
-        "amqp-cockpit.apps.ocp.cloud.ci.centos.org:443",
-    )
+    update_amqp_server("amqp-cockpit.apps.ocp.cloud.ci.centos.org:443")
     update_bots_urls(cockpit_bots_url)
-    ensure_parameter(f"{DISPATCHER_PARAMS}/max-active", "50")
-    ensure_parameter(f"{DISPATCHER_PARAMS}/max-awaiting-logs", "20")
-    for name, value in sorted(secrets.items()):
-        ensure_parameter(
-            f"{DISPATCHER_PARAMS}/secrets/{name}", value, param_type="SecureString"
-        )
+    update_max_jobs(50)
+    update_max_awaiting_logs(20)
+    upload_secrets(secrets)
 
 
 def sync_infra(*, cockpit_bots_url: str, secrets: Mapping[str, str]) -> set[str]:
