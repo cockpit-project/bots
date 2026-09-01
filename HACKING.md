@@ -69,20 +69,32 @@ pushing PRs that will fail on trivial errors:
 
     ln -s ../../test/run .git/hooks/pre-push
 
-### Updating pixel tests code
+### Hacking on the logs page
 
-> [!NOTE]
-> This will only update the `log.html` page and redirect all links there to the log URL set in `<head>`. For `pixeldiff.html` there is currently no written dev guide.
+The logs viewer page lives in `lib/html/s3streamer`, as `log.html` and
+`log.js`.  It's no-bundle, based on Web Components using Lit, and covered by
+TypeScript (on JSDoc comments) and Biome.  It's uploaded by the s3streamer
+server code (`lib/aio/s3streamer.py`) at the start of each new test job.
 
+You can also test it locally by downloading an existing raw log file into
+`lib/html/s3streamer/log` and starting a local webserver to view the result:
 
-* Easiest way to develop is to go to `./lib/s3-html/log.html` and within `<head>` add a test URL for what you want to improve layout for.
-```html
-<base href="https://log-url/log.html" />
-<meta http-equiv="refresh" content="5" >
 ```
-* Start a server for the `lib/` directory with `python -m http.server -d ./lib/s3-html`
-* Open up the URL echoed in terminal and go to `/log.html`
-* Make changes in `log.html` and see changes refresh live in the browser
+python -m http.server -d ./lib/html/s3streamer
+```
+
+If you need to test the streaming code itself, it's also possible to run CI
+jobs locally using `job-runner run cockpit-project/starter-kit` or something
+similar.  In the default configuration, `job-runner` will write to the local
+disk instead of uploading to S3, but the s3streamer algorithm is still used and
+live updates should work in the same way.  In that case you should run the
+webserver like this:
+
+```
+python -m http.server -b 127.0.0.1 -d ~/.cache/cockpit-dev/job-runner-logs
+```
+
+See `job-runner.toml` for more information.
 
 ## Debugging tips
 

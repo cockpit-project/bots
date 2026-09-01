@@ -20,3 +20,11 @@ find_python_files() {
 find_python_files | xargs -0 ruff check --quiet
 find_python_files | xargs -0 mypy --no-error-summary
 pytest -vv
+
+if command -v biome >/dev/null 2>&1; then
+    biome check
+fi
+
+if command -v tsc >/dev/null 2>&1; then
+    tsc -p lib/html/tsconfig.json
+fi

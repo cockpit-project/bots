@@ -139,7 +139,7 @@ class LogStreamer:
         # Send the initial data immediately, to get the chunks file written out.
         self.pending = data.encode()
         self.send_pending()
-        AttachmentsDirectory(self.index, f'{LIB_DIR}/s3-html').scan()
+        AttachmentsDirectory(self.index, f'{LIB_DIR}/html/s3streamer').scan()
 
     def write(self, data: str) -> None:
         self.pending += data.encode()
