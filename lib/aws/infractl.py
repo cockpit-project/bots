@@ -27,6 +27,7 @@ from .ec2 import (
 )
 from .infra_definitions import (
     sync_infra,
+    update_amqp_server,
     update_bots_urls,
     update_max_awaiting_logs,
     update_max_jobs,
@@ -122,6 +123,12 @@ def cmd_dispatcher_ssh(_args: argparse.Namespace) -> None:
             ssh_to_instance(instance, "admin")
             return
     sys.exit("no running dispatcher instance found")
+
+
+def cmd_dispatcher_set_amqp_server(args: argparse.Namespace) -> None:
+    logger.debug("setting amqp-server to %r", args.server)
+    update_amqp_server(args.server)
+    remind_restart(args.prog)
 
 
 def cmd_dispatcher_set_max_jobs(args: argparse.Namespace) -> None:
@@ -316,6 +323,12 @@ def main() -> None:
 
     dispatcher_set = dispatcher_cmds.add_parser("set", help="Configure dispatcher")
     dispatcher_set_cmds = dispatcher_set.add_subparsers(required=True)
+
+    dispatcher_set_amqp_server = dispatcher_set_cmds.add_parser("amqp-server",
+        help="Set the AMQP server address")
+    dispatcher_set_amqp_server.add_argument("server",
+                                            help="AMQP server address (host:port)")
+    dispatcher_set_amqp_server.set_defaults(func=cmd_dispatcher_set_amqp_server)
 
     dispatcher_set_max_jobs = dispatcher_set_cmds.add_parser("max-jobs",
         help="Set the maximum number of concurrently active jobs")
