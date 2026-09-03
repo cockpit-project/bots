@@ -26,7 +26,7 @@ COCKPIT_SCENARIOS = {'networking', 'storage', 'expensive', 'other'}
 ANACONDA_SCENARIOS = {'bios', 'cockpit', 'dnf', 'storage', 'expensive', 'other', 'bootopts-net1'}
 
 
-def contexts(image: str, *scenarios: Iterable[str], repo: str | None = None) -> Sequence[str]:
+def product(image: str, *scenarios: Iterable[str], repo: str | None = None) -> Sequence[str]:
     return [image + '/' + '-'.join(i) + (('@' + repo) if repo else '')
             for i in itertools.product(*scenarios)]
 
@@ -42,42 +42,42 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     },
     'cockpit-project/cockpit': {
         'main': [
-            *contexts('arch', COCKPIT_SCENARIOS),
-            *contexts('centos-9-bootc', COCKPIT_SCENARIOS),
-            *contexts('debian-testing', COCKPIT_SCENARIOS),
-            *contexts('debian-trixie', COCKPIT_SCENARIOS),
-            *contexts('ubuntu-2604', COCKPIT_SCENARIOS),
-            *contexts('ubuntu-stable', COCKPIT_SCENARIOS),
-            *contexts('fedora-43', COCKPIT_SCENARIOS),
-            *contexts('fedora-44', COCKPIT_SCENARIOS),
+            *product('arch', COCKPIT_SCENARIOS),
+            *product('centos-9-bootc', COCKPIT_SCENARIOS),
+            *product('debian-testing', COCKPIT_SCENARIOS),
+            *product('debian-trixie', COCKPIT_SCENARIOS),
+            *product('ubuntu-2604', COCKPIT_SCENARIOS),
+            *product('ubuntu-stable', COCKPIT_SCENARIOS),
+            *product('fedora-43', COCKPIT_SCENARIOS),
+            *product('fedora-44', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
-            *contexts(TEST_OS_DEFAULT, ['devel']),
-            *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
+            *product(TEST_OS_DEFAULT, ['devel']),
+            *product(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
             # no udisks on CoreOS → skip storage
-            *contexts('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
+            *product('fedora-coreos', COCKPIT_SCENARIOS - {'storage'}),
             # TODO: gradually fix the remaining scenarios
-            *contexts('opensuse-tumbleweed', COCKPIT_SCENARIOS - {'networking', 'storage', 'expensive'}),
-            *contexts('rhel-8-10', ['ws-container'], COCKPIT_SCENARIOS),
-            *contexts('rhel-9-9', COCKPIT_SCENARIOS),
-            *contexts('rhel-10-3', COCKPIT_SCENARIOS),
-            *contexts('centos-10', COCKPIT_SCENARIOS),
+            *product('opensuse-tumbleweed', COCKPIT_SCENARIOS - {'networking', 'storage', 'expensive'}),
+            *product('rhel-8-10', ['ws-container'], COCKPIT_SCENARIOS),
+            *product('rhel-9-9', COCKPIT_SCENARIOS),
+            *product('rhel-10-3', COCKPIT_SCENARIOS),
+            *product('centos-10', COCKPIT_SCENARIOS),
         ],
         'rhel-8': [
-            *contexts('rhel-8-10', COCKPIT_SCENARIOS),
+            *product('rhel-8-10', COCKPIT_SCENARIOS),
             # all skipped
-            *contexts('rhel-8-10-distropkg', COCKPIT_SCENARIOS - {'networking'}),
+            *product('rhel-8-10-distropkg', COCKPIT_SCENARIOS - {'networking'}),
         ],
         'rhel-9.8': [
-            *contexts('rhel-9-8', COCKPIT_SCENARIOS),
-            *contexts('rhel-10-2', COCKPIT_SCENARIOS),
+            *product('rhel-9-8', COCKPIT_SCENARIOS),
+            *product('rhel-10-2', COCKPIT_SCENARIOS),
         ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
             'opensuse-tumbleweed',
-            *contexts('fedora-45', COCKPIT_SCENARIOS),
-            *contexts('rhel-10-3', COCKPIT_SCENARIOS),
-            *contexts('ubuntu-2604', COCKPIT_SCENARIOS),
+            *product('fedora-45', COCKPIT_SCENARIOS),
+            *product('rhel-10-3', COCKPIT_SCENARIOS),
+            *product('ubuntu-2604', COCKPIT_SCENARIOS),
         ],
     },
     'cockpit-project/starter-kit': {
@@ -221,11 +221,11 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     },
     'rhinstaller/anaconda-webui': {
         'main': [
-            *contexts('fedora-rawhide-boot', ANACONDA_SCENARIOS),
+            *product('fedora-rawhide-boot', ANACONDA_SCENARIOS),
         ],
         '_manual': [
             'fedora-eln-boot',
-            *contexts('fedora-45-boot', ANACONDA_SCENARIOS),
+            *product('fedora-45-boot', ANACONDA_SCENARIOS),
         ]
     },
 }
@@ -245,26 +245,27 @@ WSCONTAINER_BUILD_IMAGE = {
 }
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
+# every entry here must also appear in REPO_BRANCH_CONTEXT — otherwise it will never be triggered
 IMAGE_REFRESH_TRIGGERS = {
-    "services": [
-        *contexts(TEST_OS_DEFAULT, COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *contexts(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *contexts('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *contexts('debian-trixie', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *contexts('rhel-9-8', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+    "services": {
+        *product(TEST_OS_DEFAULT, COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *product(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *product('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *product('debian-trixie', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
+        *product('rhel-9-8', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         "rhel-8-10@cockpit-project/cockpit/rhel-8",
         "rhel-8-10@candlepin/subscription-manager/subscription-manager-1.28",
         "rhel-9-8@candlepin/subscription-manager/subscription-manager-1.29",
         "rhel-10-2@cockpit-project/subscription-manager-cockpit",
-    ],
+    },
     # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
-    "fedora-rawhide": [
-        *contexts("fedora-rawhide-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
-    ],
+    "fedora-rawhide": {
+        *product("fedora-rawhide-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
+    },
     # Anaconda payload updates can affect tests
-    "fedora-rawhide-anaconda-payload": [
-        *contexts("fedora-rawhide-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
-    ],
+    "fedora-rawhide-anaconda-payload": {
+        *product("fedora-rawhide-boot", ANACONDA_SCENARIOS, repo='rhinstaller/anaconda-webui'),
+    },
 }
 
 
