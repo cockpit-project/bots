@@ -93,6 +93,13 @@ def test_cockpit_contexts() -> None:
     # devel runs in one scenario due to coverage
 
 
+def test_refresh_triggers_in_repo_branch_context() -> None:
+    all_tests = set(testmap._all_tests())
+    for image, t in testmap._REFRESH_TRIGGER_TESTS:
+        assert t in all_tests, \
+            f"IMAGE_REFRESH_TRIGGERS[{image!r}] contains {t.bots_context()!r} not found in REPO_BRANCH_CONTEXT"
+
+
 def test_tests_for_image_ostree() -> None:
     # refreshing an ostree build image should trigger the ostree image tests
     for ostree_image, build_image in testmap.OSTREE_BUILD_IMAGE.items():

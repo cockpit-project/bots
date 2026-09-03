@@ -18,7 +18,8 @@
 import fnmatch
 import itertools
 import os
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from typing import NamedTuple
 
 from lib.constants import TEST_OS_DEFAULT
 
@@ -252,11 +253,10 @@ IMAGE_REFRESH_TRIGGERS = {
         *product(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *product('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *product('debian-trixie', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *product('rhel-9-8', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        "rhel-8-10@cockpit-project/cockpit/rhel-8",
+        *product('rhel-9-8', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit/rhel-9.8'),
+        *product('rhel-8-10', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit/rhel-8'),
         "rhel-8-10@candlepin/subscription-manager/subscription-manager-1.28",
         "rhel-9-8@candlepin/subscription-manager/subscription-manager-1.29",
-        "rhel-10-2@cockpit-project/subscription-manager-cockpit",
     },
     # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
     "fedora-rawhide": {
@@ -350,48 +350,78 @@ def tests_for_project(project: str) -> Mapping[str, Sequence[str]]:
     return res
 
 
-def _direct_tests_for_image(image: str, scenario: str = '*') -> set[str]:
-    """Return tests directly matching an image, without following build image mappings.
+class Test(NamedTuple):
+    os: str
+    scenario: str
+    repo: str
+    branch: str
 
-    scenario is an fnmatch pattern to filter by scenario name (default '*' matches all).
-    """
-    tests: set[str] = set()
-    for repo, branch_contexts in REPO_BRANCH_CONTEXT.items():
-        for branch, contexts in branch_contexts.items():
+    @property
+    def image(self) -> str:
+        return get_test_image(self.os)
+
+    @property
+    def context(self) -> str:
+        return f'{self.os}/{self.scenario}' if self.scenario else self.os
+
+    @classmethod
+    def from_context(cls, s: str, repo: str, branch: str = 'main') -> 'Test':
+        os_name, _, scenario = s.partition('/')
+        return cls(os=os_name, scenario=scenario, repo=repo, branch=branch)
+
+    @classmethod
+    def from_bots_context(cls, s: str) -> 'Test':
+        context_str, _, repo_branch = s.partition('@')
+        match repo_branch.split('/', 2):
+            case [org, project]:
+                return cls.from_context(context_str, repo=f'{org}/{project}')
+            case [org, project, branch]:
+                return cls.from_context(context_str, repo=f'{org}/{project}', branch=branch)
+        raise ValueError(s)
+
+    def bots_context(self) -> str:
+        s = f'{self.context}@{self.repo}'
+        if self.branch != 'main':
+            s += f'/{self.branch}'
+        return s
+
+
+_REFRESH_TRIGGER_TESTS = {
+    (image, Test.from_bots_context(s))
+    for image, triggers in IMAGE_REFRESH_TRIGGERS.items()
+    for s in triggers
+}
+
+
+def _test_depends_on_image(t: Test, image: str) -> bool:
+    # tests always depend on their own image
+    if t.image == image:
+        return True
+
+    # ostree images require non-ostree builders
+    if OSTREE_BUILD_IMAGE.get(t.image) == image:
+        return True
+
+    # the ws-container scenarios build the container on a different image
+    if WSCONTAINER_BUILD_IMAGE.get(t.image) == image:
+        return t.scenario.startswith('ws-container')
+
+    # finally, some scenarios are known to depend on other images (like services)
+    return (image, t) in _REFRESH_TRIGGER_TESTS
+
+
+def _all_tests() -> Iterator[Test]:
+    for repo, branches in REPO_BRANCH_CONTEXT.items():
+        for branch, context_list in branches.items():
             if branch.startswith('_'):
                 continue
-            for context in contexts:
-                context_image, _, context_scenario = context.partition('/')
-                # -distropkg is a test mode suffix, not a separate image
-                if context_image.removesuffix('-distropkg') != image:
-                    continue
-                if not fnmatch.fnmatch(context_scenario, scenario):
-                    continue
-                c = context + '@' + repo
-                if branch != get_default_branch(repo):
-                    c += "/" + branch
-                tests.add(c)
-    return tests
+            for context in context_list:
+                yield Test.from_context(context, repo=repo, branch=branch)
 
 
 def tests_for_image(image: str) -> Sequence[str]:
     """Return context list of all tests required for testing an image"""
-
-    tests = set(IMAGE_REFRESH_TRIGGERS.get(image, []))
-    tests.update(_direct_tests_for_image(image))
-
-    # is this a build image for Atomic? then add the Atomic tests
-    for a, i in OSTREE_BUILD_IMAGE.items():
-        if image == i:
-            tests.update(_direct_tests_for_image(a))
-            break
-
-    # is this a build image for ws-container? then add those scenario tests
-    for test_image, build_image in WSCONTAINER_BUILD_IMAGE.items():
-        if image == build_image:
-            tests.update(_direct_tests_for_image(test_image, 'ws-container*'))
-
-    return list(tests)
+    return [t.bots_context() for t in _all_tests() if _test_depends_on_image(t, image)]
 
 
 def tests_for_po_refresh(project: str) -> Sequence[str]:
