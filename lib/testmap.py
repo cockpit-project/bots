@@ -336,9 +336,6 @@ def projects() -> Iterable[str]:
 
 
 def get_default_branch(repo: str) -> str:
-    branches = tests_for_project(repo)
-    if 'master' in branches:
-        return 'master'
     return 'main'
 
 
