@@ -17,7 +17,7 @@
 
 import fnmatch
 import itertools
-import os.path
+import os
 from collections.abc import Iterable, Mapping, Sequence
 
 from lib.constants import TEST_OS_DEFAULT
