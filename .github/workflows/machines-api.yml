@@ -1,0 +1,60 @@
+name: machines-api
+on: [pull_request]
+
+jobs:
+  query-affected:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      affected_images: ${{ steps.get-images.outputs.affected_images }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Determine affected images
+        id: get-images
+        run: |
+          git diff --name-only HEAD^1 HEAD |
+              python3 -m test.affected_images |
+              tee -a "$GITHUB_OUTPUT"
+
+  machines-api:
+    needs: query-affected
+    if: needs.query-affected.outputs.affected_images != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pull-requests: none
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJson(needs.query-affected.outputs.affected_images) }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y \
+            libvirt-clients \
+            libvirt-daemon-system \
+            python3-libvirt \
+            python3-pytest \
+            python3-pytest-asyncio \
+            python3-pytest-cov \
+            qemu-kvm
+
+      # virtqemud spawns QEMU processes as a non-root user which needs /dev/kvm access
+      - name: Enable KVM access for QEMU
+        run: sudo chmod 666 /dev/kvm
+
+      - name: Download image
+        run: ./image-download ${{ matrix.image }}
+
+      - name: Run tests
+        env:
+          TEST_OS: ${{ matrix.image }}
+          FORCE_COLOR: 1
+        run: python3 -m pytest -vvs test/test_machines_api.py
