@@ -420,6 +420,21 @@ def _all_tests() -> Iterator[Test]:
                 yield Test.from_context(context, repo=repo, branch=branch)
 
 
+def bots_contexts_for_fnmatch(pattern: str) -> Sequence[str]:
+    """Return all bots contexts (full @repo form) matching the given fnmatch pattern.
+
+    Searches across all repos and branches.  For use when running from the bots
+    repo, where the full context form is always required.
+    """
+    return [t.bots_context() for t in _all_tests() if fnmatch.fnmatch(t.bots_context(), pattern)]
+
+
+def contexts_for_fnmatch(pattern: str, *, repo: str, branch: str = 'main') -> Sequence[str]:
+    """Return bare contexts for the given repo and branch matching the given fnmatch pattern."""
+    return [t.context for t in _all_tests()
+            if t.repo == repo and t.branch == branch and fnmatch.fnmatch(t.context, pattern)]
+
+
 def tests_for_image(image: str) -> Sequence[str]:
     """Return context list of all tests required for testing an image"""
     return [t.bots_context() for t in _all_tests() if _test_depends_on_image(t, image)]

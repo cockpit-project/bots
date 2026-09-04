@@ -37,7 +37,12 @@ def trigger_pull(api: github.GitHub, opts: argparse.Namespace) -> int:
     if opts.context:
         contexts = set[str]()
         for cntx in opts.context:
-            if cntx.startswith("image:"):
+            if '*' in cntx or '?' in cntx:
+                if api.repo == 'cockpit-project/bots':
+                    contexts.update(testmap.bots_contexts_for_fnmatch(cntx))
+                else:
+                    contexts.update(testmap.contexts_for_fnmatch(cntx, repo=api.repo, branch=opts.branch))
+            elif cntx.startswith("image:"):
                 contexts.update(testmap.tests_for_image(cntx.split(':', 1)[1]))
             elif testmap.is_valid_context(cntx, api.repo):
                 if opts.bots_pr:
@@ -93,10 +98,13 @@ def main() -> int:
     parser.add_argument('--bots-pr', help="Use the bots code from this PR instead of main")
     parser.add_argument('-n', '--dry-run', action="store_true",
                         help="Only show which contexts would be triggered")
+    parser.add_argument('--branch', default='main',
+                        help="Branch for wildcard triggers in non-bots repos (default: main)")
     parser.add_argument('target', help='The pull request number to trigger, '
                                        'or - for the upstream of the current branch')
     parser.add_argument('context', nargs='*', help='The github task context(s) to trigger; can also be '
-                                                   '"image:<imagename>" to trigger all tests related to that image')
+                                                   '"image:<imagename>" to trigger all tests related to that image, '
+                                                   'or a wildcard pattern like "*/networking@*"')
     opts = parser.parse_args()
 
     api = github.GitHub(repo=opts.repo)
