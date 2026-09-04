@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
 import fnmatch
 import itertools
 import os
@@ -434,3 +435,35 @@ def tests_for_po_refresh(project: str) -> Sequence[str]:
         # plus required f-coreos
         contexts.append("fedora-coreos/other")
     return contexts
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--image-gating', help='Limit to tests required to gate an image update')
+    parser.add_argument('--repo', help='Limit to a single repo (returns bare contexts without @repo)')
+    parser.add_argument('--branch', help='Limit to a specific branch')
+    parser.add_argument('--scenario', help='Limit to a specific scenario')
+    parser.add_argument('--images', action='store_true', help='Output image names instead of full contexts')
+    args = parser.parse_args()
+
+    results: set[str] = set()
+    for t in _all_tests():
+        # filter by --repo --branch --scenario and --image-gating
+        if args.repo not in (None, t.repo):
+            continue
+        if args.branch not in (None, t.branch):
+            continue
+        if args.scenario not in (None, t.scenario):
+            continue
+        if args.image_gating and not _test_depends_on_image(t, args.image_gating):
+            continue
+
+        # output type is according to if --images or --repo were specified
+        if args.images:
+            results.add(t.image)
+        elif args.repo:
+            results.add(t.context)
+        else:
+            results.add(t.bots_context())
+
+    print('\n'.join(sorted(results)))
