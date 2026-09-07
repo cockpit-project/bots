@@ -1,0 +1,62 @@
+name: Auto-add to Cockpit GitHub Project
+
+on:
+  pull_request:
+    types: [edited]
+  schedule:
+    - cron: "*/10 * * * *"
+
+env:
+  # Needs repo and project scopes in a PAT token in the org
+  # https://github.com/actions/add-to-project#creating-a-pat-and-adding-it-to-your-repository
+  PROJECT_TOKEN: ${{ secrets.GH_PROJECTS }}
+  # https://github.com/orgs/cockpit-project/projects/10
+  PROJECT: 10
+  ORG: ${{ github.repository_owner }}
+
+jobs:
+  issues:
+    name: Issues
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      pull-requests: read
+    steps:
+      - name: Find issues without a project
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const query = `
+              query {
+                search(first:100, query:"org:cockpit-project is:open -project:cockpit-project/10", type:ISSUE) {
+                  nodes {
+                    ... on Issue {
+                      id,
+                      number
+                    }
+                  }
+                }
+              }`;
+            const response = await github.graphql(query);
+            console.log(response)
+            const issues = response.search.nodes.flatMap(n => n.id);
+            for (const issue of issues) {
+              await octokit.request('POST /orgs/${{ env.ORG }}/projectsV2/${{ env.PROJECT }}/items', {
+                type: 'Issue',
+                id: $issue,
+                headers: {
+                  'X-GitHub-Api-Version': '2026-03-10'
+                }
+              })
+            }
+
+  # prs:
+  #   # if: ${{ contains(github.event.pull_request.labels.*.name, 'bot') }}
+  #   name: Add bot PR to project
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/add-to-project@v2
+  #       with:
+  #         project-url: https://github.com/orgs/cockpit-project/projects/10
+  #         github-token: ${{ secrets.GH_PROJECTS }}
