@@ -3,6 +3,7 @@
         "checkJs": true,
         "strict": true,
         "noEmit": true,
+        "incremental": true,
         "noImplicitOverride": true,
         "target": "ES2022",
         "module": "ES2022",
