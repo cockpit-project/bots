@@ -254,7 +254,7 @@ class TestTestsScan(unittest.TestCase):
         args = ["--dry", "--context", self.context, "--amqp", "amqp.example.com:1234"]
         self.run_success(args, "")
 
-        mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
+        mock_queue.assert_called_once_with("amqp.example.com:1234", ["public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
 
         channel.basic_publish.assert_called_once()
@@ -292,7 +292,7 @@ class TestTestsScan(unittest.TestCase):
         args = ["--dry", "--context", self.context, "--sha", "9988aa", "--amqp", "amqp.example.com:1234"]
         self.run_success(args, "")
 
-        mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
+        mock_queue.assert_called_once_with("amqp.example.com:1234", ["public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
 
         channel.basic_publish.assert_called_once()
@@ -332,7 +332,7 @@ class TestTestsScan(unittest.TestCase):
                 "--sha", "112233", "--amqp", "amqp.example.com:1234"]
         self.run_success(args, "")
 
-        mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
+        mock_queue.assert_called_once_with("amqp.example.com:1234", ["public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
 
         channel.basic_publish.assert_called_once()
@@ -372,7 +372,7 @@ class TestTestsScan(unittest.TestCase):
         args = ["--dry", "--context", self.context, "--sha", "abcdef", "--amqp", "amqp.example.com:1234"]
         self.run_success(args, "")
 
-        mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
+        mock_queue.assert_called_once_with("amqp.example.com:1234", ["public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
 
         channel.basic_publish.assert_called_once()
@@ -415,7 +415,7 @@ class TestTestsScan(unittest.TestCase):
                 "--context", f"{self.context}@{repo_branch}"]
         self.run_success(args, "")
 
-        mock_queue.assert_called_once_with("amqp.example.com:1234", ["rhel", "public"])
+        mock_queue.assert_called_once_with("amqp.example.com:1234", ["public"])
         channel = mock_queue.return_value.__enter__.return_value.channel
 
         channel.basic_publish.assert_called_once()

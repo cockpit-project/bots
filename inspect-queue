@@ -35,7 +35,7 @@ def main() -> int:
                         help='Directory with ca.pem and amqp-client.{pem,key} (default: %(default)s)')
     opts = parser.parse_args()
 
-    with distributed_queue.DistributedQueue(opts.amqp, ['public', 'rhel', 'statistics', 'webhook'],
+    with distributed_queue.DistributedQueue(opts.amqp, ['public', 'statistics', 'webhook'],
                                             secrets_dir=opts.secrets_dir, passive=True) as q:
         def print_queue(queue: str) -> None:
             message_count = q.queue_counts.get(queue, 0)
@@ -53,8 +53,6 @@ def main() -> int:
 
         print('public queue:')
         print_queue('public')
-        print('rhel queue:')
-        print_queue('rhel')
         print('statistics queue:')
         print_queue('statistics')
         print('webhook queue:')

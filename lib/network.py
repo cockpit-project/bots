@@ -18,9 +18,7 @@
 # Shared GitHub code. When run as a script, we print out info about
 # our GitHub interacition.
 
-import functools
 import os
-import socket
 import ssl
 
 from lib.constants import IMAGES_DIR
@@ -67,18 +65,3 @@ def host_ssl_context(hostname: str) -> ssl.SSLContext | None:
     """
     cafile = get_host_ca(hostname)
     return ssl.create_default_context(cafile=cafile) if cafile else None
-
-
-@functools.lru_cache
-def redhat_network() -> bool:
-    """Check if we can access the Red Hat network
-
-    The result gets cached, so this can be called several times.
-    """
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(10)
-        s.connect(("download.devel.redhat.com", 443))
-        return True
-    except OSError:
-        return False

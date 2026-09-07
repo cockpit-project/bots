@@ -22,7 +22,6 @@ import json
 import logging
 import os
 import platform
-import random
 import smtplib
 import subprocess
 import sys
@@ -33,7 +32,6 @@ import pika
 
 from lib import distributed_queue
 from lib.directories import get_images_data_dir
-from lib.network import redhat_network
 from lib.stores import LOG_STORE
 
 logging.basicConfig(level=logging.INFO)
@@ -101,13 +99,6 @@ def consume_task_queue(dq: distributed_queue.DistributedQueue) -> ConsumeResult:
     elif os.path.exists('/dev/kvm') or os.getenv('JOB_RUNNER_CONFIG'):
         # only process test queues in capable environments: with KVM or job-runner support
         queue = 'public'
-        if redhat_network():
-            # Try the rhel queue if the public queue is empty
-            if dq.queue_counts['public'] == 0:
-                queue = 'rhel'
-                # If both are non-empty, shuffle
-            elif dq.queue_counts['rhel'] > 0:
-                queue = ['public', 'rhel'][random.randrange(2)]
     else:
         # nothing to do
         return None, None
@@ -149,7 +140,7 @@ def main() -> int:
                         help='The host:port of the AMQP server to consume from (default: %(default)s)')
     opts = parser.parse_args()
 
-    with distributed_queue.DistributedQueue(opts.amqp, ['webhook', 'rhel', 'public', 'statistics']) as dq:
+    with distributed_queue.DistributedQueue(opts.amqp, ['webhook', 'public', 'statistics']) as dq:
         cmd, delivery_tag = consume_webhook_queue(dq)
         if not cmd and delivery_tag:
             logging.info("Webhook message interpretation generated no command")

@@ -48,9 +48,6 @@ DEFAULT_AMQP_SERVER = 'amqp-cockpit.apps.ocp.cloud.ci.centos.org:443'
 # DEFAULT_AMQP_SERVER = 'ec2-3-228-126-27.compute-1.amazonaws.com:5671'
 
 arguments = {
-    'rhel': {
-        "x-max-priority": MAX_PRIORITY
-    },
     'public': {
         "x-max-priority": MAX_PRIORITY
     },
