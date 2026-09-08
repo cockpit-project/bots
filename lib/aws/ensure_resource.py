@@ -269,10 +269,14 @@ def ensure_bucket(
         else:
             s3.create_bucket(Bucket=name)
 
-    # Tags
+    # Tags — Name is included so Cost Explorer can group S3 costs by bucket.
     s3.put_bucket_tagging(
         Bucket=name,
-        Tagging={"TagSet": [{"Key": k, "Value": v} for k, v in TAGS.items()]},
+        Tagging={
+            "TagSet": [
+                {"Key": k, "Value": v} for k, v in {**TAGS, "Name": name}.items()
+            ]
+        },
     )
 
     # Ownership controls (disable ACLs)
