@@ -10,14 +10,16 @@ import logging
 import os
 import sys
 from collections.abc import Iterator
+from datetime import datetime, timedelta, timezone
+from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import boto3
 
 from ..aio.jsonutil import get_str
 from ..github import GitHub
-from .account import CI_RUNNER_REGION, DISPATCHER_ASG, DISPATCHER_NAME
+from .account import CI_RUNNER_REGION, DISPATCHER_ASG, DISPATCHER_NAME, MANDATORY_TAGS
 from .ec2 import (
     describe_runner_instances,
     get_instance_ip,
@@ -35,6 +37,7 @@ from .infra_definitions import (
 )
 
 if TYPE_CHECKING:
+    from types_boto3_ce.type_defs import ExpressionTypeDef, GroupTypeDef
     from types_boto3_ec2.type_defs import InstanceTypeDef
 
 logger = logging.getLogger(__name__)
@@ -192,6 +195,85 @@ def cmd_dispatcher_console(_args: argparse.Namespace) -> None:
     if not instances:
         sys.exit("no dispatcher instance found")
     print_console_output(ec2, instances[0])
+
+
+# --- costs ---
+
+
+def cmd_costs(args: argparse.Namespace) -> None:
+    today = datetime.now(tz=timezone.utc).date()
+
+    granularity: Literal["DAILY", "MONTHLY"]
+    if args.days is not None:
+        start = today - timedelta(days=args.days)
+        granularity = "DAILY"
+    else:
+        start = today.replace(day=1)  # first of the month
+        for _ in range(args.months - 1):
+            start = (start - timedelta(days=1)).replace(day=1)  # first of the previous
+        granularity = "MONTHLY"
+
+    ce = boto3.client("ce")
+    logger.debug(
+        "querying costs from %r to %r with granularity %r", start, today, granularity
+    )
+
+    @cache
+    def query(service: str | None = None) -> dict[str, list[GroupTypeDef]]:
+        group_by: list[tuple[Literal["DIMENSION", "TAG"], str]]
+        match service:
+            case None:
+                group_by = [("DIMENSION", "SERVICE")]
+            case "Amazon Elastic Compute Cloud - Compute":
+                group_by = [("DIMENSION", "INSTANCE_TYPE")]
+            case "Amazon Simple Storage Service":
+                group_by = [("TAG", "Name"), ("DIMENSION", "USAGE_TYPE")]
+            case _:
+                group_by = [("DIMENSION", "USAGE_TYPE")]
+
+        filter_expr: ExpressionTypeDef = {
+            "Tags": {"Key": "app-code", "Values": [MANDATORY_TAGS["app-code"]]}
+        }
+        if service is not None:
+            filter_expr = {
+                "And": [
+                    filter_expr,
+                    {"Dimensions": {"Key": "SERVICE", "Values": [service]}},
+                ]
+            }
+
+        logger.debug("ce.get_cost_and_usage service=%r, group_by=%r", service, group_by)
+
+        result = ce.get_cost_and_usage(
+            TimePeriod={"Start": start.isoformat(), "End": today.isoformat()},
+            Granularity=granularity,
+            Metrics=["UnblendedCost", "UsageQuantity"],
+            Filter=filter_expr,
+            GroupBy=[{"Type": t, "Key": k} for t, k in group_by],
+        )["ResultsByTime"]
+
+        return {p["TimePeriod"]["Start"]: p["Groups"] for p in result}
+
+    for period_start, groups in query().items():
+        print(f"\n## From {period_start} ({granularity.lower()})")
+        total = 0.0
+        for group in groups:
+            (service,) = group["Keys"]
+            amount = float(group["Metrics"]["UnblendedCost"]["Amount"])
+            total += amount
+            if args.verbose >= 1:
+                print(f"  {service:<45}  ${amount:>8.2f}")
+            if args.verbose >= 2:
+                for sub in query(service).get(period_start, []):
+                    cost = float(sub["Metrics"]["UnblendedCost"]["Amount"])
+                    if cost < 0.10 and args.verbose < 3:
+                        continue
+                    name = " / ".join(sub["Keys"])
+                    quantity = float(sub["Metrics"]["UsageQuantity"]["Amount"])
+                    unit = sub["Metrics"]["UsageQuantity"]["Unit"]
+                    usage = f"  {quantity:.2f} {unit}" if unit != "N/A" else ""
+                    print(f"    {name:<43}  ${cost:>8.2f}{usage}")
+        print(f"  {'Total':<45}  ${total:>8.2f}")
 
 
 # --- runner ---
@@ -375,6 +457,18 @@ def main() -> None:
         help="Show EC2 console output for a runner")
     runner_console.add_argument("slug")
     runner_console.set_defaults(func=cmd_runner_console)
+
+    # --- costs ---
+
+    costs = sub.add_parser("costs", help="Show AWS costs for cockpit-ci resources")
+    costs_range = costs.add_mutually_exclusive_group()
+    costs_range.add_argument("--days", type=int, metavar="N",
+        help="Show last N days (daily breakdown)")
+    costs_range.add_argument("--months", type=int, metavar="N", default=3,
+        help="Show last N months, monthly breakdown (default: 3)")
+    costs.add_argument("-v", action="count", default=0, dest="verbose",
+        help="-v: per-service, -vv: sub-items (>=0.10), -vvv: all sub-items")
+    costs.set_defaults(func=cmd_costs)
 
     # fmt: on
 

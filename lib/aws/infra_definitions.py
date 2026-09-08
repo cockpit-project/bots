@@ -259,6 +259,7 @@ def sync_iam() -> None:
                 [
                     "ec2:DescribeInstances",
                     "autoscaling:DescribeAutoScalingGroups",
+                    "ce:GetCostAndUsage",
                 ],
                 "*",
             ),

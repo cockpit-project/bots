@@ -23,6 +23,8 @@ module = [
     'libvirt_qemu',
     'nacl',
     'types_boto3_autoscaling.*',
+    'types_boto3_ce',
+    'types_boto3_ce.*',
     'types_boto3_ec2',
     'types_boto3_ec2.*',
     'types_boto3_s3.*',
