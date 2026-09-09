@@ -103,6 +103,8 @@ fi
 if [ "$IMAGE" = "debian-testing" ] ; then
     # it's new
     TEST_PACKAGES="${TEST_PACKAGES} network-manager-team"
+    # we need to explicitly install GSSAPI support for SSH
+    TEST_PACKAGES="${TEST_PACKAGES} openssh-server-gssapi openssh-client-gssapi"
 fi
 
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1129529
