@@ -262,18 +262,20 @@ def cmd_costs(args: argparse.Namespace) -> None:
             amount = float(group["Metrics"]["UnblendedCost"]["Amount"])
             total += amount
             if args.verbose >= 1:
-                print(f"  {service:<45}  ${amount:>8.2f}")
+                print(f"  ${amount:>8.2f}  {'':19}  {service}")
             if args.verbose >= 2:
                 for sub in query(service).get(period_start, []):
                     cost = float(sub["Metrics"]["UnblendedCost"]["Amount"])
                     if cost < 0.10 and args.verbose < 3:
                         continue
-                    name = " / ".join(sub["Keys"])
+                    name = " / ".join(k.removeprefix("Name$") for k in sub["Keys"])
                     quantity = float(sub["Metrics"]["UsageQuantity"]["Amount"])
                     unit = sub["Metrics"]["UsageQuantity"]["Unit"]
-                    usage = f"  {quantity:.2f} {unit}" if unit != "N/A" else ""
-                    print(f"    {name:<43}  ${cost:>8.2f}{usage}")
-        print(f"  {'Total':<45}  ${total:>8.2f}")
+                    usage = f"{quantity:.2f} {unit}" if unit != "N/A" else ""
+                    print(f"  ${cost:>8.2f}  {usage:<19}    {name}")
+                print()
+        print(f"  ${total:>8.2f}  {'':19}  Total")
+        print()
 
 
 # --- runner ---
