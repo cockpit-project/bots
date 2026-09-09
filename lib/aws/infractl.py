@@ -224,6 +224,8 @@ def cmd_costs(args: argparse.Namespace) -> None:
         match service:
             case None:
                 group_by = [("DIMENSION", "SERVICE")]
+            case "Amazon Elastic Compute Cloud - Compute" if args.slugs:
+                group_by = [("TAG", "Name")]
             case "Amazon Elastic Compute Cloud - Compute":
                 group_by = [("DIMENSION", "INSTANCE_TYPE")]
             case "Amazon Simple Storage Service":
@@ -468,6 +470,8 @@ def main() -> None:
         help="Show last N days (daily breakdown)")
     costs_range.add_argument("--months", type=int, metavar="N", default=3,
         help="Show last N months, monthly breakdown (default: 3)")
+    costs.add_argument("--slugs", action="store_true",
+        help="Break down EC2 compute by instance name instead of instance type")
     costs.add_argument("-v", action="count", default=0, dest="verbose",
         help="-v: per-service, -vv: sub-items (>=0.10), -vvv: all sub-items")
     costs.set_defaults(func=cmd_costs)
