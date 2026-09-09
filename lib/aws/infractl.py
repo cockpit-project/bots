@@ -6,14 +6,15 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime, timedelta, timezone
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 import boto3
 
@@ -200,6 +201,24 @@ def cmd_dispatcher_console(_args: argparse.Namespace) -> None:
 # --- costs ---
 
 
+class CostItem(TypedDict):
+    keys: Sequence[str]
+    cost: float
+    quantity: float
+    unit: str
+
+
+class CostService(TypedDict):
+    cost: float
+    items: Sequence[CostItem]
+
+
+class CostPeriod(TypedDict):
+    granularity: str
+    total: float
+    services: Mapping[str, CostService]
+
+
 def cmd_costs(args: argparse.Namespace) -> None:
     today = datetime.now(tz=timezone.utc).date()
 
@@ -256,27 +275,56 @@ def cmd_costs(args: argparse.Namespace) -> None:
 
         return {p["TimePeriod"]["Start"]: p["Groups"] for p in result}
 
-    for period_start, groups in query().items():
-        print(f"\n## From {period_start} ({granularity.lower()})")
-        total = 0.0
-        for group in groups:
-            (service,) = group["Keys"]
-            amount = float(group["Metrics"]["UnblendedCost"]["Amount"])
-            total += amount
-            if args.verbose >= 1:
-                print(f"  ${amount:>8.2f}  {'':19}  {service}")
-            if args.verbose >= 2:
-                for sub in query(service).get(period_start, []):
-                    cost = float(sub["Metrics"]["UnblendedCost"]["Amount"])
-                    if cost < 0.10 and args.verbose < 3:
-                        continue
-                    name = " / ".join(k.removeprefix("Name$") for k in sub["Keys"])
-                    quantity = float(sub["Metrics"]["UsageQuantity"]["Amount"])
-                    unit = sub["Metrics"]["UsageQuantity"]["Unit"]
-                    usage = f"{quantity:.2f} {unit}" if unit != "N/A" else ""
-                    print(f"  ${cost:>8.2f}  {usage:<19}    {name}")
-                print()
-        print(f"  ${total:>8.2f}  {'':19}  Total")
+    periods: Mapping[str, CostPeriod] = {
+        period_start: {
+            "granularity": granularity.lower(),
+            "total": sum(
+                float(g["Metrics"]["UnblendedCost"]["Amount"]) for g in groups
+            ),
+            "services": {
+                service: {
+                    "cost": float(group["Metrics"]["UnblendedCost"]["Amount"]),
+                    "items": [
+                        {
+                            "keys": list(sub["Keys"]),
+                            "cost": float(sub["Metrics"]["UnblendedCost"]["Amount"]),
+                            "quantity": float(
+                                sub["Metrics"]["UsageQuantity"]["Amount"]
+                            ),
+                            "unit": sub["Metrics"]["UsageQuantity"]["Unit"],
+                        }
+                        for sub in query(service).get(period_start, [])
+                    ],
+                }
+                for group in groups
+                for service in (group["Keys"][0],)
+            },
+        }
+        for period_start, groups in query().items()
+    }
+
+    if args.json:
+        print(json.dumps(periods, indent=4))
+        return
+
+    for period_start, period in periods.items():
+        print(f"\n## From {period_start} ({period['granularity']})")
+        if args.verbose >= 1:
+            for service, svc in period["services"].items():
+                print(f"  ${svc['cost']:>8.2f}  {'':19}  {service}")
+                if args.verbose >= 2:
+                    for item in svc["items"]:
+                        if item["cost"] < 0.10 and args.verbose < 3:
+                            continue
+                        name = " / ".join(k.removeprefix("Name$") for k in item["keys"])
+                        usage = (
+                            f"{item['quantity']:.2f} {item['unit']}"
+                            if item["unit"] != "N/A"
+                            else ""
+                        )
+                        print(f"  ${item['cost']:>8.2f}  {usage:<19}    {name}")
+                    print()
+        print(f"  ${period['total']:>8.2f}  {'':19}  Total")
         print()
 
 
@@ -474,6 +522,8 @@ def main() -> None:
         help="Break down EC2 compute by instance name instead of instance type")
     costs.add_argument("-v", action="count", default=0, dest="verbose",
         help="-v: per-service, -vv: sub-items (>=0.10), -vvv: all sub-items")
+    costs.add_argument("--json", action="store_true",
+        help="Output raw JSON instead of human-readable text")
     costs.set_defaults(func=cmd_costs)
 
     # fmt: on
