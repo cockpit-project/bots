@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2026 Red Hat, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import argparse
+import importlib
+import re
+import sys
+
+import fedora_distro_aliases
+
+import lib.testmap
+from lib import git
+from lib.github import GitHub
+from lib.testmap import OSTREE_BUILD_IMAGE
+
+TESTMAP = "lib/testmap.py"
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Update OSTREE_BUILD_IMAGE to latest stable Fedora")
+    parser.add_argument("-n", "--dry-run", action="store_true", help="Dry run")
+    args = parser.parse_args()
+
+    aliases = fedora_distro_aliases.get_distro_aliases()
+    latest_stable = aliases["fedora-latest-stable"][0].namever
+    print(f"Latest stable Fedora: {latest_stable}")
+
+    outdated = {k: v for k, v in OSTREE_BUILD_IMAGE.items() if v.startswith("fedora-") and v != latest_stable}
+    if not outdated:
+        print("Already up to date")
+        return
+
+    for test_image, build_image in outdated.items():
+        print(f"{test_image}: {build_image} → {latest_stable}")
+
+    head = git.get_current_head()
+    git.detach_head(head)
+
+    with open(TESTMAP) as f:
+        source = f.read()
+
+    source = re.sub(
+        r'(OSTREE_BUILD_IMAGE\s*=\s*\{[^}]*":\s*")fedora-\d+',
+        rf'\g<1>{latest_stable}',
+        source,
+    )
+
+    with open(TESTMAP, "w") as f:
+        f.write(source)
+
+    try:
+        importlib.reload(lib.testmap)
+    except SyntaxError:
+        print('failed to update OSTREE_BUILD_IMAGE')
+        sys.exit(1)
+
+    for image, value in lib.testmap.OSTREE_BUILD_IMAGE.items():
+        if value.startswith("fedora-"):
+            assert value == latest_stable, f"{image} still has {value}"
+
+    title = f"testmap: Update OSTREE_BUILD_IMAGE to {latest_stable}"
+    body = f"The Fedora CoreOS build image moved to {latest_stable}."
+
+    git.add("lib/testmap.py")
+    git.commit(f"{title}\n\n{body}")
+
+    github = GitHub()
+    branch = git.push(github, "ostree-image-update", dry_run=args.dry_run)
+    github.create_pull_request(branch, title=title, body=body, dry_run=args.dry_run)
+    git.amend_and_forcepush(github, branch, dry_run=args.dry_run)
+
+
+if __name__ == '__main__':
+    main()

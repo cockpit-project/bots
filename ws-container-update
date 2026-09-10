@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2026 Red Hat, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import argparse
+import re
+
+import fedora_distro_aliases
+
+from lib import git
+from lib.github import GitHub
+
+CONTAINERFILE = "containers/ws/Containerfile"
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Update cockpit/ws Containerfile to latest stable Fedora")
+    parser.add_argument("-n", "--dry-run", action="store_true", help="Dry run")
+    args = parser.parse_args()
+
+    aliases = fedora_distro_aliases.get_distro_aliases()
+    latest_stable = aliases["fedora-latest-stable"][0].major_version
+    print(f"Latest stable Fedora: {latest_stable}")
+
+    with open(CONTAINERFILE) as f:
+        content = f.read()
+
+    match = re.search(r"^(FROM\s+.*fedora:)(\d+)", content, re.MULTILINE)
+    if not match:
+        raise RuntimeError(f"Could not find Fedora version in {CONTAINERFILE}")
+
+    current = int(match.group(2))
+    print(f"Current Containerfile uses: fedora:{current}")
+
+    if current == latest_stable:
+        print("Already up to date")
+        return
+
+    content = re.sub(r"(FROM\s+.*fedora:)\d+", rf"\g<1>{latest_stable}", content)
+
+    with open(CONTAINERFILE, "w") as f:
+        f.write(content)
+
+    title = f"ws: Update container base image to Fedora {latest_stable}"
+    body = f"Fedora {latest_stable} is now the latest stable release."
+
+    git.add(CONTAINERFILE)
+    git.commit(f"{title}\n\n{body}")
+
+    github = GitHub()
+    branch = git.push(github, "ws-container-update", dry_run=args.dry_run)
+    github.create_pull_request(branch, title=title, body=body, dry_run=args.dry_run)
+    git.amend_and_forcepush(github, branch, dry_run=args.dry_run)
+
+
+if __name__ == '__main__':
+    main()

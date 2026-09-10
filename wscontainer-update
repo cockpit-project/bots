@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+
+# Copyright (C) 2026 Red Hat, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import argparse
+import base64
+import re
+
+from lib import git
+from lib.github import GitHub
+from lib.testmap import WSCONTAINER_BUILD_IMAGE
+
+TESTMAP = "lib/testmap.py"
+CONTAINERFILE_PATH = "containers/ws/Containerfile"
+
+
+def get_ws_container_fedora() -> str:
+    """Read the Fedora version from cockpit/ws Containerfile."""
+    cockpit = GitHub(repo="cockpit-project/cockpit")
+    content = base64.b64decode(cockpit.get_obj(f"contents/{CONTAINERFILE_PATH}")["content"]).decode()
+    match = re.search(r"^FROM\s+.*fedora:(\d+)", content, re.MULTILINE)
+    if not match:
+        raise RuntimeError(f"Could not find Fedora version in {CONTAINERFILE_PATH}")
+    return f"fedora-{match.group(1)}"
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Update WSCONTAINER_BUILD_IMAGE to latest stable Fedora")
+    parser.add_argument("-n", "--dry-run", action="store_true", help="Dry run")
+    args = parser.parse_args()
+
+    ws_fedora = get_ws_container_fedora()
+    print(f"cockpit/ws container uses: {ws_fedora}")
+
+    current = set(WSCONTAINER_BUILD_IMAGE.values())
+    if current == {ws_fedora}:
+        print("Already up to date")
+        return
+
+    for test_image, build_image in WSCONTAINER_BUILD_IMAGE.items():
+        print(f"{test_image}: {build_image} → {ws_fedora}")
+
+    head = git.get_current_head()
+    git.detach_head(head)
+
+    with open(TESTMAP) as f:
+        source = f.read()
+
+    source = re.sub(
+        r'(WSCONTAINER_BUILD_IMAGE\s*=\s*\{[^}]*":\s*")fedora-\d+',
+        rf'\g<1>{ws_fedora}',
+        source,
+    )
+
+    with open(TESTMAP, "w") as f:
+        f.write(source)
+
+    title = f"testmap: Update WSCONTAINER_BUILD_IMAGE to {ws_fedora}"
+    body = f"The cockpit/ws container base image moved to {ws_fedora}.\n\nDetected from cockpit-project/cockpit {CONTAINERFILE_PATH}."
+
+    git.add("lib/testmap.py")
+    git.commit(f"{title}\n\n{body}")
+
+    github = GitHub()
+    branch = git.push(github, "wscontainer-update", dry_run=args.dry_run)
+    github.create_pull_request(branch, title=title, body=body, dry_run=args.dry_run)
+    git.amend_and_forcepush(github, branch, dry_run=args.dry_run)
+
+
+if __name__ == '__main__':
+    main()
