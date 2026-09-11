@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2026 Red Hat, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import argparse
+import contextlib
+import json
+import logging
+import time
+import urllib.error
+import urllib.request
+from collections.abc import Iterator
+
+logger = logging.getLogger(__name__)
+
+
+def fetch_once(url: str, offset: int) -> str:
+    req = urllib.request.Request(url, headers={"Range": f"bytes={offset}-"})
+    with urllib.request.urlopen(req) as resp:
+        data = resp.read()
+        if resp.status == 206:
+            return data.decode()
+        # Server doesn't support Range (e.g. python -m http.server)
+        if resp.status == 200:
+            return data[offset:].decode()
+        raise ValueError(f"Unexpected status {resp.status}")
+
+
+def fetch(url: str, offset: int = 0) -> str:
+    for attempt in range(8):
+        try:
+            return fetch_once(url, offset)
+        except OSError as exc:
+            if isinstance(exc, urllib.error.HTTPError) and exc.code < 500:
+                raise
+            delay = 2 ** attempt
+            logger.debug("error fetching %r, retrying after %r", url, delay)
+            time.sleep(delay)
+
+    return fetch_once(url, offset)
+
+
+def fetch_log(base_url: str, follow: bool) -> Iterator[str]:
+    bytes_received = 0
+
+    while True:
+        try:
+            chunks: list[int] = json.loads(fetch(f"{base_url}.chunks"))
+            logger.debug("Chunks: %r, bytes: %r", chunks, bytes_received)
+
+            chunk_start = 0
+            for chunk_size in chunks:
+                chunk_end = chunk_start + chunk_size
+                if bytes_received < chunk_end:
+                    yield fetch(
+                        f"{base_url}.{chunk_start}-{chunk_end}",
+                        bytes_received - chunk_start,
+                    )
+                    bytes_received = chunk_end
+                chunk_start = chunk_end
+        except urllib.error.HTTPError as exc:
+            # S3 returns 403 instead of 404 when s3:ListBucket is not granted
+            if exc.code in (403, 404):
+                break
+            raise
+
+        if not follow:
+            return
+
+        time.sleep(10)
+
+    # Streaming is over (or never started) — fetch the (remaining) final log
+    yield fetch(base_url, bytes_received)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Fetch streamed logs")
+    parser.add_argument("-d", "--debug", action="store_true",
+                        help="Enable debug logging")
+    parser.add_argument("-f", "--follow", action="store_true",
+                        help="Follow log output until job completes")
+    parser.add_argument("url", help="Base log URL (e.g. https://…/slug/log)")
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(format="%(message)s", level=logging.DEBUG)
+
+    url = args.url
+    if url.endswith("/"):
+        url += "log"
+
+    with contextlib.suppress(KeyboardInterrupt):
+        for chunk in fetch_log(url, follow=args.follow):
+            print(chunk, end='', flush=True)
+
+
+if __name__ == "__main__":
+    main()

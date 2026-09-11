@@ -1,17 +1,92 @@
-# Copyright (C) 2022-2024 Red Hat, Inc.
+# SPDX-FileCopyrightText: 2022-2024 Red Hat, Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# S3 Log Streaming Protocol
+# =========================
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# This module implements a protocol for streaming log output through S3 (or
+# any object store with similar semantics).  The core problem is that S3
+# objects are immutable once written, so we can't append to a file.  Instead,
+# we write a series of chunk objects and a manifest that tells clients how to
+# reassemble them.  The base filename ("log" in this case) is not special —
+# any name works as long as the writer and clients agree on it.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
+# The entire protocol is bytes-oriented: chunk sizes in the manifest are
+# byte counts, Range request offsets are byte offsets, and chunk filenames
+# encode byte ranges.  Although character offsets are never used for
+# anything, the content is assumed to be UTF-8 text.  The server
+# is responsible for ensuring that a single codepoint is never split across
+# two chunk files, so clients can safely decode each chunk independently.
 #
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# The object store should support Range requests and respond with 206
+# Partial Content.  If the server does not support Range requests (e.g.
+# python -m http.server for local development), it will return 200 with
+# the complete object body.  Clients must handle both cases: on 206 the
+# body is exactly the requested range; on 200 the client must slice the
+# body at the requested byte offset and discard the prefix.
+#
+# File layout during streaming:
+#
+#   log.chunks          JSON array of chunk sizes in bytes, e.g. [81920, 40960]
+#   log.0-81920         First chunk (size 81920, bytes [0, 81920))
+#   log.81920-122880    Second chunk (size 40960, bytes [81920, 122880))
+#
+# File layout after streaming:
+#
+#   log                 Complete log contents (single object)
+#
+# The chunk files and log.chunks are deleted when streaming ends.
+#
+#
+# Writer protocol (this module)
+# -----------------------------
+#
+# LogStreamer buffers incoming data and flushes it as chunk objects.  A flush
+# happens when the buffer exceeds SIZE_LIMIT (1MB) or TIME_LIMIT (30s) elapses
+# with data pending.
+#
+# Each flush appends a new entry to the internal chunks list, then runs a
+# merge pass modelled after the game 2048: if the last two entries have the
+# same number of constituent blocks, they are merged into one.  This keeps
+# the total number of chunk objects logarithmic in the amount of data written,
+# while only ever rewriting the last chunk (so the write amplification is
+# also logarithmically bounded).
+#
+# The manifest (log.chunks) is a JSON array of chunk sizes in bytes.  Clients
+# use it to derive the chunk filenames: each chunk is named
+# "log.{start}-{end}" where start is the cumulative size of all preceding
+# chunks and end = start + size.  The range is end-exclusive: a chunk named
+# "log.0-81920" has length 81920, containing bytes [0, 81920).
+#
+# Order of operations matters for consistency.  On each flush, the writer
+# must write the chunk object first, then update the manifest — otherwise a
+# client could read a manifest that references a chunk that doesn't exist
+# yet.  On close(), the writer writes the final "log" object first, then
+# deletes the manifest and chunk files.  This way, a client that gets a 404
+# on the manifest can be confident that the final log object is already
+# available.
+#
+#
+# Client protocol (log.html, s3stream CLI)
+# -----------------------------------------
+#
+# Clients always read the manifest first.  On each poll they compare it
+# against how many bytes they have already received, then fetch only the
+# new/updated chunk objects, using Range requests to avoid re-downloading
+# data within a chunk that grew due to a merge.  If the server responds
+# with 200 instead of 206, the client reads the full body as bytes and
+# slices at the requested offset before decoding to text.
+#
+# S3 can return 500 Internal Server Error at any time, even under normal
+# operation.  Both clients and the server should retry transient failures (5xx,
+# network errors) with exponential backoff:
+# https://docs.aws.amazon.com/AmazonS3/latest/developerguide/ErrorBestPractices.html
+#
+# When fetching the manifest or a chunk returns 404 (or 403 — S3 returns 403
+# instead of 404 when the bucket policy does not grant s3:ListBucket),
+# streaming is over (or never started). The client fetches "log" with a Range
+# header for any bytes beyond what it already has, giving a seamless transition
+# from streamed to final content.
 
 import asyncio
 import json
@@ -137,12 +212,12 @@ class LogStreamer:
 
     def start(self, data: str) -> None:
         # Send the initial data immediately, to get the chunks file written out.
-        self.pending = data.encode()
+        self.pending = data.encode(errors='replace')
         self.send_pending()
         AttachmentsDirectory(self.index, f'{LIB_DIR}/s3-html').scan()
 
     def write(self, data: str) -> None:
-        self.pending += data.encode()
+        self.pending += data.encode(errors='replace')
 
         if len(self.pending) > LogStreamer.SIZE_LIMIT:
             self.send_pending()
