@@ -19,6 +19,7 @@ import logging
 import os
 import textwrap
 from collections.abc import Collection
+from datetime import datetime, timezone
 from typing import ClassVar
 
 from yarl import URL
@@ -141,7 +142,10 @@ class LogStreamer:
         self.send_pending()
         AttachmentsDirectory(self.index, f'{LIB_DIR}/s3-html').scan()
 
-    def write(self, data: str) -> None:
+    def write(self, data: str, stamped: bool = False) -> None:
+        if stamped:
+            self.pending += f"\n\n{datetime.now(timezone.utc):%F %T} ▶ ".encode()
+
         self.pending += data.encode()
 
         if len(self.pending) > LogStreamer.SIZE_LIMIT:
