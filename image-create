@@ -120,8 +120,11 @@ class MachineBuilder:
         try:
             timeout_sec = 60 if self.machine.image in ["ubuntu-2604"] else 30
             self.machine.boot(timeout_sec=timeout_sec, nested_kvm_retry=False)
+        except testvm.Failure:
+            self.machine.message("Boot timeout expired, killing machine")
+            raise
         finally:
-            self.machine.stop(timeout_sec=30)
+            self.machine.stop(timeout_sec=60)
 
     def build(self) -> None:
         self.bootstrap_system()
