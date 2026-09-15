@@ -106,7 +106,7 @@ class TestingFarmClient(contextlib.AsyncExitStack):
         job: JobSpecification | JsonObject,  # TODO: PEP 728
         *,
         git_url_ref: tuple[str, str] | None = None,
-        compose: str = 'Fedora-Rawhide',
+        compose: str = 'Fedora-44',
     ) -> str:
         """Submit a job to Testing Farm for remote execution.
 
@@ -114,7 +114,7 @@ class TestingFarmClient(contextlib.AsyncExitStack):
             ctx: JobContext with configuration (will be serialized)
             job: Job specification as JSON object
             git_url_ref: Git repository URL and ref (default: from @{upstream})
-            compose: Fedora compose to use (default: Fedora-Rawhide)
+            compose: Fedora compose to use (default: Fedora-44)
 
         Returns:
             Testing Farm request ID
@@ -150,19 +150,8 @@ class TestingFarmClient(contextlib.AsyncExitStack):
                     'secrets': {
                         'JOB_RUNNER_CONFIG_JSON': config_json,
                     },
-                    'hardware': {
-                        'virtualization': {
-                            'is-virtualized': True,
-                            'is-supported': True,
-                        }
-                    },
                 }
             ],
-            'settings': {
-                'pipeline': {
-                    'timeout': 120,
-                }
-            },
         }
 
         url = f'{self.api_url}/requests'
