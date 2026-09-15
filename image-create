@@ -118,7 +118,7 @@ class MachineBuilder:
         # builds due to nested KVM issues.
         # FIXME: ubuntu-2604 is achingly slow on nested kvm PSI machines, fast locally
         try:
-            timeout_sec = 60 if self.machine.image in ["ubuntu-2604"] else 30
+            timeout_sec = 120 if self.machine.image in ["ubuntu-2604"] else 30
             self.machine.boot(timeout_sec=timeout_sec, nested_kvm_retry=False)
         finally:
             self.machine.stop(timeout_sec=30)
