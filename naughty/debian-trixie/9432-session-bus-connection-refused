@@ -1,0 +1,1 @@
+> warn: failed to connect to session bus: [Errno 111] sd_bus_default_user: Connection refused
