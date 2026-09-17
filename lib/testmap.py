@@ -73,6 +73,10 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *product('rhel-9-8', COCKPIT_SCENARIOS),
             *product('rhel-10-2', COCKPIT_SCENARIOS),
         ],
+        'rhel-9.9': [
+            *product('rhel-9-9', COCKPIT_SCENARIOS),
+            *product('rhel-10-3', COCKPIT_SCENARIOS),
+        ],
         # These can be triggered manually with bots/tests-trigger
         '_manual': [
             'fedora-rawhide',
