@@ -1,0 +1,1 @@
+apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/*" * comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
