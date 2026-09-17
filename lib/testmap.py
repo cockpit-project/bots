@@ -154,6 +154,14 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-3',
             'rhel-9-9',
         ],
+        'rhel-9.8': [
+            'rhel-9-8',
+            'rhel-10-2',
+        ],
+        'rhel-9.9': [
+            'rhel-9-9',
+            'rhel-10-3',
+        ],
         'rhel-8': [
             'rhel-8-10',
         ],
