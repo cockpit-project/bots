@@ -273,7 +273,7 @@ def cockpit_tasks(api: github.GitHub, contexts: Sequence[str], opts: argparse.Na
                     "pull": number or None,  # number uses 0 to mean 'None'
                     "report": None if number else {
                         "title": f"Tests failed on {revision}",
-                        "labels": ["nightly"],
+                        "labels": ["nightly", "bot"],
                     },
                     "command_subject": command_subject,
                     "slug": slug,
