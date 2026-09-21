@@ -81,6 +81,7 @@ def prepare_and_launch(
     post: bool,
     ssh_keys: Sequence[str] = (),
     ami: str | None = None,
+    embargoed: bool = False,
 ) -> str:
     slug = get_str(job, "slug")
     job_timeout_min = min(get_int(job, "timeout", 120), MAX_JOB_TIMEOUT_MIN)
@@ -116,6 +117,7 @@ def prepare_and_launch(
         systemd_timeout_min=systemd_timeout_min,
         ami=ami,
         ssh_keys=ssh_keys,
+        embargoed=embargoed,
     )
 
 
