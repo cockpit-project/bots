@@ -35,6 +35,9 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v7
 
+      - name: Update packages
+        run: sudo apt-get update -y
+
       - name: Install dependencies
         run: |
           sudo apt-get install -y \
