@@ -20,7 +20,13 @@ import httpx
 
 from ..aio.amqp import Queue
 from ..aio.jsonutil import JsonObject, get_int, get_str, get_strv
-from .account import CI_RUNNER_REGION, DISPATCHER_PARAMS, LOGS_BUCKET, LOGS_URL
+from .account import (
+    CI_RUNNER_REGION,
+    DISPATCHER_PARAMS,
+    EMBARGOED_SLUG,
+    LOGS_BUCKET,
+    LOGS_URL,
+)
 from .ec2 import (
     describe_runner_instances,
     get_instance_ip,
@@ -272,7 +278,9 @@ class Dispatcher:
 
                 for slug, job in unchecked:
                     try:
-                        resp = await http.head(f"{LOGS_URL}{slug}/log.html", timeout=5.)
+                        resp = await http.head(
+                            f"{LOGS_URL}{slug}/log.html", timeout=5.0
+                        )
                         job.logs_visible = resp.is_success
                         if resp.is_success:
                             logger.info("logs visible for %r", slug)
@@ -288,7 +296,7 @@ class Dispatcher:
 
         all_instances = await loop.run_in_executor(None, describe_runner_instances, ec2)
 
-        self.instances = {
+        instances = {
             obj["InstanceId"]: Instance(
                 instance_id=obj["InstanceId"],
                 slug=get_instance_slug(obj),
@@ -300,16 +308,9 @@ class Dispatcher:
         }
 
         now = datetime.now(timezone.utc)
-
-        for inst in self.instances.values():
-            job = self.jobs[inst.slug]
-            job.observed_instances.add(inst.instance_id)
-            if job.should_check_logs(self.instances):
-                self.logs_pending.set()
-
         overdue = [
             inst.instance_id
-            for inst in self.instances.values()
+            for inst in instances.values()
             if inst.state in ("pending", "running")
             and (now - inst.launch_time).total_seconds() > MAX_AGE_MIN * 60
         ]
@@ -319,6 +320,22 @@ class Dispatcher:
                 None,
                 lambda: ec2.terminate_instances(InstanceIds=overdue),
             )
+
+        # In the name of belt-and-suspenders when it comes to burning cash, we
+        # want to notice and terminate-on-overdue "embargoed" instances (done
+        # above) but we don't otherwise want to make any note of them for
+        # bookkeeping (done below): this means that they don't count towards
+        # our total instance count, don't get their logs tracked, and don't
+        # show up on the dashboard.
+        self.instances = {
+            iid: inst for iid, inst in instances.items() if inst.slug != EMBARGOED_SLUG
+        }
+
+        for inst in self.instances.values():
+            job = self.jobs[inst.slug]
+            job.observed_instances.add(inst.instance_id)
+            if job.should_check_logs(self.instances):
+                self.logs_pending.set()
 
         for slug in [
             s
@@ -371,7 +388,7 @@ async def main() -> None:
     dashboard_dir = Path(__file__).parent / "../html/dashboard"
     for name, mimetype in [
         ("dashboard.html", "text/html"),
-        ("dashboard.js", "text/javascript")
+        ("dashboard.js", "text/javascript"),
     ]:
         await loop.run_in_executor(
             None, _upload_logs, name, (dashboard_dir / name).read_text(), mimetype

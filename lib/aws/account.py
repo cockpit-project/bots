@@ -83,6 +83,9 @@ DISPATCHER_PARAMS = '/cockpit-ci/dispatcher'
 # RUNNER INSTANCES
 RUNNER_NAME_PREFIX = 'cockpit-ci/runner/'
 RUNNER_INSTANCE_SLUG_TAG = 'cockpit-ci-slug'
+# Slug tag value used for embargoed CVE CI instances: excluded from the
+# public dashboard and summary.json, but still subject to overdue termination.
+EMBARGOED_SLUG = 'embargoed'
 
 # SECURITY GROUPS
 SSH_SECURITY_GROUP = 'cockpit-ci-ssh'
