@@ -49,7 +49,6 @@ REFRESH = {
     "fedora-rawhide-anaconda-payload": REFRESH_30,
     "opensuse-tumbleweed": {},
     "ubuntu-2604": {},
-    "ubuntu-stable": {},
     "rhel-8-10": {},
     "rhel-9-8": REFRESH_30,
     "rhel-9-9": {},

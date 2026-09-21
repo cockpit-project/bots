@@ -49,7 +49,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *product('debian-testing', COCKPIT_SCENARIOS),
             *product('debian-trixie', COCKPIT_SCENARIOS),
             *product('ubuntu-2604', COCKPIT_SCENARIOS),
-            *product('ubuntu-stable', COCKPIT_SCENARIOS),
             *product('fedora-43', COCKPIT_SCENARIOS),
             *product('fedora-44', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
@@ -130,7 +129,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-3',
             'rhel-9-9',
             'ubuntu-2604',
-            'ubuntu-stable',
         ],
         '_manual': [
             'centos-10',
@@ -144,7 +142,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'debian-testing',
             'debian-trixie',
             'ubuntu-2604',
-            'ubuntu-stable',
             'fedora-43',
             'fedora-44',
             f'{TEST_OS_DEFAULT}/devel',
@@ -272,7 +269,6 @@ IMAGE_REFRESH_TRIGGERS = {
     "services": {
         *product(TEST_OS_DEFAULT, COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *product(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
-        *product('ubuntu-stable', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *product('debian-trixie', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit'),
         *product('rhel-9-8', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit/rhel-9.8'),
         *product('rhel-8-10', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit/rhel-8'),
