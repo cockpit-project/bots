@@ -310,7 +310,7 @@ class TestTestsScan(unittest.TestCase):
                 "pull": None,
                 "report": {
                     "title": "Tests failed on 9988aa",
-                    "labels": ["nightly"],
+                    "labels": ["bot", "nightly"],
                 },
                 "command_subject": None,
                 "timeout": 120,
@@ -350,7 +350,7 @@ class TestTestsScan(unittest.TestCase):
                 "pull": None,
                 "report": {
                     "title": "Tests failed on 112233",
-                    "labels": ["nightly"],
+                    "labels": ["bot", "nightly"],
                 },
                 "command_subject": None,
                 "timeout": 120,
