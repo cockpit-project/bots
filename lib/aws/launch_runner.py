@@ -7,6 +7,7 @@ import argparse
 import contextlib
 import json
 import logging
+import secrets
 import shlex
 import socket
 import subprocess
@@ -20,7 +21,7 @@ import boto3
 import botocore.exceptions
 
 from ..aio.jsonutil import typechecked
-from .account import CI_RUNNER_REGION, DISPATCHER_PARAMS
+from .account import CI_RUNNER_REGION, DISPATCHER_PARAMS, EMBARGOED_SLUG, LOGS_URL
 from .dispatcher import load_parameters, prepare_and_launch
 from .ec2 import get_instance_ip
 
@@ -96,6 +97,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     # fmt: off
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument("--embargo", action="store_true",
+                        help="Run as an embargoed CVE CI job, hidden from dashboard")
     parser.add_argument("--ami", help="FCOS AMI ID (default: latest)")
     parser.add_argument("--instance-type", default="m8id.4xlarge")
     parser.add_argument("--ssh-key", type=Path,
@@ -136,6 +139,10 @@ def main() -> None:
 
     job = typechecked(json.loads(args.job_json), dict)
 
+    if args.embargo:
+        job["slug"] = f"{EMBARGOED_SLUG}-{secrets.token_urlsafe(16)}"
+        print(f"Log URL: {LOGS_URL}{job['slug']}/log.html")
+
     with contextlib.ExitStack() as stack:
         key_dir = stack.enter_context(tempfile.TemporaryDirectory())
         key_path = f"{key_dir}/id"
@@ -156,6 +163,7 @@ def main() -> None:
             post=False,
             ami=args.ami,
             ssh_keys=ssh_keys,
+            embargoed=args.embargo,
         )
         print(f"launched {instance_id}")
         stack.callback(terminate_and_wait, ec2, instance_id)
