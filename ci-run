@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 # Usage: ./ci-run [--dry-run] https://github.com/ORG/REPO/pull/NUMBER ['*' ...]
+# NB: Depending on your AWS config, you'll probably need to set `AWS_PROFILE`.
+# See lib/aws/README.md.
 
 import argparse
 import logging
