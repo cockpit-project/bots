@@ -44,30 +44,38 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def load_parameters(source: str) -> dict[str, str]:
+def load_parameters(
+    source: str | None = None, *, overrides: Sequence[str] = ()
+) -> Mapping[str, str]:
+    if source is None:
+        source = f"ssm:{DISPATCHER_PARAMS}/"
     if source.startswith("ssm:"):
         prefix = source.removeprefix("ssm:")
         ssm = boto3.client("ssm", region_name=CI_RUNNER_REGION)
         paginator = ssm.get_paginator("get_parameters_by_path")
         pages = paginator.paginate(Path=prefix, WithDecryption=True, Recursive=True)
-        return {
+        params = {
             param["Name"].removeprefix(prefix): param["Value"]
             for page in pages
             for param in page["Parameters"]
         }
-
-    if source.startswith("json:"):
-        return json.loads(source.removeprefix("json:"))
-
-    if source.startswith("dir:"):
+    elif source.startswith("json:"):
+        params = json.loads(source.removeprefix("json:"))
+    elif source.startswith("dir:"):
         root = Path(source.removeprefix("dir:"))
-        return {
+        params = {
             str(p.relative_to(root)): p.read_text()
             for p in sorted(root.rglob("*"))
             if p.is_file()
         }
+    else:
+        raise ValueError(f"unknown parameter source: {source!r}")
 
-    raise ValueError(f"unknown parameter source: {source!r}")
+    for override in overrides:
+        key, _, value = override.partition("=")
+        logger.debug("overriding parameter %r=%r", key, value)
+        params[key] = value
+    return params
 
 
 def prepare_and_launch(
@@ -76,8 +84,7 @@ def prepare_and_launch(
     *,
     job: JsonObject,
     params: Mapping[str, str],
-    bots_url: str,
-    instance_type: InstanceTypeType,
+    instance_type: InstanceTypeType | None = None,
     post: bool,
     ssh_keys: Sequence[str] = (),
     ami: str | None = None,
@@ -103,7 +110,7 @@ def prepare_and_launch(
 
     return launch_instance(
         ec2,
-        bots_url=bots_url,
+        bots_url=params["runner-url"],
         job={**job, "timeout": job_timeout_min},
         job_config=job_runner_config(
             slug,
@@ -113,7 +120,7 @@ def prepare_and_launch(
             post=post,
             credential_duration=credential_duration,
         ),
-        instance_type=instance_type,
+        instance_type=instance_type or "m8id.4xlarge",
         systemd_timeout_min=systemd_timeout_min,
         ami=ami,
         ssh_keys=ssh_keys,
@@ -226,8 +233,6 @@ class Dispatcher:
                         sts,
                         job=job_json,
                         params=self.params,
-                        bots_url=self.params["runner-url"],
-                        instance_type="m8id.4xlarge",
                         post=True,
                         ssh_keys=self.ssh_keys,
                     ),
@@ -369,7 +374,7 @@ async def main() -> None:
     # fmt: off
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--poll-interval", type=float, default=3)
-    parser.add_argument("--parameters", default=f"ssm:{DISPATCHER_PARAMS}/",
+    parser.add_argument("--parameters",
         help="Parameter source: ssm:PREFIX, json:DATA, or dir:PATH")
     parser.add_argument("--ssh-key", type=Path,
         help="SSH public key file to authorize for the core user")
@@ -396,11 +401,7 @@ async def main() -> None:
             None, _upload_logs, name, (dashboard_dir / name).read_text(), mimetype
         )
 
-    params = load_parameters(args.parameters)
-    for override in args.param:
-        key, _, value = override.partition("=")
-        logger.debug("overriding parameter %r=%r", key, value)
-        params[key] = value
+    params = load_parameters(args.parameters, overrides=args.param)
 
     ssh_keys = args.ssh_key.read_text().strip().splitlines() if args.ssh_key else ()
     dispatcher = Dispatcher(params=params, ssh_keys=ssh_keys)
