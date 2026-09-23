@@ -213,7 +213,11 @@ class Machine(ssh_connection.SSHConnection):
             messages = []
 
         # SELinux full auditing; https://fedoraproject.org/wiki/SELinux/Debugging#Enable_full_auditing
-        if any("avc:  denied" in m for m in messages):
+        # RHEL does not include audit messages in the journal, so we run ausearch unconditionally.
+        # XXX - we enable this slowly for a few images at a time so that
+        # we don't go insane. In the end, this should trigger for all
+        # "rhel-*" images.
+        if any("avc:  denied" in m for m in messages) or self.image.startswith("rhel-9-"):
             try:
                 audit = self.execute("ausearch -i -m avc,user_avc,selinux_err,user_selinux_err "
                                      "--checkpoint /run/cockpit.ausearch.checkpoint --start checkpoint "
@@ -226,6 +230,12 @@ class Machine(ssh_connection.SSHConnection):
 
     def allowed_messages(self) -> Collection[str]:
         allowed = []
+
+        # Allow supplemental ausearch output. The actual violations
+        # like "type=AVC" will still show up.
+        allowed.append('----')
+        allowed.append('type=(PROCTITLE|SYSCALL|EXECVE|PATH|CWD).*')
+
         if self.image.startswith('debian') or self.ostree_image:
             # These images don't have any non-C locales (mostly deliberate, to test this scenario somewhere)
             allowed.append("invalid or unusable locale: .*")
@@ -238,9 +248,6 @@ class Machine(ssh_connection.SSHConnection):
             # https://issues.redhat.com/browse/RHEL-37631
             allowed.append('.*avc:  denied  { map_read map_write } for .* tclass=bpf.*')
             allowed.append('.*avc:  denied .* comm=daemon-init name=libvirt.*')
-            # also need to ignore the corresponding ausearch
-            allowed.append('----')
-            allowed.append('type=(PROCTITLE|SYSCALL|EXECVE|PATH|CWD).*')
 
         if self.image in ["debian-testing"]:
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
