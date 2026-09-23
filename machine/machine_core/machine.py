@@ -213,7 +213,7 @@ class Machine(ssh_connection.SSHConnection):
             messages = []
 
         # SELinux full auditing; https://fedoraproject.org/wiki/SELinux/Debugging#Enable_full_auditing
-        if any("avc:  denied" in m for m in messages):
+        if any("avc:  denied" in m for m in messages) or self.image.startswith("rhel-"):
             try:
                 audit = self.execute("ausearch -i -m avc,user_avc,selinux_err,user_selinux_err "
                                      "--checkpoint /run/cockpit.ausearch.checkpoint --start checkpoint "
@@ -226,6 +226,12 @@ class Machine(ssh_connection.SSHConnection):
 
     def allowed_messages(self) -> Collection[str]:
         allowed = []
+
+        # Allow supplemental ausearch output. The actual violations
+        # like "type=AVC" will still show up.
+        allowed.append('----')
+        allowed.append('type=(PROCTITLE|SYSCALL|EXECVE|PATH|CWD).*')
+
         if self.image.startswith('debian') or self.ostree_image:
             # These images don't have any non-C locales (mostly deliberate, to test this scenario somewhere)
             allowed.append("invalid or unusable locale: .*")
@@ -234,13 +240,10 @@ class Machine(ssh_connection.SSHConnection):
             # Default PAM configuration logs motd for cockpit-session
             allowed.append(".*cockpit-session: pam: Web console: .*")
 
-        if self.image == "centos-10":
+        if self.image == "centos-10" or self.image.startswith("rhel-10-"):
             # https://issues.redhat.com/browse/RHEL-37631
             allowed.append('.*avc:  denied  { map_read map_write } for .* tclass=bpf.*')
             allowed.append('.*avc:  denied .* comm=daemon-init name=libvirt.*')
-            # also need to ignore the corresponding ausearch
-            allowed.append('----')
-            allowed.append('type=(PROCTITLE|SYSCALL|EXECVE|PATH|CWD).*')
 
         if self.image in ["debian-testing"]:
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
