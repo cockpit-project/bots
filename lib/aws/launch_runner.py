@@ -21,7 +21,7 @@ import boto3
 import botocore.exceptions
 
 from ..aio.jsonutil import typechecked
-from .account import CI_RUNNER_REGION, DISPATCHER_PARAMS, EMBARGOED_SLUG, LOGS_URL
+from .account import CI_RUNNER_REGION, EMBARGOED_SLUG, LOGS_URL
 from .dispatcher import load_parameters, prepare_and_launch
 from .ec2 import get_instance_ip
 
@@ -100,10 +100,10 @@ def main() -> None:
     parser.add_argument("--embargo", action="store_true",
                         help="Run as an embargoed CVE CI job, hidden from dashboard")
     parser.add_argument("--ami", help="FCOS AMI ID (default: latest)")
-    parser.add_argument("--instance-type", default="m8id.4xlarge")
+    parser.add_argument("--instance-type", help="EC2 instance type")
     parser.add_argument("--ssh-key", type=Path,
         help="Additional SSH public key file to authorize for the core user")
-    parser.add_argument("--parameters", default=f"ssm:{DISPATCHER_PARAMS}/",
+    parser.add_argument("--parameters",
         help="Parameter source: ssm:PREFIX, json:DATA, or dir:PATH")
     parser.add_argument("--param", action="append", default=[],
         help="Override a parameter: --param key=value")
@@ -131,11 +131,7 @@ def main() -> None:
     ec2 = boto3.client("ec2", region_name=CI_RUNNER_REGION)
     sts = boto3.client("sts", region_name=CI_RUNNER_REGION)
 
-    params = load_parameters(args.parameters)
-    for override in args.param:
-        key, _, value = override.partition("=")
-        logger.debug("overriding parameter %r=%r", key, value)
-        params[key] = value
+    params = load_parameters(args.parameters, overrides=args.param)
 
     job = typechecked(json.loads(args.job_json), dict)
 
@@ -158,7 +154,6 @@ def main() -> None:
             sts,
             job=job,
             params=params,
-            bots_url=params["runner-url"],
             instance_type=args.instance_type,
             post=False,
             ami=args.ami,
