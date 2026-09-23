@@ -332,3 +332,16 @@ required to launch the instances) this requires the `cockpit-ci` profile from
 Bitwarden.
 
 Closing the ssh connection will cause the instance to be terminated.
+
+### Directly launch several runners to manually test a PR
+
+It's possible to use the ./ci-run script to manually request testing against a
+particular PR.  This is useful for private repositories or GHSA forks.
+
+```
+AWS_PROFILE=cockpit-ci ./ci-run --dry-run https://github.com/x/y/pull/123 'fedora-*'
+```
+
+The output of the command is a markdown-formatted document intended to be
+pasted into a comment on the PR in question, with the intent the checklist
+items will be manually checked off as jobs go green.
