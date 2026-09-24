@@ -257,6 +257,17 @@ class Machine(ssh_connection.SSHConnection):
             # yes, this ignores all crash info; we can't help it
             allowed.append("^(Module|ELF|Stack trace|#[0-9]).*")
 
+        # https://redhat.atlassian.net/browse/RHEL-268928
+        if self.image in ["rhel-9-8", "rhel-9-9"]:
+            allowed.append('.*avc:  denied  { write } for .* comm=io-task-worker.*tclass=sock_file.*')
+
+        # https://redhat.atlassian.net/browse/RHEL-268930
+        if self.image in ["rhel-10-2", "rhel-10-3"]:
+            allowed.append('.*avc:  denied  { .* } for .* comm=prio-rpc-virtqe .* '
+                           'scontext=system_u:system_r:virtqemud_t:s0 '
+                           'tcontext=system_u:object_r:var_t:s0 '
+                           '.* permissive=1.*')
+
         return allowed
 
     def get_admin_group(self) -> str:
