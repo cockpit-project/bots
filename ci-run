@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+
+# Usage: ./ci-run [--dry-run] https://github.com/ORG/REPO/pull/NUMBER ['*' ...]
+# NB: Depending on your AWS config, you'll probably need to set `AWS_PROFILE`.
+# See lib/aws/README.md.
+
+import argparse
+import logging
+import re
+import secrets
+import sys
+from collections.abc import Mapping
+
+import boto3
+
+from lib import github
+from lib.aio.jsonutil import get_nested, get_str
+from lib.aws.account import CI_RUNNER_REGION, EMBARGOED_SLUG, LOGS_URL
+from lib.aws.dispatcher import load_parameters, prepare_and_launch
+from lib.testmap import contexts_for_fnmatch
+
+logger = logging.getLogger(__name__)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description='Launch full embargo CI for a GHSA private fork PR')
+    # fmt: off
+    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--parameters',
+        help='Parameter source: ssm:PREFIX, json:DATA, or dir:PATH')
+    parser.add_argument('--param', action='append', default=[],
+        help='Override a parameter: --param key=value')
+    parser.add_argument('--instance-type', help='EC2 instance type')
+    parser.add_argument('-n', '--dry-run', action='store_true',
+        help="Print what would be launched without actually launching")
+    parser.add_argument('pr_url',
+        help='GHSA fork PR URL, e.g. https://github.com/ORG/REPO-ghsa-.../pull/1')
+    parser.add_argument('context', nargs='*', default=['*'],
+        help='Test context patterns to run (default: full matrix); supports fnmatch wildcards')
+    # fmt: on
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    m = re.fullmatch(r'https://github\.com/([^/]+/[^/]+)/pull/(\d+)/?', args.pr_url)
+    if m is None:
+        sys.exit(f'Invalid GitHub PR URL: {args.pr_url!r}')
+    repo, pull_number = m.group(1), int(m.group(2))
+
+    logger.debug('fetching PR info for %r #%r', repo, pull_number)
+    pr = github.GitHub(repo=repo).get_obj(f'pulls/{pull_number}')
+    with get_nested(pr, 'head') as head:
+        sha = get_str(head, 'sha')
+    with get_nested(pr, 'base') as base:
+        base_ref = get_str(base, 'ref')
+        with get_nested(base, 'repo') as base_repo:
+            parent_repo = get_str(base_repo, 'full_name')
+    logger.debug('sha=%r base_ref=%r parent_repo=%r', sha, base_ref, parent_repo)
+
+    all_contexts = set[str]()
+    for pattern in args.context:
+        matches = contexts_for_fnmatch(pattern, repo=parent_repo, branch=base_ref)
+        if not matches:
+            logger.warning('no contexts matched %r', pattern)
+        all_contexts.update(matches)
+    if not all_contexts:
+        sys.exit(f'No test contexts found for {parent_repo!r} branch {base_ref!r}')
+
+    ec2 = boto3.client('ec2', region_name=CI_RUNNER_REGION)
+    sts = boto3.client('sts', region_name=CI_RUNNER_REGION)
+
+    params: Mapping[str, str] = {}
+    if not args.dry_run:
+        params = load_parameters(
+            args.parameters,
+            overrides=[
+                *args.param,
+                # HACK: remove me once cve-ci lands in main
+                'runner-url=https://github.com/cockpit-project/bots/archive/refs/heads/cve-ci.tar.gz',
+            ],
+        )
+
+    logger.debug(
+        '%slaunching %d jobs for %s#%d (%s)',
+        'dry run: ' if args.dry_run else '',
+        len(all_contexts),
+        repo,
+        pull_number,
+        sha[:8],
+    )
+
+    print(f'### CI https://github.com/{repo}/pull/{pull_number} @ {sha} → {base_ref} ({parent_repo})')
+    print(f'Requested contexts: {", ".join(f"`{p}`" for p in args.context)}')
+    print()
+
+    for context in sorted(all_contexts):
+        embargo_slug = f'{EMBARGOED_SLUG}-{secrets.token_urlsafe(16)}'
+        log_url = f'{LOGS_URL}{embargo_slug}/log.html'
+
+        # Print before launching: the URL is known as soon as the slug is generated.
+        # Logs won't exist yet but will appear at this URL once the job runs.
+        print(f'- [ ] [{context}]({log_url})')
+
+        if args.dry_run:
+            logger.debug('dry run: skipping launch of %r', embargo_slug)
+            continue
+
+        logger.debug('launching %r', embargo_slug)
+        image, _, scenario = context.partition('/')
+        prepare_and_launch(
+            ec2,
+            sts,
+            job={
+                'slug': embargo_slug,
+                'repo': repo,
+                'sha': sha,
+                'context': context,
+                'pull': pull_number,
+                'timeout': 120,
+                'env': {
+                    'TEST_OS': image,
+                    'TEST_REVISION': sha,
+                    'BASE_BRANCH': base_ref,
+                    # opt in to authenticated git clone in checkout-and-run
+                    'COCKPIT_CI_AUTHENTICATED_FETCH': '1',
+                    **({'TEST_SCENARIO': scenario} if scenario else {}),
+                },
+                'secrets': ['github-token', 'image-download'],
+            },
+            params=params,
+            instance_type=args.instance_type,
+            post=False,
+            embargoed=True,
+        )
+
+
+if __name__ == '__main__':
+    main()

@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from types_boto3_ec2.type_defs import InstanceTypeDef, TagTypeDef
 
 from .account import (
+    EMBARGOED_SLUG,
     RUNNER_INSTANCE_SLUG_TAG,
     RUNNER_NAME_PREFIX,
     SSH_SECURITY_GROUP,
@@ -163,6 +164,7 @@ def launch_instance(
     systemd_timeout_min: int,
     ami: str | None = None,
     ssh_keys: Sequence[str] = (),
+    embargoed: bool = False,
 ) -> str:
     _ensure_nested_virt_support(ec2)
 
@@ -295,8 +297,8 @@ def launch_instance(
         {"Key": k, "Value": v}
         for k, v in {
             **TAGS,
-            "Name": f"{RUNNER_NAME_PREFIX}{slug}",
-            RUNNER_INSTANCE_SLUG_TAG: slug,
+            "Name": f"{RUNNER_NAME_PREFIX}{EMBARGOED_SLUG if embargoed else slug}",
+            RUNNER_INSTANCE_SLUG_TAG: EMBARGOED_SLUG if embargoed else slug,
         }.items()
     ]
 
