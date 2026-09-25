@@ -170,6 +170,9 @@ class Machine(ssh_connection.SSHConnection):
 
         This can be passed to journal_messages() or audit_messages().
         """
+
+        # Get a fresh perspective on audit messages as well
+        self.execute("truncate -s 0 /var/log/audit/audit.log")
         return self.execute("journalctl --show-cursor -n0 -o cat | sed 's/^.*cursor: *//'")
 
     def journal_messages(self, matches: Collection[str], log_level: int, cursor: str | None = None) -> list[str]:
@@ -282,6 +285,7 @@ class Machine(ssh_connection.SSHConnection):
         Cockpit is not running when the test virtual machine starts up, to
         allow you to make modifications before it starts.
         """
+
         if self.ws_container:
             self.stop_cockpit()
             cmd = "podman container runlabel RUN cockpit/ws"
