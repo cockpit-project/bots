@@ -85,7 +85,7 @@ async def run_container(job: Job, subject: Subject, ctx: JobContext, log: LogStr
             ctx.default_image
         ).strip()
 
-        log.write(f'Using container image: {container_image}\n')
+        log.write(f'Using container image: {container_image}\n', stamped=True)
 
         try:
             secret_args = ctx.prepare_secrets(job.secrets, tmpdir / 'secrets')
@@ -189,7 +189,7 @@ async def run_job(job: Job, ctx: JobContext) -> None:
                 f'{title}\n\n'
                 f'Running on: {platform.node()} as {invocation_id or "(unknown invocation)"}\n'
                 f'{journal}\n'
-                f'Job({json.dumps(job, default=lambda obj: obj.__dict__, indent=4)})\n\n'
+                f'Job({json.dumps(job, default=lambda obj: obj.__dict__, indent=4)})\n'
             )
             await status.post('pending', 'In progress')
 
@@ -208,7 +208,7 @@ async def run_job(job: Job, ctx: JobContext) -> None:
             await gather_and_cancel(tasks)
 
         except Failure as exc:
-            log.write(f'\n*** Failure: {exc}\n')
+            log.write(f'*** Failure: {exc}\n', stamped=True)
             await status.post('failure', str(exc))
 
             if job.report is not None:
@@ -225,18 +225,18 @@ async def run_job(job: Job, ctx: JobContext) -> None:
 
         except asyncio.CancelledError:
             await status.post('error', 'Cancelled')
-            log.write('*** Job cancelled\n')
+            log.write('*** Job cancelled\n', stamped=True)
             raise
 
         except BaseException as exc:
             # ie: bug in this program, but let's be helpful
             await status.post('error', 'Internal error')
-            log.write('\n\n' + '\n'.join(traceback.format_exception(exc)) + '\n')
+            log.write('\n\n' + '\n'.join(traceback.format_exception(exc)) + '\n', stamped=True)
             raise
 
         else:
             await status.post('success', 'Success')
-            log.write('\n\nJob ran successfully.  :)\n')
+            log.write('Job ran successfully.  :)\n', stamped=True)
 
         finally:
             log.close()
