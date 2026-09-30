@@ -52,6 +52,7 @@ REFRESH = {
     "rhel-8-10": {},
     "rhel-9-8": REFRESH_30,
     "rhel-9-9": {},
+    "rhel-9-10": {},
     "rhel-10-2": REFRESH_30,
     "rhel-10-3": {},
     "services": REFRESH_30,

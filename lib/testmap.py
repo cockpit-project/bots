@@ -59,7 +59,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             # TODO: gradually fix the remaining scenarios
             *product('opensuse-tumbleweed', COCKPIT_SCENARIOS - {'networking', 'storage', 'expensive'}),
             *product('rhel-8-10', ['ws-container'], COCKPIT_SCENARIOS),
-            *product('rhel-9-9', COCKPIT_SCENARIOS),
+            *product('rhel-9-10', COCKPIT_SCENARIOS),
             *product('rhel-10-3', COCKPIT_SCENARIOS),
             *product('centos-10', COCKPIT_SCENARIOS),
         ],
@@ -101,7 +101,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-8-10/ws-container',
             'fedora-45',
             'rhel-10-3',
-            'rhel-9-9',
         ]
     },
     'cockpit-project/cockpit-ostree': {
@@ -127,7 +126,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'opensuse-tumbleweed',
             'rhel-8-10/ws-container',
             'rhel-10-3',
-            'rhel-9-9',
+            'rhel-9-10',
             'ubuntu-2604',
         ],
         '_manual': [
@@ -149,7 +148,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'opensuse-tumbleweed',
             'rhel-8-10/ws-container',
             'rhel-10-3',
-            'rhel-9-9',
+            'rhel-9-10',
         ],
         'rhel-9.8': [
             'rhel-9-8',
@@ -181,7 +180,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'rhel-8-10/ws-container',
             'rhel-10-3',
-            'rhel-9-9',
+            'rhel-9-10',
         ],
         'rhel-9.8': [
             'rhel-10-2',
@@ -228,7 +227,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             'centos-9-stream',
             'centos-10',
-            'rhel-9-9',
+            'rhel-9-10',
             'rhel-10-3',
             'rhel-10-3/devel',
             'fedora-43',
