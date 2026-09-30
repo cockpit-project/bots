@@ -81,7 +81,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'fedora-rawhide',
             'opensuse-tumbleweed',
             *product('fedora-45', COCKPIT_SCENARIOS),
-            *product('rhel-10-3', COCKPIT_SCENARIOS),
+            *product('rhel-10-4', COCKPIT_SCENARIOS),
             *product('ubuntu-2604', COCKPIT_SCENARIOS),
         ],
     },
@@ -100,7 +100,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-9-bootc',
             'rhel-8-10/ws-container',
             'fedora-45',
-            'rhel-10-3',
+            'rhel-10-4',
             'rhel-9-9',
         ]
     },
@@ -134,6 +134,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'fedora-45',
+            'rhel-10-4',
         ],
     },
     'cockpit-project/cockpit-machines': {
@@ -166,6 +167,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-10',
             'fedora-rawhide',
             'fedora-45',
+            'rhel-10-4',
         ],
     },
     'cockpit-project/cockpit-files': {
@@ -194,6 +196,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'ubuntu-2604',
             'fedora-45',
+            'rhel-10-4',
         ],
     },
     'codeberg:lis/test.thing': {
@@ -236,6 +239,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'fedora-45',
+            'rhel-10-4',
         ],
     },
     'rhinstaller/anaconda-webui': {
