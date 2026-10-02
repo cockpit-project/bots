@@ -170,6 +170,9 @@ class Machine(ssh_connection.SSHConnection):
 
         This can be passed to journal_messages() or audit_messages().
         """
+
+        # Get a fresh perspective on audit messages as well
+        self.execute("truncate -s 0 /var/log/audit/audit.log")
         return self.execute("journalctl --show-cursor -n0 -o cat | sed 's/^.*cursor: *//'")
 
     def journal_messages(self, matches: Collection[str], log_level: int, cursor: str | None = None) -> list[str]:
@@ -213,7 +216,11 @@ class Machine(ssh_connection.SSHConnection):
             messages = []
 
         # SELinux full auditing; https://fedoraproject.org/wiki/SELinux/Debugging#Enable_full_auditing
-        if any("avc:  denied" in m for m in messages):
+        # RHEL does not include audit messages in the journal, so we run ausearch unconditionally.
+        # XXX - we enable this slowly for a few images at a time so that
+        # we don't go insane. In the end, this should trigger for all
+        # "rhel-*" images.
+        if any("avc:  denied" in m for m in messages) or self.image.startswith("rhel-9-"):
             try:
                 audit = self.execute("ausearch -i -m avc,user_avc,selinux_err,user_selinux_err "
                                      "--checkpoint /run/cockpit.ausearch.checkpoint --start checkpoint "
@@ -226,6 +233,12 @@ class Machine(ssh_connection.SSHConnection):
 
     def allowed_messages(self) -> Collection[str]:
         allowed = []
+
+        # Allow supplemental ausearch output. The actual violations
+        # like "type=AVC" will still show up.
+        allowed.append('----')
+        allowed.append('type=(PROCTITLE|SYSCALL|EXECVE|PATH|CWD).*')
+
         if self.image.startswith('debian') or self.ostree_image:
             # These images don't have any non-C locales (mostly deliberate, to test this scenario somewhere)
             allowed.append("invalid or unusable locale: .*")
@@ -238,9 +251,6 @@ class Machine(ssh_connection.SSHConnection):
             # https://issues.redhat.com/browse/RHEL-37631
             allowed.append('.*avc:  denied  { map_read map_write } for .* tclass=bpf.*')
             allowed.append('.*avc:  denied .* comm=daemon-init name=libvirt.*')
-            # also need to ignore the corresponding ausearch
-            allowed.append('----')
-            allowed.append('type=(PROCTITLE|SYSCALL|EXECVE|PATH|CWD).*')
 
         if self.image in ["debian-testing"]:
             # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1989073
@@ -253,6 +263,10 @@ class Machine(ssh_connection.SSHConnection):
             allowed.append(r"Process.*\(w\) .*dumped core.")
             # yes, this ignores all crash info; we can't help it
             allowed.append("^(Module|ELF|Stack trace|#[0-9]).*")
+
+        # https://redhat.atlassian.net/browse/RHEL-268928
+        if self.image.startswith("rhel-9-"):
+            allowed.append('.*avc:  denied  { write } for .* comm=io-task-worker.*tclass=sock_file.*')
 
         return allowed
 
@@ -271,6 +285,7 @@ class Machine(ssh_connection.SSHConnection):
         Cockpit is not running when the test virtual machine starts up, to
         allow you to make modifications before it starts.
         """
+
         if self.ws_container:
             self.stop_cockpit()
             cmd = "podman container runlabel RUN cockpit/ws"
