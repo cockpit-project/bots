@@ -49,8 +49,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *product('debian-testing', COCKPIT_SCENARIOS),
             *product('debian-trixie', COCKPIT_SCENARIOS),
             *product('ubuntu-2604', COCKPIT_SCENARIOS),
-            *product('fedora-43', COCKPIT_SCENARIOS),
             *product('fedora-44', COCKPIT_SCENARIOS),
+            *product('fedora-45', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
             *product(TEST_OS_DEFAULT, ['devel']),
             *product(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
@@ -80,7 +80,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'fedora-rawhide',
             'opensuse-tumbleweed',
-            *product('fedora-45', COCKPIT_SCENARIOS),
             *product('ubuntu-2604', COCKPIT_SCENARIOS),
         ],
     },
@@ -88,8 +87,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             TEST_OS_DEFAULT,
             'arch',
-            'fedora-43',
             'fedora-44',
+            'fedora-45',
             'centos-9-stream',
             'centos-10',
             'fedora-rawhide',
@@ -118,8 +117,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-9-bootc',
             'debian-testing',
             'debian-trixie',
-            'fedora-43',
             'fedora-44',
+            'fedora-45',
             'fedora-coreos',
             'opensuse-tumbleweed',
             'rhel-8-10/ws-container',
@@ -139,8 +138,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'debian-testing',
             'debian-trixie',
             'ubuntu-2604',
-            'fedora-43',
             'fedora-44',
+            'fedora-45',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             'opensuse-tumbleweed',
@@ -170,8 +169,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'arch',
             'debian-testing',
             'debian-trixie',
-            'fedora-43',
             'fedora-44',
+            'fedora-45',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             'fedora-rawhide',
@@ -206,8 +205,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             'centos-10',
             'rhel-10-3',
-            'fedora-43',
             'fedora-44',
+            'fedora-45',
         ],
         'subscription-manager-1.28': [
             'rhel-8-10',
@@ -218,7 +217,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-9',
         ],
         '_manual': [
-            'fedora-45',
         ],
     },
     'cockpit-project/subscription-manager-cockpit': {
@@ -228,8 +226,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-10',
             'rhel-10-4',
             'rhel-10-4/devel',
-            'fedora-43',
             'fedora-44',
+            'fedora-45',
         ],
         '_manual': [
             'fedora-45',
