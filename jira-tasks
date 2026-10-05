@@ -182,7 +182,7 @@ def main() -> None:
         help="Create a RHEL rebase issue"
     )
     rebase_parser.add_argument("package", help="Package name")
-    rebase_parser.add_argument("release", help="RHEL release version")
+    rebase_parser.add_argument("release", help="RHEL release version (e.g. 10.4)")
     rebase_parser.set_defaults(func=cmd_rhel_rebase_issue)
 
     args = parser.parse_args()
