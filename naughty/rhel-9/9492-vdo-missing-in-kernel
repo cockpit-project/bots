@@ -1,0 +1,5 @@
+  /usr/sbin/modprobe failed: 1
+  vdo: Required device-mapper target(s) not detected in your kernel.
+  Run `lvcreate --help' for more information.
+*
+  File "test/verify/check-storage-vdo", line *
