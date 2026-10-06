@@ -31,14 +31,13 @@ ALLOWLIST = {
     'KKoukiou',
     'M4rtinK',
     'adamkankovsky',
-    'elkoniu',
-    'jkonecny12',
+    'bruno-fs',
+    'jikortus',
+    'jstodola',
     'pkratoch',
     'rvykydal',
-    'vojtechtrefny',
-    'abadger',
-    'bruno-fs',
     'tomasfratrik',
+    'vojtechtrefny',
 
     # osbuild team + contributors
     'croissanne',
