@@ -120,7 +120,8 @@ class Queue:
         self._channel = None
         self._consumer_tags = ()
         if self._connection is not None:
-            self._connection.close()
+            if self._connection.is_open:
+                self._connection.close()
             self._connection = None
         if reason is not None:
             self._messages.put_nowait(reason)
