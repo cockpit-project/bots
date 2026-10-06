@@ -60,14 +60,14 @@ class Queue:
         self._queues = tuple(queues)
         self._consumer_priority = consumer_priority
         self._consumer_tags = tuple[str, ...]()
-        self._messages = asyncio.Queue[tuple[int, bytes] | Exception]()
+        self._messages = asyncio.Queue[tuple[int, bytes] | BaseException]()
         self._connection: AsyncioConnection | None = None
         self._channel: Channel | None = None
 
     async def __aenter__(self) -> Self:
         init_done: asyncio.Future[None] = asyncio.get_running_loop().create_future()
 
-        def on_channel_closed(channel: Channel, reason: Exception) -> None:
+        def on_channel_closed(channel: Channel, reason: BaseException) -> None:
             logger.error('AMQP channel closed: %r %r', channel, reason)
             self.close(reason)
 
@@ -86,11 +86,11 @@ class Queue:
             self._connection = connection
             connection.channel(on_open_callback=on_channel_opened)
 
-        def on_connection_open_error(connection: AsyncioConnection, error: Exception) -> None:
+        def on_connection_open_error(connection: AsyncioConnection, error: BaseException) -> None:
             logger.error('AMQP connection failed: %r %r', connection, error)
             init_done.set_exception(error)
 
-        def on_connection_closed(connection: AsyncioConnection, reason: Exception) -> None:
+        def on_connection_closed(connection: AsyncioConnection, reason: BaseException) -> None:
             logger.error('AMQP closed: %r %r', connection, reason)
             # We might get the close before or after we finished initializing
             if not init_done.done():
@@ -116,7 +116,7 @@ class Queue:
     async def __aexit__(self, *_args: object) -> None:
         self.close()
 
-    def close(self, reason: Exception | None = None) -> None:
+    def close(self, reason: BaseException | None = None) -> None:
         self._channel = None
         self._consumer_tags = ()
         if self._connection is not None:
@@ -128,7 +128,7 @@ class Queue:
     async def next_message(self) -> tuple[int, bytes]:
         self.start_deliveries()
         message = await self._messages.get()
-        if isinstance(message, Exception):
+        if isinstance(message, BaseException):
             raise message
         return message
 
@@ -157,5 +157,6 @@ class Queue:
     def _on_message(
         self, _channel: Channel, method: Basic.Deliver, _properties: BasicProperties | None, body: bytes
     ) -> None:
+        assert method.delivery_tag is not None
         logger.debug('received message tag=%r', method.delivery_tag)
         self._messages.put_nowait((method.delivery_tag, body))

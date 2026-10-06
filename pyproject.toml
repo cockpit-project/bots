@@ -22,6 +22,8 @@ module = [
     'libvirt',
     'libvirt_qemu',
     'nacl',
+    'pika',
+    'pika.*',
     'types_boto3_autoscaling.*',
     'types_boto3_ce',
     'types_boto3_ce.*',
