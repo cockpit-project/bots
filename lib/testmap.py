@@ -461,7 +461,7 @@ def tests_for_po_refresh(project: str) -> Sequence[str]:
         # check-pages "all languages" test only runs on RHEL
         contexts = sorted([c for c in contexts if c.startswith("rhel-")])
         # plus required f-coreos
-        contexts.append("fedora-coreos/other")
+        contexts.append("fedora-coreos/networking")
     return contexts
 
 
