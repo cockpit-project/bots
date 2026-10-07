@@ -1,0 +1,2 @@
+  File "check-system-realms", line *, in testUnqualifiedUsers
+    m.execute('while ! su -l -c "echo %s | sudo -S true" %s; do sleep 5; sss_cache -E || true; systemctl try-restart sssd; done'
