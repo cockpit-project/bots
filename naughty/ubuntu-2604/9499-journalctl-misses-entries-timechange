@@ -1,0 +1,4 @@
+  File "test/verify/check-system-journal", line *, in testRebootAndTime
+    b.wait_visible(".pf-v6-c-menu ul button:contains('check-journal')")
+*
+wait_js_cond(ph_is_present(".pf-v6-c-menu ul button:contains('check-journal')")): Error: condition did not become true
