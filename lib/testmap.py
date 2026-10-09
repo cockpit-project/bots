@@ -244,6 +244,11 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *product('fedora-45-boot', ANACONDA_SCENARIOS),
         ]
     },
+    'cockpit-project/cockpit-system-roles': {
+        'main': [
+            'fedora-44',
+        ]
+    }
 }
 
 # The OSTree variants can't build their own packages, so we build in
