@@ -94,6 +94,16 @@ deploy_to cockpit-project/subscription-manager-cockpit-weblate \
     --deploy-from \
         cockpit-project/subscription-manager-cockpit/subscription-manager-cockpit-weblate/DEPLOY_KEY
 
+# cockpit-system-roles
+deploy_to cockpit-project/cockpit-system-roles \
+    --deploy-from \
+        cockpit-project/cockpit-system-roles/npm-update/SELF_DEPLOY_KEY \
+        cockpit-project/cockpit-system-roles/self/DEPLOY_KEY
+
+deploy_to cockpit-project/cockpit-system-roles-weblate \
+    --deploy-from \
+        cockpit-project/cockpit-system-roles/cockpit-system-roles-weblate/DEPLOY_KEY
+
 # shared
 deploy_to cockpit-project/node-cache \
     --deploy-from \
@@ -106,7 +116,9 @@ deploy_to cockpit-project/node-cache \
         cockpit-project/cockpit-podman/npm-update/NODE_CACHE_DEPLOY_KEY \
         cockpit-project/cockpit-podman/node-cache/DEPLOY_KEY \
         cockpit-project/subscription-manager-cockpit/npm-update/NODE_CACHE_DEPLOY_KEY \
-        cockpit-project/subscription-manager-cockpit/node-cache/DEPLOY_KEY
+        cockpit-project/subscription-manager-cockpit/node-cache/DEPLOY_KEY \
+        cockpit-project/cockpit-system-roles/npm-update/NODE_CACHE_DEPLOY_KEY \
+        cockpit-project/cockpit-system-roles/node-cache/DEPLOY_KEY
 
 # flathub
 deploy_to cockpit-project/org.cockpit_project.CockpitClient \
