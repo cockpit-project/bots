@@ -205,7 +205,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'candlepin/subscription-manager': {
         'main': [
             'centos-10',
-            'rhel-10-3',
+            'rhel-10-4',
             'fedora-43',
             'fedora-44',
         ],
@@ -216,6 +216,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'centos-9-stream',
             'rhel-9-8',
             'rhel-9-9',
+            'rhel-9-10',
         ],
         '_manual': [
             'fedora-45',
