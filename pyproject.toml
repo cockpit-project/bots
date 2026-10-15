@@ -71,6 +71,9 @@ select = [
     "W",       # warnings (mostly whitespace)
     "YTT",     # flake8-2020
 ]
+ignore = [
+    "ICN001",  # ignore rule "import datetime as dt"
+]
 
 [tool.pytest.ini_options]
 addopts = ["--cov-config=pyproject.toml"]  # for subprocesses
