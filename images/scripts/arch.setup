@@ -16,12 +16,9 @@ json-glib \
 krb5 \
 cpio \
 cdrtools \
-docbook-xsl \
-dmidecode \
 openssh \
 networkmanager \
 pcp \
-xmlto \
 packagekit \
 libvirt \
 libvirt-python \
