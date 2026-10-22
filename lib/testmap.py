@@ -170,6 +170,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'debian-trixie',
             'fedora-43',
             'fedora-44',
+            'fedora-45',
             f'{TEST_OS_DEFAULT}/devel',
             f'{TEST_OS_DEFAULT}/firefox',
             'fedora-rawhide',
@@ -188,7 +189,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
         '_manual': [
             'ubuntu-2604',
-            'fedora-45',
         ],
     },
     'codeberg:lis/test.thing': {
