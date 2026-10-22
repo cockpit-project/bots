@@ -88,8 +88,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             TEST_OS_DEFAULT,
             'arch',
-            'fedora-43',
-            'fedora-44',
+            'fedora-45',
             'centos-9-stream',
             'centos-10',
             'fedora-rawhide',
@@ -98,7 +97,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         '_manual': [
             'centos-9-bootc',
             'rhel-8-10/ws-container',
-            'fedora-45',
         ]
     },
     'cockpit-project/cockpit-ostree': {
