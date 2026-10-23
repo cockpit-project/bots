@@ -16,7 +16,7 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 # Shared GitHub code. When run as a script, we print out info about
-# our GitHub interacition.
+# our GitHub interaction.
 
 import logging
 import os
