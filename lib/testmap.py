@@ -206,6 +206,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-10-4',
             'fedora-43',
             'fedora-44',
+            'fedora-45',
         ],
         'subscription-manager-1.28': [
             'rhel-8-10',
@@ -217,7 +218,6 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'rhel-9-10',
         ],
         '_manual': [
-            'fedora-45',
         ],
     },
     'cockpit-project/subscription-manager-cockpit': {
