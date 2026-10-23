@@ -1,0 +1,3 @@
+su: user Administrator@cockpit.lan does not exist or the user entry does not contain all the required fields
+*
+  File "check-system-realms", line *, in testQualifiedUsers
