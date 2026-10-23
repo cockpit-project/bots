@@ -51,6 +51,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *product('ubuntu-2604', COCKPIT_SCENARIOS),
             *product('fedora-43', COCKPIT_SCENARIOS),
             *product('fedora-44', COCKPIT_SCENARIOS),
+            *product('fedora-45', COCKPIT_SCENARIOS),
             # this runs coverage, reports need the whole test suite
             *product(TEST_OS_DEFAULT, ['devel']),
             *product(TEST_OS_DEFAULT, ['firefox'], COCKPIT_SCENARIOS),
