@@ -16,7 +16,7 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 # Shared GitHub code. When run as a script, we print out info about
-# our GitHub interacition.
+# our GitHub interaction.
 
 import os
 import ssl
@@ -52,7 +52,7 @@ def get_curl_ca_arg(hostname: str) -> list[str]:
     """Return curl CLI arguments for talking to hostname.
 
     This uses get_host_ca() to determine an appropriate CA for talking to hostname.
-    Returns ["--cacert", "CAFilePath"] or [] as approprioate.
+    Returns ["--cacert", "CAFilePath"] or [] as appropriate.
     """
     ca = get_host_ca(hostname)
     return ['--cacert', ca] if ca else []
