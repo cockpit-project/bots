@@ -261,7 +261,7 @@ OSTREE_BUILD_IMAGE = {
 # image than the one being tested.  This must match the base OS version used in
 # the cockpit/ws container present in the given image.
 WSCONTAINER_BUILD_IMAGE = {
-    "rhel-8-10": "fedora-43",
+    "rhel-8-10": "fedora-44",
 }
 
 # only put auxiliary images here; triggers for primary OS images are computed from testmap
