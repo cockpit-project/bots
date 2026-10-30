@@ -34,13 +34,6 @@ ALLOWLIST = {
     'tomasfratrik',
     'vojtechtrefny',
 
-    # osbuild team + contributors
-    'croissanne',
-    'jkozol',
-    'lucasgarfield',
-    'regexowl',
-    'supakeen',
-
     # candlepin team + contributors
     'ptoscano',
     'pkoprda',
