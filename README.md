@@ -83,7 +83,7 @@ the [GitHub CLI](https://cli.github.com/) configuration in
 [Developer Settings → Personal access tokens](https://github.com/settings/tokens).
 
 When generating a new personal access token, the scopes should contain
-`repo:status` and `read:org`. Note in particular, that `repo` and
+`repo:status`. Note in particular, that `repo` and
 `public_repo` scopes each grant full push access, and should not be used.
 
 You need at least "Write" access to the project for triggering statuses, either
