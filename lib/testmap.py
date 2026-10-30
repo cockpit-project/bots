@@ -82,6 +82,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             'opensuse-tumbleweed',
             *product('fedora-45', COCKPIT_SCENARIOS),
             *product('ubuntu-2604', COCKPIT_SCENARIOS),
+            'fedora-coreos/storage',
         ],
     },
     'cockpit-project/starter-kit': {
