@@ -14,18 +14,13 @@ ALLOWLIST = {
     # humans
 
     # cockpit team + contributors
-    'ashley-cui',
     'allisonkarlitskaya',
-    'garrett',
     'jelly',
     'jscotka',
     'martinpitt',
-    'marusak',
     'mvollmer',
-    'subhoghoshX',
     'tomasmatus',
     'Venefilyn',
-    'yunmingyang',
 
     # installer team + contributors
     'KKoukiou',
@@ -38,13 +33,6 @@ ALLOWLIST = {
     'rvykydal',
     'tomasfratrik',
     'vojtechtrefny',
-
-    # osbuild team + contributors
-    'croissanne',
-    'jkozol',
-    'lucasgarfield',
-    'regexowl',
-    'supakeen',
 
     # candlepin team + contributors
     'ptoscano',
