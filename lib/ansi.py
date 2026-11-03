@@ -9,6 +9,9 @@ USE_COLOR = 'FORCE_COLOR' in os.environ or (IS_TTY and 'NO_COLOR' not in os.envi
 
 RED = '\033[31m' if USE_COLOR else ''
 GREEN = '\033[32m' if USE_COLOR else ''
+YELLOW = '\033[33m' if USE_COLOR else ''
 BLUE = '\033[34m' if USE_COLOR else ''
+CYAN = '\033[36m' if USE_COLOR else ''
+DARK_GREY = '\033[90m' if USE_COLOR else ''
 RESET = '\033[0m' if USE_COLOR else ''
 CLEAR_LINE = '\033[2K\r' if IS_TTY else ''

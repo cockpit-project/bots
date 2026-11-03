@@ -20,8 +20,7 @@ import importlib.util
 import io
 import os
 import sys
-import typing
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from types import ModuleType
 
 import pytest
@@ -78,23 +77,19 @@ def tests_trigger_module() -> ModuleType:
     return module
 
 
-type TestsTrigger = Callable[[list[str]], tuple[int, str]]
+type TestsTrigger = Callable[[Sequence[str]], str]
 
 
 @pytest.fixture(scope="module")
 def tests_trigger(tests_trigger_module: ModuleType) -> TestsTrigger:
-    def _run(args: list[str]) -> tuple[int, str]:
+    def _run(args: Sequence[str]) -> str:
         with pytest.MonkeyPatch.context() as mp:
             stderr = io.StringIO()
             mp.setattr(sys, 'argv', ['tests-trigger', *args])
             mp.setattr(sys, 'stderr', stderr)
-            try:
-                assert typing.get_type_hints(tests_trigger_module.main)['return'] is int
-                ret: int = tests_trigger_module.main()
-            except SystemExit as e:
-                ret = e.code if isinstance(e.code, int) else 0
+            tests_trigger_module.main()
         sys.stderr.write(stderr.getvalue())
-        return ret, stderr.getvalue()
+        return stderr.getvalue()
 
     return _run
 
@@ -110,20 +105,18 @@ def mock_server() -> Iterator[None]:
 
 def test_wildcard_project_repo(tests_trigger: TestsTrigger) -> None:
     # wildcard from a project repo should produce bare contexts for that repo/branch only
-    ret, stderr = tests_trigger(["--repo", "cockpit-project/cockpit", "-n", "1", "*/networking"])
-    assert ret == 0
-    assert "arch/networking: triggering on pull request 1\n" in stderr
-    assert "debian-testing/networking: triggering on pull request 1\n" in stderr
+    stderr = tests_trigger(["--repo", "cockpit-project/cockpit", "-n", "1", "*/networking"])
+    assert "  → arch/networking: triggering (" in stderr
+    assert "  → debian-testing/networking: triggering (" in stderr
     # no bots-form contexts for the current repo, no other repos
     assert "@" not in stderr
 
 
 def test_wildcard_bots_repo(tests_trigger: TestsTrigger) -> None:
     # wildcard from the bots repo should produce full bots contexts across all repos
-    ret, stderr = tests_trigger(
+    stderr = tests_trigger(
         ["--repo", "cockpit-project/bots", "-n", "1", "*/networking@cockpit-project/cockpit"])
-    assert ret == 0
-    assert "arch/networking@cockpit-project/cockpit: triggering on pull request 1\n" in stderr
-    assert "debian-testing/networking@cockpit-project/cockpit: triggering on pull request 1\n" in stderr
+    assert "  → arch/networking@cockpit-project/cockpit: triggering (" in stderr
+    assert "  → debian-testing/networking@cockpit-project/cockpit: triggering (" in stderr
     # should not appear as bare contexts
     assert "arch/networking: triggering" not in stderr
