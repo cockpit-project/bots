@@ -1,4 +1,0 @@
-* Error (criu/cr-dump.c*): Dumping FAILED.
-*
-  File "check-application", line *, in testCheckpointRestore
-    b.wait(lambda: self.getContainerAttr("swamped-crate", "State") in NOT_RUNNING)
