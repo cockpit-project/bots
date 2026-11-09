@@ -16,6 +16,7 @@ json-glib \
 krb5 \
 cpio \
 cdrtools \
+esbuild \
 openssh \
 networkmanager \
 pcp \
