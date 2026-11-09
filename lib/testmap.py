@@ -247,6 +247,9 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
     'cockpit-project/cockpit-system-roles': {
         'main': [
             'fedora-44',
+        ],
+        'manual': [
+            'fedora-45',
         ]
     }
 }
