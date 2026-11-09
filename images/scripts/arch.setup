@@ -16,7 +16,6 @@ json-glib \
 krb5 \
 cpio \
 cdrtools \
-esbuild \
 openssh \
 networkmanager \
 pcp \
@@ -134,6 +133,7 @@ BUILD_DEPS="\
 asciidoctor \
 base-devel \
 cockpit \
+esbuild \
 git \
 glib-networking \
 glib2-devel \
