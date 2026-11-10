@@ -1,0 +1,2 @@
+  File "check-storage-stratis", line *, in testBasic
+    b.wait_visible(self.card("Encrypted Stratis pool"))  # should be started after boot
