@@ -222,6 +222,11 @@ class BuildAction(ActionBase):
             cp "$archdir"/* .
             # tarball must be in same directory as PKGBUILD
             cp '{vm_source}' /var/tmp/build/
+            # if there is a -node tarball, include that
+            node_tar="$(dirname '{vm_source}')/$(basename '{vm_source}' | sed 's/cockpit-/cockpit-node-/')"
+            if [ -e "$node_tar" ]; then
+                cp "$node_tar" /var/tmp/build/
+            fi
             """, perm="755")
         machine.execute(f"su builder {opt_build_options} /var/tmp/mkbuild.sh")
 
