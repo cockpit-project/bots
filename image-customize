@@ -18,6 +18,8 @@
 
 import argparse
 import os
+import re
+import shlex
 import subprocess
 import sys
 from collections.abc import Sequence
@@ -211,21 +213,22 @@ class BuildAction(ActionBase):
     def build_arch(machine: testvm.Machine, vm_source: str) -> None:
         # unpack source tree's arch packaging directory (PKGBUILD refers to some files)
         # and set PKGBUILD variables
+        vm_node_cache = shlex.quote(re.sub(r'-(?=\d[^/]*$)', r'-node-', vm_source, count=1))
+        vm_source = shlex.quote(vm_source)
+
         machine.write("/var/tmp/mkbuild.sh", f"""#!/bin/sh
-            set -eu
+            set -eu{'x' if opt_verbose else ''}
             rm -rf /var/tmp/build
             mkdir -p /var/tmp/build
-            tar -C /var/tmp/build -xf '{vm_source}'
+            tar -C /var/tmp/build -xf {vm_source}
             cd /var/tmp/build/
-            unpackdir="$(ls)"
             archdir=$(dirname $(find -path '*/arch/PKGBUILD'))
             cp "$archdir"/* .
             # tarball must be in same directory as PKGBUILD
-            cp '{vm_source}' /var/tmp/build/
+            cp {vm_source} /var/tmp/build/
             # if there is a -node tarball, include that
-            node_tar="$(dirname '{vm_source}')/$(basename '{vm_source}' | sed 's/cockpit-/cockpit-node-/')"
-            if [ -e "$node_tar" ]; then
-                cp "$node_tar" /var/tmp/build/
+            if [ -e {vm_node_cache} ]; then
+                cp {vm_node_cache} /var/tmp/build/
             fi
             """, perm="755")
         machine.execute(f"su builder {opt_build_options} /var/tmp/mkbuild.sh")
