@@ -248,7 +248,7 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         'main': [
             'fedora-44',
         ],
-        'manual': [
+        '_manual': [
             'fedora-45',
         ]
     }
