@@ -321,18 +321,15 @@ def sync_iam() -> None:
     # Users
     ensure_user(
         # This is useful for testing the dispatcher code locally or for using
-        # lib.aws.launch_runner to spawn testing jobs (also locally).
+        # lib.aws.infractl or lib.aws.launch_runner to spawn testing jobs.
         "cockpit-ci",
         managed_policies=[
             policy_dispatcher,
             policy_images_download,
             policy_images_upload,
             policy_logs_write,
+            policy_infractl,
         ],
-    )
-    ensure_user(
-        "cockpit-ci-infractl",
-        managed_policies=[policy_infractl],
     )
 
     # Instance profiles
