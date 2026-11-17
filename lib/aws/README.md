@@ -106,7 +106,7 @@ Contact one of the owners of that group if you want to be added.
 You can add those credentials to `~/.aws/credentials` in a format similar to this:
 
 ```
-[cockpit-ci-infractl]
+[cockpit-ci]
 aws_access_key_id = AKIA...
 aws_secret_access_key = secret...
 ```
@@ -200,7 +200,7 @@ explanation for why they're there.
 You'll want a checkout of the `ci-secrets` repository, mentioned above.
 
 ```
-AWS_PROFILE=cockpit-ci-infractl python3 -m lib.aws.infractl dispatcher set secrets \
+AWS_PROFILE=cockpit-ci python3 -m lib.aws.infractl dispatcher set secrets \
     --secrets-dir $XDG_RUNTIME_DIR/ci-secrets/aws-secrets/dispatcher/
 ```
 
@@ -232,11 +232,11 @@ explicitly update them.  This also gives a mechanism to roll back to known-good
 versions.
 
 It's possible to do this without requiring a full infrastructure deploy.  This
-is also a lower-privilege operation and can be performed using the
-`cockpit-ci-infractl` IAM user from Bitwarden).
+is also a lower-privilege operation and can be performed using the `cockpit-ci`
+IAM user from Bitwarden).
 
 ```
-AWS_PROFILE=cockpit-ci-infractl python3 -m lib.aws.infractl dispatcher update --bots-ref=main
+AWS_PROFILE=cockpit-ci python3 -m lib.aws.infractl dispatcher update --bots-ref=main
 ```
 
 The reference can be a branch name or a raw sha.
@@ -261,14 +261,14 @@ that can be done is to power it off, at which point the auto-scaling group will
 bring up a new instance.  This can be done via:
 
 ```
-AWS_PROFILE=cockpit-ci-infractl python3 -m lib.aws.infractl dispatcher restart
+AWS_PROFILE=cockpit-ci python3 -m lib.aws.infractl dispatcher restart
 ```
 
 ### Start or stop the dispatcher
 
 ```
-AWS_PROFILE=cockpit-ci-infractl python3 -m lib.aws.infractl dispatcher up
-AWS_PROFILE=cockpit-ci-infractl python3 -m lib.aws.infractl dispatcher down
+AWS_PROFILE=cockpit-ci python3 -m lib.aws.infractl dispatcher up
+AWS_PROFILE=cockpit-ci python3 -m lib.aws.infractl dispatcher down
 ```
 
 This will configure the auto-scaling group to have a desired capacity of 0 or
@@ -277,7 +277,7 @@ This will configure the auto-scaling group to have a desired capacity of 0 or
 ### Check dispatcher status
 
 ```
-AWS_PROFILE=cockpit-ci-infractl python3 -m lib.aws.infractl dispatcher status
+AWS_PROFILE=cockpit-ci python3 -m lib.aws.infractl dispatcher status
 ```
 
 This will show the status of the auto-scaling group and any dispatcher
@@ -289,7 +289,7 @@ You can ssh to (`admin@`) the dispatcher public IP directly (as discovered by
 the `status` command) but there's also a convenience wrapper:
 
 ```
-AWS_PROFILE=cockpit-ci-infractl python3 -m lib.aws.infractl dispatcher ssh
+AWS_PROFILE=cockpit-ci python3 -m lib.aws.infractl dispatcher ssh
 ```
 
 In order to do that, you'll need to have your ssh key in the
@@ -300,7 +300,7 @@ update` will not update it.
 ### List, inspect, or terminate runner instances
 
 ```
-export AWS_PROFILE=cockpit-ci-infractl
+export AWS_PROFILE=cockpit-ci
 python3 -m lib.aws.infractl runner list
 python3 -m lib.aws.infractl runner list -a          # include terminated
 python3 -m lib.aws.infractl runner ssh SLUG
