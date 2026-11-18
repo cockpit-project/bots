@@ -203,21 +203,8 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
         ],
     },
     'candlepin/subscription-manager': {
-        'main': [
-            'centos-10',
-            'rhel-10-4',
-            'fedora-43',
-            'fedora-44',
-            'fedora-45',
-        ],
         'subscription-manager-1.28': [
             'rhel-8-10',
-        ],
-        'subscription-manager-1.29': [
-            'centos-9-stream',
-            'rhel-9-8',
-            'rhel-9-9',
-            'rhel-9-10',
         ],
         '_manual': [
         ],
@@ -279,7 +266,6 @@ IMAGE_REFRESH_TRIGGERS = {
         *product('rhel-9-8', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit/rhel-9.8'),
         *product('rhel-8-10', COCKPIT_SCENARIOS, repo='cockpit-project/cockpit/rhel-8'),
         "rhel-8-10@candlepin/subscription-manager/subscription-manager-1.28",
-        "rhel-9-8@candlepin/subscription-manager/subscription-manager-1.29",
     },
     # Anaconda builds in fedora-rawhide and runs tests in fedora-rawhide-boot
     "fedora-rawhide": {
