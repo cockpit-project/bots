@@ -19,6 +19,7 @@ module = [
     'boto3',
     'botocore',
     'botocore.*',
+    'fedora_distro_aliases',
     'libvirt',
     'libvirt_qemu',
     'nacl',
