@@ -50,6 +50,7 @@ cryptsetup
 btrfs-progs
 mdadm
 lvm2
+iscsi-initiator-utils
 %end
 """
 
