@@ -244,6 +244,9 @@ REPO_BRANCH_CONTEXT: Mapping[str, Mapping[str, Sequence[str]]] = {
             *product('fedora-45-boot', ANACONDA_SCENARIOS),
         ]
     },
+    'rhinstaller/anaconda': {
+        '_manual': [],
+    },
     'cockpit-project/cockpit-system-roles': {
         'main': [
             'fedora-44',
