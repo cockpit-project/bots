@@ -3,113 +3,208 @@
 import argparse
 import subprocess
 import sys
+from collections.abc import Sequence
 
 from lib import ALLOWLIST, github, testmap
-from lib.aio.jsonutil import get_str
+from lib.aio.jsonutil import get_int, get_nested, get_str
+from lib.ansi import CYAN, DARK_GREY, GREEN, RED, RESET, YELLOW
 
 
 def git(*args: str) -> str:
     return subprocess.check_output(('git', *args), encoding='utf-8').strip()
 
 
-def trigger_pull(api: github.GitHub, opts: argparse.Namespace) -> int:
-    if opts.target != '-':
-        pull = api.get("pulls/" + opts.target)
+_STATE_COLORS: dict[str, str] = {'error': RED, 'failure': RED, 'success': GREEN, 'pending': YELLOW}
 
-        if not pull:
-            sys.stderr.write(f"{opts.target} is not a pull request.\n")
-            return 1
 
-        # triggering is manual, so don't prevent triggering a user that does not have push access
-        # nor isn't in the 'Contributors' group, but issue a warning in case of an oversight
-        login = pull["head"]["user"]["login"]
-        if not opts.allow and login not in ALLOWLIST:
-            sys.stderr.write(f"Pull request author '{login}' isn't allowed. Override with --allow.\n")
-            return 1
+def colored_state(state: str) -> str:
+    return f"{_STATE_COLORS.get(state, DARK_GREY)}{state}{RESET}"
 
-        revision = pull['head']['sha']
-        target = f'pull request {opts.target}'
+
+def trigger(
+    target: str,
+    contexts: Sequence[str],
+    *,
+    allow: bool,
+    bots_pr: str | None,
+    branch: str | None,
+    dry: bool,
+    ignore_status: bool,
+    raw: bool,
+    repo: str | None,
+    requeue: bool,
+    verbose: bool,
+) -> None:
+    api = github.GitHub(repo=repo)
+    sha: str
+    to_trigger: set[str] = set()
+    branches: set[str] = set()
+
+    if target.isdigit():
+        print(f"Working with PR {CYAN}#{target}{RESET}...")
+        pull = api.get_obj(f"pulls/{target}")
+        with get_nested(pull, 'head') as head, get_nested(head, 'user') as user:
+            login = get_str(user, 'login')
+        if not allow and login not in ALLOWLIST:
+            sys.exit(f"Pull request author '{login}' isn't allowed. Override with --allow.")
+        with get_nested(pull, 'head') as head:
+            sha = get_str(head, 'sha')
+        with get_nested(pull, 'base') as base:
+            ref = get_str(base, 'ref')
+        branches.add(ref)
+        print(f"  → {CYAN}{sha}{RESET} (target: {CYAN}{ref}{RESET})")
+
+    elif target == '-':
+        if repo is not None:
+            sys.exit("- target uses the local git upstream and doesn't make sense with --repo")
+        sha = git('rev-parse', '@{upstream}')
+        print(f"Working with revision {sha}...")
+        if sha_pulls := api.pulls_for_commit(sha):
+            for p in sha_pulls:
+                with get_nested(p, 'base') as base:
+                    ref = get_str(base, 'ref')
+                branches.add(ref)
+                print(f"  → PR {CYAN}#{get_int(p, 'number')}{RESET} (target: {CYAN}{ref}{RESET})")
+        else:
+            print("  → no associated PRs found")
+
     else:
-        revision = git('rev-parse', '@{upstream}')
-        target = git('rev-parse', '--abbrev-ref', '@{upstream}')
+        sys.exit(f"Invalid trigger target {target}")
 
-    statuses = api.statuses(revision)
-    if opts.context:
-        contexts = set[str]()
-        for cntx in opts.context:
-            if '*' in cntx or '?' in cntx:
-                if api.repo == 'cockpit-project/bots':
-                    contexts.update(testmap.bots_contexts_for_fnmatch(cntx))
-                else:
-                    contexts.update(testmap.contexts_for_fnmatch(cntx, repo=api.repo, branch=opts.branch))
-            elif cntx.startswith("image:"):
-                contexts.update(testmap.tests_for_image(cntx.split(':', 1)[1]))
-            elif testmap.is_valid_context(cntx, api.repo):
-                if opts.bots_pr:
-                    cntx += "@bots#" + opts.bots_pr
-                contexts.add(cntx)
+    statuses = api.statuses(sha)
+    print()
+
+    if verbose:
+        print("Showing existing statuses...")
+        for context, status in sorted(statuses.items()):
+            state = get_str(status, 'state', 'unknown')
+            description = get_str(status, 'description', '')
+            desc = f': {description}' if description else ''
+            print(f"  {colored_state(state)} {context}{desc}")
+        print()
+
+    if not contexts:
+        # no contexts listed: retrigger failed tests
+        to_trigger = {c for c, s in statuses.items() if get_str(s, 'state', '') in ('error', 'failure')}
+        if not to_trigger:
+            sys.exit("no failed contexts to retrigger")
+
+    elif raw:
+        # --raw: trigger exactly the named contexts without validity checks
+        if branch is not None:
+            sys.exit("--branch doesn't make sense with --raw")
+        to_trigger = set(contexts)
+
+    elif api.repo == 'cockpit-project/bots':
+        # bots repository: trigger full 'os/scenario@org/repo[/branch]' contexts
+        if branch is not None:
+            sys.exit("--branch doesn't make sense on bots")
+        for context in contexts:
+            if context.startswith('image:'):
+                to_trigger.update(testmap.tests_for_image(context[6:]))
             else:
-                sys.stderr.write(f"ignoring unknown context {cntx}\n")
-        everything = False
+                result = testmap.bots_contexts_for_fnmatch(context)
+                if not result:
+                    print(f"no contexts matched {context!r}", file=sys.stderr)
+                to_trigger.update(result)
+
     else:
-        contexts = set(statuses.keys())
-        everything = True
+        # project repositories: trigger per-branch 'os/scenario[@bots#n]' contexts
+        if branch is None:
+            try:
+                (branch,) = branches
+            except ValueError:
+                sys.exit("Unable to automatically determine target branch, try --branch")
 
-    ret = 0
-    for context in contexts:
-        status = statuses.get(context, {})
-        current_status = status.get("state", "unknown" if everything else "empty")
+        for context in contexts:
+            if context == 'required':
+                to_trigger.update(api.required_contexts(branch))
+            else:
+                result = testmap.contexts_for_fnmatch(context, repo=api.repo, branch=branch)
+                if not result:
+                    print(f"no contexts matched {context!r}", file=sys.stderr)
+                to_trigger.update(f'{c}@bots#{bots_pr}' if bots_pr else c for c in result)
 
-        if current_status not in ["empty", "error", "failure"]:
-            # allow changing if manual testing required
-            # otherwise "pending" state indicates that testing is in progress
-            manual_testing = current_status == "pending" and status.get("description", None) == github.NO_TESTING
-            queued = current_status == "pending" and status.get("description", None) == github.NOT_TESTED_DIRECT
-            # also allow override with --force or --requeue
-            if not (manual_testing or opts.force) and not (queued and opts.requeue):
-                if not everything:
-                    sys.stderr.write(f"{context}: isn't in triggerable state (is: {status['state']})\n")
-                    ret = 1
+    if not to_trigger:
+        print("No contexts to trigger.")
+        return
+
+    n = len(to_trigger)
+    print(f"Considering {n} {'context' if n == 1 else 'contexts'}...")
+
+    for context in sorted(to_trigger):
+        match {"state": "ignored"} if ignore_status else statuses.get(context):
+            case {"state": "ignored"}:
+                reason = "ignoring status"
+            case {"state": "error" | "failure"}:
+                reason = "retrying failed test"
+            case {"state": "pending", "description": github.NO_TESTING}:
+                reason = "overriding manual-only status"
+            case {"state": "pending", "description": github.NOT_TESTED_DIRECT} if requeue:
+                reason = "requeuing"
+            case {"state": str() as state}:
+                print(
+                    f"  {DARK_GREY}→ {context}: not triggerable (state: {colored_state(state)}{DARK_GREY}){RESET}",
+                    file=sys.stderr,
+                )
                 continue
-        sys.stderr.write(f"{context}: triggering on {target}\n")
-        if opts.dry_run:
-            continue
+            case _:
+                reason = "no status yet"
 
-        changes = {"state": "pending", "description": github.NOT_TESTED_DIRECT, "context": context}
+        print(f"  {CYAN}→ {context}: triggering ({reason}){RESET}", file=sys.stderr)
+        if not dry:
+            api.post(
+                f"statuses/{sha}",
+                {
+                    "state": "pending",
+                    "description": github.NOT_TESTED_DIRECT,
+                    "context": context,
+                },
+            )
 
-        # Keep the old link for reference, until testing starts again
-        if link := get_str(status, "target_url", None):
-            changes["target_url"] = link
 
-        api.post("statuses/" + revision, changes)
-
-    return ret
-
-
-def main() -> int:
+def main() -> None:
     parser = argparse.ArgumentParser(description='Manually trigger CI Robots')
+    # fmt: off
     parser.add_argument('-f', '--force', action="store_true",
-                        help="Force setting the status even if the program logic thinks it shouldn't be done")
+                        help="Implies --ignore-status and --raw")
+    parser.add_argument('--ignore-status', action="store_true",
+                        help="Trigger even if the current status isn't in a retriggerable state")
+    parser.add_argument('--raw', action="store_true",
+                        help="Use context strings as-is, without testmap validation or expansion")
     parser.add_argument('-a', '--allow', action='store_true', dest='allow',
                         help="Allow triggering for users that aren't allowed")
     parser.add_argument('--requeue', action="store_true",
                         help='Re-queue pending test requests (workaround for occasionally ignored webhook events)')
     parser.add_argument('--repo', help="The repository to trigger the robots in", default=None)
     parser.add_argument('--bots-pr', help="Use the bots code from this PR instead of main")
-    parser.add_argument('-n', '--dry-run', action="store_true",
-                        help="Only show which contexts would be triggered")
-    parser.add_argument('--branch', default='main',
-                        help="Branch for wildcard triggers in non-bots repos (default: main)")
-    parser.add_argument('target', help='The pull request number to trigger, '
-                                       'or - for the upstream of the current branch')
-    parser.add_argument('context', nargs='*', help='The github task context(s) to trigger; can also be '
-                                                   '"image:<imagename>" to trigger all tests related to that image, '
-                                                   'or a wildcard pattern like "*/networking@*"')
-    opts = parser.parse_args()
+    parser.add_argument('-n', '--dry-run', action="store_true", help="Only show which contexts would be triggered")
+    parser.add_argument('-v', '--verbose', action="store_true", help="Show all current statuses before triggering")
+    parser.add_argument('--branch', default=None, help="Branch for wildcard triggers in non-bots repos")
+    parser.add_argument('target',
+                        help='The pull request number to trigger, or - for the upstream of the current branch'
+    )
+    parser.add_argument('context', nargs='*',
+                        help='The github task context(s) to trigger; can also be '
+                        '"image:<imagename>" to trigger all tests related to that image, '
+                        'or a wildcard pattern like "*/networking@*"')
+    # fmt: on
+    args = parser.parse_args()
 
-    api = github.GitHub(repo=opts.repo)
-    return trigger_pull(api, opts)
+    trigger(
+        args.target,
+        args.context,
+        allow=args.allow,
+        bots_pr=args.bots_pr,
+        branch=args.branch,
+        dry=args.dry_run,
+        ignore_status=args.ignore_status or args.force,
+        raw=args.raw or args.force,
+        repo=args.repo,
+        requeue=args.requeue,
+        verbose=args.verbose,
+    )
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

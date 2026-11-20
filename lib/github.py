@@ -16,6 +16,7 @@
 # along with Cockpit; If not, see <http://www.gnu.org/licenses/>.
 
 import base64
+import fnmatch
 import functools
 import http.client
 import json
@@ -32,7 +33,7 @@ from types import EllipsisType
 from typing import Any, TypedDict, TypeVar
 
 from lib import cache
-from lib.aio.jsonutil import JsonObject, JsonValue, get_dict, get_dictv, get_int, get_str, typechecked
+from lib.aio.jsonutil import JsonObject, JsonValue, get_dict, get_dictv, get_int, get_str, get_strv, typechecked
 from lib.directories import xdg_cache_home, xdg_config_home
 from lib.testmap import is_valid_context
 
@@ -358,6 +359,46 @@ class GitHub:
             result += data
             count = len(data)
         return result
+
+    def pulls_for_commit(self, sha: str, state: str | None = 'open') -> Sequence[JsonObject]:
+        pulls = self.get_objv(f"commits/{sha}/pulls", ())
+        if state is not None:
+            pulls = tuple(p for p in pulls if get_str(p, 'state', '') == state)
+        return pulls
+
+    def required_contexts(self, branch: str) -> Sequence[str]:
+        """Return the required status check contexts for a branch, from rulesets."""
+        branch_ref = f"refs/heads/{branch}"
+        contexts: list[str] = []
+
+        def ref_matches(pattern: str) -> bool:
+            if pattern == "~ALL":
+                return True
+            if pattern == "~DEFAULT_BRANCH":
+                return branch == self.default_branch
+            return fnmatch.fnmatch(branch_ref, pattern)
+
+        for summary in self.get_objv("rulesets", ()):
+            if get_str(summary, "target", "") != "branch":
+                continue
+            if get_str(summary, "enforcement", "") != "active":
+                continue
+            ruleset_id = get_int(summary, "id")
+            ruleset = self.get_obj(f"rulesets/{ruleset_id}", {})
+            ref_name = get_dict(get_dict(ruleset, "conditions", {}), "ref_name", {})
+            if not any(ref_matches(p) for p in get_strv(ref_name, "include", ())):
+                continue
+            if any(ref_matches(p) for p in get_strv(ref_name, "exclude", ())):
+                continue
+            for rule in get_dictv(ruleset, "rules", ()):
+                if get_str(rule, "type", "") != "required_status_checks":
+                    continue
+                for check in get_dictv(get_dict(rule, "parameters", {}), "required_status_checks", ()):
+                    # integration_id identifies GitHub App checks (Checks API); skip those
+                    if check.get("integration_id") is None:
+                        contexts.append(get_str(check, "context"))
+
+        return contexts
 
     def pulls(self, state: str = 'open', since: float | None = None) -> Sequence[JsonObject]:
         result = []
