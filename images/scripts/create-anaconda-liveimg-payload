@@ -78,9 +78,16 @@ def build_payload(image: str, output: str) -> None:
 
         # dirinstall produces wrong SELinux labels (host is in permissive mode);
         # relabel from the host using the target's file_contexts — no chroot needed;
+        # validate contexts against the target's compiled policy (-c) instead of the
+        # host's loaded policy, otherwise newer target-only SELinux types make
+        # setfiles reject the whole file_contexts with "Invalid argument";
         # exclude os-prober mount dir which creates a directory cycle
+        target_policy = machine.execute(
+            "ls /mnt/sysimage/etc/selinux/targeted/policy/policy.* | sort -V | tail -n1"
+        ).strip()
         machine.execute(
             "setfiles -r /mnt/sysimage"
+            f" -c {target_policy}"
             " -e /mnt/sysimage/var/lib/os-prober"
             " /mnt/sysimage/etc/selinux/targeted/contexts/files/file_contexts"
             " /mnt/sysimage/",
