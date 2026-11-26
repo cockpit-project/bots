@@ -213,6 +213,25 @@ after the file).  You'll need to restart the dispatcher afterwards to pick up
 the new values.
 
 
+### Updating GitHub App RSA private key
+
+Unlike the other secrets, this key is never stored anywhere "at rest" and
+therefore can't be updated in the "idempotent" way that the rest of the
+infrastructure can: it's a destructive operation by definition and involves
+interacting with the GitHub UI via the web browser to generate and download a
+new key.
+
+The process is self-documenting.  Run it like this:
+
+```
+AWS_PROFILE=poweruser python3 -m lib.aws.kms_import_key
+```
+
+The main idea is that the script will create a temporary directory for you to
+download the key into, upload it to AWS, then delete it when you're done.  This
+prevents the key material from ever hitting disk or sitting around too long.
+
+
 ### Make changes to the CI infrastructure
 
 You can make the required changes by modifying `lib/aws/infra_definitions.py` and running

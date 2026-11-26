@@ -87,6 +87,9 @@ RUNNER_INSTANCE_SLUG_TAG = 'cockpit-ci-slug'
 # public dashboard and summary.json, but still subject to overdue termination.
 EMBARGOED_SLUG = 'embargoed'
 
+# GITHUB APP (experimental)
+GITHUB_APP_KMS_ALIAS = 'alias/cockpit-ci-github-app'
+
 # SECURITY GROUPS
 SSH_SECURITY_GROUP = 'cockpit-ci-ssh'
 
