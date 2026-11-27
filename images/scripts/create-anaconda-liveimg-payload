@@ -51,6 +51,7 @@ btrfs-progs
 mdadm
 lvm2
 iscsi-initiator-utils
+dracut-network
 %end
 """
 
