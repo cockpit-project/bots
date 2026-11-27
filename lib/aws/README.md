@@ -125,6 +125,9 @@ The easiest way to get this working is by configuring an `admin` profile in
 ```
 [admin]
 credential_process = /home/lis/src/bots/main/saml-login --output=awscreds 727920394381-admin
+
+[poweruser]
+credential_process = /home/lis/src/bots/main/saml-login --output=awscreds 727920394381-poweruser
 ```
 
 with the `/home/lis/src/bots/main` path adjusted to point to your bots
